@@ -1,0 +1,33 @@
+{
+  "name": "bfx-facs-reports-framework",
+  "version": "0.1.0",
+  "description": "Bitfinex reports framework facility",
+  "main": "index.js",
+  "private": false,
+  "engine": {
+    "node": ">=8.0"
+  },
+  "deprecated": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitfinexcom/bfx-facs-reports-framework.git"
+  },
+  "keywords": [
+    "bitfinex"
+  ],
+  "homepage": "https://github.com/bitfinexcom/bfx-facs-reports-framework#readme",
+  "bugs": {
+    "url": "https://github.com/bitfinexcom/bfx-facs-reports-framework/issues"
+  },
+  "dependencies": {
+    "async": "^2.6.1",
+    "bfx-facs-base": "git+https://github.com:bitfinexcom/bfx-facs-base.git",
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "standard": "^12.0.1"
+  },
+  "scripts": {
+    "test": "standard"
+  }
+}
