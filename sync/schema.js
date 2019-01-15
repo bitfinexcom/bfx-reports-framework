@@ -1,8 +1,7 @@
 'use strict'
 
-const { cloneDeep } = require('lodash')
-
 const ALLOWED_COLLS = require('./allowed.colls')
+const { CandlesExtension } = require('./data.inserter.extension')
 
 const _models = new Map([
   [
@@ -32,24 +31,18 @@ const _methodCollMap = new Map([
       sort: [['mts', -1]],
       hasNewData: false,
       start: 0,
-      type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mts'],
+      type: 'public:insertable:array:objects',
+      // TODO:
+      fieldsOfUniqueIndex: ['_symbol', 'mts'],
+      extension: new CandlesExtension(),
       model: { ..._models.get(ALLOWED_COLLS.CANDLES) }
     }
   ]
 ])
 
-const _cloneSchema = (map) => {
-  return new Map(Array.from(map).map(item => cloneDeep(item)))
-}
+const getMethodCollMap = () => _methodCollMap
 
-const getMethodCollMap = () => {
-  return _cloneSchema(_methodCollMap)
-}
-
-const getModelsMap = () => {
-  return _cloneSchema(_models)
-}
+const getModelsMap = () => _models
 
 module.exports = {
   getMethodCollMap,
