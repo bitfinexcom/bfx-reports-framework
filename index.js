@@ -4,6 +4,12 @@ const { pick } = require('lodash')
 const async = require('async')
 const Base = require('bfx-facs-base')
 
+const {
+  getMethodCollMap,
+  getModelsMap
+} = require('./sync/schema')
+const ALLOWED_COLLS = require('./sync/allowed.colls')
+
 class ReportsFrameworkFacility extends Base {
   constructor (caller, opts, ctx) {
     super(caller, opts, ctx)
@@ -30,6 +36,18 @@ class ReportsFrameworkFacility extends Base {
         next()
       }
     ], cb)
+  }
+
+  getMethodCollMap () {
+    return getMethodCollMap()
+  }
+
+  getModelsMap () {
+    return getModelsMap()
+  }
+
+  getAllowedColls () {
+    return ALLOWED_COLLS
   }
 
   _stop (cb) {
