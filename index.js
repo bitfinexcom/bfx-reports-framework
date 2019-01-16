@@ -11,6 +11,7 @@ const {
 } = require('./sync/schema')
 const ALLOWED_COLLS = require('./sync/allowed.colls')
 const { DependencyInjectionError } = require('./errors')
+const Responder = require('./responder')
 
 class ReportsFrameworkFacility extends Base {
   constructor (caller, opts, ctx) {
@@ -19,7 +20,8 @@ class ReportsFrameworkFacility extends Base {
     this.name = 'reports-framework'
     this._hasConf = false
 
-    this.core = null
+    this._core = null
+    this._responder = null
 
     this.init()
   }
@@ -86,7 +88,17 @@ class ReportsFrameworkFacility extends Base {
       throw new DependencyInjectionError(ajv.errors)
     }
 
-    this.core = core
+    this._core = core
+
+    this._initResponder()
+  }
+
+  getResponder () {
+    return this._responder
+  }
+
+  _initResponder () {
+    this._responder = new Responder(this.caller, this._core)
   }
 
   _stop (cb) {
