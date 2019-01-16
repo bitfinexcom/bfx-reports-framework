@@ -20,6 +20,7 @@
     "url": "https://github.com/bitfinexcom/bfx-facs-reports-framework/issues"
   },
   "dependencies": {
+    "ajv": "^6.7.0",
     "async": "^2.6.1",
     "bfx-facs-base": "git+https://github.com:bitfinexcom/bfx-facs-base.git",
     "lodash": "^4.17.10"

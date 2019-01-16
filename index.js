@@ -1,6 +1,7 @@
 'use strict'
 
 const { pick } = require('lodash')
+const Ajv = require('ajv')
 const async = require('async')
 const Base = require('bfx-facs-base')
 
@@ -9,6 +10,7 @@ const {
   getModelsMap
 } = require('./sync/schema')
 const ALLOWED_COLLS = require('./sync/allowed.colls')
+const { DependencyInjectionError } = require('./errors')
 
 class ReportsFrameworkFacility extends Base {
   constructor (caller, opts, ctx) {
@@ -16,6 +18,8 @@ class ReportsFrameworkFacility extends Base {
 
     this.name = 'reports-framework'
     this._hasConf = false
+
+    this.core = null
 
     this.init()
   }
@@ -48,6 +52,41 @@ class ReportsFrameworkFacility extends Base {
 
   getAllowedColls () {
     return ALLOWED_COLLS
+  }
+
+  getDISchema () {
+    return {
+      type: 'object',
+      required: [
+        'getREST',
+        'prepareResponse'
+      ],
+      properties: {
+        getREST: {
+          isFunction: true
+        },
+        prepareResponse: {
+          isFunction: true
+        }
+      }
+    }
+  }
+
+  injectDeps (core = {}) {
+    const ajv = new Ajv()
+    ajv.addKeyword('isFunction', {
+      validate (isFunction = true, data) {
+        return isFunction
+          ? typeof data === 'function'
+          : typeof data !== 'function'
+      }
+    })
+
+    if (!ajv.validate(this.getDISchema(), core)) {
+      throw new DependencyInjectionError(ajv.errors)
+    }
+
+    this.core = core
   }
 
   _stop (cb) {
