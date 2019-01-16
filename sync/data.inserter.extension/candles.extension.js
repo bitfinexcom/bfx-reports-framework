@@ -1,6 +1,8 @@
 'use strict'
 
-class CandlesExtension {
+const DataInserterExtension = require('./data.inserter.extension')
+
+class CandlesExtension extends DataInserterExtension {
   /**
    * TODO:
    * @override
