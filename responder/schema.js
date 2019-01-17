@@ -10,7 +10,7 @@ const paramsSchemaForCandlesApi = {
       type: 'string'
     },
     section: {
-      type: 'hist'
+      type: 'string'
     },
     limit: {
       type: 'integer'
