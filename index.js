@@ -61,7 +61,10 @@ class ReportsFrameworkFacility extends Base {
       type: 'object',
       required: [
         'getREST',
-        'prepareResponse'
+        'prepareResponse',
+        'checkParams',
+        'getDateNotMoreNow',
+        'getMethodLimit'
       ],
       properties: {
         getREST: {
