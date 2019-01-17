@@ -37,7 +37,7 @@ class Responder {
         'end',
         'sort'
       ])
-      const rest = this.core.getREST(args.auth, this.wrk)
+      const rest = this.core.getREST({}, this.wrk)
 
       const data = await rest.candles.bind(rest)({ ...params, query })
 
