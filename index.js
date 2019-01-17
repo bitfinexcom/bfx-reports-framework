@@ -69,6 +69,15 @@ class ReportsFrameworkFacility extends Base {
         },
         prepareResponse: {
           isFunction: true
+        },
+        checkParams: {
+          isFunction: true
+        },
+        getDateNotMoreNow: {
+          isFunction: true
+        },
+        getMethodLimit: {
+          isFunction: true
         }
       }
     }
