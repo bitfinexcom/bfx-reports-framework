@@ -13,7 +13,6 @@ class Responder {
     this.logger = wrk.logger
   }
 
-  // TODO:
   async getCandles (methodName = 'getCandles', args, cb) {
     try {
       this.core.checkParams(
