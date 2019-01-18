@@ -14,8 +14,7 @@ const _models = new Map([
       high: 'DECIMAL(22,12)',
       low: 'DECIMAL(22,12)',
       volume: 'DECIMAL(22,12)',
-      _symbol: 'VARCHAR(255)',
-      _section: 'VARCHAR(255)'
+      _symbol: 'VARCHAR(255)'
     }
   ]
 ])
@@ -30,9 +29,8 @@ const _methodCollMap = new Map([
       symbolFieldName: '_symbol',
       sort: [['mts', -1]],
       hasNewData: false,
-      start: 0,
+      start: [],
       type: 'public:insertable:array:objects',
-      // TODO:
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
       extension: new CandlesExtension(),
       model: { ..._models.get(ALLOWED_COLLS.CANDLES) }
