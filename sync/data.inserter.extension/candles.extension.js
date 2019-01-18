@@ -145,12 +145,18 @@ class CandlesExtension extends DataInserterExtension {
     method,
     schema
   ) {
-    const args = this.dataInserter._getMethodArgMap(
-      method,
-      null,
-      10000000,
-      schema.start
-    )
+    for (const [symbol, dates] of schema.start) {
+      await this.dataInserter._insertConfigurablePublicApiData(
+        method,
+        schema,
+        symbol,
+        dates,
+        {
+          timeframe: this._timeframe,
+          section: this._section
+        }
+      )
+    }
   }
 }
 
