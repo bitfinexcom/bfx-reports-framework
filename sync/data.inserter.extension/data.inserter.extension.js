@@ -1,8 +1,10 @@
 'use strict'
 
 class DataInserterExtension {
-  injectDeps (dataInserter) {
+  injectDeps (dataInserter, ALLOWED_COLLS) {
     this.dataInserter = dataInserter
+    this.dao = dataInserter.dao
+    this.ALLOWED_COLLS = ALLOWED_COLLS
   }
 
   /**
