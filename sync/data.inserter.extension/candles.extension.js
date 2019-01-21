@@ -157,6 +157,61 @@ class CandlesExtension extends DataInserterExtension {
         }
       )
     }
+
+    await this._convertCurrency()
+  }
+
+  _getConvSchema () {
+    return new Map([
+      [
+        this.ALLOWED_COLLS.LEDGERS,
+        {
+          symbolFieldName: 'currency',
+          convFields: [
+            { inputField: 'amount', outputField: 'amountUsd' },
+            { inputField: 'balance', outputField: 'balanceUsd' }
+          ]
+        }
+
+      ]
+    ])
+  }
+
+  // TODO:
+  async _convertCurrency () {
+    const convSchema = this._getConvSchema()
+
+    for (const [collName, schema] of convSchema) {
+      let count = 0
+      let _id = 0
+
+      while (true) {
+        count += 1
+
+        if (count > 100) break
+
+        const elems = await this.dao.getElemsInCollBy(
+          collName,
+          {
+            filter: {
+              [schema.symbolFieldName]: this._allowedSymbs,
+              $gt: { _id },
+              $isNull: schema.convFields.map(obj => obj.outputField)
+            },
+            sort: [['_id', 1]],
+            limit: 10000
+          }
+        )
+
+        if (!Array.isArray(elems) || elems.length === 0) {
+          break
+        }
+
+        // TODO:
+
+        _id = elems[elems.length - 1]._id
+      }
+    }
   }
 }
 
