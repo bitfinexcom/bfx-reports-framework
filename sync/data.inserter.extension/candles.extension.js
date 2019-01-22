@@ -62,7 +62,7 @@ class CandlesExtension extends DataInserterExtension {
     })
 
     for (const { symbol, start } of collСonfig) {
-      const args = this.dataInserter._getMethodArgMap(method, {}, 1)
+      const args = this.dataInserter.getMethodArgMap(method, {}, 1)
       args.params = {
         ...args.params,
         timeframe: this._timeframe,
@@ -79,7 +79,7 @@ class CandlesExtension extends DataInserterExtension {
       )
       const {
         res: lastElemFromApi
-      } = await this.dataInserter._getDataFromApi(method, args)
+      } = await this.dataInserter.getDataFromApi(method, args)
 
       if (
         isEmpty(lastElemFromApi) ||
@@ -99,7 +99,7 @@ class CandlesExtension extends DataInserterExtension {
         continue
       }
 
-      const lastDateInDb = this.dataInserter._compareElemsDbAndApi(
+      const lastDateInDb = this.dataInserter.compareElemsDbAndApi(
         schema.dateFieldName,
         lastElemFromDb,
         lastElemFromApi
@@ -119,11 +119,11 @@ class CandlesExtension extends DataInserterExtension {
       const firstElemFromDb = await this.dao.getElemInCollBy(
         schema.name,
         filter,
-        this.dataInserter._invertSort(schema.sort)
+        this.dataInserter.invertSort(schema.sort)
       )
 
       if (!isEmpty(firstElemFromDb)) {
-        const isChangedBaseStart = this.dataInserter._compareElemsDbAndApi(
+        const isChangedBaseStart = this.dataInserter.compareElemsDbAndApi(
           schema.dateFieldName,
           { [schema.dateFieldName]: start },
           firstElemFromDb
@@ -152,7 +152,7 @@ class CandlesExtension extends DataInserterExtension {
     schema
   ) {
     for (const [symbol, dates] of schema.start) {
-      await this.dataInserter._insertConfigurablePublicApiData(
+      await this.dataInserter.insertConfigurablePublicApiData(
         method,
         schema,
         symbol,
