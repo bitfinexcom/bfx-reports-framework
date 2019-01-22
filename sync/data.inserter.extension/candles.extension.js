@@ -55,7 +55,10 @@ class CandlesExtension extends DataInserterExtension {
     }
 
     const collСonfig = uniqueLedgersSymbs.map(({ currency }) => {
-      return { symbol: `t${currency}${this._convertTo}`, start: lastElemLedgers.mts }
+      return {
+        symbol: `t${currency}${this._convertTo}`,
+        start: lastElemLedgers.mts
+      }
     })
 
     for (const { symbol, start } of collСonfig) {
@@ -135,10 +138,13 @@ class CandlesExtension extends DataInserterExtension {
 
       schema.start.push([symbol, startConf])
     }
+
+    if (!schema.hasNewData) {
+      await this._convertCurrency(schema)
+    }
   }
 
   /**
-   * TODO:
    * @override
    */
   async insertNewData (
@@ -154,11 +160,16 @@ class CandlesExtension extends DataInserterExtension {
         {
           timeframe: this._timeframe,
           section: this._section
+        },
+        (itemRes, params) => {
+          if (typeof params.symbol === 'string') {
+            itemRes._symbol = params.symbol
+          }
         }
       )
     }
 
-    await this._convertCurrency()
+    await this._convertCurrency(schema)
   }
 
   _getConvSchema () {
@@ -167,6 +178,7 @@ class CandlesExtension extends DataInserterExtension {
         this.ALLOWED_COLLS.LEDGERS,
         {
           symbolFieldName: 'currency',
+          dateFieldName: 'mts',
           convFields: [
             { inputField: 'amount', outputField: 'amountUsd' },
             { inputField: 'balance', outputField: 'balanceUsd' }
@@ -177,8 +189,7 @@ class CandlesExtension extends DataInserterExtension {
     ])
   }
 
-  // TODO:
-  async _convertCurrency () {
+  async _convertCurrency (candlesSchema) {
     const convSchema = this._getConvSchema()
 
     for (const [collName, schema] of convSchema) {
@@ -207,7 +218,42 @@ class CandlesExtension extends DataInserterExtension {
           break
         }
 
-        // TODO:
+        for (const item of elems) {
+          const candle = await this.dao.getElemInCollBy(
+            candlesSchema.name,
+            {
+              [candlesSchema.symbolFieldName]: `t${item[schema.symbolFieldName]}${this._convertTo}`,
+              end: item[schema.dateFieldName],
+              _dateFieldName: [candlesSchema.dateFieldName]
+            },
+            candlesSchema.sort
+          )
+
+          if (
+            !candle ||
+            typeof candle !== 'object' ||
+            !candle.close ||
+            !Number.isFinite(candle.close)
+          ) {
+            continue
+          }
+
+          schema.convFields.forEach(({ inputField, outputField }) => {
+            if (
+              item[inputField] &&
+              Number.isFinite(item[inputField])
+            ) {
+              item[outputField] = item[inputField] * candle.close
+            }
+          })
+        }
+
+        await this.dao.updateElemsInCollBy(
+          collName,
+          elems,
+          ['_id'],
+          schema.convFields.map(({ outputField }) => outputField)
+        )
 
         _id = elems[elems.length - 1]._id
       }
