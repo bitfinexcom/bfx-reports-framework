@@ -41,12 +41,18 @@ const _methodCollMap = new Map([
   ]
 ])
 
-const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return _getMethodCollMap(methodCollMap)
+const getMethodCollMap = () => {
+  return new Map([
+    ..._getMethodCollMap(),
+    ..._getMethodCollMap(_methodCollMap)
+  ])
 }
 
-const getModelsMap = (models = _models) => {
-  return _getModelsMap(models)
+const getModelsMap = () => {
+  return new Map([
+    ..._getModelsMap(),
+    ..._getModelsMap(_models)
+  ])
 }
 
 module.exports = {
