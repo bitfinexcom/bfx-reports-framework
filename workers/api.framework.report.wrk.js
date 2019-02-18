@@ -21,11 +21,13 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
    * @override
    */
   _syncQueueFactory (isSingleton, ...args) {
+    const _args = args.length > 0
+      ? args
+      : ['syncQueue', ALLOWED_COLLS]
+
     return super._syncQueueFactory(
       isSingleton,
-      args.length > 0
-        ? args
-        : ['syncQueue', ALLOWED_COLLS]
+      ..._args
     )
   }
 }
