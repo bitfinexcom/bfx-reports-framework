@@ -1,16 +1,19 @@
 'use strict'
 
-const BaseDataInserter = require('bfx-report/workers/loc.api/sync/data.inserter')
 const { isEmpty } = require('lodash')
 
+const BaseDataInserter = require(
+  'bfx-report/workers/loc.api/sync/data.inserter'
+)
+const { getMethodCollMap } = require('../schema')
 const ALLOWED_COLLS = require('../allowed.colls')
 
 class DataInserter extends BaseDataInserter {
   constructor (
     reportService,
-    syncColls = ALLOWED_COLLS.ALL,
-    methodCollMap
+    syncColls = ALLOWED_COLLS.ALL
   ) {
+    const methodCollMap = getMethodCollMap()
     super(
       reportService,
       syncColls,
@@ -32,8 +35,8 @@ class DataInserter extends BaseDataInserter {
     schema,
     auth
   ) {
-    if (schema.name === ALLOWED_COLLS.WALLETS) {
-      await this.checkNewWalletsData(method, schema)
+    if (schema.name === ALLOWED_COLLS.CANDLES) {
+      await this._checkNewCandlesData(method, schema)
 
       return
     }
@@ -45,7 +48,30 @@ class DataInserter extends BaseDataInserter {
     )
   }
 
-  async _checkNewWalletsData (
+  /**
+   * @override
+   */
+  async _insertApiDataPublicArrObjTypeToDb (
+    methodApi,
+    schema
+  ) {
+    await super._insertApiDataPublicArrObjTypeToDb(
+      methodApi,
+      schema
+    )
+
+    if (!this._isInsertableArrObjTypeOfColl(schema, true)) {
+      return
+    }
+    if (schema.name === ALLOWED_COLLS.CANDLES) {
+      await this._insertNewCandlesData(
+        methodApi,
+        schema
+      )
+    }
+  }
+
+  async _checkNewCandlesData (
     method,
     schema
   ) {
@@ -54,7 +80,7 @@ class DataInserter extends BaseDataInserter {
     const symbFieldName = schema.symbolFieldName
     const lastElemLedgers = await this.dao.getElemInCollBy(
       ALLOWED_COLLS.LEDGERS,
-      { currency: this._allowedSymbs },
+      { currency: this._candlesAllowedSymbs },
       [['mts', 1]]
     )
 
@@ -69,7 +95,7 @@ class DataInserter extends BaseDataInserter {
     const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
       ALLOWED_COLLS.LEDGERS,
       {
-        filter: { currency: this._allowedSymbs },
+        filter: { currency: this._candlesAllowedSymbs },
         isDistinct: true,
         projection: ['currency']
       }
@@ -93,8 +119,8 @@ class DataInserter extends BaseDataInserter {
       const args = this._getMethodArgMap(method, {}, 1)
       args.params = {
         ...args.params,
-        timeframe: this._timeframe,
-        section: this._section,
+        timeframe: this._candlesTimeframe,
+        section: this._candlesSection,
         notThrowError: true,
         notCheckNextPage: true,
         symbol
@@ -172,8 +198,7 @@ class DataInserter extends BaseDataInserter {
     }
   }
 
-  // TODO:
-  async insertNewWalletsData (
+  async _insertNewCandlesData (
     method,
     schema
   ) {
@@ -183,15 +208,9 @@ class DataInserter extends BaseDataInserter {
         schema,
         symbol,
         dates,
-        // TODO:
         {
-          timeframe: this._timeframe,
-          section: this._section
-        },
-        (itemRes, params) => {
-          if (typeof params.symbol === 'string') {
-            itemRes._symbol = params.symbol
-          }
+          timeframe: this._candlesTimeframe,
+          section: this._candlesSection
         }
       )
     }
@@ -232,7 +251,7 @@ class DataInserter extends BaseDataInserter {
           collName,
           {
             filter: {
-              [schema.symbolFieldName]: this._allowedSymbs,
+              [schema.symbolFieldName]: this._candlesAllowedSymbs,
               $gt: { _id },
               $isNull: schema.convFields.map(obj => obj.outputField)
             },
