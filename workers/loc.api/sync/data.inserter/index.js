@@ -5,6 +5,11 @@ const { isEmpty } = require('lodash')
 const BaseDataInserter = require(
   'bfx-report/workers/loc.api/sync/data.inserter'
 )
+const ApiMiddleware = require(
+  'bfx-report/workers/loc.api/sync/data.inserter/api.middleware'
+)
+
+const ApiMiddlewareHandlerAfter = require('./api.middleware.handler.after')
 const { getMethodCollMap } = require('../schema')
 const ALLOWED_COLLS = require('../allowed.colls')
 
@@ -13,12 +18,22 @@ class DataInserter extends BaseDataInserter {
     reportService,
     syncColls = ALLOWED_COLLS.ALL
   ) {
+    const apiMiddlewareHandlerAfter = new ApiMiddlewareHandlerAfter(
+      reportService,
+      reportService.dao
+    )
+    const apiMiddleware = new ApiMiddleware(
+      reportService,
+      reportService.dao,
+      apiMiddlewareHandlerAfter
+    )
     const methodCollMap = getMethodCollMap()
     super(
       reportService,
       syncColls,
       methodCollMap,
-      ALLOWED_COLLS
+      ALLOWED_COLLS,
+      apiMiddleware
     )
 
     this._candlesAllowedSymbs = ['BTC', 'ETH']
