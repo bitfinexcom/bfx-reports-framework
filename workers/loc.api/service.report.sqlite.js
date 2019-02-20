@@ -8,9 +8,9 @@ class SqliteReportService extends MediatorReportService {
   /**
    * @override
    */
-  async _databaseInitialize () {
-    const db = this.ctx.dbSqlite_m0.db
-    const dao = new SqliteDAO(db)
+  async _databaseInitialize (db) {
+    const _db = db || this.ctx.dbSqlite_m0.db
+    const dao = new SqliteDAO(_db)
 
     await super._databaseInitialize(dao)
   }
