@@ -11,19 +11,14 @@ const {
 const {
   rmDB,
   rmAllFiles,
-  queueToPromise,
-  queueToPromiseMulti,
   delay,
   connToSQLite,
   closeSQLite
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  createMockRESTv2SrvWithDate
-} = require('bfx-report/test/helpers/helpers.mock-rest-v2')
-const {
-  testMethodOfGettingCsv,
-  testProcQueue
-} = require('bfx-report/test/helpers/helpers.tests')
+  createMockRESTv2SrvWithDate,
+  getMockData
+} = require('./helpers/helpers.mock-rest-v2')
 
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
@@ -34,12 +29,11 @@ let auth = {
   apiKey: 'fake',
   apiSecret: 'fake'
 }
-let processorQueue = null
-let aggregatorQueue = null
 let mockRESTv2Srv = null
 let db = null
 
 const basePath = '/api'
+const serviceRoot = path.join(__dirname, '..')
 const tempDirPath = path.join(__dirname, '..', 'workers/loc.api/queue/temp')
 const dbDirPath = path.join(__dirname, '..', 'db')
 const date = new Date()
@@ -56,14 +50,14 @@ describe('Sync mode with SQLite', () => {
     await rmAllFiles(tempDirPath)
     await rmDB(dbDirPath)
     const env = await startEnviroment(false, false, 1, {
+      wtype: 'wrk-report-framework-api',
       syncMode: true,
       isSchedulerEnabled: true,
       dbDriver: 'sqlite'
-    })
+    },
+    serviceRoot)
 
     wrkReportServiceApi = env.wrksReportServiceApi[0]
-    processorQueue = wrkReportServiceApi.lokue_processor.q
-    aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
 
     db = await connToSQLite(wrkReportServiceApi)
   })
@@ -79,5 +73,126 @@ describe('Sync mode with SQLite', () => {
     try {
       await mockRESTv2Srv.close()
     } catch (err) { }
+  })
+
+  it('it should be successfully performed by the login method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'login',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isOk(res.body.result === email)
+  })
+
+  it('it should be successfully performed by the syncNow method', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'syncNow',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isOk(
+      typeof res.body.result === 'number' ||
+      res.body.result === 'SYNCHRONIZATION_IS_STARTED'
+    )
+  })
+
+  it('it should be successfully performed by the getSyncProgress method', async function () {
+    this.timeout(60000)
+
+    while (true) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getSyncProgress',
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isNumber(res.body.result)
+
+      if (
+        typeof res.body.result !== 'number' ||
+        res.body.result === 100
+      ) {
+        break
+      }
+
+      await delay()
+    }
+  })
+
+  it('it should be successfully performed by the getLedgers method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getLedgers',
+        params: {
+          symbol: 'BTC',
+          start: 0,
+          end,
+          limit: 2
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isNumber(res.body.result.nextPage)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'id',
+      'currency',
+      'mts',
+      'amount',
+      'amountUsd',
+      'balance',
+      'balanceUsd',
+      'description',
+      'wallet'
+    ])
+
+    const mockCandle = getMockData('candles')[0]
+    const close = mockCandle[2]
+
+    assert.isNumber(resItem.amountUsd)
+    assert.isNumber(resItem.balanceUsd)
+    assert.strictEqual(resItem.amountUsd, resItem.amount * close)
+    assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
   })
 })
