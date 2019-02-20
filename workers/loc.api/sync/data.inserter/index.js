@@ -245,7 +245,6 @@ class DataInserter extends BaseDataInserter {
             { inputField: 'balance', outputField: 'balanceUsd' }
           ]
         }
-
       ]
     ])
   }
