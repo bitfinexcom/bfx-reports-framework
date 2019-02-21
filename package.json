@@ -11,6 +11,10 @@
   },
   "devDependencies": {
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
+    "bfx-api-mock-srv": "git+https://github.com/bitfinexcom/bfx-api-mock-srv.git",
+    "grenache-grape": "^0.9.8",
+    "grenache-nodejs-http": "^0.7.8",
+    "grenache-nodejs-link": "^0.7.10",
     "mocha": "^5.2.0",
     "chai": "^4.2.0",
     "nodemon": "^1.18.10",
