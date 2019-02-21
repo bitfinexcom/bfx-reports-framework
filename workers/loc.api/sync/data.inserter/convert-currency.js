@@ -15,6 +15,16 @@ const _getConvSchema = () => {
           { inputField: 'balance', outputField: 'balanceUsd' }
         ]
       }
+    ],
+    [
+      ALLOWED_COLLS.WALLETS,
+      {
+        symbolFieldName: 'currency',
+        dateFieldName: 'mtsUpdate',
+        convFields: [
+          { inputField: 'balance', outputField: 'balanceUsd' }
+        ]
+      }
     ]
   ])
 }
