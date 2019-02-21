@@ -12,6 +12,7 @@ const ApiMiddleware = require(
 const ApiMiddlewareHandlerAfter = require('./api.middleware.handler.after')
 const { getMethodCollMap } = require('../schema')
 const ALLOWED_COLLS = require('../allowed.colls')
+const convertCurrency = require('./convert-currency')
 
 class DataInserter extends BaseDataInserter {
   constructor (
@@ -36,10 +37,13 @@ class DataInserter extends BaseDataInserter {
       apiMiddleware
     )
 
-    this._candlesAllowedSymbs = ['BTC', 'ETH']
+    this.candlesAllowedSymbs = ['BTC', 'ETH']
+    this.convertTo = 'USD'
+
     this._candlesTimeframe = '1D'
     this._candlesSection = 'hist'
-    this._convertTo = 'USD'
+
+    this.addAfterAllInsertsHooks(convertCurrency)
   }
 
   /**
@@ -95,7 +99,7 @@ class DataInserter extends BaseDataInserter {
     const symbFieldName = schema.symbolFieldName
     const lastElemLedgers = await this.dao.getElemInCollBy(
       ALLOWED_COLLS.LEDGERS,
-      { currency: this._candlesAllowedSymbs },
+      { currency: this.candlesAllowedSymbs },
       [['mts', 1]]
     )
 
@@ -110,7 +114,7 @@ class DataInserter extends BaseDataInserter {
     const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
       ALLOWED_COLLS.LEDGERS,
       {
-        filter: { currency: this._candlesAllowedSymbs },
+        filter: { currency: this.candlesAllowedSymbs },
         isDistinct: true,
         projection: ['currency']
       }
@@ -125,7 +129,7 @@ class DataInserter extends BaseDataInserter {
 
     const collСonfig = uniqueLedgersSymbs.map(({ currency }) => {
       return {
-        symbol: `t${currency}${this._convertTo}`,
+        symbol: `t${currency}${this.convertTo}`,
         start: lastElemLedgers.mts
       }
     })
@@ -207,10 +211,6 @@ class DataInserter extends BaseDataInserter {
 
       schema.start.push([symbol, startConf])
     }
-
-    if (!schema.hasNewData) {
-      await this._convertCurrency(schema)
-    }
   }
 
   async _insertNewCandlesData (
@@ -228,95 +228,6 @@ class DataInserter extends BaseDataInserter {
           section: this._candlesSection
         }
       )
-    }
-
-    await this._convertCurrency(schema)
-  }
-
-  _getConvSchema () {
-    return new Map([
-      [
-        ALLOWED_COLLS.LEDGERS,
-        {
-          symbolFieldName: 'currency',
-          dateFieldName: 'mts',
-          convFields: [
-            { inputField: 'amount', outputField: 'amountUsd' },
-            { inputField: 'balance', outputField: 'balanceUsd' }
-          ]
-        }
-      ]
-    ])
-  }
-
-  async _convertCurrency (candlesSchema) {
-    const convSchema = this._getConvSchema()
-
-    for (const [collName, schema] of convSchema) {
-      let count = 0
-      let _id = 0
-
-      while (true) {
-        count += 1
-
-        if (count > 100) break
-
-        const elems = await this.dao.getElemsInCollBy(
-          collName,
-          {
-            filter: {
-              [schema.symbolFieldName]: this._candlesAllowedSymbs,
-              $gt: { _id },
-              $isNull: schema.convFields.map(obj => obj.outputField)
-            },
-            sort: [['_id', 1]],
-            limit: 10000
-          }
-        )
-
-        if (!Array.isArray(elems) || elems.length === 0) {
-          break
-        }
-
-        for (const item of elems) {
-          const candle = await this.dao.getElemInCollBy(
-            candlesSchema.name,
-            {
-              [candlesSchema.symbolFieldName]: `t${item[schema.symbolFieldName]}${this._convertTo}`,
-              end: item[schema.dateFieldName],
-              _dateFieldName: [candlesSchema.dateFieldName]
-            },
-            candlesSchema.sort
-          )
-
-          if (
-            !candle ||
-            typeof candle !== 'object' ||
-            !candle.close ||
-            !Number.isFinite(candle.close)
-          ) {
-            continue
-          }
-
-          schema.convFields.forEach(({ inputField, outputField }) => {
-            if (
-              item[inputField] &&
-              Number.isFinite(item[inputField])
-            ) {
-              item[outputField] = item[inputField] * candle.close
-            }
-          })
-        }
-
-        await this.dao.updateElemsInCollBy(
-          collName,
-          elems,
-          ['_id'],
-          schema.convFields.map(({ outputField }) => outputField)
-        )
-
-        _id = elems[elems.length - 1]._id
-      }
     }
   }
 }
