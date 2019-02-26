@@ -31,7 +31,7 @@ const _getConvSchema = () => {
 
 module.exports = async ({
   dao,
-  candlesAllowedSymbs,
+  candlesSkippedSymbs,
   convertTo,
   syncColls
 }) => {
@@ -58,7 +58,7 @@ module.exports = async ({
         collName,
         {
           filter: {
-            [schema.symbolFieldName]: candlesAllowedSymbs,
+            $not: { [schema.symbolFieldName]: candlesSkippedSymbs },
             $gt: { _id },
             $isNull: schema.convFields.map(obj => obj.outputField)
           },

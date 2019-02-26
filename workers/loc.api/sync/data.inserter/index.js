@@ -37,7 +37,7 @@ class DataInserter extends BaseDataInserter {
       apiMiddleware
     )
 
-    this.candlesAllowedSymbs = ['BTC', 'ETH']
+    this.candlesSkippedSymbs = ['EUR', 'JPY', 'GBP', 'USD']
     this.convertTo = 'USD'
 
     this._candlesTimeframe = '1D'
@@ -99,7 +99,7 @@ class DataInserter extends BaseDataInserter {
     const symbFieldName = schema.symbolFieldName
     const lastElemLedgers = await this.dao.getElemInCollBy(
       ALLOWED_COLLS.LEDGERS,
-      { currency: this.candlesAllowedSymbs },
+      { $not: { currency: this.candlesSkippedSymbs } },
       [['mts', 1]]
     )
 
@@ -114,7 +114,7 @@ class DataInserter extends BaseDataInserter {
     const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
       ALLOWED_COLLS.LEDGERS,
       {
-        filter: { currency: this.candlesAllowedSymbs },
+        filter: { $not: { currency: this.candlesSkippedSymbs } },
         isDistinct: true,
         projection: ['currency']
       }
