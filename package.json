@@ -1,0 +1,78 @@
+{
+  "name": "bfx-reports-framework",
+  "version": "0.1.0",
+  "description": "Bitfinex reports framework",
+  "main": "worker.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "better-npm-run": "^0.1.1",
+    "lodash": "^4.17.11",
+    "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git"
+  },
+  "devDependencies": {
+    "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
+    "bfx-api-mock-srv": "git+https://github.com/bitfinexcom/bfx-api-mock-srv.git",
+    "grenache-grape": "^0.9.8",
+    "grenache-nodejs-http": "^0.7.8",
+    "grenache-nodejs-link": "^0.7.10",
+    "mocha": "^5.2.0",
+    "chai": "^4.2.0",
+    "nodemon": "^1.18.10",
+    "supertest": "^3.4.2",
+    "standard": "^12.0.1"
+  },
+  "standard": {
+    "globals": [
+      "describe",
+      "it",
+      "before",
+      "after",
+      "beforeEach",
+      "afterEach"
+    ]
+  },
+  "nodemonConfig": {
+    "verbose": true,
+    "ignore": [
+      "test/",
+      "db/",
+      "node_modules/",
+      "logs/",
+      ".git/",
+      ".idea/",
+      ".vscode/",
+      "csv/",
+      "workers/loc.api/queue/temp/",
+      "workers/loc.api/queue/views/"
+    ]
+  },
+  "betterScripts": {
+    "start:serv": {
+      "command": "nodemon ./node_modules/bfx-report-express",
+      "env": {
+        "NODE_ENV": "development",
+        "NODE_CONFIG_DIR": "./test/config"
+      }
+    },
+    "test": {
+      "command": "standard && mocha --opts .mocha.opts",
+      "env": {
+        "NODE_ENV": "test"
+      }
+    },
+    "testDev": {
+      "command": "standard && mocha --recursive test/**/*-dev.spec.js --exit --timeout 10000",
+      "env": {
+        "NODE_ENV": "test"
+      }
+    }
+  },
+  "scripts": {
+    "start": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
+    "startDev": "nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
+    "startServDev": "better-npm-run start:serv",
+    "startSimulEnv": "node test/simulate/simulate-enviroment.js",
+    "test": "better-npm-run test",
+    "testDev": "better-npm-run testDev"
+  }
+}

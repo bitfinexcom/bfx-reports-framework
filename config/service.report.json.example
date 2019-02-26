@@ -1,0 +1,20 @@
+{
+  "grcServices": [
+    "rest:report:api"
+  ],
+  "restUrl": "https://api.bitfinex.com",
+  "company": "bitfinex",
+  "emailConf": {
+    "from": "Bitfinex <no-reply@bitfinex.com>",
+    "subject": "Download report"
+  },
+  "s3Conf": {
+    "bucket": "",
+    "acl": "",
+    "signedUrlExpireTime": 28800
+  },
+  "isSpamRestrictionMode": true,
+  "isСompress": true,
+  "dbDriver": "sqlite",
+  "syncMode": true
+}

@@ -1,0 +1,6 @@
+{
+  "app": {
+    "port": 55555
+  },
+  "enableLog": false
+}
