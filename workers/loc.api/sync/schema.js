@@ -7,7 +7,45 @@ const {
 
 const ALLOWED_COLLS = require('./allowed.colls')
 
+const _addToModel = (name, schema = {}) => {
+  return Object.entries(_getModelsMap().get(name))
+    .reduce((accum, [key, val]) => {
+      return {
+        ...accum,
+        [key]: val,
+        ...(schema[key] && typeof schema[key] === 'object')
+          ? schema[key]
+          : {}
+      }
+    }, {})
+}
+
 const _models = new Map([
+  [
+    ALLOWED_COLLS.LEDGERS,
+    _addToModel(
+      ALLOWED_COLLS.LEDGERS,
+      {
+        amount: {
+          amountUsd: 'DECIMAL(22,12)'
+        },
+        balance: {
+          balanceUsd: 'DECIMAL(22,12)'
+        }
+      }
+    )
+  ],
+  [
+    ALLOWED_COLLS.WALLETS,
+    _addToModel(
+      ALLOWED_COLLS.WALLETS,
+      {
+        balance: {
+          balanceUsd: 'DECIMAL(22,12)'
+        }
+      }
+    )
+  ],
   [
     ALLOWED_COLLS.CANDLES,
     {
