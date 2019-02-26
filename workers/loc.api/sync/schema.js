@@ -81,7 +81,15 @@ const _methodCollMap = new Map([
 
 const getMethodCollMap = () => {
   return new Map([
-    ..._getMethodCollMap(),
+    ...[..._getMethodCollMap()].map(([key, schema]) => {
+      return [
+        key,
+        {
+          ...schema,
+          model: getModelsMap().get(schema.name)
+        }
+      ]
+    }),
     ..._getMethodCollMap(_methodCollMap)
   ])
 }
