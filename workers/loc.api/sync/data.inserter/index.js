@@ -8,6 +8,10 @@ const BaseDataInserter = require(
 const ApiMiddleware = require(
   'bfx-report/workers/loc.api/sync/data.inserter/api.middleware'
 )
+const {
+  invertSort,
+  compareElemsDbAndApi
+} = require('bfx-report/workers/loc.api/sync/data.inserter/helpers')
 
 const ApiMiddlewareHandlerAfter = require('./api.middleware.handler.after')
 const { getMethodCollMap } = require('../schema')
@@ -172,7 +176,7 @@ class DataInserter extends BaseDataInserter {
         continue
       }
 
-      const lastDateInDb = this._compareElemsDbAndApi(
+      const lastDateInDb = compareElemsDbAndApi(
         schema.dateFieldName,
         lastElemFromDb,
         lastElemFromApi
@@ -192,11 +196,11 @@ class DataInserter extends BaseDataInserter {
       const firstElemFromDb = await this.dao.getElemInCollBy(
         schema.name,
         filter,
-        this._invertSort(schema.sort)
+        invertSort(schema.sort)
       )
 
       if (!isEmpty(firstElemFromDb)) {
-        const isChangedBaseStart = this._compareElemsDbAndApi(
+        const isChangedBaseStart = compareElemsDbAndApi(
           schema.dateFieldName,
           { [schema.dateFieldName]: start },
           firstElemFromDb
