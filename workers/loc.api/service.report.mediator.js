@@ -10,6 +10,9 @@ const {
   getDateNotMoreNow,
   prepareResponse
 } = require('bfx-report/workers/loc.api/helpers')
+const {
+  DuringSyncMethodAccessError
+} = require('bfx-report/workers/loc.api/errors')
 
 const {
   checkParams,
@@ -63,11 +66,8 @@ class MediatorReportService extends BaseMediatorReportService {
 
   async getRisk (space, args, cb) {
     try {
-      // TODO: maybe need to improve
       if (!await this.isSyncModeWithDbData(space, args)) {
-        cb(null, { isSyncModeWithoutDbData: true })
-
-        return
+        throw new DuringSyncMethodAccessError()
       }
 
       checkParams(args, 'paramsSchemaForRiskApi')
