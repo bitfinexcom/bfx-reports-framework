@@ -170,19 +170,6 @@ const _groupByTimeframe = (
   ) {
     return data
   }
-  if (data.length === 1) {
-    const groupItem = _getGroupItem(
-      data,
-      timeframe,
-      symbol,
-      dateFieldName,
-      symbolFieldName
-    )
-
-    return _isNotEmptyGroupItem(groupItem)
-      ? [groupItem]
-      : []
-  }
 
   const res = []
   const subRes = []
@@ -190,32 +177,6 @@ const _groupByTimeframe = (
   for (let i = data.length - 1; i >= 0; i -= 1) {
     const item = data[i]
     const isLastIter = i === 0
-
-    if (
-      item &&
-      typeof item === 'object' &&
-      Number.isInteger(item[dateFieldName]) &&
-      typeof item[symbolFieldName] === 'string'
-    ) {
-      subRes.unshift(item)
-    }
-    if (
-      isLastIter &&
-      subRes.length === 1
-    ) {
-      const groupItem = _getGroupItem(
-        subRes,
-        timeframe,
-        symbol,
-        dateFieldName,
-        symbolFieldName
-      )
-
-      _addFragment(res, subRes, groupItem)
-
-      break
-    }
-
     const nextItem = data[i - 1]
     const resToCheck = [nextItem, ...subRes]
     const paramsToCheck = {
@@ -225,6 +186,14 @@ const _groupByTimeframe = (
       isLastIter
     }
 
+    if (
+      item &&
+      typeof item === 'object' &&
+      Number.isInteger(item[dateFieldName]) &&
+      typeof item[symbolFieldName] === 'string'
+    ) {
+      subRes.unshift(item)
+    }
     if (_isDailyTimeframe(paramsToCheck)) {
       const groupItem = _getGroupItem(
         subRes,
