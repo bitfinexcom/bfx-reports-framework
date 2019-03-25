@@ -137,7 +137,8 @@ module.exports = async (
     params: {
       timeframe = 'day',
       start = 0,
-      end = Date.now()
+      end = Date.now(),
+      skip = []
     } = {}
   } = {}
 ) => {
@@ -148,7 +149,8 @@ module.exports = async (
       symbol: ['EUR', 'JPY', 'GBP', 'USD'],
       timeframe,
       start,
-      end
+      end,
+      skip
     }
   }
   const data = await _getData(dao, args)
