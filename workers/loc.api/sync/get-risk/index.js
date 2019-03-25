@@ -130,7 +130,27 @@ const _calcData = (data) => {
   })
 }
 
-module.exports = async (dao, args = {}) => {
+module.exports = async (
+  dao,
+  {
+    auth = {},
+    params: {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now()
+    } = {}
+  } = {}
+) => {
+  const user = await dao.checkAuthInDb({ auth })
+  const args = {
+    auth: user,
+    params: {
+      symbol: ['EUR', 'JPY', 'GBP', 'USD'],
+      timeframe,
+      start,
+      end
+    }
+  }
   const data = await _getData(dao, args)
   const res = _calcData(data)
 
