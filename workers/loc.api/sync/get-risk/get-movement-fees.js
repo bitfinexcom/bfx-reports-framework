@@ -77,7 +77,7 @@ module.exports = async (dao, args) => {
       isExcludePrivate: true
     }
   )
-  const res = groupByTimeframe(
+  const res = await groupByTimeframe(
     movements,
     timeframe,
     symbol,

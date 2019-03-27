@@ -96,17 +96,18 @@ const _isNotEmptyGroupItem = ({ mts, vals }) => {
   )
 }
 
-const _getGroupItem = (
+const _getGroupItem = async (
   data,
   timeframe,
   symbol,
   dateFieldName,
   symbolFieldName,
-  calcDataFn
+  calcDataFn,
+  dao
 ) => {
   const { last } = _getFirstAndLastDate(data, dateFieldName)
   const mts = _getStartMtsByTimeframe(last, timeframe)
-  const vals = calcDataFn(data, symbolFieldName, symbol)
+  const vals = await calcDataFn(data, symbolFieldName, symbol, dao)
 
   return {
     mts,
@@ -122,13 +123,14 @@ const _addFragment = (res, subRes, groupItem) => {
   subRes.splice(0, subRes.length)
 }
 
-module.exports = (
+module.exports = async (
   data,
   timeframe,
   symbol,
   dateFieldName,
   symbolFieldName,
-  calcDataFn
+  calcDataFn,
+  dao
 ) => {
   if (
     !Array.isArray(data) ||
@@ -161,13 +163,14 @@ module.exports = (
       subRes.unshift(item)
     }
     if (_isDailyTimeframe(paramsToCheck)) {
-      const groupItem = _getGroupItem(
+      const groupItem = await _getGroupItem(
         subRes,
         timeframe,
         symbol,
         dateFieldName,
         symbolFieldName,
-        calcDataFn
+        calcDataFn,
+        dao
       )
 
       _addFragment(res, subRes, groupItem)
@@ -175,13 +178,14 @@ module.exports = (
       continue
     }
     if (_isMonthlyTimeframe(paramsToCheck)) {
-      const groupItem = _getGroupItem(
+      const groupItem = await _getGroupItem(
         subRes,
         timeframe,
         symbol,
         dateFieldName,
         symbolFieldName,
-        calcDataFn
+        calcDataFn,
+        dao
       )
 
       _addFragment(res, subRes, groupItem)
@@ -189,13 +193,14 @@ module.exports = (
       continue
     }
     if (_isYearlyTimeframe(paramsToCheck)) {
-      const groupItem = _getGroupItem(
+      const groupItem = await _getGroupItem(
         subRes,
         timeframe,
         symbol,
         dateFieldName,
         symbolFieldName,
-        calcDataFn
+        calcDataFn,
+        dao
       )
 
       _addFragment(res, subRes, groupItem)
