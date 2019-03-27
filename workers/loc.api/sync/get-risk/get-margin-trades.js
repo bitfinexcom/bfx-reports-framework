@@ -4,6 +4,7 @@ const {
   getInsertableArrayObjectsFilter
 } = require('bfx-report/workers/loc.api/sync/dao/helpers')
 
+const { convertDataCurr } = require('../helpers')
 const ALLOWED_COLLS = require('../allowed.colls')
 const {
   getModelsMap,
@@ -11,32 +12,68 @@ const {
 } = require('../schema')
 const { groupByTimeframe } = require('./helpers')
 
-// TODO: need to add crypto currency conversation
+const _checkFeeFn = (item) => {
+  const regExp = new RegExp(`${item.feeCurrency}$`)
+
+  return !regExp.test(item.symbol)
+}
+
+const _getCandlesSymb = (item) => item.symbol
+
+const _getTradesConvSchema = (convertTo) => {
+  return {
+    convertTo,
+    symbolFieldName: 'symbol',
+    dateFieldName: 'mtsCreate',
+    convFields: [
+      { inputField: 'execAmount', outputField: 'execAmountForex' },
+      { inputField: 'fee', outputField: 'feeForex', checkFn: _checkFeeFn }
+    ],
+    getCandlesSymbFn: _getCandlesSymb
+  }
+}
+
 const _calcTradesData = (
   data = [],
   symbolFieldName,
-  symbol = []
+  symbol = [],
+  dao
 ) => {
-  return symbol.reduce((accum, currSymb) => {
-    const _sum = data.reduce((sum, trade) => {
-      const { execAmount } = trade
+  return symbol.reduce(async (accum, currSymb) => {
+    const _accum = await accum
+    const _sum = await data.reduce(async (currSum, trade) => {
+      const _currSum = await currSum
       const symb = trade[symbolFieldName]
       const regExp = new RegExp(`${currSymb}$`)
 
-      return (
-        regExp.test(symb) &&
-        Number.isFinite(execAmount)
-      )
-        ? sum + execAmount
-        : sum
-    }, 0)
+      if (!regExp.test(symb)) {
+        return _currSum
+      }
+
+      const tradesConvSchema = _getTradesConvSchema(currSymb)
+      const {
+        execAmountForex,
+        feeForex,
+        fee
+      } = await convertDataCurr(dao, trade, tradesConvSchema)
+
+      const sumWithExecAmountForex = Number.isFinite(execAmountForex)
+        ? _currSum + execAmountForex
+        : _currSum
+      const _feeForex = _checkFeeFn(trade) ? feeForex : fee
+      const sumWithFeeForex = Number.isFinite(_feeForex)
+        ? sumWithExecAmountForex + _feeForex
+        : sumWithExecAmountForex
+
+      return sumWithFeeForex
+    }, Promise.resolve(0))
     const res = _sum ? { [currSymb]: _sum } : {}
 
     return {
-      ...accum,
+      ..._accum,
       ...res
     }
-  }, {})
+  }, Promise.resolve({}))
 }
 
 module.exports = async (dao, args) => {
@@ -78,13 +115,14 @@ module.exports = async (dao, args) => {
       isExcludePrivate: true
     }
   )
-  const tradesRes = groupByTimeframe(
+  const tradesRes = await groupByTimeframe(
     trades,
     timeframe,
     symbol,
     dateFieldName,
     symbolFieldName,
-    _calcTradesData
+    _calcTradesData,
+    dao
   )
 
   // TODO:
