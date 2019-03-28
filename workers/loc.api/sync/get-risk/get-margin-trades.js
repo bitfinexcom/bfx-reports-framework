@@ -1,5 +1,7 @@
 'use strict'
 
+const { omit } = require('lodash')
+
 const {
   getInsertableArrayObjectsFilter
 } = require('bfx-report/workers/loc.api/sync/dao/helpers')
@@ -23,9 +25,8 @@ const _checkFeeFn = (item) => {
 
 const _getCandlesSymb = (item) => item.symbol
 
-const _getTradesConvSchema = (convertTo) => {
+const _getTradesConvSchema = () => {
   return {
-    convertTo,
     symbolFieldName: 'symbol',
     dateFieldName: 'mtsCreate',
     convFields: [
@@ -36,48 +37,87 @@ const _getTradesConvSchema = (convertTo) => {
   }
 }
 
-const _calcTradesData = (
-  data = [],
-  symbolFieldName,
-  symbol = [],
-  dao
-) => {
-  return symbol.reduce(async (accum, currSymb) => {
-    const _accum = await accum
-    const _sum = await data.reduce(async (currSum, trade) => {
-      const _currSum = await currSum
-      const symb = trade[symbolFieldName]
-      const regExp = new RegExp(`${currSymb}$`)
+const _convertTradesCurr = (dao, trades = []) => {
+  const tradesConvSchema = _getTradesConvSchema()
 
-      if (!regExp.test(symb)) {
-        return _currSum
-      }
-
-      const tradesConvSchema = _getTradesConvSchema(currSymb)
-      const {
-        execAmountForex,
-        feeForex,
-        fee
-      } = await convertDataCurr(dao, trade, tradesConvSchema)
-
-      const sumWithExecAmountForex = Number.isFinite(execAmountForex)
-        ? _currSum + execAmountForex
-        : _currSum
-      const _feeForex = _checkFeeFn(trade) ? feeForex : fee
-      const sumWithFeeForex = Number.isFinite(_feeForex)
-        ? sumWithExecAmountForex + _feeForex
-        : sumWithExecAmountForex
-
-      return sumWithFeeForex
-    }, Promise.resolve(0))
-    const res = _sum ? { [currSymb]: _sum } : {}
-
-    return {
-      ..._accum,
-      ...res
-    }
-  }, Promise.resolve({}))
+  return convertDataCurr(dao, trades, tradesConvSchema)
 }
+
+const _sumDataItem = (
+  getSumFieldName,
+  isAllowedSumFieldFn = () => true
+) => {
+  return (
+    data = [],
+    symbolFieldName,
+    symbol = []
+  ) => {
+    return symbol.reduce((accum, currSymb) => {
+      const _sum = data.reduce((currSum, item) => {
+        if (!isAllowedSumFieldFn(item, currSymb)) {
+          return currSum
+        }
+
+        const sumFieldName = typeof getSumFieldName === 'function'
+          ? getSumFieldName(item, )
+          : getSumFieldName
+
+        return currSum + item[sumFieldName]
+      }, 0)
+      const res = _sum ? { [currSymb]: _sum } : {}
+
+      return {
+        ...accum,
+        ...res
+      }
+    }, {})
+  }
+}
+
+const _isAllowedSumTradesExecAmount = (
+  trade,
+  currSymb
+) => {
+  const regExp = new RegExp(`${currSymb}$`)
+
+  return (
+    regExp.test(trade.symbol) &&
+    Number.isFinite(trade.execAmountForex)
+  )
+}
+
+const _isAllowedSumTradesFees = (
+  trade,
+  currSymb
+) => {
+  const regExp = new RegExp(`${currSymb}$`)
+
+  return (
+    regExp.test(trade.symbol) &&
+    (
+      Number.isFinite(trade.fee) ||
+      Number.isFinite(trade.feeForex)
+    )
+  )
+}
+
+const _calcTradesExecAmount = () => _sumDataItem(
+  'execAmountForex',
+  _isAllowedSumTradesExecAmount
+)
+
+const _calcTradesFees = () => _sumDataItem(
+  (trade) => (Number.isFinite(trade.feeForex)
+    ? 'feeForex'
+    : 'fee'),
+  _isAllowedSumTradesFees
+)
+
+// TODO:
+const _calcUsedFunding = () => {}
+
+// TODO:
+const _calcPositions = () => {}
 
 module.exports = async (dao, args) => {
   const {
@@ -118,19 +158,46 @@ module.exports = async (dao, args) => {
       isExcludePrivate: true
     }
   )
-  const tradesRes = await groupByTimeframe(
-    trades,
+  const convertedTrades = await _convertTradesCurr(dao, trades)
+
+  const tradesExecAmount = await groupByTimeframe(
+    convertedTrades,
     timeframe,
     symbol,
     dateFieldName,
     symbolFieldName,
-    _calcTradesData,
+    _calcTradesExecAmount(),
     dao
   )
+  const tradesFees = await groupByTimeframe(
+    convertedTrades,
+    timeframe,
+    symbol,
+    dateFieldName,
+    symbolFieldName,
+    _calcTradesFees(),
+    dao
+  )
+  const positions = [] // TODO: now it is just mock data
+  const usedFunding = [] // TODO: now it is just mock data
+
+  // TODO:
+  // const positionsDividedByTrades = calcGroupedData(
+  //   {
+  //     positions,
+  //     tradesExecAmount
+  //   },
+  //   true,
+  //   (item) => {
+  //     const _item = omit(item, ['mts'])
+  //   }
+  // )
 
   const res = calcGroupedData(
     {
-      tradesRes
+      // positionsDividedByTrades,
+      tradesFees,
+      usedFunding
     },
     true
   )
