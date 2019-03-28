@@ -10,7 +10,10 @@ const {
   getModelsMap,
   getMethodCollMap
 } = require('../schema')
-const { groupByTimeframe } = require('./helpers')
+const {
+  groupByTimeframe,
+  calcGroupedData
+} = require('./helpers')
 
 const _checkFeeFn = (item) => {
   const regExp = new RegExp(`${item.feeCurrency}$`)
@@ -125,6 +128,12 @@ module.exports = async (dao, args) => {
     dao
   )
 
-  // TODO:
-  return tradesRes
+  const res = calcGroupedData(
+    {
+      tradesRes
+    },
+    true
+  )
+
+  return res
 }
