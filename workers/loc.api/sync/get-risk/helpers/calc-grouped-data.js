@@ -73,26 +73,35 @@ const _mergeData = (data) => {
   return orderBy(res, ['mts'], ['desc'])
 }
 
-module.exports = (data, isSubCalc) => {
+const _calcDataItem = (item = []) => {
+  const _item = Object.values(omit(item, ['mts']))
+
+  return _item.reduce((accum, curr) => {
+    Object.entries(curr).forEach(([symb, val]) => {
+      if (!Number.isFinite(val)) {
+        return
+      }
+      if (Number.isFinite(accum[symb])) {
+        accum[symb] += val
+
+        return
+      }
+
+      accum[symb] = val
+    })
+
+    return accum
+  }, {})
+}
+
+module.exports = (
+  data,
+  isSubCalc,
+  calcDataItem = _calcDataItem
+) => {
   const _data = _mergeData(data)
   return _data.map(item => {
-    const res = Object.values(omit(item, ['mts']))
-      .reduce((accum, curr) => {
-        Object.entries(curr).forEach(([symb, val]) => {
-          if (!Number.isFinite(val)) {
-            return
-          }
-          if (Number.isFinite(accum[symb])) {
-            accum[symb] += val
-
-            return
-          }
-
-          accum[symb] = val
-        })
-
-        return accum
-      }, {})
+    const res = calcDataItem(item)
 
     return {
       mts: item.mts,
