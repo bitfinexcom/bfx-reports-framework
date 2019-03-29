@@ -17,13 +17,15 @@ const {
   calcGroupedData
 } = require('./helpers')
 
-const _checkFeeFn = (item) => {
-  const regExp = new RegExp(`${item.feeCurrency}$`)
+const _isAllowedSymb = (currSymb, symbol) => {
+  const regExp = new RegExp(`${currSymb}$`)
 
-  return !regExp.test(item.symbol)
+  return regExp.test(symbol)
 }
 
-const _getCandlesSymb = (item) => item.symbol
+const _checkFeeFn = (item) => (
+  !_isAllowedSymb(item.feeCurrency, item.symbol)
+)
 
 const _getTradesConvSchema = () => {
   return {
@@ -33,7 +35,7 @@ const _getTradesConvSchema = () => {
       { inputField: 'execAmount', outputField: 'execAmountForex' },
       { inputField: 'fee', outputField: 'feeForex', checkFn: _checkFeeFn }
     ],
-    getCandlesSymbFn: _getCandlesSymb
+    getCandlesSymbFn: (item) => item.symbol
   }
 }
 
@@ -59,7 +61,7 @@ const _sumDataItem = (
         }
 
         const sumFieldName = typeof getSumFieldName === 'function'
-          ? getSumFieldName(item, )
+          ? getSumFieldName(item)
           : getSumFieldName
 
         return currSum + item[sumFieldName]
@@ -77,29 +79,29 @@ const _sumDataItem = (
 const _isAllowedSumTradesExecAmount = (
   trade,
   currSymb
-) => {
-  const regExp = new RegExp(`${currSymb}$`)
-
-  return (
-    regExp.test(trade.symbol) &&
-    Number.isFinite(trade.execAmountForex)
-  )
-}
+) => (
+  _isAllowedSymb(currSymb, trade.symbol) &&
+  Number.isFinite(trade.execAmountForex)
+)
 
 const _isAllowedSumTradesFees = (
   trade,
   currSymb
-) => {
-  const regExp = new RegExp(`${currSymb}$`)
-
-  return (
-    regExp.test(trade.symbol) &&
-    (
-      Number.isFinite(trade.fee) ||
-      Number.isFinite(trade.feeForex)
-    )
+) => (
+  _isAllowedSymb(currSymb, trade.symbol) &&
+  (
+    Number.isFinite(trade.fee) ||
+    Number.isFinite(trade.feeForex)
   )
-}
+)
+
+const _isAllowedSumPositionsHistoryMarginFunding = (
+  positionHistory,
+  currSymb
+) => (
+  _isAllowedSymb(currSymb, positionHistory.symbol) &&
+  Number.isFinite(positionHistory.marginFunding)
+)
 
 const _calcTradesExecAmount = () => _sumDataItem(
   'execAmountForex',
@@ -113,11 +115,69 @@ const _calcTradesFees = () => _sumDataItem(
   _isAllowedSumTradesFees
 )
 
-// TODO:
-const _calcUsedFunding = () => {}
+const _calcUsedFunding = () => _sumDataItem(
+  'marginFunding',
+  _isAllowedSumPositionsHistoryMarginFunding
+)
 
-// TODO:
-const _calcPositions = () => {}
+const _calcPositions = (
+  data = [],
+  symbolFieldName,
+  symbol = []
+) => {
+  if (
+    !Array.isArray(data) ||
+    data.length === 0
+  ) {
+    return {}
+  }
+
+  return symbol.reduce((accum, currSymb) => {
+    const basePriceItem = data.reverse().find(({ basePrice, symbol }) => (
+      _isAllowedSymb(currSymb, symbol) &&
+      Number.isFinite(basePrice)
+    ))
+    const closePriceItem = data.find(({ closePrice, symbol }) => (
+      _isAllowedSymb(currSymb, symbol) &&
+      Number.isFinite(closePrice)
+    ))
+    const { basePrice } = { ...basePriceItem }
+    const { closePrice } = { ...closePriceItem }
+
+    const res = (
+      Number.isFinite(basePrice) &&
+      Number.isFinite(closePrice)
+    )
+      ? { [currSymb]: basePrice - closePrice }
+      : {}
+
+    return {
+      ...accum,
+      ...res
+    }
+  }, {})
+}
+
+const _dividePositionsByTrades = (item) => {
+  const _item = omit({ ...item }, ['mts'])
+
+  return Object.entries({ ..._item.positions }).reduce((
+    accum,
+    [symb, position]
+  ) => {
+    const tradeExecAmount = ({ ..._item.tradesExecAmount })[symb]
+
+    if (
+      Number.isFinite(position) &&
+      Number.isFinite(tradeExecAmount) &&
+      tradeExecAmount !== 0
+    ) {
+      accum[symb] = position / tradeExecAmount
+    }
+
+    return accum
+  }, {})
+}
 
 module.exports = async (dao, args) => {
   const {
@@ -130,15 +190,32 @@ module.exports = async (dao, args) => {
       end
     } = {}
   } = { ...args }
-  const tradesModel = getModelsMap().get(ALLOWED_COLLS.TRADES)
-  const tradesMethodColl = getMethodCollMap().get('_getTrades')
+  const tradesModel = getModelsMap()
+    .get(ALLOWED_COLLS.TRADES)
+  const positionsHistoryModel = getModelsMap()
+    .get(ALLOWED_COLLS.POSITIONS_HISTORY)
+  const tradesMethodColl = getMethodCollMap()
+    .get('_getTrades')
+  const positionsHistoryMethodColl = getMethodCollMap()
+    .get('_getPositionsHistory')
   const {
-    dateFieldName,
-    symbolFieldName
+    dateFieldName: tradesDateFieldName,
+    symbolFieldName: tradesSymbolFieldName
+  } = tradesMethodColl
+  const {
+    dateFieldName: positionsHistoryDateFieldName,
+    symbolFieldName: positionsHistorySymbolFieldName
   } = tradesMethodColl
 
-  const baseFilter = getInsertableArrayObjectsFilter(
+  const tradesBaseFilter = getInsertableArrayObjectsFilter(
     tradesMethodColl,
+    {
+      start,
+      end
+    }
+  )
+  const positionsHistoryBaseFilter = getInsertableArrayObjectsFilter(
+    positionsHistoryMethodColl,
     {
       start,
       end
@@ -149,7 +226,7 @@ module.exports = async (dao, args) => {
     ALLOWED_COLLS.TRADES,
     {
       filter: {
-        ...baseFilter,
+        ...tradesBaseFilter,
         user_id
       },
       sort: [['mtsCreate', -1]],
@@ -160,12 +237,26 @@ module.exports = async (dao, args) => {
   )
   const convertedTrades = await _convertTradesCurr(dao, trades)
 
+  const positionsHistory = await dao.getElemsInCollBy(
+    ALLOWED_COLLS.POSITIONS_HISTORY,
+    {
+      filter: {
+        ...positionsHistoryBaseFilter,
+        user_id
+      },
+      sort: [['mtsUpdate', -1]],
+      projection: positionsHistoryModel,
+      exclude: ['user_id'],
+      isExcludePrivate: true
+    }
+  )
+
   const tradesExecAmount = await groupByTimeframe(
     convertedTrades,
     timeframe,
     symbol,
-    dateFieldName,
-    symbolFieldName,
+    tradesDateFieldName,
+    tradesSymbolFieldName,
     _calcTradesExecAmount(),
     dao
   )
@@ -173,29 +264,42 @@ module.exports = async (dao, args) => {
     convertedTrades,
     timeframe,
     symbol,
-    dateFieldName,
-    symbolFieldName,
+    tradesDateFieldName,
+    tradesSymbolFieldName,
     _calcTradesFees(),
     dao
   )
-  const positions = [] // TODO: now it is just mock data
-  const usedFunding = [] // TODO: now it is just mock data
+  const positions = await groupByTimeframe(
+    positionsHistory,
+    timeframe,
+    symbol,
+    positionsHistoryDateFieldName,
+    positionsHistorySymbolFieldName,
+    _calcPositions,
+    dao
+  )
+  const usedFunding = await groupByTimeframe(
+    positionsHistory,
+    timeframe,
+    symbol,
+    positionsHistoryDateFieldName,
+    positionsHistorySymbolFieldName,
+    _calcUsedFunding(),
+    dao
+  )
 
-  // TODO:
-  // const positionsDividedByTrades = calcGroupedData(
-  //   {
-  //     positions,
-  //     tradesExecAmount
-  //   },
-  //   true,
-  //   (item) => {
-  //     const _item = omit(item, ['mts'])
-  //   }
-  // )
+  const positionsDividedByTrades = calcGroupedData(
+    {
+      positions,
+      tradesExecAmount
+    },
+    true,
+    _dividePositionsByTrades
+  )
 
   const res = calcGroupedData(
     {
-      // positionsDividedByTrades,
+      positionsDividedByTrades,
       tradesFees,
       usedFunding
     },
