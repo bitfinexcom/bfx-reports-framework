@@ -22,7 +22,7 @@ module.exports = async (dao, data, convSchema) => {
     convertTo: 'USD',
     symbolFieldName: '',
     dateFieldName: '',
-    convFields: [{ inputField: '', outputField: '', isAllowedConvFieldFn: () => true }],
+    convFields: [{ inputField: '', outputField: '' }],
     getCandlesSymbFn: _getCandlesSymbFn,
     ...convSchema
   }
@@ -59,10 +59,16 @@ module.exports = async (dao, data, convSchema) => {
       continue
     }
 
+    const candlesSymb = getCandlesSymbFn(item, _convSchema)
+
+    if (!candlesSymb) {
+      continue
+    }
+
     const candle = await dao.getElemInCollBy(
       candlesSchema.name,
       {
-        [candlesSchema.symbolFieldName]: getCandlesSymbFn(item, _convSchema),
+        [candlesSchema.symbolFieldName]: candlesSymb,
         end: item[dateFieldName],
         _dateFieldName: [candlesSchema.dateFieldName]
       },
@@ -78,12 +84,11 @@ module.exports = async (dao, data, convSchema) => {
       continue
     }
 
-    convFields.forEach(({ inputField, outputField, isAllowedConvFieldFn = () => true }) => {
+    convFields.forEach(({ inputField, outputField }) => {
       if (
         _isEmptyStr(inputField) ||
         _isEmptyStr(outputField) ||
-        !Number.isFinite(item[inputField]) ||
-        !isAllowedConvFieldFn(item, inputField, outputField, candle.close)
+        !Number.isFinite(item[inputField])
       ) {
         return
       }
