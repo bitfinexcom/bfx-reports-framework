@@ -23,26 +23,78 @@ const _isAllowedSymb = (currSymb, symbol) => {
   return regExp.test(symbol)
 }
 
-const _isAllowedConvFeeFn = (item) => (
-  !_isAllowedSymb(item.feeCurrency, item.symbol)
-)
+const _getCandlesSymbForExecAmount = (
+  item,
+  {
+    convertTo,
+    symbolFieldName
+  }
+) => {
+  const isAllowedConv = (
+    Number.isFinite(item.execAmount) &&
+    item.execAmount < 0
+  )
+  const crypto = item[symbolFieldName].slice(1, 4)
 
-const _getTradesConvSchema = () => {
+  return isAllowedConv
+    ? `t${crypto}${convertTo}`
+    : false
+}
+
+const _getCandlesSymbForFee = (
+  item,
+  {
+    convertTo,
+    symbolFieldName
+  }
+) => {
+  const forexCurr = ['EUR', 'JPY', 'GBP', 'USD']
+  const isAllowedConv = forexCurr.every(curr => curr !== item[symbolFieldName])
+
+  return isAllowedConv
+    ? `t${item[symbolFieldName]}${convertTo}`
+    : false
+}
+
+const _getTradesConvSchema = (isExecAmount) => {
+  if (isExecAmount) {
+    return {
+      symbolFieldName: 'symbol',
+      dateFieldName: 'mtsCreate',
+      convFields: [{
+        inputField: 'execAmount',
+        outputField: 'execAmountUsd'
+      }],
+      getCandlesSymbFn: _getCandlesSymbForExecAmount
+    }
+  }
+
   return {
-    symbolFieldName: 'symbol',
+    symbolFieldName: 'feeCurrency',
     dateFieldName: 'mtsCreate',
-    convFields: [
-      { inputField: 'execAmount', outputField: 'execAmountForex' },
-      { inputField: 'fee', outputField: 'feeForex', isAllowedConvFieldFn: _isAllowedConvFeeFn }
-    ],
-    getCandlesSymbFn: (item) => item.symbol
+    convFields: [{
+      inputField: 'fee',
+      outputField: 'feeUsd'
+    }],
+    getCandlesSymbFn: _getCandlesSymbForFee
   }
 }
 
-const _convertTradesCurr = (dao, trades = []) => {
-  const tradesConvSchema = _getTradesConvSchema()
+const _convertTradesCurr = async (dao, trades = []) => {
+  const tradesConvSchemaForExecAmount = _getTradesConvSchema(true)
+  const tradesConvSchemaForFee = _getTradesConvSchema()
 
-  return convertDataCurr(dao, trades, tradesConvSchema)
+  const tradesWithConvExecAmount = await convertDataCurr(
+    dao,
+    trades,
+    tradesConvSchemaForExecAmount
+  )
+
+  return convertDataCurr(
+    dao,
+    tradesWithConvExecAmount,
+    tradesConvSchemaForFee
+  )
 }
 
 const _sumDataItem = (
@@ -80,19 +132,20 @@ const _isAllowedSumTradesExecAmount = (
   trade,
   currSymb
 ) => (
-  _isAllowedSymb(currSymb, trade.symbol) &&
-  Number.isFinite(trade.execAmountForex)
+  (currSymb === 'USD' && Number.isFinite(trade.execAmountUsd)) ||
+  (
+    _isAllowedSymb(currSymb, trade.symbol) &&
+    Number.isFinite(trade.execAmount) &&
+    trade.execAmount > 0
+  )
 )
 
 const _isAllowedSumTradesFees = (
   trade,
   currSymb
 ) => (
-  _isAllowedSymb(currSymb, trade.symbol) &&
-  (
-    Number.isFinite(trade.fee) ||
-    Number.isFinite(trade.feeForex)
-  )
+  (currSymb === 'USD' && Number.isFinite(trade.feeUsd)) ||
+  (currSymb === trade.feeCurrency && Number.isFinite(trade.fee))
 )
 
 const _isAllowedSumPositionsHistoryMarginFunding = (
@@ -104,13 +157,15 @@ const _isAllowedSumPositionsHistoryMarginFunding = (
 )
 
 const _calcTradesExecAmount = () => _sumDataItem(
-  'execAmountForex',
+  (trade) => (Number.isFinite(trade.execAmountUsd)
+    ? 'execAmountUsd'
+    : 'execAmount'),
   _isAllowedSumTradesExecAmount
 )
 
 const _calcTradesFees = () => _sumDataItem(
-  (trade) => (Number.isFinite(trade.feeForex)
-    ? 'feeForex'
+  (trade) => (Number.isFinite(trade.feeUsd)
+    ? 'feeUsd'
     : 'fee'),
   _isAllowedSumTradesFees
 )
@@ -236,6 +291,7 @@ module.exports = async (dao, args) => {
     }
   )
   const convertedTrades = await _convertTradesCurr(dao, trades)
+  console.log('---convertedTrades---'.bgRed, convertedTrades)
 
   const positionsHistory = await dao.getElemsInCollBy(
     ALLOWED_COLLS.POSITIONS_HISTORY,
