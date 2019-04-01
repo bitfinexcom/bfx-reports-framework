@@ -291,7 +291,6 @@ module.exports = async (dao, args) => {
     }
   )
   const convertedTrades = await _convertTradesCurr(dao, trades)
-  console.log('---convertedTrades---'.bgRed, convertedTrades)
 
   const positionsHistory = await dao.getElemsInCollBy(
     ALLOWED_COLLS.POSITIONS_HISTORY,
