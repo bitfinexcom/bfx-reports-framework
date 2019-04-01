@@ -23,7 +23,7 @@ const _isAllowedSymb = (currSymb, symbol) => {
   return regExp.test(symbol)
 }
 
-const _checkFeeFn = (item) => (
+const _isAllowedConvFeeFn = (item) => (
   !_isAllowedSymb(item.feeCurrency, item.symbol)
 )
 
@@ -33,7 +33,7 @@ const _getTradesConvSchema = () => {
     dateFieldName: 'mtsCreate',
     convFields: [
       { inputField: 'execAmount', outputField: 'execAmountForex' },
-      { inputField: 'fee', outputField: 'feeForex', checkFn: _checkFeeFn }
+      { inputField: 'fee', outputField: 'feeForex', isAllowedConvFieldFn: _isAllowedConvFeeFn }
     ],
     getCandlesSymbFn: (item) => item.symbol
   }

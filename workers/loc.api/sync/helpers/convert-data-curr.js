@@ -22,7 +22,7 @@ module.exports = async (dao, data, convSchema) => {
     convertTo: 'USD',
     symbolFieldName: '',
     dateFieldName: '',
-    convFields: [{ inputField: '', outputField: '', checkFn: () => true }],
+    convFields: [{ inputField: '', outputField: '', isAllowedConvFieldFn: () => true }],
     getCandlesSymbFn: _getCandlesSymbFn,
     ...convSchema
   }
@@ -78,12 +78,12 @@ module.exports = async (dao, data, convSchema) => {
       continue
     }
 
-    convFields.forEach(({ inputField, outputField, checkFn = () => true }) => {
+    convFields.forEach(({ inputField, outputField, isAllowedConvFieldFn = () => true }) => {
       if (
         _isEmptyStr(inputField) ||
         _isEmptyStr(outputField) ||
         !Number.isFinite(item[inputField]) ||
-        !checkFn(item, inputField, outputField, candle.close)
+        !isAllowedConvFieldFn(item, inputField, outputField, candle.close)
       ) {
         return
       }
