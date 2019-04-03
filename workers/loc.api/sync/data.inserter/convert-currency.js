@@ -1,6 +1,6 @@
 'use strict'
 
-const { getMethodCollMap } = require('../schema')
+const { convertDataCurr } = require('../helpers')
 const ALLOWED_COLLS = require('../allowed.colls')
 
 const _getConvSchema = () => {
@@ -42,7 +42,6 @@ module.exports = async ({
     return
   }
 
-  const candlesSchema = getMethodCollMap().get('_getCandles')
   const convSchema = _getConvSchema()
 
   for (const [collName, schema] of convSchema) {
@@ -71,39 +70,18 @@ module.exports = async ({
         break
       }
 
-      for (const item of elems) {
-        const candle = await dao.getElemInCollBy(
-          candlesSchema.name,
-          {
-            [candlesSchema.symbolFieldName]: `t${item[schema.symbolFieldName]}${convertTo}`,
-            end: item[schema.dateFieldName],
-            _dateFieldName: [candlesSchema.dateFieldName]
-          },
-          candlesSchema.sort
-        )
-
-        if (
-          !candle ||
-          typeof candle !== 'object' ||
-          !candle.close ||
-          !Number.isFinite(candle.close)
-        ) {
-          continue
+      const convElems = await convertDataCurr(
+        dao,
+        elems,
+        {
+          convertTo,
+          ...schema
         }
-
-        schema.convFields.forEach(({ inputField, outputField }) => {
-          if (
-            item[inputField] &&
-            Number.isFinite(item[inputField])
-          ) {
-            item[outputField] = item[inputField] * candle.close
-          }
-        })
-      }
+      )
 
       await dao.updateElemsInCollBy(
         collName,
-        elems,
+        convElems,
         ['_id'],
         schema.convFields.map(({ outputField }) => outputField)
       )
