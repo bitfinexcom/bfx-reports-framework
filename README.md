@@ -1,4 +1,22 @@
-# bfx-facs-reports-framework
+# Bfx Reports Framework
+
+## Description
+
+Bfx Reports Framework is a Reactjs and Nodejs open source framework with License Apache 2.0 for Bitfinex and Ethfinex users that can be used to build financial Reports.
+When running the software the result is similar to what is hosted on https://www.bitfinex.com/reports
+Including main structures and libraries gives the possibility for developers to create their personalized reports.
+
+Bfx Reports Framework can be run by its own, without need of adding code, it already includes some exiting features not included on what is hosted on website.
+
+### Included Features
+- All reports and tools from https://www.bitfinex.com/reports
+- Possibility to work without a connection to internet.
+- All ledgers and wallet values expressed in USD or other Forex currency
+
+### Composition
+- https://github.com/bitfinexcom/bfx-report-ui UI components
+- https://github.com/bitfinexcom/bfx-report-express Express server
+- https://github.com/bitfinexcom/bfx-report Base from where back-end service extends from
 
 ## Setup
 
@@ -7,36 +25,15 @@
 - Clone Github repository and install projects dependencies :
 
 ```console
-git clone https://github.com/bitfinexcom/bfx-facs-reports-framework.git
+git clone https://github.com/bitfinexcom/bfx-reports-framework.git
 cd bfx-facs-reports-framework
-npm install
+node init.sh
 ```
 
 ### Configure service
 
-- As to configure the service copy the json.example files from config folder into new ones. Open a console on projects folder a copy the following codes :
-
-```console
-cp config/common.json.example config/common.json
-cp config/service.report.json.example config/service.report.json
-cp config/schedule.json.example config/schedule.json
-cp config/facs/grc.config.json.example config/facs/grc.config.json
-```
-
-- To set grenache client for express, edit common.json. If running locally, leave actual values skipping this step.
-
-```console
-vim config/common.json
-## set grenacheClient value
-```
-
-- To change the bitfinex api to connect to, edit `resUrl` in common.json. If you want to conect to main bitfinex api, skip this step, as this value is set by default.
-
-```console
-vim config/service.report.json
-## set restUrl value
-## set company value, example: ( bitfinex / ethfinex / eosfinex ) or leave it blank for general information
-```
+When running `node init.sh` configuration is done automatically.
+As to check instructions of how to configure each component, visit the git repositories of the components listed above.
 
 ## Other Requirements
 
@@ -48,6 +45,12 @@ vim config/service.report.json
 npm i -g grenache-grape
 ```
 
+## Run
+
+As to run the software, is needed to run the network and each component separately.
+
+### Run grenache network
+
 - Run two Grapes
 
 ```console
@@ -55,21 +58,28 @@ grape --dp 20001 --aph 30001 --bn '127.0.0.1:20002'
 grape --dp 20002 --aph 40001 --bn '127.0.0.1:20001'
 ```
 
-## Run
+### Run back-end service
 
-### Production environment
-
-- For production environment, run the worker in the console:
+- From `bfx-reports-framework` folder, run:
 
 ```console
 npm run start
 ```
-### Development environment
 
-- For development environment, run the worker in the console:
+### Run express service
+
+- From `bfx-reports-framework/bfx-report-ui/bfx-report-express` folder, run:
 
 ```console
-npm run startDev
+npm run start
+```
+
+### Run UI
+
+- From `bfx-reports-framework/bfx-report-ui` folder, run:
+
+```console
+npm run start
 ```
 
 
