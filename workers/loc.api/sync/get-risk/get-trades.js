@@ -11,7 +11,8 @@ const {
 } = require('../schema')
 const {
   groupByTimeframe,
-  calcGroupedData
+  calcGroupedData,
+  getMtsGroupedByTimeframe
 } = require('./helpers')
 
 const _getLastCandleInTimeframe = (
