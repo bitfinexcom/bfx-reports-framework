@@ -38,10 +38,16 @@ backendFolder="$PWD"
 
 
 git submodule sync
+git submodule update --init --recursive
+git pull --recurse-submodules
+git submodule update --remote
 npm i
 
 cd $frontendFolder
 git submodule sync
+git submodule update --init --recursive
+git pull --recurse-submodules
+git submodule update --remote
 npm i
 
 if [ $isDevEnv != 0 ]; then
