@@ -46,19 +46,72 @@ const _getLastCandleInTimeframe = (
   }, {})
 }
 
-// TODO:
+const _sumObjField = (
+  obj = {},
+  symb,
+  fieldName,
+  val
+) => {
+  const res = (
+    obj[symb] &&
+    typeof obj[symb] === 'object' &&
+    Number.isFinite(obj[symb][fieldName])
+  )
+    ? obj[symb][fieldName] + val
+    : val
+
+  return {
+    ...obj[symb],
+    [fieldName]: res
+  }
+}
+
 const _calcTradesInTimeframe = (
   data = [],
-  symbolFieldName,
-  symbol = []
+  symbolFieldName
 ) => {
   return data.reduce((accum, curr) => {
-    const res = {}
-
-    return {
-      ...accum,
-      ...res
+    if (
+      !curr ||
+      typeof curr !== 'object' ||
+      typeof curr[symbolFieldName] !== 'string' ||
+      curr[symbolFieldName].length !== 7 ||
+      typeof curr.feeCurrency !== 'string'
+    ) {
+      return accum
     }
+
+    const cryptoSymb = curr[symbolFieldName].slice(1, 4)
+    const forexSymb = curr[symbolFieldName].slice(4, 7)
+    const feeSymb = curr.feeCurrency
+
+    if (Number.isFinite(curr.execAmount)) {
+      accum[cryptoSymb] = _sumObjField(
+        accum,
+        cryptoSymb,
+        'execAmount',
+        curr.execAmount
+      )
+
+      if (Number.isFinite(curr.execPrice)) {
+        accum[forexSymb] = _sumObjField(
+          accum,
+          forexSymb,
+          'execAmount',
+          curr.execAmount * curr.execPrice
+        )
+      }
+    }
+    if (Number.isFinite(curr.fee)) {
+      accum[feeSymb] = _sumObjField(
+        accum,
+        feeSymb,
+        'fee',
+        curr.fee
+      )
+    }
+
+    return { ...accum }
   }, {})
 }
 
