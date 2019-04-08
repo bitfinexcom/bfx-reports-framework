@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
@@ -68,6 +68,8 @@
     }
   },
   "scripts": {
+    "init": "./init.sh",
+    "initDev": "./init.sh -d",
     "start": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startDev": "nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startServDev": "better-npm-run start:serv",
