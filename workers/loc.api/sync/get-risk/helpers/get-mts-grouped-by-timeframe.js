@@ -24,7 +24,12 @@ module.exports = (
       break
     }
 
-    res.unshift({ mts: currMoment.valueOf() })
+    const mts = currMoment.valueOf()
+
+    res.unshift({
+      mts,
+      vals: { mts }
+    })
 
     if (timeframe === 'day') {
       currMoment.add(1, 'days')
