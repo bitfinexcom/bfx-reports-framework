@@ -37,7 +37,7 @@ const _calcData = (
   }, {})
 }
 
-module.exports = async (dao, args) => {
+module.exports = async ({ dao }, args) => {
   const {
     // eslint-disable-next-line camelcase
     auth: { _id: user_id },
