@@ -117,7 +117,24 @@ const _calcTradesInTimeframe = (
 }
 
 // TODO:
-module.exports = async (dao, args) => {
+const _calcTrades = (symbol, wallets) => {
+  return (item, i, arr, accum) => {
+  }
+}
+
+const _getOldestMtsFromWallets = (wallets, start) => {
+  return wallets.reduce((mts, wallet) => {
+    const { mtsUpdate } = { ...wallet }
+
+    return mtsUpdate > mts
+      ? mtsUpdate
+      : mts
+  }, start)
+}
+
+// TODO:
+module.exports = async (rService, args) => {
+  const { dao } = rService
   const {
     // eslint-disable-next-line camelcase
     auth: { _id: user_id },
@@ -145,17 +162,24 @@ module.exports = async (dao, args) => {
     symbolFieldName: candlesSymbolFieldName
   } = candlesMethodColl
 
+  const wallets = await rService.getWallets(null, {
+    auth: { ...args.auth },
+    params: { end: start }
+  })
+  const exWallets = wallets.filter(w => w.type === 'exchange')
+  const oldestMtsFromWallets = _getOldestMtsFromWallets(exWallets, start)
+
   const tradesBaseFilter = getInsertableArrayObjectsFilter(
     tradesMethodColl,
     {
-      start,
+      oldestMtsFromWallets,
       end
     }
   )
   const candlesBaseFilter = getInsertableArrayObjectsFilter(
     candlesMethodColl,
     {
-      start,
+      oldestMtsFromWallets,
       end
     }
   )
@@ -202,6 +226,22 @@ module.exports = async (dao, args) => {
     _calcTradesInTimeframe,
     dao
   )
+  const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
+    oldestMtsFromWallets,
+    end,
+    timeframe
+  )
 
-  return null
+  const res = calcGroupedData(
+    {
+      candlesGroupedByTimeframe,
+      tradesGroupedByTimeframe,
+      mtsGroupedByTimeframe
+    },
+    true,
+    _calcTrades(symbol, exWallets),
+    true
+  )
+
+  return res
 }
