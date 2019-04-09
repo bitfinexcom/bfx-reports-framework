@@ -94,18 +94,46 @@ const _calcDataItem = (item = []) => {
   }, {})
 }
 
-module.exports = (
-  data,
+const _getReducer = (
   isSubCalc,
-  calcDataItem = _calcDataItem
+  isReverse,
+  calcDataItem
 ) => {
-  const _data = _mergeData(data)
-  return _data.map(item => {
-    const res = calcDataItem(item)
-
-    return {
+  return (accum, item, i, arr) => {
+    const res = calcDataItem(item, i, arr, accum)
+    const data = {
       mts: item.mts,
       ...(isSubCalc ? { vals: { ...res } } : res)
     }
-  })
+
+    if (isReverse) {
+      accum.unshift(data)
+
+      return accum
+    }
+
+    accum.push(data)
+
+    return accum
+  }
+}
+
+module.exports = (
+  data,
+  isSubCalc,
+  calcDataItem = _calcDataItem,
+  isReverse
+) => {
+  const _data = _mergeData(data)
+  const reducer = _getReducer(
+    isSubCalc,
+    isReverse,
+    calcDataItem
+  )
+
+  if (isReverse) {
+    return _data.reduceRight(reducer, [])
+  }
+
+  return _data.reduce(reducer, [])
 }
