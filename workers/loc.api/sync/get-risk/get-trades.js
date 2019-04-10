@@ -48,21 +48,17 @@ const _getLastCandleInTimeframe = (
 }
 
 const _sumObjField = (
-  obj = {},
-  symb,
+  obj,
   fieldName,
   val
 ) => {
-  const res = (
-    obj[symb] &&
-    typeof obj[symb] === 'object' &&
-    Number.isFinite(obj[symb][fieldName])
-  )
-    ? obj[symb][fieldName] + val
+  const _obj = { ...obj }
+  const res = Number.isFinite(_obj[fieldName])
+    ? _obj[fieldName] + val
     : val
 
   return {
-    ...obj[symb],
+    ..._obj,
     [fieldName]: res
   }
 }
@@ -88,16 +84,14 @@ const _calcTradesInTimeframe = (
 
     if (Number.isFinite(curr.execAmount)) {
       accum[cryptoSymb] = _sumObjField(
-        accum,
-        cryptoSymb,
+        accum[cryptoSymb],
         'execAmount',
         curr.execAmount
       )
 
       if (Number.isFinite(curr.execPrice)) {
         accum[forexSymb] = _sumObjField(
-          accum,
-          forexSymb,
+          accum[forexSymb],
           'execAmount',
           curr.execAmount * curr.execPrice
         )
@@ -105,8 +99,7 @@ const _calcTradesInTimeframe = (
     }
     if (Number.isFinite(curr.fee)) {
       accum[feeSymb] = _sumObjField(
-        accum,
-        feeSymb,
+        accum[feeSymb],
         'fee',
         curr.fee
       )
@@ -116,9 +109,126 @@ const _calcTradesInTimeframe = (
   }, {})
 }
 
-// TODO:
-const _calcTrades = (symbol, wallets) => {
-  return (item, i, arr, accum) => {
+const _isCryptoSymb = (symbs = [], currSymb) => {
+  return (
+    Array.isArray(symbs) &&
+    symbs.every(symb => symb !== currSymb)
+  )
+}
+
+const _getStartSymbBalancesFromWallets = (wallets) => {
+  return wallets.reduce((accum, wallet) => {
+    const { currency, balance } = { ...wallet }
+    const res = {}
+
+    if (
+      typeof currency === 'string' &&
+      Number.isFinite(balance)
+    ) {
+      res[currency] = balance
+    }
+
+    return {
+      ...accum,
+      ...res
+    }
+  }, {})
+}
+
+const _getSymbBalances = (
+  tradesGroupedByTimeframe = {},
+  prevSymbBalances
+) => {
+  const trades = Object.entries(tradesGroupedByTimeframe)
+
+  return trades.reduce((accum, [symb, trade]) => {
+    const { execAmount, fee } = { ...trade }
+    const res = {}
+
+    if (Number.isFinite(accum[symb])) {
+      const _execAmount = Number.isFinite(execAmount)
+        ? execAmount
+        : 0
+      const _fee = Number.isFinite(fee)
+        ? fee
+        : 0
+
+      res[symb] = accum[symb] + _execAmount + _fee
+    }
+
+    return {
+      ...accum,
+      ...res
+    }
+  }, prevSymbBalances)
+}
+
+const _searchLastCandleBySymb = (candles, symb) => {
+  const candle = {
+    ...candles.find(c => Number.isFinite(c[symb]))
+  }
+
+  return candle[symb]
+}
+
+const _calcTrades = (symbs, wallets) => {
+  const candles = []
+  let resGroupedBySymb = _getStartSymbBalancesFromWallets(
+    wallets
+  )
+
+  return (item, i) => {
+    const {
+      tradesGroupedByTimeframe,
+      candlesGroupedByTimeframe
+    } = { ...item }
+
+    if (
+      candlesGroupedByTimeframe &&
+      typeof candlesGroupedByTimeframe === 'object' &&
+      Object.keys(candlesGroupedByTimeframe) > 0
+    ) {
+      candles.unshift(candlesGroupedByTimeframe)
+    }
+
+    if (i !== 0) {
+      resGroupedBySymb = _getSymbBalances(
+        tradesGroupedByTimeframe,
+        resGroupedBySymb
+      )
+    }
+
+    const arr = Object.entries(resGroupedBySymb)
+
+    return arr.reduce((accum, [symb, val]) => {
+      if (_isCryptoSymb(symbs, symb)) {
+        const candle = _searchLastCandleBySymb(
+          candles,
+          symb
+        )
+
+        if (!Number.isFinite(candle)) {
+          return { ...accum }
+        }
+
+        const _cryptoInUsd = val * candle
+        const _val = Number.isFinite(accum.USD)
+          ? _cryptoInUsd + accum.USD
+          : _cryptoInUsd
+
+        return {
+          ...accum,
+          USD: _val
+        }
+      }
+
+      return {
+        ...accum,
+        [symb]: Number.isFinite(accum[symb])
+          ? accum[symb] + val
+          : val
+      }
+    }, {})
   }
 }
 
@@ -132,7 +242,6 @@ const _getOldestMtsFromWallets = (wallets, start) => {
   }, start)
 }
 
-// TODO:
 module.exports = async (rService, args) => {
   const { dao } = rService
   const {
@@ -166,8 +275,12 @@ module.exports = async (rService, args) => {
     auth: { ...args.auth },
     params: { end: start }
   })
+  // TODO: need to sum all types of wallets
   const exWallets = wallets.filter(w => w.type === 'exchange')
-  const oldestMtsFromWallets = _getOldestMtsFromWallets(exWallets, start)
+  const oldestMtsFromWallets = _getOldestMtsFromWallets(
+    exWallets,
+    start
+  )
 
   const tradesBaseFilter = getInsertableArrayObjectsFilter(
     tradesMethodColl,
