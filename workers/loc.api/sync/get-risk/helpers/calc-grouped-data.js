@@ -101,6 +101,15 @@ const _getReducer = (
 ) => {
   return (accum, item, i, arr) => {
     const res = calcDataItem(item, i, arr, accum)
+
+    if (
+      !res ||
+      typeof res !== 'object' ||
+      Object.keys(res).length === 0
+    ) {
+      return accum
+    }
+
     const data = {
       mts: item.mts,
       ...(isSubCalc ? { vals: { ...res } } : res)
