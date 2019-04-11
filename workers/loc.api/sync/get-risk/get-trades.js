@@ -1,5 +1,7 @@
 'use strict'
 
+const { min, max } = require('lodash')
+
 const {
   getInsertableArrayObjectsFilter
 } = require('bfx-report/workers/loc.api/sync/dao/helpers')
@@ -119,18 +121,23 @@ const _isCryptoSymb = (symbs = [], currSymb) => {
 const _getStartSymbBalancesFromWallets = (wallets) => {
   return wallets.reduce((accum, wallet) => {
     const { currency, balance } = { ...wallet }
-    const res = {}
 
     if (
-      typeof currency === 'string' &&
-      Number.isFinite(balance)
+      typeof currency !== 'string' ||
+      !Number.isFinite(balance)
     ) {
-      res[currency] = balance
+      return accum
+    }
+    if (Number.isFinite(accum[currency])) {
+      return {
+        ...accum,
+        [currency]: accum[currency] + balance
+      }
     }
 
     return {
       ...accum,
-      ...res
+      [currency]: balance
     }
   }, {})
 }
@@ -233,13 +240,13 @@ const _calcTrades = (symbs, wallets) => {
 }
 
 const _getOldestMtsFromWallets = (wallets, start) => {
-  return wallets.reduce((mts, wallet) => {
+  const _mts = wallets.reduce((mts, wallet) => {
     const { mtsUpdate } = { ...wallet }
 
-    return mtsUpdate > mts
-      ? mtsUpdate
-      : mts
-  }, start)
+    return min([mts, mtsUpdate])
+  }, null)
+
+  return max([_mts, start])
 }
 
 module.exports = async (rService, args) => {
@@ -275,10 +282,8 @@ module.exports = async (rService, args) => {
     auth: { ...args.auth },
     params: { end: start }
   })
-  // TODO: need to sum all types of wallets
-  const exWallets = wallets.filter(w => w.type === 'exchange')
   const oldestMtsFromWallets = _getOldestMtsFromWallets(
-    exWallets,
+    wallets,
     start
   )
 
@@ -352,7 +357,7 @@ module.exports = async (rService, args) => {
       mtsGroupedByTimeframe
     },
     true,
-    _calcTrades(symbol, exWallets),
+    _calcTrades(symbol, wallets),
     true
   )
 
