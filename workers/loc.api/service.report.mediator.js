@@ -8,7 +8,8 @@ const BaseMediatorReportService = require(
 const {
   getREST,
   getDateNotMoreNow,
-  prepareResponse
+  prepareResponse,
+  getCsvStoreStatus
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   DuringSyncMethodAccessError
@@ -16,8 +17,12 @@ const {
 
 const {
   checkParams,
-  getMethodLimit
+  getMethodLimit,
+  getCsvJobData
 } = require('./helpers')
+const {
+  getRiskCsvJobData
+} = getCsvJobData
 const getRisk = require('./sync/get-risk')
 
 class MediatorReportService extends BaseMediatorReportService {
@@ -80,6 +85,30 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, res)
     } catch (err) {
       this._err(err, 'getRisk', cb)
+    }
+  }
+
+  async getMultipleCsv (space, args, cb) {
+    try {
+      const _args = { ...args, getCsvJobData }
+
+      await super.getMultipleCsv(space, _args, cb)
+    } catch (err) {
+      this._err(err, 'getMultipleCsv', cb)
+    }
+  }
+
+  async getRiskCsv (space, args, cb) {
+    try {
+      const status = await getCsvStoreStatus(this, args)
+      const jobData = await getRiskCsvJobData(this, args)
+      const processorQueue = this.ctx.lokue_processor.q
+
+      processorQueue.addJob(jobData)
+
+      cb(null, status)
+    } catch (err) {
+      this._err(err, 'getRiskCsv', cb)
     }
   }
 }

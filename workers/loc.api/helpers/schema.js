@@ -1,5 +1,11 @@
 'use strict'
 
+const { cloneDeep } = require('lodash')
+
+const {
+  paramsSchemaForCsv
+} = require('bfx-report/workers/loc.api/helpers/schema')
+
 const paramsSchemaForCandlesApi = {
   type: 'object',
   properties: {
@@ -47,6 +53,7 @@ const paramsSchemaForRiskApi = {
     skip: {
       type: 'array',
       minItems: 1,
+      maxItems: 3,
       items: {
         type: 'string',
         enum: [
@@ -60,7 +67,22 @@ const paramsSchemaForRiskApi = {
   }
 }
 
+const {
+  timezone,
+  dateFormat
+} = { ...paramsSchemaForCsv.properties }
+
+const paramsSchemaForRiskCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForRiskApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
-  paramsSchemaForRiskApi
+  paramsSchemaForRiskApi,
+  paramsSchemaForRiskCsv
 }
