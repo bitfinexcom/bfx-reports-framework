@@ -290,14 +290,14 @@ module.exports = async (rService, args) => {
   const tradesBaseFilter = getInsertableArrayObjectsFilter(
     tradesMethodColl,
     {
-      oldestMtsFromWallets,
+      start: oldestMtsFromWallets,
       end
     }
   )
   const candlesBaseFilter = getInsertableArrayObjectsFilter(
     candlesMethodColl,
     {
-      oldestMtsFromWallets,
+      start: oldestMtsFromWallets,
       end
     }
   )
