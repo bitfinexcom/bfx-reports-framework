@@ -31,14 +31,14 @@ const _getLastCandleInTimeframe = (
       typeof curr[symbolFieldName] === 'string' &&
       curr[symbolFieldName].length === 7
     ) {
-      const symb = curr[symbolFieldName].slice(1, 4)
-      const isUsd = curr[symbolFieldName].slice(4, 7)
+      const cryptoSymb = curr[symbolFieldName].slice(1, 4)
+      const isUsd = curr[symbolFieldName].slice(4, 7) === 'USD'
 
       if (
         isUsd &&
-        Object.keys(accum).every(s => s !== symb)
+        Object.keys(accum).every(s => s !== cryptoSymb)
       ) {
-        res[symb] = curr.close
+        res[cryptoSymb] = curr.close
       }
     }
 
