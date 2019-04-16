@@ -152,9 +152,7 @@ module.exports = new Map([
         12345,
         _ms,
         _ms
-      ]
-    ],
-    [
+      ],
       [
         'tBTCEUR',
         'CLOSED',
@@ -170,9 +168,7 @@ module.exports = new Map([
         10012345,
         _ms,
         _ms
-      ]
-    ],
-    [
+      ],
       [
         'tBTCGBP',
         'CLOSED',
@@ -188,9 +184,7 @@ module.exports = new Map([
         20012345,
         _ms,
         _ms
-      ]
-    ],
-    [
+      ],
       [
         'tBTCJPY',
         'CLOSED',
