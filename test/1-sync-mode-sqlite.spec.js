@@ -295,7 +295,11 @@ describe('Sync mode with SQLite', () => {
 
       assert.isObject(resItem)
       assert.containsAllKeys(resItem, [
-        'mts'
+        'mts',
+        'USD',
+        'EUR',
+        'GBP',
+        'JPY'
       ])
     }
   })
