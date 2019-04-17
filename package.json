@@ -6,8 +6,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "better-npm-run": "^0.1.1",
+    "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
     "lodash": "^4.17.11",
-    "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git"
+    "moment": "^2.24.0"
   },
   "devDependencies": {
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",

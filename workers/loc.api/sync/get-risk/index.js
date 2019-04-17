@@ -6,7 +6,7 @@ const getFundingPayment = require('./get-funding-payment')
 const getMovementFees = require('./get-movement-fees')
 const { calcGroupedData } = require('./helpers')
 
-const _getData = async (dao, args) => {
+const _getData = async (rService, args) => {
   const { skip } = { ...args.params }
   const map = {
     trades: getTrades,
@@ -24,14 +24,14 @@ const _getData = async (dao, args) => {
       continue
     }
 
-    res[key] = await getter(dao, args)
+    res[key] = await getter(rService, args)
   }
 
   return res
 }
 
 module.exports = async (
-  dao,
+  rService,
   {
     auth = {},
     params: {
@@ -42,7 +42,7 @@ module.exports = async (
     } = {}
   } = {}
 ) => {
-  const user = await dao.checkAuthInDb({ auth })
+  const user = await rService.dao.checkAuthInDb({ auth })
   const args = {
     auth: user,
     params: {
@@ -53,7 +53,7 @@ module.exports = async (
       skip
     }
   }
-  const data = await _getData(dao, args)
+  const data = await _getData(rService, args)
   const res = calcGroupedData(data)
 
   return res

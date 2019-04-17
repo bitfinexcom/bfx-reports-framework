@@ -1,27 +1,6 @@
 'use strict'
 
-const _getStartMtsByTimeframe = (ts, timeframe = 'year') => {
-  const date = ts instanceof Date ? ts : new Date(ts)
-  const year = date.getUTCFullYear()
-  const month = date.getUTCMonth()
-  const day = date.getUTCDate()
-
-  if (timeframe === 'day') {
-    return Date.UTC(
-      year,
-      month,
-      day
-    )
-  }
-  if (timeframe === 'month') {
-    return Date.UTC(
-      year,
-      month
-    )
-  }
-
-  return Date.UTC(year)
-}
+const getStartMtsByTimeframe = require('./get-start-mts-by-timeframe')
 
 const _getMtsDate = (obj, dateFieldName) => {
   return (
@@ -57,7 +36,7 @@ const _checkTimeframe = ({
     (
       first &&
       last &&
-      _getStartMtsByTimeframe(first, timeframe) > _getStartMtsByTimeframe(last, timeframe)
+      getStartMtsByTimeframe(first, timeframe) > getStartMtsByTimeframe(last, timeframe)
     ) ||
     isLastIter
   )
@@ -106,7 +85,7 @@ const _getGroupItem = async (
   dao
 ) => {
   const { last } = _getFirstAndLastDate(data, dateFieldName)
-  const mts = _getStartMtsByTimeframe(last, timeframe)
+  const mts = getStartMtsByTimeframe(last, timeframe)
   const vals = await calcDataFn(data, symbolFieldName, symbol, dao)
 
   return {

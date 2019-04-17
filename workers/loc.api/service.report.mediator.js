@@ -78,7 +78,7 @@ class MediatorReportService extends BaseMediatorReportService {
       checkParams(args, 'paramsSchemaForRiskApi')
 
       const res = await getRisk(
-        this.dao,
+        this,
         args
       )
 
