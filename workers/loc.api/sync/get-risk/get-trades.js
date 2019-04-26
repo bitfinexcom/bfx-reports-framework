@@ -193,7 +193,7 @@ const _calcTrades = (symbs, wallets) => {
     if (
       candlesGroupedByTimeframe &&
       typeof candlesGroupedByTimeframe === 'object' &&
-      Object.keys(candlesGroupedByTimeframe) > 0
+      Object.keys(candlesGroupedByTimeframe).length > 0
     ) {
       candles.unshift(candlesGroupedByTimeframe)
     }
