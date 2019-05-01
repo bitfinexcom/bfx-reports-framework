@@ -36,17 +36,6 @@ const _models = new Map([
     )
   ],
   [
-    ALLOWED_COLLS.WALLETS,
-    _addToModel(
-      ALLOWED_COLLS.WALLETS,
-      {
-        balance: {
-          balanceUsd: 'DECIMAL(22,12)'
-        }
-      }
-    )
-  ],
-  [
     ALLOWED_COLLS.CANDLES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
@@ -75,6 +64,33 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
       model: { ..._models.get(ALLOWED_COLLS.CANDLES) }
+    }
+  ],
+  [
+    '_getWallets',
+    {
+      ..._getMethodCollMap().get('_getWallets'),
+      model: { ..._models.get(ALLOWED_COLLS.LEDGERS) },
+      dataStructureConverter: (accum, {
+        wallet: type,
+        currency,
+        balance,
+        balanceUsd,
+        mts: mtsUpdate
+      } = {}) => {
+        accum.push({
+          type,
+          currency,
+          balance,
+          balanceUsd,
+          unsettledInterest: null,
+          balanceAvailable: null,
+          placeHolder: null,
+          mtsUpdate
+        })
+
+        return accum
+      }
     }
   ]
 ])
