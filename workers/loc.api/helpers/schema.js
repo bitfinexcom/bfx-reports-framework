@@ -67,6 +67,26 @@ const paramsSchemaForRiskApi = {
   }
 }
 
+const paramsSchemaForBalanceHistoryApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const {
   timezone,
   dateFormat
@@ -84,5 +104,6 @@ const paramsSchemaForRiskCsv = {
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
+  paramsSchemaForBalanceHistoryApi,
   paramsSchemaForRiskCsv
 }

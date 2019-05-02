@@ -6,16 +6,16 @@ const {
   getInsertableArrayObjectsFilter
 } = require('bfx-report/workers/loc.api/sync/dao/helpers')
 
-const { convertDataCurr } = require('../helpers')
+const {
+  convertDataCurr,
+  calcGroupedData
+} = require('../helpers')
 const ALLOWED_COLLS = require('../allowed.colls')
 const {
   getModelsMap,
   getMethodCollMap
 } = require('../schema')
-const {
-  groupByTimeframe,
-  calcGroupedData
-} = require('./helpers')
+const { groupByTimeframe } = require('./helpers')
 
 const _isAllowedSymb = (currSymb, symbol) => {
   const regExp = new RegExp(`${currSymb}$`)
@@ -343,7 +343,7 @@ module.exports = async ({ dao }, args) => {
     dao
   )
 
-  const positionsDividedByTrades = calcGroupedData(
+  const positionsDividedByTrades = await calcGroupedData(
     {
       positions,
       tradesExecAmount
@@ -352,7 +352,7 @@ module.exports = async ({ dao }, args) => {
     _dividePositionsByTrades
   )
 
-  const res = calcGroupedData(
+  const res = await calcGroupedData(
     {
       positionsDividedByTrades,
       tradesFees,

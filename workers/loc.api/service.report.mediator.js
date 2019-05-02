@@ -24,6 +24,7 @@ const {
   getRiskCsvJobData
 } = getCsvJobData
 const getRisk = require('./sync/get-risk')
+const getBalanceHistory = require('./sync/get-balance-history')
 
 class MediatorReportService extends BaseMediatorReportService {
   async _getCandles (args) {
@@ -85,6 +86,25 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, res)
     } catch (err) {
       this._err(err, 'getRisk', cb)
+    }
+  }
+
+  async getBalanceHistory (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForBalanceHistoryApi')
+
+      const res = await getBalanceHistory(
+        this,
+        args
+      )
+
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getBalanceHistory', cb)
     }
   }
 
