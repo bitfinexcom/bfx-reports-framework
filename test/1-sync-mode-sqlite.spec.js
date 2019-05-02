@@ -181,28 +181,34 @@ describe('Sync mode with SQLite', () => {
     assert.isArray(res.body.result.res)
     assert.isNumber(res.body.result.nextPage)
 
-    const resItem = res.body.result.res[0]
-
-    assert.isObject(resItem)
-    assert.containsAllKeys(resItem, [
-      'id',
-      'currency',
-      'mts',
-      'amount',
-      'amountUsd',
-      'balance',
-      'balanceUsd',
-      'description',
-      'wallet'
-    ])
-
     const mockCandle = getMockData('candles')[0]
     const close = mockCandle[2]
 
-    assert.isNumber(resItem.amountUsd)
-    assert.isNumber(resItem.balanceUsd)
-    assert.strictEqual(resItem.amountUsd, resItem.amount * close)
-    assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
+    res.body.result.res.forEach(resItem => {
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'id',
+        'currency',
+        'mts',
+        'amount',
+        'amountUsd',
+        'balance',
+        'balanceUsd',
+        'description',
+        'wallet'
+      ])
+
+      if (
+        ['USD', 'EUR', 'GBP', 'JPY'].every(symb => (
+          symb !== resItem.currency
+        ))
+      ) {
+        assert.isNumber(resItem.amountUsd)
+        assert.isNumber(resItem.balanceUsd)
+        assert.strictEqual(resItem.amountUsd, resItem.amount * close)
+        assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
+      }
+    })
   })
 
   it('it should be successfully performed by the getWallets method', async function () {
@@ -226,25 +232,31 @@ describe('Sync mode with SQLite', () => {
     assert.propertyVal(res.body, 'id', 5)
     assert.isArray(res.body.result)
 
-    const resItem = res.body.result[0]
-
-    assert.isObject(resItem)
-    assert.containsAllKeys(resItem, [
-      'type',
-      'currency',
-      'balance',
-      'balanceUsd',
-      'unsettledInterest',
-      'balanceAvailable',
-      'placeHolder',
-      'mtsUpdate'
-    ])
-
     const mockCandle = getMockData('candles')[0]
     const close = mockCandle[2]
 
-    assert.isNumber(resItem.balanceUsd)
-    assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
+    res.body.result.forEach(resItem => {
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'type',
+        'currency',
+        'balance',
+        'balanceUsd',
+        'unsettledInterest',
+        'balanceAvailable',
+        'placeHolder',
+        'mtsUpdate'
+      ])
+
+      if (
+        ['USD', 'EUR', 'GBP', 'JPY'].every(symb => (
+          symb !== resItem.currency
+        ))
+      ) {
+        assert.isNumber(resItem.balanceUsd)
+        assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
+      }
+    })
   })
 
   it('it should be successfully performed by the getRisk method', async function () {
@@ -259,7 +271,7 @@ describe('Sync mode with SQLite', () => {
       ['marginTrades', 'fundingPayment', 'movementFees']
     ]
     const paramsArr = Array(timeframeArr.length * skipArr.length)
-      .fill({ start: 0, end })
+      .fill({ start, end })
       .map((item, i) => {
         const timeframeIndex = i % timeframeArr.length
         const skipIndex = i % skipArr.length

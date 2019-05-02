@@ -32,6 +32,28 @@ module.exports = new Map([
         'Margin Funding Payment on wallet funding'
       ],
       [
+        12346,
+        'BTC',
+        null,
+        _ms,
+        null,
+        -0.00001,
+        5.555555,
+        null,
+        'Transfer of 123 BTC from wallet Trading to Deposit on wallet exchange'
+      ],
+      [
+        12347,
+        'BTC',
+        null,
+        _ms,
+        null,
+        -0.00001,
+        5.555555,
+        null,
+        'Transfer of 123 BTC from wallet Trading to Deposit on wallet margin'
+      ],
+      [
         10012345,
         'USD',
         null,
@@ -325,56 +347,6 @@ module.exports = new Map([
         null,
         '0x754687b3cbee7cdc4b29107e325455c682dfc320ca0c4233c313263a27282760',
         null
-      ]
-    ]
-  ],
-  [
-    'wallets_hist',
-    [
-      [
-        'exchange',
-        'BTC',
-        12345.12345,
-        null,
-        null,
-        null,
-        _ms
-      ],
-      [
-        'funding',
-        'USD',
-        12345.12345,
-        null,
-        null,
-        null,
-        _ms
-      ],
-      [
-        'margin',
-        'EUR',
-        12345.12345,
-        null,
-        null,
-        null,
-        _ms
-      ],
-      [
-        'exchange',
-        'GBP',
-        12345.12345,
-        null,
-        null,
-        null,
-        _ms
-      ],
-      [
-        'funding',
-        'JPY',
-        12345.12345,
-        null,
-        null,
-        null,
-        _ms
       ]
     ]
   ]
