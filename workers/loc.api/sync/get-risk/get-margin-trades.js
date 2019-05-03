@@ -8,14 +8,14 @@ const {
 
 const {
   convertDataCurr,
-  calcGroupedData
+  calcGroupedData,
+  groupByTimeframe
 } = require('../helpers')
 const ALLOWED_COLLS = require('../allowed.colls')
 const {
   getModelsMap,
   getMethodCollMap
 } = require('../schema')
-const { groupByTimeframe } = require('./helpers')
 
 const _isAllowedSymb = (currSymb, symbol) => {
   const regExp = new RegExp(`${currSymb}$`)

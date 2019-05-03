@@ -9,7 +9,7 @@ const {
   getModelsMap,
   getMethodCollMap
 } = require('../schema')
-const { groupByTimeframe } = require('./helpers')
+const { groupByTimeframe } = require('../helpers')
 
 const _calcData = (
   data = [],

@@ -1,6 +1,6 @@
 'use strict'
 
-const { getStartMtsByTimeframe } = require('../../helpers')
+const getStartMtsByTimeframe = require('./get-start-mts-by-timeframe')
 
 const _getMtsDate = (obj, dateFieldName) => {
   return (

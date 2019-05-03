@@ -15,7 +15,7 @@ const {
   getMtsGroupedByTimeframe,
   calcGroupedData
 } = require('../helpers')
-const { groupByTimeframe } = require('./helpers')
+const { groupByTimeframe } = require('../helpers')
 
 const _getLastCandleInTimeframe = (
   data = [],
