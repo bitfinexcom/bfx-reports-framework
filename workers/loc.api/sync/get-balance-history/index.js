@@ -1,5 +1,7 @@
 'use strict'
 
+const { isEmpty } = require('lodash')
+
 const {
   calcGroupedData,
   getMtsGroupedByTimeframe,
@@ -108,9 +110,19 @@ const _getWallets = (
   )
 }
 
-// TODO: need to apply res for all timeframes from prev res
 const _getWalletsByTimeframe = () => {
+  let prevRes = {}
+
   return ({ walletsGroupedByTimeframe } = {}) => {
+    if (
+      isEmpty(walletsGroupedByTimeframe) &&
+      !isEmpty(prevRes)
+    ) {
+      return prevRes
+    }
+
+    prevRes = { ...walletsGroupedByTimeframe }
+
     return walletsGroupedByTimeframe
   }
 }
@@ -156,9 +168,9 @@ module.exports = async (
       mtsGroupedByTimeframe
     },
     false,
-    _getWalletsByTimeframe()
+    _getWalletsByTimeframe(),
+    true
   )
-  console.log('[res.length]:'.bgBlue, res.length)
 
   return res
 }
