@@ -12,10 +12,10 @@ const {
   getMethodCollMap
 } = require('../schema')
 const {
-  groupByTimeframe,
-  calcGroupedData,
-  getMtsGroupedByTimeframe
-} = require('./helpers')
+  getMtsGroupedByTimeframe,
+  calcGroupedData
+} = require('../helpers')
+const { groupByTimeframe } = require('../helpers')
 
 const _getLastCandleInTimeframe = (
   data = [],
@@ -350,7 +350,7 @@ module.exports = async (rService, args) => {
     timeframe
   )
 
-  const res = calcGroupedData(
+  const res = await calcGroupedData(
     {
       candlesGroupedByTimeframe,
       tradesGroupedByTimeframe,

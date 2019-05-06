@@ -4,7 +4,7 @@ const getTrades = require('./get-trades')
 const getMarginTrades = require('./get-margin-trades')
 const getFundingPayment = require('./get-funding-payment')
 const getMovementFees = require('./get-movement-fees')
-const { calcGroupedData } = require('./helpers')
+const { calcGroupedData } = require('../helpers')
 
 const _getData = async (rService, args) => {
   const { skip } = { ...args.params }
@@ -54,7 +54,7 @@ module.exports = async (
     }
   }
   const data = await _getData(rService, args)
-  const res = calcGroupedData(data)
+  const res = await calcGroupedData(data)
 
   return res
 }

@@ -99,8 +99,9 @@ const _getReducer = (
   isReverse,
   calcDataItem
 ) => {
-  return (accum, item, i, arr) => {
-    const res = calcDataItem(item, i, arr, accum)
+  return async (asyncAccum, item, i, arr) => {
+    const accum = await asyncAccum
+    const res = await calcDataItem(item, i, arr, accum)
 
     if (
       !res ||
@@ -139,10 +140,11 @@ module.exports = (
     isReverse,
     calcDataItem
   )
+  const initVal = Promise.resolve([])
 
   if (isReverse) {
-    return _data.reduceRight(reducer, [])
+    return _data.reduceRight(reducer, initVal)
   }
 
-  return _data.reduce(reducer, [])
+  return _data.reduce(reducer, initVal)
 }
