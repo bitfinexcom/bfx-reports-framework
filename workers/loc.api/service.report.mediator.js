@@ -21,7 +21,8 @@ const {
   getCsvJobData
 } = require('./helpers')
 const {
-  getRiskCsvJobData
+  getRiskCsvJobData,
+  getBalanceHistoryCsvJobData
 } = getCsvJobData
 const getRisk = require('./sync/get-risk')
 const getBalanceHistory = require('./sync/get-balance-history')
@@ -129,6 +130,20 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, status)
     } catch (err) {
       this._err(err, 'getRiskCsv', cb)
+    }
+  }
+
+  async getBalanceHistoryCsv (space, args, cb) {
+    try {
+      const status = await getCsvStoreStatus(this, args)
+      const jobData = await getBalanceHistoryCsvJobData(this, args)
+      const processorQueue = this.ctx.lokue_processor.q
+
+      processorQueue.addJob(jobData)
+
+      cb(null, status)
+    } catch (err) {
+      this._err(err, 'getBalanceHistoryCsv', cb)
     }
   }
 }

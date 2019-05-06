@@ -101,9 +101,19 @@ const paramsSchemaForRiskCsv = {
   }
 }
 
+const paramsSchemaForBalanceHistoryCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForBalanceHistoryApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
-  paramsSchemaForRiskCsv
+  paramsSchemaForRiskCsv,
+  paramsSchemaForBalanceHistoryCsv
 }
