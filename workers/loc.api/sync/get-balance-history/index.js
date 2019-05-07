@@ -136,9 +136,10 @@ module.exports = async (
       start = 0,
       end = Date.now()
     } = {}
-  } = {}
+  } = {},
+  isSubCalc = false,
+  symbol = ['EUR', 'JPY', 'GBP', 'USD']
 ) => {
-  const symbol = ['EUR', 'JPY', 'GBP', 'USD']
   const args = {
     auth,
     timeframe,
@@ -167,7 +168,7 @@ module.exports = async (
       walletsGroupedByTimeframe,
       mtsGroupedByTimeframe
     },
-    false,
+    isSubCalc,
     _getWalletsByTimeframe(),
     true
   )

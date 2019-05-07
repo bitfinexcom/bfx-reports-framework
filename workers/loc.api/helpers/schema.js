@@ -87,6 +87,26 @@ const paramsSchemaForBalanceHistoryApi = {
   }
 }
 
+const paramsSchemaForWinLossApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const {
   timezone,
   dateFormat
@@ -110,10 +130,21 @@ const paramsSchemaForBalanceHistoryCsv = {
   }
 }
 
+const paramsSchemaForWinLossCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForWinLossApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
+  paramsSchemaForWinLossApi,
   paramsSchemaForRiskCsv,
-  paramsSchemaForBalanceHistoryCsv
+  paramsSchemaForBalanceHistoryCsv,
+  paramsSchemaForWinLossCsv
 }
