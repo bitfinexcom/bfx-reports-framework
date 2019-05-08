@@ -5,15 +5,9 @@ const { isEmpty } = require('lodash')
 const {
   calcGroupedData,
   getMtsGroupedByTimeframe,
-  groupByTimeframe
+  groupByTimeframe,
+  isForexSymb
 } = require('../helpers')
-
-const _isForexSymb = (symbs = [], currSymb) => {
-  return (
-    Array.isArray(symbs) &&
-    symbs.some(symb => symb === currSymb)
-  )
-}
 
 const _calcWalletsInTimeframe = (
   data,
@@ -24,11 +18,11 @@ const _calcWalletsInTimeframe = (
     accum,
     { currency, balance, balanceUsd }
   ) => {
-    const isForexSymb = _isForexSymb(symbol, currency)
-    const _balance = isForexSymb
+    const _isForexSymb = isForexSymb(symbol, currency)
+    const _balance = _isForexSymb
       ? balance
       : balanceUsd
-    const symb = isForexSymb
+    const symb = _isForexSymb
       ? currency
       : 'USD'
 
