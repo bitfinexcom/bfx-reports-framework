@@ -36,6 +36,17 @@ const _models = new Map([
     )
   ],
   [
+    ALLOWED_COLLS.MOVEMENTS,
+    _addToModel(
+      ALLOWED_COLLS.MOVEMENTS,
+      {
+        amount: {
+          amountUsd: 'DECIMAL(22,12)'
+        }
+      }
+    )
+  ],
+  [
     ALLOWED_COLLS.CANDLES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
