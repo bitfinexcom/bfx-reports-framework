@@ -138,16 +138,37 @@ class DataInserter extends BaseDataInserter {
       }
     })
 
-    for (const { symbol, start } of collСonfig) {
-      const args = this._getMethodArgMap(method, {}, 1)
-      args.params = {
-        ...args.params,
+    for (const { symbol, start: _start } of collСonfig) {
+      const params = {
         timeframe: this._candlesTimeframe,
         section: this._candlesSection,
         notThrowError: true,
         notCheckNextPage: true,
         symbol
       }
+      const _argsForLastElem = this._getMethodArgMap(method, {}, 1)
+      const argsForLastElem = {
+        ..._argsForLastElem,
+        params: {
+          ..._argsForLastElem.params,
+          ...params
+        }
+      }
+      const _argsForReceivingStart = this._getMethodArgMap(
+        method,
+        {},
+        1,
+        0,
+        _start
+      )
+      const argsForReceivingStart = {
+        ..._argsForReceivingStart,
+        params: {
+          ..._argsForReceivingStart.params,
+          ...params
+        }
+      }
+
       const filter = { [symbFieldName]: symbol }
       const lastElemFromDb = await this.dao.getElemInCollBy(
         schema.name,
@@ -156,7 +177,10 @@ class DataInserter extends BaseDataInserter {
       )
       const {
         res: lastElemFromApi
-      } = await this._getDataFromApi(method, args)
+      } = await this._getDataFromApi(method, argsForLastElem)
+      const {
+        res: startElemFromApi
+      } = await this._getDataFromApi(method, argsForReceivingStart)
 
       if (
         isEmpty(lastElemFromApi) ||
@@ -169,6 +193,16 @@ class DataInserter extends BaseDataInserter {
       ) {
         continue
       }
+
+      const start = (
+        Array.isArray(startElemFromApi) &&
+        startElemFromApi[0] &&
+        typeof startElemFromApi[0] === 'object' &&
+        Number.isInteger(startElemFromApi[0][schema.dateFieldName])
+      )
+        ? startElemFromApi[0][schema.dateFieldName]
+        : _start
+
       if (isEmpty(lastElemFromDb)) {
         schema.hasNewData = true
         schema.start.push([symbol, { currStart: start }])
