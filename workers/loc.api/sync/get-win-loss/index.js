@@ -1,5 +1,7 @@
 'use strict'
 
+const moment = require('moment')
+
 const {
   getInsertableArrayObjectsFilter
 } = require('bfx-report/workers/loc.api/sync/dao/helpers')
@@ -63,7 +65,7 @@ const _getWinLossByTimeframe = (
       const movements = Number.isFinite(prevMovementsRes[symb])
         ? prevMovementsRes[symb]
         : 0
-      const res = (wallet - startWallet) + movements
+      const res = wallet - startWallet - movements
 
       return {
         ...accum,
@@ -100,6 +102,63 @@ const _calcMovements = (
         : _amount
     }
   }, {})
+}
+
+const _calcFirstWallets = (
+  data = [],
+  symbol = []
+) => {
+  const startData = symbol.reduce((accum, symb) => {
+    return {
+      ...accum,
+      [symb]: 0
+    }
+  }, {})
+
+  return data.reduce((accum, movement = {}) => {
+    const { balance, balanceUsd, currency } = { ...movement }
+    const _isForexSymb = isForexSymb(symbol, currency)
+    const _balance = _isForexSymb
+      ? balance
+      : balanceUsd
+    const symb = _isForexSymb
+      ? currency
+      : 'USD'
+
+    if (!Number.isFinite(_balance)) {
+      return { ...accum }
+    }
+
+    return {
+      ...accum,
+      [symb]: (Number.isFinite(accum[symb]))
+        ? accum[symb] + _balance
+        : _balance
+    }
+  }, startData)
+}
+
+const _shiftMtsToNextTimeframe = (
+  groupedData,
+  timeframe
+) => {
+  return groupedData.map(item => {
+    const mtsMoment = moment.utc(item.mts)
+
+    if (timeframe === 'day') {
+      mtsMoment.add(1, 'days')
+    }
+    if (timeframe === 'month') {
+      mtsMoment.add(1, 'months')
+    }
+    if (timeframe === 'year') {
+      mtsMoment.add(1, 'years')
+    }
+
+    const mts = mtsMoment.valueOf()
+
+    return { ...item, mts }
+  })
 }
 
 module.exports = async (
@@ -162,6 +221,14 @@ module.exports = async (
     _calcMovements
   )
 
+  const firstWallets = await rService.getWallets(null, {
+    auth,
+    params: { end: start }
+  })
+  const startWalletsInForex = _calcFirstWallets(
+    firstWallets,
+    symbol
+  )
   const walletsGroupedByTimeframe = await getBalanceHistory(
     { dao },
     args,
@@ -169,13 +236,7 @@ module.exports = async (
     symbol
   )
 
-  const startWalletsInForex = {
-    ...({
-      ...walletsGroupedByTimeframe[walletsGroupedByTimeframe.length - 1]
-    }).vals
-  }
-
-  const res = await calcGroupedData(
+  const groupedData = await calcGroupedData(
     {
       walletsGroupedByTimeframe,
       movementsGroupedByTimeframe
@@ -184,6 +245,14 @@ module.exports = async (
     _getWinLossByTimeframe(symbol, startWalletsInForex),
     true
   )
+  const res = _shiftMtsToNextTimeframe(
+    groupedData,
+    timeframe
+  )
+  res.push({
+    mts: start,
+    ...startWalletsInForex
+  })
 
   return res
 }
