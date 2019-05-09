@@ -125,13 +125,6 @@ module.exports = async (
     const item = data[i]
     const isLastIter = i === 0
     const nextItem = data[i - 1]
-    const resToCheck = [nextItem, ...subRes]
-    const paramsToCheck = {
-      data: resToCheck,
-      dateFieldName,
-      timeframe,
-      isLastIter
-    }
 
     if (
       item &&
@@ -141,6 +134,15 @@ module.exports = async (
     ) {
       subRes.unshift(item)
     }
+
+    const resToCheck = [nextItem, ...subRes]
+    const paramsToCheck = {
+      data: resToCheck,
+      dateFieldName,
+      timeframe,
+      isLastIter
+    }
+
     if (_isDailyTimeframe(paramsToCheck)) {
       const groupItem = await _getGroupItem(
         subRes,
