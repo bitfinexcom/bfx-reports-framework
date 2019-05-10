@@ -104,17 +104,20 @@ const _calcMovements = (
   }, {})
 }
 
-const _calcFirstWallets = (
-  data = [],
-  symbol = []
-) => {
-  const startData = symbol.reduce((accum, symb) => {
+const _getStartWallets = (symbol = []) => {
+  return symbol.reduce((accum, symb) => {
     return {
       ...accum,
       [symb]: 0
     }
   }, {})
+}
 
+const _calcFirstWallets = (
+  data = [],
+  symbol = [],
+  startWallets = {}
+) => {
   return data.reduce((accum, movement = {}) => {
     const { balance, balanceUsd, currency } = { ...movement }
     const _isForexSymb = isForexSymb(symbol, currency)
@@ -135,14 +138,18 @@ const _calcFirstWallets = (
         ? accum[symb] + _balance
         : _balance
     }
-  }, startData)
+  }, startWallets)
 }
 
 const _shiftMtsToNextTimeframe = (
   groupedData,
   timeframe
 ) => {
-  return groupedData.map(item => {
+  return groupedData.map((item, i) => {
+    if ((groupedData.length - 1) === i) {
+      return { ...item }
+    }
+
     const mtsMoment = moment.utc(item.mts)
 
     if (timeframe === 'day') {
@@ -225,9 +232,11 @@ module.exports = async (
     auth,
     params: { end: start }
   })
+  const startWallets = _getStartWallets(symbol)
   const startWalletsInForex = _calcFirstWallets(
     firstWallets,
-    symbol
+    symbol,
+    startWallets
   )
   const walletsGroupedByTimeframe = await getBalanceHistory(
     { dao },
@@ -251,7 +260,7 @@ module.exports = async (
   )
   res.push({
     mts: start,
-    ...startWalletsInForex
+    ...startWallets
   })
 
   return res
