@@ -196,11 +196,13 @@ class DataInserter extends BaseDataInserter {
 
       const start = (
         Array.isArray(startElemFromApi) &&
-        startElemFromApi[0] &&
-        typeof startElemFromApi[0] === 'object' &&
-        Number.isInteger(startElemFromApi[0][schema.dateFieldName])
+        startElemFromApi[startElemFromApi.length - 1] &&
+        typeof startElemFromApi[startElemFromApi.length - 1] === 'object' &&
+        Number.isInteger(
+          startElemFromApi[startElemFromApi.length - 1][schema.dateFieldName]
+        )
       )
-        ? startElemFromApi[0][schema.dateFieldName]
+        ? startElemFromApi[startElemFromApi.length - 1][schema.dateFieldName]
         : _start
 
       if (isEmpty(lastElemFromDb)) {
