@@ -30,6 +30,9 @@
       "after",
       "beforeEach",
       "afterEach"
+    ],
+    "ignore": [
+      "bfx-report-ui"
     ]
   },
   "nodemonConfig": {

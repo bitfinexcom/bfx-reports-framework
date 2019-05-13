@@ -22,10 +22,12 @@ const {
 } = require('./helpers')
 const {
   getRiskCsvJobData,
-  getBalanceHistoryCsvJobData
+  getBalanceHistoryCsvJobData,
+  getWinLossCsvJobData
 } = getCsvJobData
 const getRisk = require('./sync/get-risk')
 const getBalanceHistory = require('./sync/get-balance-history')
+const getWinLoss = require('./sync/get-win-loss')
 
 class MediatorReportService extends BaseMediatorReportService {
   async _getCandles (args) {
@@ -109,6 +111,25 @@ class MediatorReportService extends BaseMediatorReportService {
     }
   }
 
+  async getWinLoss (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForWinLossApi')
+
+      const res = await getWinLoss(
+        this,
+        args
+      )
+
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getWinLoss', cb)
+    }
+  }
+
   async getMultipleCsv (space, args, cb) {
     try {
       const _args = { ...args, getCsvJobData }
@@ -144,6 +165,20 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, status)
     } catch (err) {
       this._err(err, 'getBalanceHistoryCsv', cb)
+    }
+  }
+
+  async getWinLossCsv (space, args, cb) {
+    try {
+      const status = await getCsvStoreStatus(this, args)
+      const jobData = await getWinLossCsvJobData(this, args)
+      const processorQueue = this.ctx.lokue_processor.q
+
+      processorQueue.addJob(jobData)
+
+      cb(null, status)
+    } catch (err) {
+      this._err(err, 'getWinLossCsv', cb)
     }
   }
 }

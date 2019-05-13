@@ -89,6 +89,47 @@ const getCsvJobData = {
     }
 
     return jobData
+  },
+  async getWinLossCsvJobData (
+    reportService,
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForWinLossCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      reportService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getWinLoss',
+      fileNamesMap: [['getWinLoss', 'win-loss']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        USD: 'USD',
+        EUR: 'EUR',
+        GBP: 'GBP',
+        JPY: 'JPY',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
   }
 }
 
