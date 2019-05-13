@@ -40,7 +40,7 @@ const _calcWalletsInTimeframe = (
 }
 
 const _getSqlTimeframe = (timeframe) => {
-  const day = timeframe === 'day' ? '-%d' : ''
+  const day = timeframe === 'day' ? '-%m-%d' : ''
   const month = timeframe === 'month' ? '-%m' : ''
   const year = '%Y'
 
