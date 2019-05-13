@@ -239,7 +239,7 @@ module.exports = async (
     startWallets
   )
   const walletsGroupedByTimeframe = await getBalanceHistory(
-    { dao },
+    rService,
     args,
     true,
     symbol
