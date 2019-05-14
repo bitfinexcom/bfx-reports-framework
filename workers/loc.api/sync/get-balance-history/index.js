@@ -1,6 +1,7 @@
 'use strict'
 
 const { isEmpty } = require('lodash')
+const moment = require('moment')
 
 const {
   calcGroupedData,
@@ -12,11 +13,7 @@ const {
 const _calcWalletsInTimeframe = (firstWallets) => {
   let wallets = [...firstWallets]
 
-  return (
-    data,
-    symbolFieldName,
-    symbol
-  ) => {
+  return (data) => {
     const missingWallets = wallets.filter(w => (
       data.every(({ type, currency }) => (
         w.type !== type || w.currency !== currency
@@ -27,25 +24,17 @@ const _calcWalletsInTimeframe = (firstWallets) => {
 
     return wallets.reduce((
       accum,
-      { currency, balance, balanceUsd }
+      { currency, balance }
     ) => {
-      const _isForexSymb = isForexSymb(symbol, currency)
-      const _balance = _isForexSymb
-        ? balance
-        : balanceUsd
-      const symb = _isForexSymb
-        ? currency
-        : 'USD'
-
-      if (!Number.isFinite(_balance)) {
+      if (!Number.isFinite(balance)) {
         return { ...accum }
       }
 
       return {
         ...accum,
-        [symb]: (Number.isFinite(accum[symb]))
-          ? accum[symb] + _balance
-          : _balance
+        [currency]: (Number.isFinite(accum[currency]))
+          ? accum[currency] + balance
+          : balance
       }
     }, {})
   }
@@ -115,57 +104,121 @@ const _getWallets = (
   )
 }
 
-const _getWalletsByTimeframe = (firstWallets) => {
+const _getCandles = (
+  dao,
+  {
+    start = 0,
+    end = Date.now()
+  }
+) => {
+  return dao.findInCollBy(
+    '_getCandles',
+    { params: { start, end } },
+    {
+      isPublic: true,
+      schema: { maxLimit: null },
+      isExcludePrivate: false
+    }
+  )
+}
+
+const _getCandlesClosePrice = (
+  candles,
+  mts,
+  timeframe,
+  currency
+) => {
+  const symb = `t${currency}USD`
+  const mtsMoment = moment.utc(mts)
+
+  if (timeframe === 'day') {
+    mtsMoment.add(1, 'days')
+  }
+  if (timeframe === 'month') {
+    mtsMoment.add(1, 'months')
+  }
+  if (timeframe === 'year') {
+    mtsMoment.add(1, 'years')
+  }
+
+  const _mts = mtsMoment.valueOf() - 1
+
+  return candles.find(({
+    mts: cMts,
+    close,
+    _symbol
+  }) => (
+    symb === _symbol &&
+    Number.isFinite(close) &&
+    cMts <= _mts
+  ))
+}
+
+const _getWalletsByTimeframe = (
+  firstWallets,
+  candles,
+  symbol,
+  timeframe
+) => {
   let prevRes = {}
 
   return (
-    { walletsGroupedByTimeframe } = {},
+    {
+      walletsGroupedByTimeframe = {},
+      mtsGroupedByTimeframe: { mts } = {}
+    } = {},
     i,
     arr
   ) => {
     if (i === (arr.length - 1)) {
       prevRes = { ...firstWallets }
     }
-    if (
+
+    const isReturnedPrevRes = (
       isEmpty(walletsGroupedByTimeframe) &&
       !isEmpty(prevRes)
-    ) {
-      return prevRes
+    )
+    const walletsArr = isReturnedPrevRes
+      ? Object.entries(prevRes)
+      : Object.entries(walletsGroupedByTimeframe)
+    const res = walletsArr.reduce((
+      accum,
+      [currency, balance]
+    ) => {
+      const _isForexSymb = isForexSymb(symbol, currency)
+      const { close: closePrice } = _isForexSymb
+        ? {}
+        : { ..._getCandlesClosePrice(candles, mts, timeframe, currency) }
+
+      if (!_isForexSymb && !Number.isFinite(closePrice)) {
+        return { ...accum }
+      }
+
+      const _balance = _isForexSymb
+        ? balance
+        : balance * closePrice
+      const symb = _isForexSymb
+        ? currency
+        : 'USD'
+
+      if (!Number.isFinite(_balance)) {
+        return { ...accum }
+      }
+
+      return {
+        ...accum,
+        [symb]: (Number.isFinite(accum[symb]))
+          ? accum[symb] + _balance
+          : _balance
+      }
+    }, {})
+
+    if (!isReturnedPrevRes) {
+      prevRes = { ...walletsGroupedByTimeframe }
     }
 
-    prevRes = { ...walletsGroupedByTimeframe }
-
-    return walletsGroupedByTimeframe
+    return res
   }
-}
-
-const _calcFirstWallets = (
-  data = [],
-  symbol = []
-) => {
-  return data.reduce((
-    accum,
-    { currency, balance, balanceUsd }
-  ) => {
-    const _isForexSymb = isForexSymb(symbol, currency)
-    const _balance = _isForexSymb
-      ? balance
-      : balanceUsd
-    const symb = _isForexSymb
-      ? currency
-      : 'USD'
-
-    if (!Number.isFinite(_balance)) {
-      return { ...accum }
-    }
-
-    return {
-      ...accum,
-      [symb]: (Number.isFinite(accum[symb]))
-        ? accum[symb] + _balance
-        : _balance
-    }
-  }, {})
 }
 
 module.exports = async (
@@ -194,6 +247,7 @@ module.exports = async (
     params: { end: start }
   })
   const wallets = await _getWallets(dao, args)
+  const candles = await _getCandles(dao, args)
 
   const walletsGroupedByTimeframe = await groupByTimeframe(
     wallets,
@@ -209,15 +263,18 @@ module.exports = async (
     timeframe
   )
 
-  const firstWalletsInForex = _calcFirstWallets(firstWallets, symbol)
-
   const res = await calcGroupedData(
     {
       walletsGroupedByTimeframe,
       mtsGroupedByTimeframe
     },
     isSubCalc,
-    _getWalletsByTimeframe(firstWalletsInForex),
+    _getWalletsByTimeframe(
+      firstWallets,
+      candles,
+      symbol,
+      timeframe
+    ),
     true
   )
 

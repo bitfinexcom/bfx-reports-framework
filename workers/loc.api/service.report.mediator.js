@@ -21,6 +21,9 @@ const {
   getCsvJobData
 } = require('./helpers')
 const {
+  convertDataCurr
+} = require('./sync/helpers')
+const {
   getRiskCsvJobData,
   getBalanceHistoryCsvJobData,
   getWinLossCsvJobData
@@ -70,6 +73,40 @@ class MediatorReportService extends BaseMediatorReportService {
       return res
     } catch (err) {
       this._err(err, '_getCandles')
+    }
+  }
+
+  /**
+   * @override
+   */
+  async getWallets (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      const {
+        params: { end = Date.now() } = {}
+      } = { ...args }
+
+      const wallets = await super.getWallets(null, args)
+      const res = await convertDataCurr(
+        this.dao,
+        wallets,
+        {
+          convertTo: 'USD',
+          symbolFieldName: 'currency',
+          mts: end,
+          convFields: [
+            { inputField: 'balance', outputField: 'balanceUsd' }
+          ]
+        }
+      )
+
+      if (!cb) return res
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getWallets', cb)
     }
   }
 
