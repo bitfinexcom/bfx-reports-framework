@@ -86,14 +86,12 @@ const _methodCollMap = new Map([
         wallet: type,
         currency,
         balance,
-        balanceUsd,
         mts: mtsUpdate
       } = {}) => {
         accum.push({
           type,
           currency,
           balance,
-          balanceUsd,
           unsettledInterest: null,
           balanceAvailable: null,
           placeHolder: null,

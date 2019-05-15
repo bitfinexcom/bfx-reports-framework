@@ -30,6 +30,7 @@ module.exports = async (dao, data, convSchema) => {
     convertTo,
     symbolFieldName,
     dateFieldName,
+    mts,
     convFields,
     getCandlesSymbFn
   } = _convSchema
@@ -50,9 +51,7 @@ module.exports = async (dao, data, convSchema) => {
       isNotObj ||
       _isEmptyStr(convertTo) ||
       _isEmptyStr(symbolFieldName) ||
-      _isEmptyStr(dateFieldName) ||
       _isEmptyStr(item[symbolFieldName]) ||
-      !Number.isInteger(item[dateFieldName]) ||
       !Array.isArray(convFields) ||
       convFields.length === 0
     ) {
@@ -60,8 +59,14 @@ module.exports = async (dao, data, convSchema) => {
     }
 
     const candlesSymb = getCandlesSymbFn(item, _convSchema)
+    const end = Number.isInteger(mts)
+      ? mts
+      : item[dateFieldName]
 
-    if (!candlesSymb) {
+    if (
+      !candlesSymb ||
+      !Number.isInteger(end)
+    ) {
       continue
     }
 
@@ -69,7 +74,7 @@ module.exports = async (dao, data, convSchema) => {
       candlesSchema.name,
       {
         [candlesSchema.symbolFieldName]: candlesSymb,
-        end: item[dateFieldName],
+        end,
         _dateFieldName: [candlesSchema.dateFieldName]
       },
       candlesSchema.sort
