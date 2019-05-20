@@ -47,7 +47,7 @@ npm i -g grenache-grape
 
 ## Run
 
-As to run the software, is needed to run the network and each component separately.
+As to run the software, is needed to run the network and services separately.
 
 ### Run grenache network
 
@@ -58,25 +58,9 @@ grape --dp 20001 --aph 30001 --bn '127.0.0.1:20002'
 grape --dp 20002 --aph 40001 --bn '127.0.0.1:20001'
 ```
 
-### Run back-end service
+### Run all framework services
 
-- From `bfx-reports-framework` folder, run:
-
-```console
-npm run start
-```
-
-### Run express service
-
-- From `bfx-reports-framework/bfx-report-ui/bfx-report-express` folder, run:
-
-```console
-npm run start
-```
-
-### Run UI
-
-- From `bfx-reports-framework/bfx-report-ui` folder, run:
+- From main folder, run:
 
 ```console
 npm run start
