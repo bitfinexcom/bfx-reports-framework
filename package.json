@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
@@ -22,6 +22,10 @@
     "supertest": "^3.4.2",
     "standard": "^12.0.1"
   },
+  "contributors": [
+    "Paolo Ardoino <paolo@bitfinex.com>",
+    "Ezequiel Wernicke <ezequiel.wernicke@bitfinex.com>"
+  ],
   "standard": {
     "globals": [
       "describe",
@@ -69,16 +73,38 @@
       "env": {
         "NODE_ENV": "test"
       }
+    },
+    "start:back": {
+      "command": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "start:express": {
+      "command": "cd bfx-report-ui/bfx-report-express && npm run start",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "start:ui": {
+      "command": "cd bfx-report-ui && npm run start"
+    },
+    "start:all": {
+      "command": "npm run startBackEnd | npm run startExpress | npm run startUI"
     }
   },
   "scripts": {
-    "init": "./init.sh",
-    "initDev": "./init.sh -d",
-    "start": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
+    "init": "bash init.sh",
+    "initDev": "bash init.sh -d",
+    "startOld": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startDev": "nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startServDev": "better-npm-run start:serv",
     "startSimulEnv": "node node_modules/bfx-report/test/simulate/simulate-enviroment.js",
     "test": "better-npm-run test",
-    "testDev": "better-npm-run testDev"
+    "testDev": "better-npm-run testDev",
+    "startBackEnd": "better-npm-run start:back",
+    "startExpress": "better-npm-run start:express",
+    "startUI": "better-npm-run start:ui",
+    "start": "better-npm-run start:all"
   }
 }

@@ -37,14 +37,20 @@ expressFolder="$frontendFolder/bfx-report-express"
 backendFolder="$PWD"
 
 
+cd $frontendFolder
+git stash
+cd $backendFolder
+
 git submodule sync
 git submodule update --init --recursive
 git pull --recurse-submodules
 git submodule update --remote
 npm i
 
-cd $frontendFolder
+cd $expressFolder
 git submodule sync
+git stash
+cd $frontendFolder
 git submodule update --init --recursive
 git pull --recurse-submodules
 git submodule update --remote
@@ -63,6 +69,7 @@ npm i
 
 cd $backendFolder
 
+cp .env.example bfx-report-ui/.env
 cp config/schedule.json.example config/schedule.json
 cp config/common.json.example config/common.json
 cp config/service.report.json.example config/service.report.json
