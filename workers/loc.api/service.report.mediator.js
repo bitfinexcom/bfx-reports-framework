@@ -89,7 +89,8 @@ class MediatorReportService extends BaseMediatorReportService {
         params: { end = Date.now() } = {}
       } = { ...args }
 
-      const wallets = await super.getWallets(null, args)
+      const _wallets = await super.getWallets(null, args)
+      const wallets = _wallets.map(w => ({ balanceUsd: null, ...w }))
       const res = await convertDataCurr(
         this.dao,
         wallets,

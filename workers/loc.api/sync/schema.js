@@ -76,31 +76,6 @@ const _methodCollMap = new Map([
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
       model: { ..._models.get(ALLOWED_COLLS.CANDLES) }
     }
-  ],
-  [
-    '_getWallets',
-    {
-      ..._getMethodCollMap().get('_getWallets'),
-      model: { ..._models.get(ALLOWED_COLLS.LEDGERS) },
-      dataStructureConverter: (accum, {
-        wallet: type,
-        currency,
-        balance,
-        mts: mtsUpdate
-      } = {}) => {
-        accum.push({
-          type,
-          currency,
-          balance,
-          unsettledInterest: null,
-          balanceAvailable: null,
-          placeHolder: null,
-          mtsUpdate
-        })
-
-        return accum
-      }
-    }
   ]
 ])
 
