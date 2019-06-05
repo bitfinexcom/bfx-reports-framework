@@ -31,6 +31,7 @@ const {
 const getRisk = require('./sync/get-risk')
 const getBalanceHistory = require('./sync/get-balance-history')
 const getWinLoss = require('./sync/get-win-loss')
+const getAccountSnapshot = require('./sync/get-account-snapshot')
 
 class MediatorReportService extends BaseMediatorReportService {
   async _getCandles (args) {
@@ -165,6 +166,25 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, res)
     } catch (err) {
       this._err(err, 'getWinLoss', cb)
+    }
+  }
+
+  async getAccountSnapshot (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForAccountSnapshotApi')
+
+      const res = await getAccountSnapshot(
+        this,
+        args
+      )
+
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getAccountSnapshot', cb)
     }
   }
 
