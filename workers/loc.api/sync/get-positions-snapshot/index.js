@@ -93,6 +93,58 @@ const _getPositionsHistoryIds = (positionsHistory) => {
     }, [])
 }
 
+const _getPositionsWithActualPrice = async (
+  dao,
+  auth,
+  positions
+) => {
+  const res = []
+
+  for (const position of positions) {
+    const { mtsUpdate, symbol } = { ...position }
+
+    if (
+      !Number.isInteger(mtsUpdate) ||
+      typeof symbol !== 'string'
+    ) {
+      res.push({ ...position, actualPrice: null })
+
+      continue
+    }
+
+    const trades = await dao.findInCollBy(
+      '_getTrades',
+      {
+        auth,
+        params: {
+          symbol,
+          end: mtsUpdate,
+          limit: 1
+        }
+      }
+    )
+
+    if (
+      !Array.isArray(trades) ||
+      trades.length === 0 ||
+      !trades[0] ||
+      typeof trades[0] !== 'object' ||
+      !Number.isFinite(trades[0].execPrice)
+    ) {
+      res.push({ ...position, actualPrice: null })
+
+      continue
+    }
+
+    res.push({
+      ...position,
+      actualPrice: trades[0].execPrice
+    })
+  }
+
+  return res
+}
+
 // TODO:
 module.exports = async (
   rService,
@@ -148,5 +200,11 @@ module.exports = async (
     day
   )
 
-  return positions // TODO:
+  const res = await _getPositionsWithActualPrice(
+    dao,
+    auth,
+    positions
+  )
+
+  return res
 }
