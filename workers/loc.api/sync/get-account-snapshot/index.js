@@ -14,7 +14,7 @@ module.exports = async (
     date.getUTCMonth(),
     date.getUTCDate() + 1
   ) - 1
-  const _args = {
+  const walletsArgs = {
     ...args,
     params: {
       ...params,
@@ -28,7 +28,7 @@ module.exports = async (
   )
   const walletsSnapshot = await rService.getWallets(
     null,
-    _args
+    walletsArgs
   )
 
   const res = {
