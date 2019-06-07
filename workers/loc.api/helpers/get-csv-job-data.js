@@ -6,6 +6,7 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const checkParams = require('./check-params')
+const { accountSnapshotCsvWriter } = require('./csv-writer')
 
 const getCsvJobData = {
   async getRiskCsvJobData (
@@ -127,6 +128,68 @@ const getCsvJobData = {
       formatSettings: {
         mts: 'date'
       }
+    }
+
+    return jobData
+  },
+  async getAccountSnapshotCsvJobData (
+    reportService,
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForgetAccountSnapshotCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      reportService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getAccountSnapshot',
+      fileNamesMap: [['getAccountSnapshot', 'account-snapshot']],
+      args: csvArgs,
+      columnsCsv: {
+        positionsSnapshot: {
+          id: '#',
+          symbol: 'PAIR',
+          amount: 'AMOUNT',
+          basePrice: 'BASE PRICE',
+          actualPrice: 'ACTUAL PRICE',
+          pl: 'P/L',
+          plPerc: 'P/L%',
+          marginFunding: 'FUNDING COST',
+          marginFundingType: 'FUNDING TYPE',
+          status: 'STATUS',
+          mtsCreate: 'mtsCreate',
+          mtsUpdate: 'mtsUpdate'
+        },
+        walletsSnapshot: {
+          type: 'TYPE',
+          currency: 'CURRENCY',
+          balance: 'BALANCE',
+          balanceUsd: 'BALANCE USD'
+        }
+      },
+      formatSettings: {
+        positionsSnapshot: {
+          mtsUpdate: 'date'
+        },
+        walletsSnapshot: {
+          mtsUpdate: 'date',
+          currency: 'symbol'
+        }
+      },
+      csvCustomWriter: accountSnapshotCsvWriter
     }
 
     return jobData
