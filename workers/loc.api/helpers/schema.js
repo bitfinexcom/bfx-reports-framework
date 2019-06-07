@@ -148,6 +148,17 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
+const paramsSchemaForgetAccountSnapshotCsv = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    },
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
@@ -156,5 +167,6 @@ module.exports = {
   paramsSchemaForAccountSnapshotApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
-  paramsSchemaForWinLossCsv
+  paramsSchemaForWinLossCsv,
+  paramsSchemaForgetAccountSnapshotCsv
 }
