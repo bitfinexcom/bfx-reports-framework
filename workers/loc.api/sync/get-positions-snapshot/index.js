@@ -145,7 +145,6 @@ const _getPositionsWithActualPrice = async (
   return res
 }
 
-// TODO:
 module.exports = async (
   rService,
   {
