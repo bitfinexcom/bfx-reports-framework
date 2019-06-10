@@ -145,6 +145,84 @@ const _getPositionsWithActualPrice = async (
   return res
 }
 
+const _filterDuplicate = (accum = [], curr = []) => {
+  if (
+    !Array.isArray(accum) ||
+    accum.length === 0
+  ) {
+    return [...curr]
+  }
+
+  const keys = Object.keys(accum[0]).filter(key => !/^_/.test(key))
+
+  return curr.filter(currItem => {
+    return accum.every(accumItem => {
+      return keys.some(key => {
+        return accumItem[key] !== currItem[key]
+      })
+    })
+  })
+}
+
+const _getPositionsAudit = async (
+  rService,
+  {
+    auth = {},
+    params: { id } = {}
+  } = {}
+) => {
+  const positionsAudit = []
+
+  let end = Date.now()
+  let serialRequestsCount = 0
+
+  while (true) {
+    const _res = await rService.getPositionsAudit(
+      null,
+      { auth, params: { id, end, limit: 250 } }
+    )
+
+    const { res, nextPage } = (
+      Object.keys({ ..._res }).every(key => key !== 'nextPage')
+    )
+      ? { res: _res, nextPage: null }
+      : _res
+
+    end = nextPage
+
+    if (
+      Array.isArray(res) &&
+      res.length === 0 &&
+      nextPage &&
+      Number.isInteger(nextPage) &&
+      serialRequestsCount < 1
+    ) {
+      serialRequestsCount += 1
+
+      continue
+    }
+
+    serialRequestsCount = 0
+
+    if (
+      !Array.isArray(res) ||
+      res.length === 0
+    ) {
+      break
+    }
+
+    positionsAudit.push(
+      ..._filterDuplicate(positionsAudit, res)
+    )
+
+    if (!Number.isInteger(nextPage)) {
+      break
+    }
+  }
+
+  return positionsAudit
+}
+
 module.exports = async (
   rService,
   {
@@ -179,9 +257,9 @@ module.exports = async (
   }
 
   const ids = _getPositionsHistoryIds(positionsHistory)
-  const { res: positionsAudit } = await rService.getPositionsAudit(
-    null,
-    { auth, params: { id: [...ids] } }
+  const positionsAudit = await _getPositionsAudit(
+    rService,
+    { auth, params: { id: ids } }
   )
 
   if (
