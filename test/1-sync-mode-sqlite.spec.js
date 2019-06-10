@@ -54,7 +54,7 @@ describe('Sync mode with SQLite', () => {
 
     mockRESTv2Srv = createMockRESTv2SrvWithDate(start, end, 100)
 
-    await rmAllFiles(tempDirPath)
+    await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
     const env = await startEnviroment(false, false, 1, {
       wtype: 'wrk-report-framework-api',
@@ -77,7 +77,7 @@ describe('Sync mode with SQLite', () => {
     await stopEnviroment()
     await closeSQLite(db)
     await rmDB(dbDirPath)
-    await rmAllFiles(tempDirPath)
+    await rmAllFiles(tempDirPath, ['README.md'])
 
     try {
       await mockRESTv2Srv.close()
