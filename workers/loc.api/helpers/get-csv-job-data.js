@@ -150,7 +150,11 @@ const getCsvJobData = {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const csvArgs = getCsvArgs(
+      args,
+      null,
+      { isOnMomentInName: true }
+    )
 
     const jobData = {
       userInfo,
