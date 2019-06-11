@@ -168,55 +168,64 @@ const _getPositionsAudit = async (
   rService,
   {
     auth = {},
-    params: { id } = {}
+    params: { ids } = {}
   } = {}
 ) => {
   const positionsAudit = []
 
-  let end = Date.now()
-  let serialRequestsCount = 0
+  for (const id of ids) {
+    let end = Date.now()
+    let prevEnd = end
+    let serialRequestsCount = 0
 
-  while (true) {
-    const _res = await rService.getPositionsAudit(
-      null,
-      { auth, params: { id, end, limit: 250 } }
-    )
+    while (true) {
+      const _res = await rService.getPositionsAudit(
+        null,
+        { auth, params: { id: [id], end, limit: 250 } }
+      )
 
-    const { res, nextPage } = (
-      Object.keys({ ..._res }).every(key => key !== 'nextPage')
-    )
-      ? { res: _res, nextPage: null }
-      : _res
+      const { res, nextPage } = (
+        Object.keys({ ..._res }).every(key => key !== 'nextPage')
+      )
+        ? { res: _res, nextPage: null }
+        : _res
 
-    end = nextPage
+      prevEnd = end
+      end = nextPage
 
-    if (
-      Array.isArray(res) &&
-      res.length === 0 &&
-      nextPage &&
-      Number.isInteger(nextPage) &&
-      serialRequestsCount < 1
-    ) {
-      serialRequestsCount += 1
+      if (
+        Array.isArray(res) &&
+        res.length === 0 &&
+        nextPage &&
+        Number.isInteger(nextPage) &&
+        serialRequestsCount < 1
+      ) {
+        serialRequestsCount += 1
 
-      continue
-    }
+        continue
+      }
 
-    serialRequestsCount = 0
+      serialRequestsCount = 0
 
-    if (
-      !Array.isArray(res) ||
-      res.length === 0
-    ) {
-      break
-    }
+      if (
+        !Array.isArray(res) ||
+        res.length === 0
+      ) {
+        break
+      }
 
-    positionsAudit.push(
-      ..._filterDuplicate(positionsAudit, res)
-    )
+      const resWithoutDuplicate = _filterDuplicate(positionsAudit, res)
+      positionsAudit.push(...resWithoutDuplicate)
 
-    if (!Number.isInteger(nextPage)) {
-      break
+      if (
+        !Number.isInteger(nextPage) ||
+        (
+          resWithoutDuplicate.length === 0 &&
+          end === prevEnd
+        )
+      ) {
+        break
+      }
     }
   }
 
@@ -259,7 +268,7 @@ module.exports = async (
   const ids = _getPositionsHistoryIds(positionsHistory)
   const positionsAudit = await _getPositionsAudit(
     rService,
-    { auth, params: { id: ids } }
+    { auth, params: { ids } }
   )
 
   if (
