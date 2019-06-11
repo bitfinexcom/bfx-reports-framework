@@ -174,8 +174,8 @@ const getCsvJobData = {
           marginFunding: 'FUNDING COST',
           marginFundingType: 'FUNDING TYPE',
           status: 'STATUS',
-          mtsCreate: 'mtsCreate',
-          mtsUpdate: 'mtsUpdate'
+          mtsUpdate: 'UPDATED',
+          mtsCreate: 'CREATED'
         },
         walletsSnapshot: {
           type: 'TYPE',
