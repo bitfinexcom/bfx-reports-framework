@@ -28,58 +28,59 @@ const _getPositionsHistory = (
   )
 }
 
-const _getClosedPosition = (
-  positionsHistory,
-  posAudit
-) => {
-  const { id } = { ...posAudit }
-
-  const posHist = positionsHistory.find(({ status, id: posHistId }) => (
-    status === 'CLOSED' &&
-    id === posHistId
-  ))
-
-  return posHist || posAudit
-}
-
-const _filterPositions = (
+const _findPositions = (
   positionsAudit,
-  positionsHistory,
+  reqStatus,
   year,
   month,
   day
 ) => {
-  return positionsAudit.reduce(
-    (accum, posAudit) => {
-      const { mtsUpdate, status } = { ...posAudit }
+  return positionsAudit.find((posAudit) => {
+    const { mtsUpdate, status } = { ...posAudit }
 
-      if (!Number.isInteger(mtsUpdate)) {
-        return accum
-      }
+    if (!Number.isInteger(mtsUpdate)) {
+      return false
+    }
 
-      const date = new Date(mtsUpdate)
+    const date = new Date(mtsUpdate)
 
-      if (
-        year === date.getUTCFullYear() &&
-        month === date.getUTCMonth() &&
-        day === date.getUTCDate()
-      ) {
-        if (status === 'CLOSED') {
-          const closedPosition = _getClosedPosition(
-            positionsHistory,
-            posAudit
-          )
+    return (
+      status === reqStatus &&
+      year === date.getUTCFullYear() &&
+      month === date.getUTCMonth() &&
+      day === date.getUTCDate()
+    )
+  })
+}
 
-          accum.push(closedPosition)
+const _findActivePositions = (
+  positionsAudit,
+  year,
+  month,
+  day
+) => {
+  return _findPositions(
+    positionsAudit,
+    'ACTIVE',
+    year,
+    month,
+    day
+  )
+}
 
-          return accum
-        }
-
-        accum.push(posAudit)
-      }
-
-      return accum
-    }, [])
+const _findClosedPositions = (
+  positionsAudit,
+  year,
+  month,
+  day
+) => {
+  return _findPositions(
+    positionsAudit,
+    'CLOSED',
+    year,
+    month,
+    day
+  )
 }
 
 const _getPositionsHistoryIds = (positionsHistory) => {
@@ -166,6 +167,9 @@ const _filterDuplicate = (accum = [], curr = []) => {
 
 const _getPositionsAudit = async (
   rService,
+  year,
+  month,
+  day,
   {
     auth = {},
     params: { ids } = {}
@@ -174,6 +178,8 @@ const _getPositionsAudit = async (
   const positionsAudit = []
 
   for (const id of ids) {
+    const singleIdRes = []
+
     let end = Date.now()
     let prevEnd = end
     let serialRequestsCount = 0
@@ -214,8 +220,38 @@ const _getPositionsAudit = async (
         break
       }
 
-      const resWithoutDuplicate = _filterDuplicate(positionsAudit, res)
-      positionsAudit.push(...resWithoutDuplicate)
+      const closedPos = _findClosedPositions(
+        res,
+        year,
+        month,
+        day
+      )
+
+      if (
+        closedPos &&
+        typeof closedPos === 'object'
+      ) {
+        break
+      }
+
+      const activePos = _findActivePositions(
+        res,
+        year,
+        month,
+        day
+      )
+
+      if (
+        activePos &&
+        typeof activePos === 'object'
+      ) {
+        positionsAudit.push(activePos)
+
+        break
+      }
+
+      const resWithoutDuplicate = _filterDuplicate(singleIdRes, res)
+      singleIdRes.push(...resWithoutDuplicate)
 
       if (
         !Number.isInteger(nextPage) ||
@@ -268,6 +304,9 @@ module.exports = async (
   const ids = _getPositionsHistoryIds(positionsHistory)
   const positionsAudit = await _getPositionsAudit(
     rService,
+    year,
+    month,
+    day,
     { auth, params: { ids } }
   )
 
@@ -278,18 +317,10 @@ module.exports = async (
     return []
   }
 
-  const positions = _filterPositions(
-    positionsAudit,
-    positionsHistory,
-    year,
-    month,
-    day
-  )
-
   const res = await _getPositionsWithActualPrice(
     dao,
     auth,
-    positions
+    positionsAudit
   )
 
   return res
