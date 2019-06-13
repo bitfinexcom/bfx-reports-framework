@@ -157,6 +157,17 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
+const paramsSchemaForPositionsSnapshotCsv = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    },
+    timezone,
+    dateFormat
+  }
+}
+
 const paramsSchemaForFullSnapshotReportCsv = {
   type: 'object',
   properties: {
@@ -178,5 +189,6 @@ module.exports = {
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
+  paramsSchemaForPositionsSnapshotCsv,
   paramsSchemaForFullSnapshotReportCsv
 }

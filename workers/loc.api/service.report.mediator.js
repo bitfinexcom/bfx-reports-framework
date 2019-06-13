@@ -27,6 +27,7 @@ const {
   getRiskCsvJobData,
   getBalanceHistoryCsvJobData,
   getWinLossCsvJobData,
+  getPositionsSnapshotCsvJobData,
   getFullSnapshotReportCsvJobData
 } = getCsvJobData
 const getRisk = require('./sync/get-risk')
@@ -258,6 +259,20 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, status)
     } catch (err) {
       this._err(err, 'getWinLossCsv', cb)
+    }
+  }
+
+  async getPositionsSnapshotCsv (space, args, cb) {
+    try {
+      const status = await getCsvStoreStatus(this, args)
+      const jobData = await getPositionsSnapshotCsvJobData(this, args)
+      const processorQueue = this.ctx.lokue_processor.q
+
+      processorQueue.addJob(jobData)
+
+      cb(null, status)
+    } catch (err) {
+      this._err(err, 'getPositionsSnapshotCsv', cb)
     }
   }
 

@@ -132,6 +132,56 @@ const getCsvJobData = {
 
     return jobData
   },
+  async getPositionsSnapshotCsvJobData (
+    reportService,
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForPositionsSnapshotCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      reportService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getPositionsSnapshot',
+      fileNamesMap: [['getPositionsSnapshot', 'positions-snapshot']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        id: '#',
+        symbol: 'PAIR',
+        amount: 'AMOUNT',
+        basePrice: 'BASE PRICE',
+        actualPrice: 'ACTUAL PRICE',
+        pl: 'P/L',
+        plPerc: 'P/L%',
+        marginFunding: 'FUNDING COST',
+        marginFundingType: 'FUNDING TYPE',
+        status: 'STATUS',
+        mtsUpdate: 'UPDATED',
+        mtsCreate: 'CREATED'
+      },
+      formatSettings: {
+        mtsUpdate: 'date',
+        mtsCreate: 'date',
+        symbol: 'symbol'
+      }
+    }
+
+    return jobData
+  },
   async getFullSnapshotReportCsvJobData (
     reportService,
     args,
@@ -186,7 +236,9 @@ const getCsvJobData = {
       },
       formatSettings: {
         positionsSnapshot: {
-          mtsUpdate: 'date'
+          mtsUpdate: 'date',
+          mtsCreate: 'date',
+          symbol: 'symbol'
         },
         walletsSnapshot: {
           mtsUpdate: 'date',
