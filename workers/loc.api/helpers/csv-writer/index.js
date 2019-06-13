@@ -1,9 +1,9 @@
 'use strict'
 
-const accountSnapshotCsvWriter = require(
-  './account-snapshot-csv-writer'
+const fullSnapshotReportCsvWriter = require(
+  './full-snapshot-report-csv-writer'
 )
 
 module.exports = {
-  accountSnapshotCsvWriter
+  fullSnapshotReportCsvWriter
 }

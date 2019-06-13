@@ -61,7 +61,7 @@ module.exports = async (
   walletsNameStringifier.pipe(wStream)
   walletsStringifier.pipe(wStream)
 
-  const getData = promisify(rService.getAccountSnapshot.bind(rService))
+  const getData = promisify(rService.getFullSnapshotReport.bind(rService))
   const res = await getDataFromApi(
     getData,
     args

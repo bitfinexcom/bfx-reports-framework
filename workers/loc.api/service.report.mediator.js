@@ -27,12 +27,12 @@ const {
   getRiskCsvJobData,
   getBalanceHistoryCsvJobData,
   getWinLossCsvJobData,
-  getAccountSnapshotCsvJobData
+  getFullSnapshotReportCsvJobData
 } = getCsvJobData
 const getRisk = require('./sync/get-risk')
 const getBalanceHistory = require('./sync/get-balance-history')
 const getWinLoss = require('./sync/get-win-loss')
-const getAccountSnapshot = require('./sync/get-account-snapshot')
+const getFullSnapshotReport = require('./sync/get-full-snapshot-report')
 
 class MediatorReportService extends BaseMediatorReportService {
   async _getCandles (args) {
@@ -170,22 +170,22 @@ class MediatorReportService extends BaseMediatorReportService {
     }
   }
 
-  async getAccountSnapshot (space, args, cb) {
+  async getFullSnapshotReport (space, args, cb) {
     try {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
 
-      checkParams(args, 'paramsSchemaForAccountSnapshotApi')
+      checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
 
-      const res = await getAccountSnapshot(
+      const res = await getFullSnapshotReport(
         this,
         args
       )
 
       cb(null, res)
     } catch (err) {
-      this._err(err, 'getAccountSnapshot', cb)
+      this._err(err, 'getFullSnapshotReport', cb)
     }
   }
 
@@ -241,17 +241,17 @@ class MediatorReportService extends BaseMediatorReportService {
     }
   }
 
-  async getAccountSnapshotCsv (space, args, cb) {
+  async getFullSnapshotReportCsv (space, args, cb) {
     try {
       const status = await getCsvStoreStatus(this, args)
-      const jobData = await getAccountSnapshotCsvJobData(this, args)
+      const jobData = await getFullSnapshotReportCsvJobData(this, args)
       const processorQueue = this.ctx.lokue_processor.q
 
       processorQueue.addJob(jobData)
 
       cb(null, status)
     } catch (err) {
-      this._err(err, 'getAccountSnapshotCsv', cb)
+      this._err(err, 'getFullSnapshotReportCsv', cb)
     }
   }
 }

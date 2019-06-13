@@ -406,7 +406,7 @@ describe('Sync mode with SQLite', () => {
     }
   })
 
-  it('it should be successfully performed by the getAccountSnapshot method', async function () {
+  it('it should be successfully performed by the getFullSnapshotReport method', async function () {
     this.timeout(5000)
 
     const res = await agent
@@ -414,7 +414,7 @@ describe('Sync mode with SQLite', () => {
       .type('json')
       .send({
         auth,
-        method: 'getAccountSnapshot',
+        method: 'getFullSnapshotReport',
         params: {
           end
         },
@@ -574,7 +574,7 @@ describe('Sync mode with SQLite', () => {
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getAccountSnapshotCsv method', async function () {
+  it('it should be successfully performed by the getFullSnapshotReportCsv method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(processorQueue)
@@ -585,7 +585,7 @@ describe('Sync mode with SQLite', () => {
       .type('json')
       .send({
         auth,
-        method: 'getAccountSnapshotCsv',
+        method: 'getFullSnapshotReportCsv',
         params: {
           end,
           email

@@ -6,7 +6,7 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const checkParams = require('./check-params')
-const { accountSnapshotCsvWriter } = require('./csv-writer')
+const { fullSnapshotReportCsvWriter } = require('./csv-writer')
 
 const getCsvJobData = {
   async getRiskCsvJobData (
@@ -132,13 +132,13 @@ const getCsvJobData = {
 
     return jobData
   },
-  async getAccountSnapshotCsvJobData (
+  async getFullSnapshotReportCsvJobData (
     reportService,
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForgetAccountSnapshotCsv')
+    checkParams(args, 'paramsSchemaForFullSnapshotReportCsv')
 
     const {
       userId,
@@ -159,8 +159,8 @@ const getCsvJobData = {
     const jobData = {
       userInfo,
       userId,
-      name: 'getAccountSnapshot',
-      fileNamesMap: [['getAccountSnapshot', 'account-snapshot']],
+      name: 'getFullSnapshotReport',
+      fileNamesMap: [['getFullSnapshotReport', 'full-snapshot-report']],
       args: csvArgs,
       columnsCsv: {
         positionsSnapshot: {
@@ -193,7 +193,7 @@ const getCsvJobData = {
           currency: 'symbol'
         }
       },
-      csvCustomWriter: accountSnapshotCsvWriter
+      csvCustomWriter: fullSnapshotReportCsvWriter
     }
 
     return jobData

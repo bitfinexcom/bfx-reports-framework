@@ -87,7 +87,7 @@ const paramsSchemaForBalanceHistoryApi = {
   }
 }
 
-const paramsSchemaForAccountSnapshotApi = {
+const paramsSchemaForFullSnapshotReportApi = {
   type: 'object',
   properties: {
     end: {
@@ -148,7 +148,7 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
-const paramsSchemaForgetAccountSnapshotCsv = {
+const paramsSchemaForFullSnapshotReportCsv = {
   type: 'object',
   properties: {
     end: {
@@ -164,9 +164,9 @@ module.exports = {
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
-  paramsSchemaForAccountSnapshotApi,
+  paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
-  paramsSchemaForgetAccountSnapshotCsv
+  paramsSchemaForFullSnapshotReportCsv
 }
