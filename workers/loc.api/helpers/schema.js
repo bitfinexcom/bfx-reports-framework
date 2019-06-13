@@ -87,6 +87,15 @@ const paramsSchemaForBalanceHistoryApi = {
   }
 }
 
+const paramsSchemaForPositionsSnapshotApi = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const paramsSchemaForFullSnapshotReportApi = {
   type: 'object',
   properties: {
@@ -164,6 +173,7 @@ module.exports = {
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
+  paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,

@@ -32,6 +32,7 @@ const {
 const getRisk = require('./sync/get-risk')
 const getBalanceHistory = require('./sync/get-balance-history')
 const getWinLoss = require('./sync/get-win-loss')
+const getPositionsSnapshot = require('./sync/get-positions-snapshot')
 const getFullSnapshotReport = require('./sync/get-full-snapshot-report')
 
 class MediatorReportService extends BaseMediatorReportService {
@@ -167,6 +168,25 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, res)
     } catch (err) {
       this._err(err, 'getWinLoss', cb)
+    }
+  }
+
+  async getPositionsSnapshot (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
+
+      const res = await getPositionsSnapshot(
+        this,
+        args
+      )
+
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getPositionsSnapshot', cb)
     }
   }
 
