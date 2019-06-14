@@ -94,21 +94,30 @@ const _getPositionsHistoryIds = (positionsHistory) => {
     }, [])
 }
 
-const _getPositionsWithActualPrice = async (
+const _getCalculatedPositions = async (
   dao,
   auth,
-  positions
+  positions,
+  end
 ) => {
   const res = []
 
   for (const position of positions) {
-    const { mtsUpdate, symbol } = { ...position }
+    const {
+      symbol,
+      basePrice,
+      amount
+    } = { ...position }
 
-    if (
-      !Number.isInteger(mtsUpdate) ||
-      typeof symbol !== 'string'
-    ) {
-      res.push({ ...position, actualPrice: null })
+    const resPositions = {
+      ...position,
+      actualPrice: null,
+      pl: null,
+      plPerc: null
+    }
+
+    if (typeof symbol !== 'string') {
+      res.push(resPositions)
 
       continue
     }
@@ -119,7 +128,7 @@ const _getPositionsWithActualPrice = async (
         auth,
         params: {
           symbol,
-          end: mtsUpdate,
+          end,
           limit: 1
         }
       }
@@ -130,16 +139,24 @@ const _getPositionsWithActualPrice = async (
       trades.length === 0 ||
       !trades[0] ||
       typeof trades[0] !== 'object' ||
-      !Number.isFinite(trades[0].execPrice)
+      !Number.isFinite(trades[0].execPrice) ||
+      !Number.isFinite(basePrice) ||
+      !Number.isFinite(amount)
     ) {
-      res.push({ ...position, actualPrice: null })
+      res.push(resPositions)
 
       continue
     }
 
+    const actualPrice = trades[0].execPrice
+    const pl = (actualPrice - basePrice) * Math.abs(amount)
+    const plPerc = ((actualPrice / basePrice) - 1) * 100
+
     res.push({
-      ...position,
-      actualPrice: trades[0].execPrice
+      ...resPositions,
+      actualPrice,
+      pl,
+      plPerc
     })
   }
 
@@ -317,10 +334,11 @@ module.exports = async (
     return []
   }
 
-  const res = await _getPositionsWithActualPrice(
+  const res = await _getCalculatedPositions(
     dao,
     auth,
-    positionsAudit
+    positionsAudit,
+    endMts
   )
 
   return res
