@@ -95,8 +95,7 @@ const _getPositionsHistoryIds = (positionsHistory) => {
 }
 
 const _getCalculatedPositions = async (
-  dao,
-  auth,
+  rService,
   positions,
   end
 ) => {
@@ -122,24 +121,24 @@ const _getCalculatedPositions = async (
       continue
     }
 
-    const trades = await dao.findInCollBy(
-      '_getTrades',
-      {
-        auth,
-        params: {
-          symbol,
-          end,
-          limit: 1
-        }
+    const {
+      res: publicTrades
+    } = await rService._getPublicTrades({
+      params: {
+        symbol,
+        end,
+        limit: 1,
+        notThrowError: true,
+        notCheckNextPage: true
       }
-    )
+    })
 
     if (
-      !Array.isArray(trades) ||
-      trades.length === 0 ||
-      !trades[0] ||
-      typeof trades[0] !== 'object' ||
-      !Number.isFinite(trades[0].execPrice) ||
+      !Array.isArray(publicTrades) ||
+      publicTrades.length === 0 ||
+      !publicTrades[0] ||
+      typeof publicTrades[0] !== 'object' ||
+      !Number.isFinite(publicTrades[0].price) ||
       !Number.isFinite(basePrice) ||
       !Number.isFinite(amount)
     ) {
@@ -148,7 +147,7 @@ const _getCalculatedPositions = async (
       continue
     }
 
-    const actualPrice = trades[0].execPrice
+    const actualPrice = publicTrades[0].price
     const pl = (actualPrice - basePrice) * Math.abs(amount)
     const plPerc = ((actualPrice / basePrice) - 1) * 100
 
@@ -335,8 +334,7 @@ module.exports = async (
   }
 
   const res = await _getCalculatedPositions(
-    dao,
-    auth,
+    rService,
     positionsAudit,
     endMts
   )
