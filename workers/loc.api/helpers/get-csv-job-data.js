@@ -6,6 +6,7 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const checkParams = require('./check-params')
+const { fullSnapshotReportCsvWriter } = require('./csv-writer')
 
 const getCsvJobData = {
   async getRiskCsvJobData (
@@ -127,6 +128,124 @@ const getCsvJobData = {
       formatSettings: {
         mts: 'date'
       }
+    }
+
+    return jobData
+  },
+  async getPositionsSnapshotCsvJobData (
+    reportService,
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForPositionsSnapshotCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      reportService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getPositionsSnapshot',
+      fileNamesMap: [['getPositionsSnapshot', 'positions-snapshot']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        id: '#',
+        symbol: 'PAIR',
+        amount: 'AMOUNT',
+        basePrice: 'BASE PRICE',
+        actualPrice: 'ACTUAL PRICE',
+        pl: 'P/L',
+        plPerc: 'P/L%',
+        marginFunding: 'FUNDING COST',
+        marginFundingType: 'FUNDING TYPE',
+        status: 'STATUS',
+        mtsUpdate: 'UPDATED',
+        mtsCreate: 'CREATED'
+      },
+      formatSettings: {
+        mtsUpdate: 'date',
+        mtsCreate: 'date',
+        symbol: 'symbol'
+      }
+    }
+
+    return jobData
+  },
+  async getFullSnapshotReportCsvJobData (
+    reportService,
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForFullSnapshotReportCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      reportService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(
+      args,
+      null,
+      { isOnMomentInName: true }
+    )
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getFullSnapshotReport',
+      fileNamesMap: [['getFullSnapshotReport', 'full-snapshot-report']],
+      args: csvArgs,
+      columnsCsv: {
+        positionsSnapshot: {
+          id: '#',
+          symbol: 'PAIR',
+          amount: 'AMOUNT',
+          basePrice: 'BASE PRICE',
+          actualPrice: 'ACTUAL PRICE',
+          pl: 'P/L',
+          plPerc: 'P/L%',
+          marginFunding: 'FUNDING COST',
+          marginFundingType: 'FUNDING TYPE',
+          status: 'STATUS',
+          mtsUpdate: 'UPDATED',
+          mtsCreate: 'CREATED'
+        },
+        walletsSnapshot: {
+          type: 'TYPE',
+          currency: 'CURRENCY',
+          balance: 'BALANCE',
+          balanceUsd: 'BALANCE USD'
+        }
+      },
+      formatSettings: {
+        positionsSnapshot: {
+          mtsUpdate: 'date',
+          mtsCreate: 'date',
+          symbol: 'symbol'
+        },
+        walletsSnapshot: {
+          mtsUpdate: 'date',
+          currency: 'symbol'
+        }
+      },
+      csvCustomWriter: fullSnapshotReportCsvWriter
     }
 
     return jobData

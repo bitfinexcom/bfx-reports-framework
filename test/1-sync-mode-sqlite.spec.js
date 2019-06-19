@@ -54,7 +54,7 @@ describe('Sync mode with SQLite', () => {
 
     mockRESTv2Srv = createMockRESTv2SrvWithDate(start, end, 100)
 
-    await rmAllFiles(tempDirPath)
+    await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
     const env = await startEnviroment(false, false, 1, {
       wtype: 'wrk-report-framework-api',
@@ -77,7 +77,7 @@ describe('Sync mode with SQLite', () => {
     await stopEnviroment()
     await closeSQLite(db)
     await rmDB(dbDirPath)
-    await rmAllFiles(tempDirPath)
+    await rmAllFiles(tempDirPath, ['README.md'])
 
     try {
       await mockRESTv2Srv.close()
@@ -406,6 +406,97 @@ describe('Sync mode with SQLite', () => {
     }
   })
 
+  it('it should be successfully performed by the getPositionsSnapshot method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getPositionsSnapshot',
+        params: {
+          end
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+
+    res.body.result.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'id',
+        'symbol',
+        'amount',
+        'basePrice',
+        'actualPrice',
+        'pl',
+        'plPerc',
+        'marginFunding',
+        'marginFundingType',
+        'status',
+        'mtsCreate',
+        'mtsUpdate'
+      ])
+    })
+  })
+
+  it('it should be successfully performed by the getFullSnapshotReport method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullSnapshotReport',
+        params: {
+          end
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.positionsSnapshot)
+    assert.isArray(res.body.result.walletsSnapshot)
+
+    res.body.result.positionsSnapshot.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'id',
+        'symbol',
+        'amount',
+        'basePrice',
+        'actualPrice',
+        'pl',
+        'plPerc',
+        'marginFunding',
+        'marginFundingType',
+        'status',
+        'mtsCreate',
+        'mtsUpdate'
+      ])
+    })
+    res.body.result.walletsSnapshot.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'type',
+        'currency',
+        'balance',
+        'balanceUsd'
+      ])
+    })
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
@@ -513,6 +604,54 @@ describe('Sync mode with SQLite', () => {
           end,
           start,
           timeframe: 'day',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getFullSnapshotReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullSnapshotReportCsv',
+        params: {
+          end,
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getPositionsSnapshotCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getPositionsSnapshotCsv',
+        params: {
+          end,
           email
         },
         id: 5

@@ -87,6 +87,24 @@ const paramsSchemaForBalanceHistoryApi = {
   }
 }
 
+const paramsSchemaForPositionsSnapshotApi = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
+const paramsSchemaForFullSnapshotReportApi = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const paramsSchemaForWinLossApi = {
   type: 'object',
   properties: {
@@ -139,12 +157,38 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
+const paramsSchemaForPositionsSnapshotCsv = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    },
+    timezone,
+    dateFormat
+  }
+}
+
+const paramsSchemaForFullSnapshotReportCsv = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    },
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
+  paramsSchemaForPositionsSnapshotApi,
+  paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
-  paramsSchemaForWinLossCsv
+  paramsSchemaForWinLossCsv,
+  paramsSchemaForPositionsSnapshotCsv,
+  paramsSchemaForFullSnapshotReportCsv
 }

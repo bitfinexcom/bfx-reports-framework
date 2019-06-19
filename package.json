@@ -7,6 +7,7 @@
   "dependencies": {
     "better-npm-run": "^0.1.1",
     "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
+    "csv": "^5.1.1",
     "lodash": "^4.17.11",
     "moment": "^2.24.0"
   },

@@ -26,11 +26,15 @@ const {
 const {
   getRiskCsvJobData,
   getBalanceHistoryCsvJobData,
-  getWinLossCsvJobData
+  getWinLossCsvJobData,
+  getPositionsSnapshotCsvJobData,
+  getFullSnapshotReportCsvJobData
 } = getCsvJobData
 const getRisk = require('./sync/get-risk')
 const getBalanceHistory = require('./sync/get-balance-history')
 const getWinLoss = require('./sync/get-win-loss')
+const getPositionsSnapshot = require('./sync/get-positions-snapshot')
+const getFullSnapshotReport = require('./sync/get-full-snapshot-report')
 
 class MediatorReportService extends BaseMediatorReportService {
   async _getCandles (args) {
@@ -168,6 +172,44 @@ class MediatorReportService extends BaseMediatorReportService {
     }
   }
 
+  async getPositionsSnapshot (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
+
+      const res = await getPositionsSnapshot(
+        this,
+        args
+      )
+
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getPositionsSnapshot', cb)
+    }
+  }
+
+  async getFullSnapshotReport (space, args, cb) {
+    try {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
+
+      const res = await getFullSnapshotReport(
+        this,
+        args
+      )
+
+      cb(null, res)
+    } catch (err) {
+      this._err(err, 'getFullSnapshotReport', cb)
+    }
+  }
+
   async getMultipleCsv (space, args, cb) {
     try {
       const _args = { ...args, getCsvJobData }
@@ -217,6 +259,34 @@ class MediatorReportService extends BaseMediatorReportService {
       cb(null, status)
     } catch (err) {
       this._err(err, 'getWinLossCsv', cb)
+    }
+  }
+
+  async getPositionsSnapshotCsv (space, args, cb) {
+    try {
+      const status = await getCsvStoreStatus(this, args)
+      const jobData = await getPositionsSnapshotCsvJobData(this, args)
+      const processorQueue = this.ctx.lokue_processor.q
+
+      processorQueue.addJob(jobData)
+
+      cb(null, status)
+    } catch (err) {
+      this._err(err, 'getPositionsSnapshotCsv', cb)
+    }
+  }
+
+  async getFullSnapshotReportCsv (space, args, cb) {
+    try {
+      const status = await getCsvStoreStatus(this, args)
+      const jobData = await getFullSnapshotReportCsvJobData(this, args)
+      const processorQueue = this.ctx.lokue_processor.q
+
+      processorQueue.addJob(jobData)
+
+      cb(null, status)
+    } catch (err) {
+      this._err(err, 'getFullSnapshotReportCsv', cb)
     }
   }
 }
