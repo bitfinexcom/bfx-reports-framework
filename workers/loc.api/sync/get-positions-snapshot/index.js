@@ -286,13 +286,13 @@ const _getPositionsAudit = async (
 
 module.exports = async (
   rService,
-  {
-    auth = {},
-    params: {
-      end = Date.now()
-    } = {}
-  } = {}
+  args
 ) => {
+  const {
+    auth = {},
+    params = {}
+  } = { ...args }
+  const { end = Date.now() } = { ...params }
   const { dao } = rService
   const user = await rService.dao.checkAuthInDb({ auth })
 
