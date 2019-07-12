@@ -83,7 +83,7 @@ const _calcMovements = (
   return data.reduce((accum, movement = {}) => {
     const { amount, amountUsd } = { ...movement }
     const currSymb = movement[symbolFieldName]
-    const _isForexSymb = isForexSymb(symbol, currSymb)
+    const _isForexSymb = isForexSymb(currSymb, symbol)
     const _amount = _isForexSymb
       ? amount
       : amountUsd
@@ -120,7 +120,7 @@ const _calcFirstWallets = (
 ) => {
   return data.reduce((accum, movement = {}) => {
     const { balance, balanceUsd, currency } = { ...movement }
-    const _isForexSymb = isForexSymb(symbol, currency)
+    const _isForexSymb = isForexSymb(currency, symbol)
     const _balance = _isForexSymb
       ? balance
       : balanceUsd

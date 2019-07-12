@@ -1,5 +1,6 @@
 'use strict'
 
+const { isForexSymb } = require('../helpers')
 const ALLOWED_COLLS = require('../allowed.colls')
 const { getModelsMap } = require('../schema')
 
@@ -94,6 +95,50 @@ const _getPositionsHistoryIds = (positionsHistory) => {
     }, [])
 }
 
+const _convertPlToUsd = async (
+  rService,
+  pl,
+  symbol,
+  end
+) => {
+  const currency = symbol.slice(-3)
+  const _isForexSymb = isForexSymb(currency)
+
+  if (
+    _isForexSymb ||
+    currency.length < 3 ||
+    !Number.isFinite(pl)
+  ) {
+    return null
+  }
+
+  const reqSymb = `t${currency}USD`
+
+  const {
+    res: publicTrades
+  } = await rService._getPublicTrades({
+    params: {
+      reqSymb,
+      end,
+      limit: 1,
+      notThrowError: true,
+      notCheckNextPage: true
+    }
+  })
+
+  if (
+    !Array.isArray(publicTrades) ||
+    publicTrades.length === 0 ||
+    !publicTrades[0] ||
+    typeof publicTrades[0] !== 'object' ||
+    !Number.isFinite(publicTrades[0].price)
+  ) {
+    return null
+  }
+
+  return pl * publicTrades[0].price
+}
+
 const _getCalculatedPositions = async (
   rService,
   positions,
@@ -112,6 +157,7 @@ const _getCalculatedPositions = async (
       ...position,
       actualPrice: null,
       pl: null,
+      plUsd: null,
       plPerc: null
     }
 
@@ -150,11 +196,18 @@ const _getCalculatedPositions = async (
     const actualPrice = publicTrades[0].price
     const pl = (actualPrice - basePrice) * Math.abs(amount)
     const plPerc = ((actualPrice / basePrice) - 1) * 100
+    const plUsd = await _convertPlToUsd(
+      rService,
+      pl,
+      symbol,
+      end
+    )
 
     res.push({
       ...resPositions,
       actualPrice,
       pl,
+      plUsd,
       plPerc
     })
   }
