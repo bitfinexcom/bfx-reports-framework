@@ -1,31 +1,35 @@
 {
   "name": "bfx-reports-framework",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
   "dependencies": {
     "better-npm-run": "^0.1.1",
+    "bfx-facs-db-sqlite": "git+https://github.com:bitfinexcom/bfx-facs-db-sqlite.git",
     "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
+    "bfx-facs-scheduler": "git+https://github.com:bitfinexcom/bfx-facs-scheduler.git",
     "csv": "^5.1.1",
+    "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
+    "inversify": "^5.0.1",
     "lodash": "^4.17.11",
-    "moment": "^2.24.0"
+    "moment": "^2.24.0",
+    "reflect-metadata": "^0.1.13",
+    "yargs": "^13.2.4",
+    "sqlite3": "4.0.3"
   },
   "devDependencies": {
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
-    "bfx-api-mock-srv": "git+https://github.com/bitfinexcom/bfx-api-mock-srv.git",
-    "grenache-grape": "^0.9.8",
-    "grenache-nodejs-http": "^0.7.8",
-    "grenache-nodejs-link": "^0.7.10",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "chai": "^4.2.0",
     "nodemon": "^1.18.10",
-    "supertest": "^3.4.2",
+    "supertest": "^4.0.2",
     "standard": "^12.0.1"
   },
   "contributors": [
     "Paolo Ardoino <paolo@bitfinex.com>",
-    "Ezequiel Wernicke <ezequiel.wernicke@bitfinex.com>"
+    "Ezequiel Wernicke <ezequiel.wernicke@bitfinex.com>",
+    "Vladimir Voronkov <vsvoronkov@gmail.com>"
   ],
   "standard": {
     "globals": [

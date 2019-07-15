@@ -6,7 +6,7 @@
   "company": "bitfinex",
   "emailConf": {
     "from": "Bitfinex <no-reply@bitfinex.com>",
-    "subject": "Download report"
+    "subject": "Your report is ready"
   },
   "s3Conf": {
     "bucket": "",
@@ -15,6 +15,7 @@
   },
   "isSpamRestrictionMode": true,
   "isСompress": true,
+  "isLoggerDisabled": false,
   "dbDriver": "sqlite",
   "syncMode": true,
   "wsPort": 1455
