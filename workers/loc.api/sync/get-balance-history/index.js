@@ -185,7 +185,7 @@ const _getWalletsByTimeframe = (
       accum,
       [currency, balance]
     ) => {
-      const _isForexSymb = isForexSymb(symbol, currency)
+      const _isForexSymb = isForexSymb(currency, symbol)
       const { close: closePrice } = _isForexSymb
         ? {}
         : { ..._getCandlesClosePrice(candles, mts, timeframe, currency) }

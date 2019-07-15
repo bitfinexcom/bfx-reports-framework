@@ -1,6 +1,9 @@
 'use strict'
 
-module.exports = (symbs = [], currSymb) => {
+module.exports = (
+  currSymb,
+  symbs = ['EUR', 'JPY', 'GBP', 'USD']
+) => {
   return (
     Array.isArray(symbs) &&
     symbs.some(symb => symb === currSymb)
