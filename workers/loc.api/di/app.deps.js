@@ -23,7 +23,11 @@ module.exports = ({
     rebind(TYPES.RServiceDepsSchema)
       .toDynamicValue((ctx) => {
         return [
-          ...ctx.container.get(TYPES.RServiceDepsSchema)
+          ...ctx.container.get(TYPES.RServiceDepsSchema),
+          ['_conf', TYPES.CONF],
+          ['_sync', TYPES.Sync],
+          ['_wsEventEmitter', TYPES.WSEventEmitter],
+          ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS]
         ]
       })
       .inSingletonScope()
