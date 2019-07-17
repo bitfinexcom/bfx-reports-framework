@@ -87,8 +87,7 @@ class ReportService extends BaseReportService {
 
       const data = await rest.candles({ ...params, query })
 
-      // TODO:
-      return prepareResponse(
+      return this._prepareResponse(
         data,
         'mts',
         params.limit,

@@ -4,24 +4,27 @@ const {
   pick,
   isEmpty
 } = require('lodash')
+const {
+  AuthError
+} = require('bfx-report/workers/loc.api/errors')
+const {
+  isAuthError
+} = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
 const {
-  getREST,
-  getDateNotMoreNow,
-  prepareResponse,
-  getCsvStoreStatus
-} = require('bfx-report/workers/loc.api/helpers')
-const {
-  DuringSyncMethodAccessError,
-  DBInitializationError,
-  AuthError
+  ServerAvailabilityError,
+  DuringSyncMethodAccessError
 } = require('./errors')
-
 const {
   checkParams,
-  getMethodLimit,
-  getCsvJobData
+  getCsvJobData,
+  checkParamsAuth,
+  isEnotfoundError,
+  isEaiAgainError,
+  getTimezoneConf,
+  emptyRes,
+  collObjToArr
 } = require('./helpers')
 const {
   convertDataCurr
@@ -41,12 +44,6 @@ class MediatorReportService extends ReportService {
    * @abstract
    */
   async _databaseInitialize (db) {
-    if (!db) {
-      throw new DBInitializationError()
-    }
-
-    this._dao.setDB(db)
-
     await this._dao.databaseInitialize(db)
     await this._dao.updateProgress('SYNCHRONIZATION_HAS_NOT_STARTED_YET')
     await this._dao.updateStateOf('syncMode', true)
@@ -105,6 +102,9 @@ class MediatorReportService extends ReportService {
     }
   }
 
+  /**
+   * @override
+   */
   login (space, args, cb, isInnerCall) {
     return this._responder(async () => {
       let userInfo = {
@@ -271,7 +271,7 @@ class MediatorReportService extends ReportService {
         user.isDataFromDb &&
         isSchedulerEnabled
       )
-        ? await getProgress(this) // TODO:
+        ? this._progress.getProgress()
         : false
     }, 'getSyncProgress', cb)
   }
@@ -386,10 +386,10 @@ class MediatorReportService extends ReportService {
       const currenciesMethod = '_getCurrencies'
       const {
         field: symbolsField
-      } = getMethodCollMap().get(symbolsMethod)
+      } = this._syncSchema.getMethodCollMap().get(symbolsMethod)
       const {
         field: futuresField
-      } = getMethodCollMap().get(futuresMethod)
+      } = this._syncSchema.getMethodCollMap().get(futuresMethod)
       const symbols = await this._dao.findInCollBy(
         symbolsMethod,
         args,
@@ -426,7 +426,7 @@ class MediatorReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForApi', ['symbol'])
 
-      const confs = await this._publicСollsСonfAccessors
+      const confs = await this._publicСollsСonfAccessors // TODO:
         .getPublicСollsСonf(
           'tickersHistoryConf',
           args
