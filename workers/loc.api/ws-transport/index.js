@@ -11,7 +11,9 @@ const {
 
 const TYPES = require('../di/types')
 
-const { FindMethodError } = require('../errors')
+const {
+  FindMethodError
+} = require('bfx-report/workers/loc.api/errors')
 
 class WSTransport {
   constructor (

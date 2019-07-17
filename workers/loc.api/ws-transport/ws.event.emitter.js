@@ -22,14 +22,18 @@ class WSEventEmitter {
     )
   }
 
-  emitProgress (handler = () => {}) {
+  emitProgress (
+    handler = () => {}
+  ) {
     return this.wsTransport.sendToActiveUsers(
       handler,
       'emitProgress'
     )
   }
 
-  async emitRedirectingRequestsStatusToApi (handler = () => {}) {
+  async emitRedirectingRequestsStatusToApi (
+    handler = () => {}
+  ) {
     return this.wsTransport.sendToActiveUsers(
       handler,
       'emitRedirectingRequestsStatusToApi'
