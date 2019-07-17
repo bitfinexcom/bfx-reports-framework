@@ -1,19 +1,7 @@
 'use strict'
 
-// TODO: need to check using
 const {
-  BaseError,
-  FindMethodError,
-  FindMethodToGetCsvFileError,
-  AuthError,
-  ArgsParamsError,
-  GrenacheServiceConfigArgsError,
-  EmailSendingError,
-  MinLimitParamError,
-  QueueJobAddingError,
-  SymbolsTypeError,
-  TimeframeError,
-  ParamsValidSchemaFindingError
+  BaseError
 } = require('bfx-report/workers/loc.api/errors')
 
 class CollSyncPermissionError extends BaseError {
@@ -28,12 +16,14 @@ class UpdateSyncQueueJobError extends BaseError {
   }
 }
 
+// TODO: need to check
 class AsyncProgressHandlerIsNotFnError extends BaseError {
   constructor (message = 'ERR_ASYNC_PROGRESS_HANDLER_IS_NOT_FUNCTION') {
     super(message)
   }
 }
 
+// TODO: need to check
 class AfterAllInsertsHookIsNotFnError extends BaseError {
   constructor (message = 'ERR_AFTER_ALL_INSERTS_HOOK_IS_NOT_FUNCTION') {
     super(message)
@@ -92,10 +82,7 @@ module.exports = {
   BaseError,
   CollSyncPermissionError,
   UpdateSyncQueueJobError,
-  FindMethodError,
-  FindMethodToGetCsvFileError,
   AsyncProgressHandlerIsNotFnError,
-  AuthError,
   AfterAllInsertsHookIsNotFnError,
   RemoveListElemsError,
   UpdateStateCollError,
@@ -103,14 +90,6 @@ module.exports = {
   ImplementationError,
   DAOInitializationError,
   ServerAvailabilityError,
-  ArgsParamsError,
-  GrenacheServiceConfigArgsError,
   ObjectMappingError,
-  EmailSendingError,
-  MinLimitParamError,
-  QueueJobAddingError,
-  SymbolsTypeError,
-  TimeframeError,
-  ParamsValidSchemaFindingError,
   DuringSyncMethodAccessError
 }
