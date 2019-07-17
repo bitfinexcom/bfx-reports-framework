@@ -4,9 +4,15 @@ const {
   getCsvArgs,
   checkJobAndGetUserData
 } = require('bfx-report/workers/loc.api/helpers')
+const bindDepsToFn = require(
+  'bfx-report/workers/loc.api/di/bind-deps-to-fn'
+)
 
+const TYPES = require('../di/types')
 const checkParams = require('./check-params')
-const { fullSnapshotReportCsvWriter } = require('./csv-writer')
+const {
+  fullSnapshotReportCsvWriter
+} = require('./csv-writer')
 
 const getCsvJobData = {
   async getRiskCsvJobData (
@@ -247,7 +253,11 @@ const getCsvJobData = {
           currency: 'symbol'
         }
       },
-      csvCustomWriter: fullSnapshotReportCsvWriter
+      csvCustomWriter: bindDepsToFn(
+        fullSnapshotReportCsvWriter,
+        [TYPES.RService],
+        true
+      )
     }
 
     return jobData
