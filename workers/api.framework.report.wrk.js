@@ -36,7 +36,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
   getApiConf () {
     const conf = this.conf[this.group]
-    const suffix = conf.syncMode ? `.${conf.dbDriver}` : ''
+    const suffix = conf.syncMode ? '.framework' : ''
 
     return { path: `service.report${suffix}` }
   }
