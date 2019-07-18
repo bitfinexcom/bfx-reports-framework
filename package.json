@@ -7,8 +7,9 @@
   "dependencies": {
     "better-npm-run": "^0.1.1",
     "bfx-facs-db-sqlite": "git+https://github.com:bitfinexcom/bfx-facs-db-sqlite.git",
-    "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
     "bfx-facs-scheduler": "git+https://github.com:bitfinexcom/bfx-facs-scheduler.git",
+    "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
+    "bfx-svc-boot-js": "https://github.com/bitfinexcom/bfx-svc-boot-js.git",
     "csv": "^5.1.1",
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "inversify": "^5.0.1",

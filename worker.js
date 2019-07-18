@@ -1,3 +1,5 @@
 'use strict'
 
-module.exports = require('bfx-report/worker')
+process.versions.electron = process.env.ELECTRON_VERSION
+
+module.exports = require('bfx-svc-boot-js')
