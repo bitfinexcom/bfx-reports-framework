@@ -5,6 +5,7 @@ const TYPES = require('bfx-report/workers/loc.api/di/types')
 module.exports = {
   ...TYPES,
   ALLOWED_COLLS: Symbol.for('ALLOWED_COLLS'),
+  FrameworkRServiceDepsSchema: Symbol.for('FrameworkRServiceDepsSchema'),
   GRC_BFX_OPTS: Symbol.for('GRC_BFX_OPTS'),
   ApiMiddlewareHandlerAfter: Symbol.for('ApiMiddlewareHandlerAfter'),
   ApiMiddleware: Symbol.for('ApiMiddleware'),

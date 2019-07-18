@@ -1,6 +1,11 @@
 'use strict'
 
-const { ContainerModule } = require('inversify')
+const {
+  ContainerModule,
+  decorate,
+  injectable
+} = require('inversify')
+const EventEmitter = require('events')
 const bindDepsToFn = require(
   'bfx-report/workers/loc.api/di/bind-deps-to-fn'
 )
@@ -35,14 +40,15 @@ const {
 } = require('../sync/colls.accessors')
 const getWallets = require('../sync/get-wallets')
 
+decorate(injectable(), EventEmitter)
+
 module.exports = ({
   grcBfxOpts
 }) => {
   return new ContainerModule((bind, unbind, isBound, rebind) => {
-    rebind(TYPES.RServiceDepsSchema)
+    bind(TYPES.FrameworkRServiceDepsSchema)
       .toDynamicValue((ctx) => {
         return [
-          ...ctx.container.get(TYPES.RServiceDepsSchema),
           ['_conf', TYPES.CONF],
           ['_sync', TYPES.Sync],
           ['_wsEventEmitter', TYPES.WSEventEmitter],
@@ -55,7 +61,11 @@ module.exports = ({
           ['_getWallets', TYPES.GetWallets]
         ]
       })
-      .inSingletonScope()
+    rebind(TYPES.RServiceDepsSchemaAliase)
+      .toDynamicValue((ctx) => [
+        ...ctx.container.get(TYPES.RServiceDepsSchema),
+        ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
+      ])
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.WSTransport)
@@ -106,7 +116,6 @@ module.exports = ({
           true
         )
       )
-      .inSingletonScope()
     bind(TYPES.ApiMiddlewareHandlerAfter)
       .to(ApiMiddlewareHandlerAfter)
     bind(TYPES.ApiMiddleware)
