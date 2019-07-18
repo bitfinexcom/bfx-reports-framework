@@ -23,7 +23,10 @@ const emptyRes = () => {
   return { res: [], nexPage: false }
 }
 
-const tryParseJSON = jsonString => {
+const tryParseJSON = (
+  jsonString,
+  isNotObject
+) => {
   try {
     if (typeof jsonString !== 'string') {
       return false
@@ -31,7 +34,13 @@ const tryParseJSON = jsonString => {
 
     const obj = JSON.parse(jsonString)
 
-    if (obj && typeof obj === 'object') {
+    if (
+      isNotObject ||
+      (
+        obj &&
+        typeof obj === 'object'
+      )
+    ) {
       return obj
     }
   } catch (e) { }
