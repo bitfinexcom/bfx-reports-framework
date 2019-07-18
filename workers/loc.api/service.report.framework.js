@@ -30,7 +30,7 @@ const {
   convertDataCurr
 } = require('./sync/helpers')
 
-class MediatorReportService extends ReportService {
+class FrameworkReportService extends ReportService {
   /**
    * @override
    */
@@ -298,14 +298,14 @@ class MediatorReportService extends ReportService {
 
   getPublicTradesConf (space, args = {}, cb) {
     return this._responder(() => {
-      return this._publicСollsСonfAccessors // TODO:
+      return this._publicСollsСonfAccessors
         .getPublicСollsСonf('publicTradesConf', args)
     }, 'getPublicTradesConf', cb)
   }
 
   getTickersHistoryConf (space, args = {}, cb) {
     return this._responder(() => {
-      return this._publicСollsСonfAccessors // TODO:
+      return this._publicСollsСonfAccessors
         .getPublicСollsСonf('tickersHistoryConf', args)
     }, 'getTickersHistoryConf', cb)
   }
@@ -314,7 +314,7 @@ class MediatorReportService extends ReportService {
     return this._responder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
-      await this._publicСollsСonfAccessors // TODO:
+      await this._publicСollsСonfAccessors
         .editPublicСollsСonf('publicTradesConf', args)
       await this._sync(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
 
@@ -326,7 +326,7 @@ class MediatorReportService extends ReportService {
     return this._responder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
-      await this._publicСollsСonfAccessors // TODO:
+      await this._publicСollsСonfAccessors
         .editPublicСollsСonf('tickersHistoryConf', args)
       await this._sync(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
 
@@ -426,7 +426,7 @@ class MediatorReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForApi', ['symbol'])
 
-      const confs = await this._publicСollsСonfAccessors // TODO:
+      const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
           'tickersHistoryConf',
           args
@@ -948,4 +948,4 @@ class MediatorReportService extends ReportService {
   }
 }
 
-module.exports = MediatorReportService
+module.exports = FrameworkReportService

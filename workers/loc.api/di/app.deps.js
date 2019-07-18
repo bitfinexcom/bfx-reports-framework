@@ -9,7 +9,9 @@ const TYPES = require('./types')
 
 const ALLOWED_COLLS = require('../sync/allowed.colls')
 const WSTransport = require('../ws-transport')
-const WSEventEmitter = require('../ws-transport/ws.event.emitter')
+const WSEventEmitter = require(
+  '../ws-transport/ws.event.emitter'
+)
 const Progress = require('../sync/progress')
 const syncSchema = require('../sync/schema')
 const sync = require('../sync')
@@ -19,6 +21,9 @@ const {
 } = require('../sync/helpers')
 const DataInserter = require('../sync/data.inserter')
 const SqliteDAO = require('../sync/dao/dao.sqlite')
+const {
+  PublicСollsСonfAccessors
+} = require('../sync/colls.accessors')
 
 module.exports = ({
   grcBfxOpts
@@ -35,7 +40,8 @@ module.exports = ({
           ['_prepareResponse', TYPES.PrepareResponse],
           ['_progress', TYPES.Progress],
           ['_syncSchema', TYPES.SyncSchema],
-          ['_dao', TYPES.DAO]
+          ['_dao', TYPES.DAO],
+          ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors]
         ]
       })
       .inSingletonScope()
@@ -46,6 +52,9 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.WSEventEmitter)
       .to(WSEventEmitter)
+      .inSingletonScope()
+    bind(TYPES.PublicСollsСonfAccessors)
+      .to(PublicСollsСonfAccessors)
       .inSingletonScope()
     bind(TYPES.Progress)
       .to(Progress)
