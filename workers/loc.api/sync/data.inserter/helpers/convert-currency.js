@@ -1,7 +1,7 @@
 'use strict'
 
-const { convertDataCurr } = require('../helpers')
-const ALLOWED_COLLS = require('../allowed.colls')
+const { convertDataCurr } = require('../../helpers')
+const ALLOWED_COLLS = require('../../allowed.colls')
 
 const _getConvSchema = () => {
   return new Map([
@@ -29,12 +29,12 @@ const _getConvSchema = () => {
   ])
 }
 
-module.exports = async ({
+module.exports = (
   dao,
   candlesSkippedSymbs,
   convertTo,
   syncColls
-}) => {
+) => async () => {
   if (syncColls.every(name => (
     name !== ALLOWED_COLLS.ALL &&
     name !== ALLOWED_COLLS.CANDLES

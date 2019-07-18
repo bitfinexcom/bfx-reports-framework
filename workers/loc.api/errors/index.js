@@ -16,14 +16,12 @@ class UpdateSyncQueueJobError extends BaseError {
   }
 }
 
-// TODO: need to check
 class AsyncProgressHandlerIsNotFnError extends BaseError {
   constructor (message = 'ERR_ASYNC_PROGRESS_HANDLER_IS_NOT_FUNCTION') {
     super(message)
   }
 }
 
-// TODO: need to check
 class AfterAllInsertsHookIsNotFnError extends BaseError {
   constructor (message = 'ERR_AFTER_ALL_INSERTS_HOOK_IS_NOT_FUNCTION') {
     super(message)

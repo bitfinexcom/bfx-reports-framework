@@ -19,6 +19,15 @@ const SyncQueue = require('../sync/sync.queue')
 const {
   redirectRequestsToApi
 } = require('../sync/helpers')
+const {
+  searchClosePriceAndSumAmount
+} = require('../sync/data.inserter/helpers')
+const ApiMiddlewareHandlerAfter = require(
+  '../sync/data.inserter/api.middleware.handler.after'
+)
+const ApiMiddleware = require(
+  '../sync/data.inserter/api.middleware'
+)
 const DataInserter = require('../sync/data.inserter')
 const SqliteDAO = require('../sync/dao/dao.sqlite')
 const {
@@ -84,6 +93,22 @@ module.exports = ({
         }
       })
       .inSingletonScope()
+    bind(TYPES.SearchClosePriceAndSumAmount)
+      .toConstantValue(
+        bindDepsToFn(
+          searchClosePriceAndSumAmount,
+          [
+            TYPES.RService,
+            TYPES.DAO
+          ],
+          true
+        )
+      )
+      .inSingletonScope()
+    bind(TYPES.ApiMiddlewareHandlerAfter)
+      .to(ApiMiddlewareHandlerAfter)
+    bind(TYPES.ApiMiddleware)
+      .to(ApiMiddleware)
     bind(TYPES.DataInserter)
       .to(DataInserter)
     bind(TYPES.DataInserterFactory)

@@ -8,6 +8,9 @@ const groupByTimeframe = require('./group-by-timeframe')
 const isForexSymb = require('./is-forex-symb')
 const redirectRequestsToApi = require('./redirect-requests-to-api')
 const checkCollPermission = require('./check-coll-permission')
+const {
+  delay
+} = require('./utils')
 
 module.exports = {
   convertDataCurr,
@@ -17,5 +20,6 @@ module.exports = {
   groupByTimeframe,
   isForexSymb,
   redirectRequestsToApi,
-  checkCollPermission
+  checkCollPermission,
+  delay
 }
