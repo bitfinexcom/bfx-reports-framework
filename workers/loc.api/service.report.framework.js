@@ -337,7 +337,7 @@ class FrameworkReportService extends ReportService {
   getEmail (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getEmail(space, args, cb) // TODO: need to check double cb call
+        super.getEmail(space, args, cb)
 
         return
       }
