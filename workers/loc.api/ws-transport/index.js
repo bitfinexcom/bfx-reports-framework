@@ -310,8 +310,8 @@ class WSTransport {
   stop () {
     clearInterval(this._announceItv)
 
-    this.peer.stop()
-    this.transport.stop()
+    if (this.peer) this.peer.stop()
+    if (this.transport) this.transport.stop()
   }
 }
 
