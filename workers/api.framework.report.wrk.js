@@ -129,7 +129,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     this.scheduler_sync.mem.get(name).rule = rule
   }
 
-  stopService () {
+  async stopService () {
+    await super.stopService()
+
     const wsTransport = this.container.get(TYPES.WSTransport)
 
     wsTransport.stop()
