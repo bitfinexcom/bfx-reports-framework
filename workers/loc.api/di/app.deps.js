@@ -33,6 +33,7 @@ const SqliteDAO = require('../sync/dao/dao.sqlite')
 const {
   PublicСollsСonfAccessors
 } = require('../sync/colls.accessors')
+const getWallets = require('../sync/get-wallets')
 
 module.exports = ({
   grcBfxOpts
@@ -50,7 +51,8 @@ module.exports = ({
           ['_progress', TYPES.Progress],
           ['_syncSchema', TYPES.SyncSchema],
           ['_dao', TYPES.DAO],
-          ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors]
+          ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors],
+          ['_getWallets', TYPES.GetWallets]
         ]
       })
       .inSingletonScope()
@@ -144,6 +146,13 @@ module.exports = ({
           TYPES.ALLOWED_COLLS,
           TYPES.Progress
         ],
+        true
+      )
+    )
+    bind(TYPES.GetWallets).toConstantValue(
+      bindDepsToFn(
+        getWallets,
+        [TYPES.DAO],
         true
       )
     )

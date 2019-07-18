@@ -26,9 +26,6 @@ const {
   emptyRes,
   collObjToArr
 } = require('./helpers')
-const {
-  convertDataCurr
-} = require('./sync/helpers')
 
 class FrameworkReportService extends ReportService {
   /**
@@ -773,7 +770,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO: need to move the base logic to a service
    * @override
    */
   getWallets (space, args, cb) {
@@ -784,47 +780,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForWallets')
 
-      const {
-        auth = {},
-        params: { end = Date.now() } = {}
-      } = { ...args }
-
-      const walletsFromLedgers = await this.dao.findInCollBy(
-        '_getWallets',
-        {
-          auth,
-          params: { end }
-        }
-      )
-
-      const _wallets = walletsFromLedgers
-        .filter(({
-          type,
-          balance,
-          currency
-        } = {}) => (
-          type &&
-          typeof type === 'string' &&
-          balance &&
-          Number.isFinite(balance) &&
-          typeof currency === 'string' &&
-          currency.length >= 3
-        ))
-
-      const wallets = _wallets.map(w => ({ balanceUsd: null, ...w }))
-
-      return convertDataCurr(
-        this.dao,
-        wallets,
-        {
-          convertTo: 'USD',
-          symbolFieldName: 'currency',
-          mts: end,
-          convFields: [
-            { inputField: 'balance', outputField: 'balanceUsd' }
-          ]
-        }
-      )
+      return this._getWallets(args)
     }, 'getWallets', cb)
   }
 
