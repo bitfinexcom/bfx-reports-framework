@@ -1,6 +1,11 @@
 'use strict'
 
 const {
+  decorate,
+  injectable
+} = require('inversify')
+
+const {
   DAOInitializationError,
   ImplementationError
 } = require('../../errors')
@@ -131,5 +136,7 @@ class DAO {
    */
   async getCountBy () { throw new ImplementationError() }
 }
+
+decorate(injectable(), DAO)
 
 module.exports = DAO
