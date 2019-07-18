@@ -57,7 +57,7 @@ class Progress extends EventEmitter {
       !isEmpty(progress) &&
       typeof progress.value === 'string'
     )
-      ? tryParseJSON(progress.value)
+      ? tryParseJSON(progress.value, true)
       : 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
   }
 }
