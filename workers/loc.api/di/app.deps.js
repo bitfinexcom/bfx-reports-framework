@@ -153,7 +153,8 @@ module.exports = ({
           TYPES.SyncQueue,
           TYPES.RService,
           TYPES.ALLOWED_COLLS,
-          TYPES.Progress
+          TYPES.Progress,
+          TYPES.RedirectRequestsToApi
         ],
         true
       )
