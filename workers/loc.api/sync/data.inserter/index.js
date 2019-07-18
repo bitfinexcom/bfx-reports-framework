@@ -69,20 +69,10 @@ class DataInserter extends EventEmitter {
 
     this._candlesTimeframe = '1D'
     this._candlesSection = 'hist'
-
-    this.addAfterAllInsertsHooks(convertCurrency(
-      this.dao,
-      this.candlesSkippedSymbs,
-      this.convertTo,
-      this.syncColls
-    ))
   }
 
   init (syncColls = this.ALLOWED_COLLS.ALL) {
-    this.syncColls = (
-      syncColls &&
-      Array.isArray(syncColls)
-    )
+    this.syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
 
@@ -93,6 +83,12 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
+    this.addAfterAllInsertsHooks(convertCurrency(
+      this.dao,
+      this.candlesSkippedSymbs,
+      this.convertTo,
+      this.syncColls
+    ))
   }
 
   setAsyncProgressHandler (cb) {
