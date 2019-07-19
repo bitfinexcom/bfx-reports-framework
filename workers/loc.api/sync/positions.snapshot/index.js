@@ -121,6 +121,12 @@ class PositionsSnapshot {
     const _isForexSymb = isForexSymb(currency)
 
     if (
+      currency === 'USD' &&
+      Number.isFinite(pl)
+    ) {
+      return pl
+    }
+    if (
       _isForexSymb ||
       currency.length < 3 ||
       !Number.isFinite(pl)
