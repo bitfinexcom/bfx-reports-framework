@@ -15,47 +15,6 @@ const {
 } = require('./csv-writer')
 
 const getCsvJobData = {
-  async getRiskCsvJobData (
-    reportService,
-    args,
-    uId,
-    uInfo
-  ) {
-    checkParams(args, 'paramsSchemaForRiskCsv')
-
-    const {
-      userId,
-      userInfo
-    } = await checkJobAndGetUserData(
-      reportService,
-      args,
-      uId,
-      uInfo
-    )
-
-    const csvArgs = getCsvArgs(args)
-
-    const jobData = {
-      userInfo,
-      userId,
-      name: 'getRisk',
-      fileNamesMap: [['getRisk', 'risk']],
-      args: csvArgs,
-      propNameForPagination: null,
-      columnsCsv: {
-        USD: 'USD',
-        EUR: 'EUR',
-        GBP: 'GBP',
-        JPY: 'JPY',
-        mts: 'DATE'
-      },
-      formatSettings: {
-        mts: 'date'
-      }
-    }
-
-    return jobData
-  },
   async getBalanceHistoryCsvJobData (
     reportService,
     args,

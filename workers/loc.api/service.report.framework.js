@@ -784,19 +784,6 @@ class FrameworkReportService extends ReportService {
     }, 'getWallets', cb)
   }
 
-  getRisk (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
-
-      checkParams(args, 'paramsSchemaForRiskApi')
-
-      // TODO: need to bind like a service and inject to here
-      return this._getRisk(args)
-    }, 'getRisk', cb)
-  }
-
   getBalanceHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
@@ -852,15 +839,6 @@ class FrameworkReportService extends ReportService {
         { ...args, getCsvJobData }
       )
     }, 'getMultipleCsv', cb)
-  }
-
-  getRiskCsv (space, args, cb) {
-    return this._responder(() => {
-      return this._generateCsv(
-        'getRiskCsvJobData',
-        { ...args, getCsvJobData }
-      )
-    }, 'getRiskCsv', cb)
   }
 
   getBalanceHistoryCsv (space, args, cb) {
