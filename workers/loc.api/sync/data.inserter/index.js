@@ -82,6 +82,7 @@ class DataInserter extends EventEmitter {
 
     this._methodCollMap = filterMethodCollMapByList(
       this.syncSchema,
+      this.ALLOWED_COLLS,
       this.syncColls,
       this._allowedCollsNames
     )

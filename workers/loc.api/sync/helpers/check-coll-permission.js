@@ -1,13 +1,12 @@
 'use strict'
 
-const ALLOWED_COLLS = require('../allowed.colls')
 const {
   CollSyncPermissionError
 } = require('../../errors')
 
 module.exports = (
   syncColls,
-  allowedColls = ALLOWED_COLLS
+  ALLOWED_COLLS
 ) => {
   if (
     !syncColls ||
@@ -16,7 +15,7 @@ module.exports = (
     syncColls.some(item => (
       !item ||
       typeof item !== 'string' ||
-      Object.values(allowedColls)
+      Object.values(ALLOWED_COLLS)
         .every(collName => item !== collName)
     ))
   ) {

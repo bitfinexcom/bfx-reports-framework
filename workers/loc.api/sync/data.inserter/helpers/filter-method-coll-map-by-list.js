@@ -1,7 +1,5 @@
 'use strict'
 
-const ALLOWED_COLLS = require('../../allowed.colls')
-
 const _reduceMethodCollMap = (
   _methodCollMap,
   res,
@@ -30,6 +28,7 @@ const _isAllowedColl = (coll, allowedCollsNames) => {
 
 module.exports = (
   syncSchema,
+  ALLOWED_COLLS,
   syncColls,
   allowedCollsNames
 ) => {
