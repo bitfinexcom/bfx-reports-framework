@@ -42,6 +42,7 @@ const getWallets = require('../sync/get-wallets')
 const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
 const PositionsSnapshot = require('../sync/positions.snapshot')
+const FullSnapshotReport = require('../sync/full.snapshot.report')
 
 decorate(injectable(), EventEmitter)
 
@@ -64,7 +65,8 @@ module.exports = ({
           ['_getWallets', TYPES.GetWallets],
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
-          ['_positionsSnapshot', TYPES.PositionsSnapshot]
+          ['_positionsSnapshot', TYPES.PositionsSnapshot],
+          ['_fullSnapshotReport', TYPES.FullSnapshotReport]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -184,5 +186,7 @@ module.exports = ({
       .to(WinLoss)
     bind(TYPES.PositionsSnapshot)
       .to(PositionsSnapshot)
+    bind(TYPES.FullSnapshotReport)
+      .to(FullSnapshotReport)
   })
 }

@@ -26,5 +26,6 @@ module.exports = {
   GetWallets: Symbol.for('GetWallets'),
   BalanceHistory: Symbol.for('BalanceHistory'),
   WinLoss: Symbol.for('WinLoss'),
-  PositionsSnapshot: Symbol.for('PositionsSnapshot')
+  PositionsSnapshot: Symbol.for('PositionsSnapshot'),
+  FullSnapshotReport: Symbol.for('FullSnapshotReport')
 }

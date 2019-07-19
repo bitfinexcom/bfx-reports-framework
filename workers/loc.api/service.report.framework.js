@@ -841,8 +841,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
 
-      // TODO: need to bind like a service and inject to here
-      return this._getFullSnapshotReport(args)
+      return this._fullSnapshotReport.getFullSnapshotReport(args)
     }, 'getFullSnapshotReport', cb)
   }
 
