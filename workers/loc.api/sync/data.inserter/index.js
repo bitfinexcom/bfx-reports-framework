@@ -47,7 +47,8 @@ class DataInserter extends EventEmitter {
     dao,
     apiMiddleware,
     syncSchema,
-    ALLOWED_COLLS
+    ALLOWED_COLLS,
+    currencyConverter
   ) {
     super()
 
@@ -56,6 +57,7 @@ class DataInserter extends EventEmitter {
     this.apiMiddleware = apiMiddleware
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.currencyConverter = currencyConverter
 
     this._asyncProgressHandler = null
     this._auth = null
@@ -85,6 +87,8 @@ class DataInserter extends EventEmitter {
     )
     this.addAfterAllInsertsHooks(convertCurrency(
       this.dao,
+      this.currencyConverter,
+      this.ALLOWED_COLLS,
       this.candlesSkippedSymbs,
       this.convertTo,
       this.syncColls
@@ -940,5 +944,6 @@ decorate(inject(TYPES.DAO), DataInserter, 1)
 decorate(inject(TYPES.ApiMiddleware), DataInserter, 2)
 decorate(inject(TYPES.SyncSchema), DataInserter, 3)
 decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 4)
+decorate(inject(TYPES.CurrencyConverter), DataInserter, 5)
 
 module.exports = DataInserter

@@ -1,11 +1,8 @@
 'use strict'
 
-const {
-  convertDataCurr
-} = require('../helpers')
-
 module.exports = (
-  dao
+  dao,
+  currencyConverter
 ) => async (args) => {
   const {
     auth = {},
@@ -36,8 +33,7 @@ module.exports = (
 
   const wallets = _wallets.map(w => ({ balanceUsd: null, ...w }))
 
-  return convertDataCurr(
-    dao,
+  return currencyConverter.convertByCandles(
     wallets,
     {
       convertTo: 'USD',

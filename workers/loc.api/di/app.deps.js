@@ -43,6 +43,7 @@ const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
 const PositionsSnapshot = require('../sync/positions.snapshot')
 const FullSnapshotReport = require('../sync/full.snapshot.report')
+const CurrencyConverter = require('../sync/currency.converter')
 
 decorate(injectable(), EventEmitter)
 
@@ -130,6 +131,8 @@ module.exports = ({
           true
         )
       )
+    bind(TYPES.CurrencyConverter)
+      .to(CurrencyConverter)
     bind(TYPES.ApiMiddlewareHandlerAfter)
       .to(ApiMiddlewareHandlerAfter)
     bind(TYPES.ApiMiddleware)
@@ -176,7 +179,10 @@ module.exports = ({
     bind(TYPES.GetWallets).toConstantValue(
       bindDepsToFn(
         getWallets,
-        [TYPES.DAO],
+        [
+          TYPES.DAO,
+          TYPES.CurrencyConverter
+        ],
         true
       )
     )

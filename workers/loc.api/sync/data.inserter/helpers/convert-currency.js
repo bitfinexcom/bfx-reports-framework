@@ -1,9 +1,6 @@
 'use strict'
 
-const { convertDataCurr } = require('../../helpers')
-const ALLOWED_COLLS = require('../../allowed.colls')
-
-const _getConvSchema = () => {
+const _getConvSchema = (ALLOWED_COLLS) => {
   return new Map([
     [
       ALLOWED_COLLS.LEDGERS,
@@ -31,6 +28,8 @@ const _getConvSchema = () => {
 
 module.exports = (
   dao,
+  currencyConverter,
+  ALLOWED_COLLS,
   candlesSkippedSymbs,
   convertTo,
   syncColls
@@ -42,7 +41,7 @@ module.exports = (
     return
   }
 
-  const convSchema = _getConvSchema()
+  const convSchema = _getConvSchema(ALLOWED_COLLS)
 
   for (const [collName, schema] of convSchema) {
     let count = 0
@@ -70,14 +69,14 @@ module.exports = (
         break
       }
 
-      const convElems = await convertDataCurr(
-        dao,
-        elems,
-        {
-          convertTo,
-          ...schema
-        }
-      )
+      const convElems = await currencyConverter
+        .convertByCandles(
+          elems,
+          {
+            convertTo,
+            ...schema
+          }
+        )
 
       await dao.updateElemsInCollBy(
         collName,
