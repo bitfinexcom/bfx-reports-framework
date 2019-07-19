@@ -40,6 +40,7 @@ const {
 } = require('../sync/colls.accessors')
 const getWallets = require('../sync/get-wallets')
 const BalanceHistory = require('../sync/balance.history')
+const WinLoss = require('../sync/win.loss')
 
 decorate(injectable(), EventEmitter)
 
@@ -60,7 +61,8 @@ module.exports = ({
           ['_dao', TYPES.DAO],
           ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors],
           ['_getWallets', TYPES.GetWallets],
-          ['_balanceHistory', TYPES.BalanceHistory]
+          ['_balanceHistory', TYPES.BalanceHistory],
+          ['_winLoss', TYPES.WinLoss]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -176,5 +178,7 @@ module.exports = ({
     )
     bind(TYPES.BalanceHistory)
       .to(BalanceHistory)
+    bind(TYPES.WinLoss)
+      .to(WinLoss)
   })
 }

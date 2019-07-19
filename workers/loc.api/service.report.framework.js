@@ -817,8 +817,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForWinLossApi')
 
-      // TODO: need to bind like a service and inject to here
-      return this._getWinLoss(args)
+      return this._winLoss.getWinLoss(args)
     }, 'getWinLoss', cb)
   }
 
