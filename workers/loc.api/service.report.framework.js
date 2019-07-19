@@ -805,8 +805,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForBalanceHistoryApi')
 
-      // TODO: need to bind like a service and inject to here
-      return this._getBalanceHistory(args)
+      return this._balanceHistory.getBalanceHistory(args)
     }, 'getBalanceHistory', cb)
   }
 
