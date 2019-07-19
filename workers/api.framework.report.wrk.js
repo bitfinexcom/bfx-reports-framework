@@ -125,7 +125,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     ))
     const name = 'sync'
 
-    this.scheduler_sync.add(name, sync, rule)
+    this.scheduler_sync.add(name, () => sync.start(), rule)
     this.scheduler_sync.mem.get(name).rule = rule
   }
 

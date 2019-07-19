@@ -181,7 +181,7 @@ class FrameworkReportService extends ReportService {
         ...pick(args.auth, ['apiKey', 'apiSecret']),
         isDataFromDb: 1
       })
-      await this._sync(true)
+      await this._sync.start(true)
 
       return true
     }, 'enableSyncMode', cb)
@@ -289,7 +289,7 @@ class FrameworkReportService extends ReportService {
         ? args.params.syncColls
         : this._ALLOWED_COLLS.ALL
 
-      return this._sync(true, syncColls)
+      return this._sync.start(true, syncColls)
     }, 'syncNow', cb)
   }
 
@@ -313,7 +313,7 @@ class FrameworkReportService extends ReportService {
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('publicTradesConf', args)
-      await this._sync(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
+      await this._sync.start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
 
       return true
     }, 'editPublicTradesConf', cb)
@@ -325,7 +325,7 @@ class FrameworkReportService extends ReportService {
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('tickersHistoryConf', args)
-      await this._sync(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
+      await this._sync.start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
 
       return true
     }, 'editTickersHistoryConf', cb)

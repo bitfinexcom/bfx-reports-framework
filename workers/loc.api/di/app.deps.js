@@ -19,7 +19,7 @@ const WSEventEmitter = require(
 )
 const Progress = require('../sync/progress')
 const syncSchema = require('../sync/schema')
-const sync = require('../sync')
+const Sync = require('../sync')
 const SyncQueue = require('../sync/sync.queue')
 const {
   redirectRequestsToApi
@@ -131,6 +131,16 @@ module.exports = ({
           true
         )
       )
+    bind(TYPES.RedirectRequestsToApi).toConstantValue(
+      bindDepsToFn(
+        redirectRequestsToApi,
+        [
+          TYPES.DAO,
+          TYPES.WSEventEmitter
+        ],
+        true
+      )
+    )
     bind(TYPES.CurrencyConverter)
       .to(CurrencyConverter)
     bind(TYPES.ApiMiddlewareHandlerAfter)
@@ -153,29 +163,9 @@ module.exports = ({
     bind(TYPES.SyncQueue)
       .to(SyncQueue)
       .inSingletonScope()
-    bind(TYPES.RedirectRequestsToApi).toConstantValue(
-      bindDepsToFn(
-        redirectRequestsToApi,
-        [
-          TYPES.DAO,
-          TYPES.WSEventEmitter
-        ],
-        true
-      )
-    )
-    bind(TYPES.Sync).toConstantValue(
-      bindDepsToFn(
-        sync,
-        [
-          TYPES.SyncQueue,
-          TYPES.RService,
-          TYPES.ALLOWED_COLLS,
-          TYPES.Progress,
-          TYPES.RedirectRequestsToApi
-        ],
-        true
-      )
-    )
+    bind(TYPES.Sync)
+      .to(Sync)
+      .inSingletonScope()
     bind(TYPES.Wallets)
       .to(Wallets)
     bind(TYPES.BalanceHistory)
