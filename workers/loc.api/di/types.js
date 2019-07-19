@@ -23,7 +23,7 @@ module.exports = {
   SqliteDAO: Symbol.for('SqliteDAO'),
   PublicСollsСonfAccessors: Symbol.for('PublicСollsСonfAccessors'),
   SearchClosePriceAndSumAmount: Symbol.for('SearchClosePriceAndSumAmount'),
-  GetWallets: Symbol.for('GetWallets'),
+  Wallets: Symbol.for('Wallets'),
   BalanceHistory: Symbol.for('BalanceHistory'),
   WinLoss: Symbol.for('WinLoss'),
   PositionsSnapshot: Symbol.for('PositionsSnapshot'),

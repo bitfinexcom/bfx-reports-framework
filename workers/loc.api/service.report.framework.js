@@ -780,7 +780,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForWallets')
 
-      return this._getWallets(args)
+      return this._wallets.getWallets(args)
     }, 'getWallets', cb)
   }
 

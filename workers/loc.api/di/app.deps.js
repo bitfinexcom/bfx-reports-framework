@@ -38,7 +38,7 @@ const SqliteDAO = require('../sync/dao/dao.sqlite')
 const {
   PublicСollsСonfAccessors
 } = require('../sync/colls.accessors')
-const getWallets = require('../sync/get-wallets')
+const Wallets = require('../sync/wallets')
 const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
 const PositionsSnapshot = require('../sync/positions.snapshot')
@@ -63,7 +63,7 @@ module.exports = ({
           ['_syncSchema', TYPES.SyncSchema],
           ['_dao', TYPES.DAO],
           ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors],
-          ['_getWallets', TYPES.GetWallets],
+          ['_wallets', TYPES.Wallets],
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
@@ -176,16 +176,8 @@ module.exports = ({
         true
       )
     )
-    bind(TYPES.GetWallets).toConstantValue(
-      bindDepsToFn(
-        getWallets,
-        [
-          TYPES.DAO,
-          TYPES.CurrencyConverter
-        ],
-        true
-      )
-    )
+    bind(TYPES.Wallets)
+      .to(Wallets)
     bind(TYPES.BalanceHistory)
       .to(BalanceHistory)
     bind(TYPES.WinLoss)
