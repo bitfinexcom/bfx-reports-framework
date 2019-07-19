@@ -127,8 +127,7 @@ module.exports = ({
           [
             TYPES.RService,
             TYPES.DAO
-          ],
-          true
+          ]
         )
       )
     bind(TYPES.RedirectRequestsToApi).toConstantValue(
@@ -137,8 +136,7 @@ module.exports = ({
         [
           TYPES.DAO,
           TYPES.WSEventEmitter
-        ],
-        true
+        ]
       )
     )
     bind(TYPES.CurrencyConverter)
