@@ -829,8 +829,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
 
-      // TODO: need to bind like a service and inject to here
-      return this._getPositionsSnapshot(args)
+      return this._positionsSnapshot.getPositionsSnapshot(args)
     }, 'getPositionsSnapshot', cb)
   }
 
