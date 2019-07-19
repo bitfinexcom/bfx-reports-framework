@@ -83,9 +83,7 @@ module.exports = ({
     bind(TYPES.SyncSchema).toConstantValue(
       syncSchema
     )
-    bind(TYPES.SqliteDAO)
-      .to(SqliteDAO)
-    bind(TYPES.DAO)
+    bind(TYPES.DB)
       .toDynamicValue((ctx) => {
         const { dbDriver } = ctx.container.get(
           TYPES.CONF
@@ -95,13 +93,21 @@ module.exports = ({
         )
 
         if (dbDriver === 'sqlite') {
-          const db = rService.ctx.dbSqlite_m0.db
-          const dao = ctx.container.get(
+          return rService.ctx.dbSqlite_m0.db
+        }
+      })
+    bind(TYPES.SqliteDAO)
+      .to(SqliteDAO)
+    bind(TYPES.DAO)
+      .toDynamicValue((ctx) => {
+        const { dbDriver } = ctx.container.get(
+          TYPES.CONF
+        )
+
+        if (dbDriver === 'sqlite') {
+          return ctx.container.get(
             TYPES.SqliteDAO
           )
-          dao.setDB(db)
-
-          return dao
         }
       })
       .inSingletonScope()

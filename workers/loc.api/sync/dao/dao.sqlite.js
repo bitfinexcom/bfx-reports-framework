@@ -757,7 +757,8 @@ class SqliteDAO extends DAO {
 }
 
 decorate(injectable(), SqliteDAO)
-decorate(inject(TYPES.SyncSchema), SqliteDAO, 0)
-decorate(inject(TYPES.PrepareResponse), SqliteDAO, 1)
+decorate(inject(TYPES.DB), SqliteDAO, 0)
+decorate(inject(TYPES.SyncSchema), SqliteDAO, 1)
+decorate(inject(TYPES.PrepareResponse), SqliteDAO, 2)
 
 module.exports = SqliteDAO

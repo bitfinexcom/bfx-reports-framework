@@ -18,6 +18,7 @@ module.exports = {
   Sync: Symbol.for('Sync'),
   SyncQueue: Symbol.for('SyncQueue'),
   Progress: Symbol.for('Progress'),
+  DB: Symbol.for('DB'),
   DAO: Symbol.for('DAO'),
   SqliteDAO: Symbol.for('SqliteDAO'),
   PublicСollsСonfAccessors: Symbol.for('PublicСollsСonfAccessors'),

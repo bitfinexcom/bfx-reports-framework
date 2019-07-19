@@ -12,9 +12,11 @@ const {
 
 class DAO {
   constructor (
+    db,
     syncSchema,
     prepareResponse
   ) {
+    this.db = db
     this.syncSchema = syncSchema
     this.prepareResponse = prepareResponse
   }
