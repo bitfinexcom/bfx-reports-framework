@@ -37,9 +37,6 @@ class FrameworkReportService extends ReportService {
     await this._databaseInitialize(db)
   }
 
-  /**
-   * @abstract
-   */
   async _databaseInitialize (db) {
     await this._dao.databaseInitialize(db)
     await this._dao.updateProgress('SYNCHRONIZATION_HAS_NOT_STARTED_YET')

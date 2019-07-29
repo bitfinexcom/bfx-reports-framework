@@ -2,7 +2,7 @@
 
 const {
   createMockRESTv2SrvWithDate: _createMockRESTv2SrvWithDate,
-  getMockDataOpts,
+  getMockDataOpts: getBaseMockDataOpts,
   getMockData: _getMockData,
   setDataTo: _setDataTo
 } = require('bfx-report/test/helpers/helpers.mock-rest-v2')
@@ -40,14 +40,16 @@ const setDataTo = (
   return dataItem
 }
 
+const getMockDataOpts = () => ({
+  ...getBaseMockDataOpts(),
+  candles: { limit: 500 }
+})
+
 const createMockRESTv2SrvWithDate = (
   start = Date.now(),
   end = start,
   limit = null,
-  opts = {
-    ...getMockDataOpts(),
-    candles: { limit: 500 }
-  },
+  opts = getMockDataOpts(),
   {
     _getMockData = getMockData,
     _setDataTo = setDataTo
