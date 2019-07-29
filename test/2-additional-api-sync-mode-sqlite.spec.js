@@ -5,24 +5,28 @@ const { assert } = require('chai')
 const request = require('supertest')
 
 const {
-  startEnviroment,
-  stopEnviroment
+  stopEnvironment
 } = require('bfx-report/test/helpers/helpers.boot')
 const {
   rmDB,
   rmAllFiles,
-  queueToPromise,
-  delay,
-  connToSQLite,
-  closeSQLite
+  queueToPromise
 } = require('bfx-report/test/helpers/helpers.core')
 const {
   testMethodOfGettingCsv
 } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
-  createMockRESTv2SrvWithDate,
-  getMockData
+  startEnvironment
+} = require('./helpers/helpers.boot')
+const {
+  connToSQLite,
+  closeSQLite,
+  delay
+} = require('./helpers/helpers.core')
+
+const {
+  createMockRESTv2SrvWithDate
 } = require('./helpers/helpers.mock-rest-v2')
 
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
@@ -30,25 +34,24 @@ const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
 let wrkReportServiceApi = null
-let auth = {
-  apiKey: 'fake',
-  apiSecret: 'fake'
-}
 let processorQueue = null
 let aggregatorQueue = null
 let mockRESTv2Srv = null
 let db = null
 
 const basePath = '/api'
-const serviceRoot = path.join(__dirname, '..')
 const tempDirPath = path.join(__dirname, '..', 'workers/loc.api/queue/temp')
 const dbDirPath = path.join(__dirname, '..', 'db')
 const date = new Date()
 const end = date.getTime()
 const start = (new Date()).setDate(date.getDate() - 90)
 const email = 'fake@email.fake'
+const auth = {
+  apiKey: 'fake',
+  apiSecret: 'fake'
+}
 
-describe('Sync mode with SQLite', () => {
+describe('Additional sync mode API with SQLite', () => {
   before(async function () {
     this.timeout(20000)
 
@@ -56,25 +59,21 @@ describe('Sync mode with SQLite', () => {
 
     await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
-    const env = await startEnviroment(false, false, 1, {
-      wtype: 'wrk-report-framework-api',
-      syncMode: true,
-      isSchedulerEnabled: true,
+    const env = await startEnvironment(false, false, 1, {
       dbDriver: 'sqlite'
-    },
-    serviceRoot)
+    })
 
     wrkReportServiceApi = env.wrksReportServiceApi[0]
     processorQueue = wrkReportServiceApi.lokue_processor.q
     aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
 
-    db = await connToSQLite(wrkReportServiceApi)
+    db = await connToSQLite()
   })
 
   after(async function () {
     this.timeout(5000)
 
-    await stopEnviroment()
+    await stopEnvironment()
     await closeSQLite(db)
     await rmDB(dbDirPath)
     await rmAllFiles(tempDirPath, ['README.md'])
@@ -153,110 +152,6 @@ describe('Sync mode with SQLite', () => {
 
       await delay()
     }
-  })
-
-  it('it should be successfully performed by the getLedgers method', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/get-data`)
-      .type('json')
-      .send({
-        auth,
-        method: 'getLedgers',
-        params: {
-          symbol: 'BTC',
-          start: 0,
-          end,
-          limit: 2
-        },
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isObject(res.body.result)
-    assert.isArray(res.body.result.res)
-    assert.isNumber(res.body.result.nextPage)
-
-    const mockCandle = getMockData('candles')[0]
-    const close = mockCandle[2]
-
-    res.body.result.res.forEach(resItem => {
-      assert.isObject(resItem)
-      assert.containsAllKeys(resItem, [
-        'id',
-        'currency',
-        'mts',
-        'amount',
-        'amountUsd',
-        'balance',
-        'balanceUsd',
-        'description',
-        'wallet'
-      ])
-
-      if (
-        ['USD', 'EUR', 'GBP', 'JPY'].every(symb => (
-          symb !== resItem.currency
-        ))
-      ) {
-        assert.isNumber(resItem.amountUsd)
-        assert.isNumber(resItem.balanceUsd)
-        assert.strictEqual(resItem.amountUsd, resItem.amount * close)
-        assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
-      }
-    })
-  })
-
-  it('it should be successfully performed by the getWallets method', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/get-data`)
-      .type('json')
-      .send({
-        auth,
-        method: 'getWallets',
-        params: {
-          end
-        },
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isArray(res.body.result)
-
-    const mockCandle = getMockData('candles')[0]
-    const close = mockCandle[2]
-
-    res.body.result.forEach(resItem => {
-      assert.isObject(resItem)
-      assert.containsAllKeys(resItem, [
-        'type',
-        'currency',
-        'balance',
-        'balanceUsd',
-        'unsettledInterest',
-        'balanceAvailable',
-        'placeHolder',
-        'mtsUpdate'
-      ])
-
-      if (
-        ['USD', 'EUR', 'GBP', 'JPY'].every(symb => (
-          symb !== resItem.currency
-        ))
-      ) {
-        assert.isNumber(resItem.balanceUsd)
-        assert.strictEqual(resItem.balanceUsd, resItem.balance * close)
-      }
-    })
   })
 
   it('it should be successfully performed by the getBalanceHistory method', async function () {
