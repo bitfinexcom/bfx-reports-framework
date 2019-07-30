@@ -214,8 +214,7 @@ const getCsvJobData = {
       },
       csvCustomWriter: bindDepsToFn(
         fullSnapshotReportCsvWriter,
-        [TYPES.RService],
-        true
+        [TYPES.RService]
       )
     }
 
