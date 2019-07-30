@@ -6,8 +6,8 @@ const {
   injectable
 } = require('inversify')
 const EventEmitter = require('events')
-const bindDepsToFn = require(
-  'bfx-report/workers/loc.api/di/bind-deps-to-fn'
+const { bindDepsToFn } = require(
+  'bfx-report/workers/loc.api/di/helpers'
 )
 
 const TYPES = require('./types')

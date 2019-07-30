@@ -4,8 +4,8 @@ const {
   getCsvArgs,
   checkJobAndGetUserData
 } = require('bfx-report/workers/loc.api/helpers')
-const bindDepsToFn = require(
-  'bfx-report/workers/loc.api/di/bind-deps-to-fn'
+const { bindDepsToFn } = require(
+  'bfx-report/workers/loc.api/di/helpers'
 )
 
 const TYPES = require('../di/types')
