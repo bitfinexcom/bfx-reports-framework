@@ -5,7 +5,7 @@ const { stringify } = require('csv')
 const {
   write,
   getDataFromApi
-} = require('bfx-report/workers/loc.api/queue/helpers')
+} = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
 
 module.exports = (rService) => async (
   wStream,
@@ -60,7 +60,7 @@ module.exports = (rService) => async (
   walletsStringifier.pipe(wStream)
 
   const res = await getDataFromApi(
-    rService.getFullSnapshotReport,
+    rService.getFullSnapshotReport.bind(rService),
     args
   )
 
