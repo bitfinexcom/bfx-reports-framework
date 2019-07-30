@@ -14,10 +14,6 @@ const {
   queueToPromiseMulti
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  createMockRESTv2SrvWithDate,
-  getMockData
-} = require('./helpers/helpers.mock-rest-v2')
-const {
   testMethodOfGettingCsv,
   testProcQueue
 } = require('bfx-report/test/helpers/helpers.tests')
@@ -30,6 +26,10 @@ const {
   closeSQLite,
   delay
 } = require('./helpers/helpers.core')
+const {
+  createMockRESTv2SrvWithDate,
+  getMockData
+} = require('./helpers/helpers.mock-rest-v2')
 
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
@@ -53,7 +53,7 @@ const auth = {
   apiSecret: 'fake'
 }
 
-describe('Sync mode with SQLite', () => {
+describe('Sync mode API with SQLite', () => {
   before(async function () {
     this.timeout(20000)
 
@@ -1223,7 +1223,7 @@ describe('Sync mode with SQLite', () => {
           symbol: ['tBTCUSD', 'tETHUSD'],
           start: 0,
           end,
-          limit: 2
+          limit: 10
         },
         id: 5
       })

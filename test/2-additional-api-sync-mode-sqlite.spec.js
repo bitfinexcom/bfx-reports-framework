@@ -24,7 +24,6 @@ const {
   closeSQLite,
   delay
 } = require('./helpers/helpers.core')
-
 const {
   createMockRESTv2SrvWithDate
 } = require('./helpers/helpers.mock-rest-v2')

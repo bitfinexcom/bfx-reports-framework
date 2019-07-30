@@ -829,6 +829,9 @@ class FrameworkReportService extends ReportService {
     }, 'getFullSnapshotReport', cb)
   }
 
+  /**
+   * @override
+   */
   getMultipleCsv (space, args, cb) {
     return this._responder(() => {
       return this._generateCsv(
