@@ -334,9 +334,7 @@ class FrameworkReportService extends ReportService {
   getEmail (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getEmail(space, args, cb)
-
-        return
+        return super.getEmail(space, args)
       }
 
       const { email } = await this._dao.checkAuthInDb(args)
@@ -351,9 +349,7 @@ class FrameworkReportService extends ReportService {
   getUsersTimeConf (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getUsersTimeConf(space, args, cb)
-
-        return
+        return super.getUsersTimeConf(space, args)
       }
 
       const { timezone } = await this._dao.checkAuthInDb(args)
@@ -368,9 +364,7 @@ class FrameworkReportService extends ReportService {
   getSymbols (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getSymbols(space, args, cb)
-
-        return
+        return super.getSymbols(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -413,9 +407,7 @@ class FrameworkReportService extends ReportService {
   getTickersHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getTickersHistory(space, args, cb)
-
-        return
+        return super.getTickersHistory(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi', ['symbol'])
@@ -482,9 +474,7 @@ class FrameworkReportService extends ReportService {
   getPositionsHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getPositionsHistory(space, args, cb)
-
-        return
+        return super.getPositionsHistory(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -511,9 +501,7 @@ class FrameworkReportService extends ReportService {
           throw new DuringSyncMethodAccessError()
         }
 
-        super.getLedgers(space, args, cb)
-
-        return
+        return super.getLedgers(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -534,9 +522,7 @@ class FrameworkReportService extends ReportService {
   getTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getTrades(space, args, cb)
-
-        return
+        return super.getTrades(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -557,9 +543,7 @@ class FrameworkReportService extends ReportService {
   getFundingTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getFundingTrades(space, args, cb)
-
-        return
+        return super.getFundingTrades(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -580,9 +564,7 @@ class FrameworkReportService extends ReportService {
   getPublicTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getPublicTrades(space, args, cb)
-
-        return
+        return super.getPublicTrades(space, args)
       }
 
       checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
@@ -629,9 +611,7 @@ class FrameworkReportService extends ReportService {
   getOrderTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getOrderTrades(space, args, cb)
-
-        return
+        return super.getOrderTrades(space, args)
       }
 
       checkParams(args, 'paramsSchemaForOrderTradesApi')
@@ -657,9 +637,7 @@ class FrameworkReportService extends ReportService {
   getOrders (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getOrders(space, args, cb)
-
-        return
+        return super.getOrders(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -680,9 +658,7 @@ class FrameworkReportService extends ReportService {
   getMovements (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getMovements(space, args, cb)
-
-        return
+        return super.getMovements(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -703,9 +679,7 @@ class FrameworkReportService extends ReportService {
   getFundingOfferHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getFundingOfferHistory(space, args, cb)
-
-        return
+        return super.getFundingOfferHistory(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -726,9 +700,7 @@ class FrameworkReportService extends ReportService {
   getFundingLoanHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getFundingLoanHistory(space, args, cb)
-
-        return
+        return super.getFundingLoanHistory(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -749,9 +721,7 @@ class FrameworkReportService extends ReportService {
   getFundingCreditHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        super.getFundingCreditHistory(space, args, cb)
-
-        return
+        return super.getFundingCreditHistory(space, args)
       }
 
       checkParams(args, 'paramsSchemaForApi')
