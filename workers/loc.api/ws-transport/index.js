@@ -19,12 +19,14 @@ class WSTransport {
   constructor (
     { wsPort },
     rService,
+    dao,
     link,
     grcBfxOpts
   ) {
     this.wsPort = wsPort
-    this.link = link
     this.rService = rService
+    this.dao = dao
+    this.link = link
     this.opts = { ...grcBfxOpts }
 
     this._active = false
@@ -182,7 +184,7 @@ class WSTransport {
   _getFreshUsersDataFromDb () {
     const apiKey = [...this._auth].map(([sid, user]) => user.apiKey)
 
-    return this.rService.dao.getElemsInCollBy(
+    return this.dao.getElemsInCollBy(
       'users',
       {
         $or: { apiKey }
@@ -318,7 +320,8 @@ class WSTransport {
 decorate(injectable(), WSTransport)
 decorate(inject(TYPES.CONF), WSTransport, 0)
 decorate(inject(TYPES.RService), WSTransport, 1)
-decorate(inject(TYPES.Link), WSTransport, 2)
-decorate(inject(TYPES.GRC_BFX_OPTS), WSTransport, 3)
+decorate(inject(TYPES.DAO), WSTransport, 2)
+decorate(inject(TYPES.Link), WSTransport, 3)
+decorate(inject(TYPES.GRC_BFX_OPTS), WSTransport, 4)
 
 module.exports = WSTransport
