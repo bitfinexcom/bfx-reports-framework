@@ -8,7 +8,8 @@ const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  isAuthError
+  isAuthError,
+  getTimezoneConf
 } = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
@@ -22,7 +23,6 @@ const {
   checkParamsAuth,
   isEnotfoundError,
   isEaiAgainError,
-  getTimezoneConf,
   emptyRes,
   collObjToArr
 } = require('./helpers')

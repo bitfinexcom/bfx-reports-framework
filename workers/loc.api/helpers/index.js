@@ -15,7 +15,6 @@ const {
   isEnotfoundError,
   isEaiAgainError
 } = require('./api-errors-testers')
-const getTimezoneConf = require('./get-timezone-conf')
 
 module.exports = {
   getMethodLimit,
@@ -28,6 +27,5 @@ module.exports = {
   refreshObj,
   mapObjBySchema,
   isEnotfoundError,
-  isEaiAgainError,
-  getTimezoneConf
+  isEaiAgainError
 }
