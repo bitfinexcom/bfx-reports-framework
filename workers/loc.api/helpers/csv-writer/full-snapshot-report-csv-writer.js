@@ -1,15 +1,13 @@
 'use strict'
 
-const { promisify } = require('util')
 const { stringify } = require('csv')
 
 const {
   write,
   getDataFromApi
-} = require('bfx-report/workers/loc.api/queue/helpers')
+} = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
 
-module.exports = async (
-  rService,
+module.exports = (rService) => async (
   wStream,
   jobData
 ) => {
@@ -61,9 +59,8 @@ module.exports = async (
   walletsNameStringifier.pipe(wStream)
   walletsStringifier.pipe(wStream)
 
-  const getData = promisify(rService.getFullSnapshotReport.bind(rService))
   const res = await getDataFromApi(
-    getData,
+    rService.getFullSnapshotReport.bind(rService),
     args
   )
 

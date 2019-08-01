@@ -4,52 +4,17 @@ const {
   getCsvArgs,
   checkJobAndGetUserData
 } = require('bfx-report/workers/loc.api/helpers')
+const { bindDepsToFn } = require(
+  'bfx-report/workers/loc.api/di/helpers'
+)
 
+const TYPES = require('../di/types')
 const checkParams = require('./check-params')
-const { fullSnapshotReportCsvWriter } = require('./csv-writer')
+const {
+  fullSnapshotReportCsvWriter
+} = require('./csv-writer')
 
 const getCsvJobData = {
-  async getRiskCsvJobData (
-    reportService,
-    args,
-    uId,
-    uInfo
-  ) {
-    checkParams(args, 'paramsSchemaForRiskCsv')
-
-    const {
-      userId,
-      userInfo
-    } = await checkJobAndGetUserData(
-      reportService,
-      args,
-      uId,
-      uInfo
-    )
-
-    const csvArgs = getCsvArgs(args)
-
-    const jobData = {
-      userInfo,
-      userId,
-      name: 'getRisk',
-      fileNamesMap: [['getRisk', 'risk']],
-      args: csvArgs,
-      propNameForPagination: null,
-      columnsCsv: {
-        USD: 'USD',
-        EUR: 'EUR',
-        GBP: 'GBP',
-        JPY: 'JPY',
-        mts: 'DATE'
-      },
-      formatSettings: {
-        mts: 'date'
-      }
-    }
-
-    return jobData
-  },
   async getBalanceHistoryCsvJobData (
     reportService,
     args,
@@ -247,7 +212,10 @@ const getCsvJobData = {
           currency: 'symbol'
         }
       },
-      csvCustomWriter: fullSnapshotReportCsvWriter
+      csvCustomWriter: bindDepsToFn(
+        fullSnapshotReportCsvWriter,
+        [TYPES.RService]
+      )
     }
 
     return jobData

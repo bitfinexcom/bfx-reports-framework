@@ -3,9 +3,29 @@
 const checkParams = require('./check-params')
 const { getMethodLimit } = require('./limit-param.helpers')
 const getCsvJobData = require('./get-csv-job-data')
+const {
+  checkParamsAuth,
+  emptyRes,
+  tryParseJSON,
+  collObjToArr,
+  refreshObj,
+  mapObjBySchema
+} = require('./utils')
+const {
+  isEnotfoundError,
+  isEaiAgainError
+} = require('./api-errors-testers')
 
 module.exports = {
   getMethodLimit,
   checkParams,
-  getCsvJobData
+  getCsvJobData,
+  checkParamsAuth,
+  emptyRes,
+  tryParseJSON,
+  collObjToArr,
+  refreshObj,
+  mapObjBySchema,
+  isEnotfoundError,
+  isEaiAgainError
 }
