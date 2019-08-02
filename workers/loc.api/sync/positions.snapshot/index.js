@@ -112,12 +112,33 @@ class PositionsSnapshot {
       }, [])
   }
 
+  _splitSymbolPairs (symbol) {
+    const str = (
+      symbol[0] === 't' ||
+      symbol[0] === 'f'
+    )
+      ? symbol.slice(1)
+      : symbol
+
+    if (
+      str.length > 5 &&
+      /.+[:].+/.test(str)
+    ) {
+      return str.split(':')
+    }
+    if (str.length < 6) {
+      return [str]
+    }
+
+    return [str.slice(0, 3), str.slice(-3)]
+  }
+
   async _convertPlToUsd (
     pl,
     symbol,
     end
   ) {
-    const currency = symbol.slice(-3)
+    const currency = this._splitSymbolPairs(symbol)[1]
     const _isForexSymb = isForexSymb(currency)
 
     if (
@@ -128,6 +149,7 @@ class PositionsSnapshot {
     }
     if (
       _isForexSymb ||
+      !currency ||
       currency.length < 3 ||
       !Number.isFinite(pl)
     ) {
