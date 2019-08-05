@@ -29,5 +29,6 @@ module.exports = {
   PositionsSnapshot: Symbol.for('PositionsSnapshot'),
   FullSnapshotReport: Symbol.for('FullSnapshotReport'),
   CurrencyConverter: Symbol.for('CurrencyConverter'),
-  FullSnapshotReportCsvWriter: Symbol.for('FullSnapshotReportCsvWriter')
+  FullSnapshotReportCsvWriter: Symbol.for('FullSnapshotReportCsvWriter'),
+  FOREX_SYMBS: Symbol.for('FOREX_SYMBS')
 }

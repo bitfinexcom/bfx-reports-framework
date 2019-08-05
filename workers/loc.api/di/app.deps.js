@@ -81,6 +81,7 @@ module.exports = ({
       ])
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
+    bind(TYPES.FOREX_SYMBS).toConstantValue(['EUR', 'JPY', 'GBP', 'USD'])
     bind(TYPES.WSTransport)
       .to(WSTransport)
       .inSingletonScope()
