@@ -48,7 +48,8 @@ class DataInserter extends EventEmitter {
     apiMiddleware,
     syncSchema,
     ALLOWED_COLLS,
-    currencyConverter
+    currencyConverter,
+    FOREX_SYMBS
   ) {
     super()
 
@@ -58,6 +59,7 @@ class DataInserter extends EventEmitter {
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.currencyConverter = currencyConverter
+    this.FOREX_SYMBS = FOREX_SYMBS
 
     this._asyncProgressHandler = null
     this._auth = null
@@ -66,7 +68,6 @@ class DataInserter extends EventEmitter {
     )
     this._afterAllInsertsHooks = []
 
-    this.candlesSkippedSymbs = ['EUR', 'JPY', 'GBP', 'USD']
     this.convertTo = 'USD'
 
     this._candlesTimeframe = '1D'
@@ -90,7 +91,7 @@ class DataInserter extends EventEmitter {
       this.dao,
       this.currencyConverter,
       this.ALLOWED_COLLS,
-      this.candlesSkippedSymbs,
+      this.convertTo,
       this.convertTo,
       this.syncColls
     ))
@@ -770,7 +771,7 @@ class DataInserter extends EventEmitter {
     const symbFieldName = schema.symbolFieldName
     const lastElemLedgers = await this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
-      { $not: { currency: this.candlesSkippedSymbs } },
+      { $not: { currency: this.FOREX_SYMBS } },
       [['mts', 1]]
     )
 
@@ -785,7 +786,7 @@ class DataInserter extends EventEmitter {
     const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       {
-        filter: { $not: { currency: this.candlesSkippedSymbs } },
+        filter: { $not: { currency: this.FOREX_SYMBS } },
         isDistinct: true,
         projection: ['currency']
       }
@@ -798,12 +799,24 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const collСonfig = uniqueLedgersSymbs.map(({ currency }) => {
+    const _collСonfig = uniqueLedgersSymbs.map(({ currency }) => {
       return {
         symbol: `t${currency}${this.convertTo}`,
         start: lastElemLedgers.mts
       }
     })
+    const collСonfig = this.FOREX_SYMBS.reduce((accum, convertTo) => {
+      const _symb = `tBTC${convertTo}`
+
+      if (accum.every(({ symbol }) => symbol !== _symb)) {
+        accum.push({
+          symbol: _symb,
+          start: lastElemLedgers.mts
+        })
+      }
+
+      return accum
+    }, _collСonfig)
 
     for (const { symbol, start: _start } of collСonfig) {
       const params = {
@@ -946,5 +959,6 @@ decorate(inject(TYPES.ApiMiddleware), DataInserter, 2)
 decorate(inject(TYPES.SyncSchema), DataInserter, 3)
 decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 4)
 decorate(inject(TYPES.CurrencyConverter), DataInserter, 5)
+decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 6)
 
 module.exports = DataInserter
