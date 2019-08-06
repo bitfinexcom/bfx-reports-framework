@@ -7,17 +7,26 @@ export REACT_APP_LOGO_PATH=favicon.ico
 
 programname=$0
 isDevEnv=0
+ip=0
 
 function usage {
-  echo "Usage: $programname [-d] | [-h]"
-  echo "  -d      turn on developer environment"
-  echo "  -h      display help"
+  echo "Usage: $programname [-d] | [-i] | [-u] | [-h]"
+  echo "  -d                 turn on developer environment"
+  echo "  -i=XX.XX.XX.XX     adds ip as to run on an external network"
+  echo "  -u=URL             adds URL as to run on an external network"
+  echo "  -h                 display help"
   exit 1
 }
 
 while [ "$1" != "" ]; do
   case $1 in
     -d | --dev )    isDevEnv=1
+                    ;;
+    -i | --ip )    shift
+                    ip=$1
+                    ;;
+    -u | --url )   shift
+                    ip=$1
                     ;;
     -h | --help )   usage
                     exit
@@ -32,6 +41,10 @@ if [ $isDevEnv != 0 ]; then
   echo "Developer environment is turned on"
 fi
 
+if [ $ip != 0 ]; then
+  echo "Ip is set to: $ip"
+fi
+
 frontendFolder="$PWD/bfx-report-ui"
 expressFolder="$frontendFolder/bfx-report-express"
 backendFolder="$PWD"
@@ -42,22 +55,25 @@ git stash
 cd $backendFolder
 
 git submodule sync
-git submodule update --init --recursive
-git pull --recurse-submodules
 git submodule update --remote
+git pull --recurse-submodules
 npm i
 
 cd $expressFolder
 git submodule sync
 git stash
 cd $frontendFolder
-git submodule update --init --recursive
-git pull --recurse-submodules
 git submodule update --remote
+git pull --recurse-submodules
 npm i
 
 if [ $isDevEnv != 0 ]; then
 	sed -i -e "s/KEY_URL: .*,/KEY_URL: \'https:\/\/test.bitfinex.com\/api\',/g" $frontendFolder/src/var/config.js
+fi
+
+if [ $ip != 0 ]; then
+	sed -i -e "s/API_URL: .*,/API_URL: \'http:\/\/$ip:31339\/api\',/g" $frontendFolder/src/var/config.js
+  sed -i -e "s/HOME_URL: .*,/HOME_URL: \'http:\/\/$ip:3000\',/g" $frontendFolder/src/var/config.js
 fi
 
 cp $expressFolder/config/default.json.example $expressFolder/config/default.json

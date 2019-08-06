@@ -29,6 +29,13 @@ git clone https://github.com/bitfinexcom/bfx-reports-framework.git
 cd bfx-facs-reports-framework
 npm run init
 ```
+- As to run framework on a network different that localhost, add to init the IP or URL as following:
+
+```console
+./init.sh -i XX.XX.XX.XX (being XX.XX.XX.XX the ip)
+or
+./init.sh -u URL
+```
 
 ### Configure service
 
