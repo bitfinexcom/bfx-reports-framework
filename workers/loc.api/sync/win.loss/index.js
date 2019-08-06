@@ -253,8 +253,7 @@ class WinLoss {
     const walletsGroupedByTimeframe = await this.balanceHistory
       .getBalanceHistory(
         args,
-        true,
-        symbol
+        true
       )
 
     const groupedData = await calcGroupedData(
