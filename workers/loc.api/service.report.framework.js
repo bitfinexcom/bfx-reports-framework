@@ -9,6 +9,7 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 const {
   isAuthError,
+  isNonceSmallError,
   getTimezoneConf
 } = require('bfx-report/workers/loc.api/helpers')
 
@@ -110,7 +111,10 @@ class FrameworkReportService extends ReportService {
       try {
         userInfo = await this._checkAuthInApi(args)
       } catch (err) {
-        if (isAuthError(err)) {
+        if (
+          isAuthError(err) ||
+          isNonceSmallError(err)
+        ) {
           throw err
         }
       }
