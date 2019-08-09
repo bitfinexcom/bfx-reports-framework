@@ -5,18 +5,28 @@ const {
   injectable,
   inject
 } = require('inversify')
+const {
+  FindMethodError
+} = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../../di/types')
 
 class CurrencyConverter {
   constructor (
+    rService,
     dao,
     syncSchema,
     FOREX_SYMBS
   ) {
+    this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
+
+    this._COLL_NAMES = {
+      PUBLIC_TRADES: 'publicTrades',
+      CANDLES: 'candles'
+    }
   }
 
   _isEmptyStr (str) {
@@ -26,7 +36,7 @@ class CurrencyConverter {
     )
   }
 
-  _getCandlesSymb (
+  _getSymb (
     item,
     {
       convertTo,
@@ -53,15 +63,44 @@ class CurrencyConverter {
       .some(s => s === convertTo)
   }
 
+  async _getPublicTradesPrice (
+    reqSymb,
+    end
+  ) {
+    if (
+      !reqSymb ||
+      !Number.isInteger(end)
+    ) {
+      return null
+    }
+
+    const { res } = await this.rService._getPublicTrades({
+      params: {
+        reqSymb,
+        end,
+        limit: 1,
+        notThrowError: true,
+        notCheckNextPage: true
+      }
+    })
+
+    const publicTrade = Array.isArray(res)
+      ? res[0]
+      : res
+    const { price } = { ...publicTrade }
+
+    return price
+  }
+
   async _getCandleClosedPrice (
-    candlesSymb,
+    reqSymb,
     end
   ) {
     const candlesSchema = this.syncSchema.getMethodCollMap()
       .get('_getCandles')
 
     if (
-      !candlesSymb ||
+      !reqSymb ||
       !Number.isInteger(end)
     ) {
       return null
@@ -70,7 +109,7 @@ class CurrencyConverter {
     const candle = await this.dao.getElemInCollBy(
       candlesSchema.name,
       {
-        [candlesSchema.symbolFieldName]: candlesSymb,
+        [candlesSchema.symbolFieldName]: reqSymb,
         end,
         _dateFieldName: [candlesSchema.dateFieldName]
       },
@@ -81,7 +120,25 @@ class CurrencyConverter {
     return close
   }
 
+  _getPriceMethodName (collName) {
+    if (collName === this._COLL_NAMES.CANDLES) {
+      return '_getCandleClosedPrice'
+    }
+    if (collName === this._COLL_NAMES.PUBLIC_TRADES) {
+      return '_getPublicTradesPrice'
+    }
+
+    throw new FindMethodError()
+  }
+
+  _getPriceMethod (collName) {
+    const name = this._getPriceMethodName(collName)
+
+    return this[name].bind(this)
+  }
+
   async _getPrice (
+    collName = this._COLL_NAMES.CANDLES,
     item,
     {
       convertTo,
@@ -104,13 +161,14 @@ class CurrencyConverter {
         symbolFieldName
       }
     )
+    const _getPrice = this._getPriceMethod(collName)
 
     if (isRequiredConvFromForex) {
-      const btcPriseIn = await this._getCandleClosedPrice(
+      const btcPriseIn = await _getPrice(
         `tBTC${item[symbolFieldName]}`,
         end
       )
-      const btcPriseOut = await this._getCandleClosedPrice(
+      const btcPriseOut = await _getPrice(
         `tBTC${convertTo}`,
         end
       )
@@ -127,8 +185,8 @@ class CurrencyConverter {
       return btcPriseOut / btcPriseIn
     }
 
-    const close = await this._getCandleClosedPrice(
-      this._getCandlesSymb(
+    const price = await _getPrice(
+      this._getSymb(
         item,
         {
           convertTo,
@@ -138,12 +196,16 @@ class CurrencyConverter {
       end
     )
 
-    return Number.isFinite(close)
-      ? close
+    return Number.isFinite(price)
+      ? price
       : null
   }
 
-  async convertByCandles (data, convSchema) {
+  async _convertBy (
+    collName,
+    data,
+    convSchema
+  ) {
     const _convSchema = {
       convertTo: 'USD',
       symbolFieldName: '',
@@ -179,10 +241,14 @@ class CurrencyConverter {
         continue
       }
 
-      const price = await this._getPrice(
-        item,
-        _convSchema
-      )
+      const isSameSymb = convertTo === item[symbolFieldName]
+      const price = isSameSymb
+        ? 1
+        : await this._getPrice(
+          collName,
+          item,
+          _convSchema
+        )
 
       if (!Number.isFinite(price)) {
         continue
@@ -203,11 +269,36 @@ class CurrencyConverter {
 
     return isArr ? res : res[0]
   }
+
+  convertByCandles (data, convSchema) {
+    return this._convertBy(
+      this._COLL_NAMES.CANDLES,
+      data,
+      convSchema
+    )
+  }
+
+  convertByPublicTrades (data, convSchema) {
+    return this._convertBy(
+      this._COLL_NAMES.PUBLIC_TRADES,
+      data,
+      convSchema
+    )
+  }
+
+  async convert (data, convSchema) {
+    if (await this.rService.pingApi()) {
+      return this.convertByPublicTrades(data, convSchema)
+    }
+
+    return this.convertByCandles(data, convSchema)
+  }
 }
 
 decorate(injectable(), CurrencyConverter)
-decorate(inject(TYPES.DAO), CurrencyConverter, 0)
-decorate(inject(TYPES.SyncSchema), CurrencyConverter, 1)
-decorate(inject(TYPES.FOREX_SYMBS), CurrencyConverter, 2)
+decorate(inject(TYPES.RService), CurrencyConverter, 0)
+decorate(inject(TYPES.DAO), CurrencyConverter, 1)
+decorate(inject(TYPES.SyncSchema), CurrencyConverter, 2)
+decorate(inject(TYPES.FOREX_SYMBS), CurrencyConverter, 3)
 
 module.exports = CurrencyConverter
