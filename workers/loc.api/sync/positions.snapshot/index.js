@@ -1,6 +1,5 @@
 'use strict'
 
-const { isForexSymb } = require('../helpers')
 const {
   decorate,
   injectable,
@@ -14,12 +13,14 @@ class PositionsSnapshot {
     rService,
     dao,
     ALLOWED_COLLS,
-    syncSchema
+    syncSchema,
+    currencyConverter
   ) {
     this.rService = rService
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.syncSchema = syncSchema
+    this.currencyConverter = currencyConverter
   }
 
   _getPositionsHistory (
@@ -139,16 +140,8 @@ class PositionsSnapshot {
     end
   ) {
     const currency = this._splitSymbolPairs(symbol)[1]
-    const _isForexSymb = isForexSymb(currency)
 
     if (
-      currency === 'USD' &&
-      Number.isFinite(pl)
-    ) {
-      return pl
-    }
-    if (
-      _isForexSymb ||
       !currency ||
       currency.length < 3 ||
       !Number.isFinite(pl)
@@ -156,31 +149,20 @@ class PositionsSnapshot {
       return null
     }
 
-    const reqSymb = `t${currency}USD`
-
-    const {
-      res: publicTrades
-    } = await this.rService._getPublicTrades({
-      params: {
-        reqSymb,
-        end,
-        limit: 1,
-        notThrowError: true,
-        notCheckNextPage: true
+    const plData = { pl, plUsd: null, currency }
+    const { plUsd } = await this.currencyConverter.convert(
+      plData,
+      {
+        convertTo: 'USD',
+        symbolFieldName: 'currency',
+        mts: end,
+        convFields: [
+          { inputField: 'pl', outputField: 'plUsd' }
+        ]
       }
-    })
+    )
 
-    if (
-      !Array.isArray(publicTrades) ||
-      publicTrades.length === 0 ||
-      !publicTrades[0] ||
-      typeof publicTrades[0] !== 'object' ||
-      !Number.isFinite(publicTrades[0].price)
-    ) {
-      return null
-    }
-
-    return pl * publicTrades[0].price
+    return plUsd
   }
 
   async _getCalculatedPositions (
@@ -438,5 +420,6 @@ decorate(inject(TYPES.RService), PositionsSnapshot, 0)
 decorate(inject(TYPES.DAO), PositionsSnapshot, 1)
 decorate(inject(TYPES.ALLOWED_COLLS), PositionsSnapshot, 2)
 decorate(inject(TYPES.SyncSchema), PositionsSnapshot, 3)
+decorate(inject(TYPES.CurrencyConverter), PositionsSnapshot, 4)
 
 module.exports = PositionsSnapshot
