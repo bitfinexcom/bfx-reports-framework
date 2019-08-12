@@ -20,7 +20,6 @@ const {
 } = require('./errors')
 const {
   checkParams,
-  getCsvJobData,
   checkParamsAuth,
   isEnotfoundError,
   isEaiAgainError,
@@ -810,7 +809,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._generateCsv(
         'getMultipleCsvJobData',
-        { ...args, getCsvJobData }
+        args
       )
     }, 'getMultipleCsv', cb)
   }
@@ -819,7 +818,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._generateCsv(
         'getBalanceHistoryCsvJobData',
-        { ...args, getCsvJobData }
+        args
       )
     }, 'getBalanceHistoryCsv', cb)
   }
@@ -828,7 +827,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._generateCsv(
         'getWinLossCsvJobData',
-        { ...args, getCsvJobData }
+        args
       )
     }, 'getWinLossCsv', cb)
   }
@@ -837,7 +836,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._generateCsv(
         'getPositionsSnapshotCsvJobData',
-        { ...args, getCsvJobData }
+        args
       )
     }, 'getPositionsSnapshotCsv', cb)
   }
@@ -846,7 +845,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._generateCsv(
         'getFullSnapshotReportCsvJobData',
-        { ...args, getCsvJobData }
+        args
       )
     }, 'getFullSnapshotReportCsv', cb)
   }
