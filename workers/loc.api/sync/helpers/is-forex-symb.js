@@ -1,8 +1,10 @@
 'use strict'
 
+const FOREX_SYMBS = require('./forex-symbs')
+
 module.exports = (
   currSymb,
-  symbs = ['EUR', 'JPY', 'GBP', 'USD']
+  symbs = FOREX_SYMBS
 ) => {
   return (
     Array.isArray(symbs) &&
