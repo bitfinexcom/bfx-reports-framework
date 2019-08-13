@@ -190,10 +190,7 @@ describe('Additional sync mode API with SQLite', () => {
       assert.isObject(resItem)
       assert.containsAllKeys(resItem, [
         'mts',
-        'USD',
-        'EUR',
-        'GBP',
-        'JPY'
+        'USD'
       ])
     }
   })
@@ -235,10 +232,7 @@ describe('Additional sync mode API with SQLite', () => {
       assert.isObject(resItem)
       assert.containsAllKeys(resItem, [
         'mts',
-        'USD',
-        'EUR',
-        'GBP',
-        'JPY'
+        'USD'
       ])
     }
   })
