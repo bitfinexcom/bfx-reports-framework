@@ -78,9 +78,6 @@ class CsvJobData extends BaseCsvJobData {
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
-        EUR: 'EUR',
-        GBP: 'GBP',
-        JPY: 'JPY',
         mts: 'DATE'
       },
       formatSettings: {
@@ -119,9 +116,6 @@ class CsvJobData extends BaseCsvJobData {
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
-        EUR: 'EUR',
-        GBP: 'GBP',
-        JPY: 'JPY',
         mts: 'DATE'
       },
       formatSettings: {
