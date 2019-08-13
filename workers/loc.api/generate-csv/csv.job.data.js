@@ -1,22 +1,56 @@
 'use strict'
 
 const {
+  decorate,
+  inject
+} = require('inversify')
+const BaseCsvJobData = require(
+  'bfx-report/workers/loc.api/generate-csv/csv.job.data'
+)
+const {
   getCsvArgs,
   checkJobAndGetUserData
 } = require('bfx-report/workers/loc.api/helpers')
-const { bindDepsToFn } = require(
-  'bfx-report/workers/loc.api/di/helpers'
-)
 
 const TYPES = require('../di/types')
-const checkParams = require('./check-params')
-const {
-  fullSnapshotReportCsvWriter
-} = require('./csv-writer')
 
-const getCsvJobData = {
+const {
+  checkParams
+} = require('../helpers')
+
+class CsvJobData extends BaseCsvJobData {
+  constructor (
+    rService,
+    fullSnapshotReportCsvWriter
+  ) {
+    super(rService)
+
+    this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
+  }
+
+  async getWalletsCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    const _jobData = await super.getWalletsCsvJobData(
+      args,
+      uId,
+      uInfo
+    )
+
+    const jobData = {
+      ..._jobData,
+      columnsCsv: {
+        ..._jobData.columnsCsv,
+        balanceUsd: 'BALANCE USD'
+      }
+    }
+
+    return jobData
+  }
+
   async getBalanceHistoryCsvJobData (
-    reportService,
     args,
     uId,
     uInfo
@@ -27,7 +61,7 @@ const getCsvJobData = {
       userId,
       userInfo
     } = await checkJobAndGetUserData(
-      reportService,
+      this.rService,
       args,
       uId,
       uInfo
@@ -55,9 +89,9 @@ const getCsvJobData = {
     }
 
     return jobData
-  },
+  }
+
   async getWinLossCsvJobData (
-    reportService,
     args,
     uId,
     uInfo
@@ -68,7 +102,7 @@ const getCsvJobData = {
       userId,
       userInfo
     } = await checkJobAndGetUserData(
-      reportService,
+      this.rService,
       args,
       uId,
       uInfo
@@ -96,9 +130,9 @@ const getCsvJobData = {
     }
 
     return jobData
-  },
+  }
+
   async getPositionsSnapshotCsvJobData (
-    reportService,
     args,
     uId,
     uInfo
@@ -109,7 +143,7 @@ const getCsvJobData = {
       userId,
       userInfo
     } = await checkJobAndGetUserData(
-      reportService,
+      this.rService,
       args,
       uId,
       uInfo
@@ -147,9 +181,9 @@ const getCsvJobData = {
     }
 
     return jobData
-  },
+  }
+
   async getFullSnapshotReportCsvJobData (
-    reportService,
     args,
     uId,
     uInfo
@@ -160,7 +194,7 @@ const getCsvJobData = {
       userId,
       userInfo
     } = await checkJobAndGetUserData(
-      reportService,
+      this.rService,
       args,
       uId,
       uInfo
@@ -212,14 +246,14 @@ const getCsvJobData = {
           currency: 'symbol'
         }
       },
-      csvCustomWriter: bindDepsToFn(
-        fullSnapshotReportCsvWriter,
-        [TYPES.RService]
-      )
+      csvCustomWriter: this.fullSnapshotReportCsvWriter
     }
 
     return jobData
   }
 }
 
-module.exports = getCsvJobData
+decorate(inject(TYPES.RService), CsvJobData, 0)
+decorate(inject(TYPES.FullSnapshotReportCsvWriter), CsvJobData, 1)
+
+module.exports = CsvJobData
