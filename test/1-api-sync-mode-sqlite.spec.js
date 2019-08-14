@@ -1766,7 +1766,7 @@ describe('Sync mode API with SQLite', () => {
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should not be successfully performed by the getMovements method, a greater limit is needed', async function () {
+  it('it should not be successfully performed by the getLedgers method, a greater limit is needed', async function () {
     this.timeout(5000)
 
     const res = await agent
@@ -1774,7 +1774,7 @@ describe('Sync mode API with SQLite', () => {
       .type('json')
       .send({
         auth,
-        method: 'getMovements',
+        method: 'getLedgers',
         params: {
           symbol: 'BTC',
           start: 0,
@@ -1791,6 +1791,49 @@ describe('Sync mode API with SQLite', () => {
     assert.propertyVal(res.body.error, 'code', 400)
     assert.propertyVal(res.body.error, 'message', 'A greater limit is needed as to show the data correctly')
     assert.propertyVal(res.body, 'id', 5)
+  })
+
+  it('it should be successfully performed by the getMovements method, without MinLimitParamError error', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getMovements',
+        params: {
+          symbol: 'BTC',
+          start: 0,
+          end,
+          limit: 25
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isBoolean(res.body.result.nextPage)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'id',
+      'currency',
+      'currencyName',
+      'mtsStarted',
+      'mtsUpdated',
+      'status',
+      'amount',
+      'fees',
+      'destinationAddress',
+      'transactionId'
+    ])
   })
 
   it('it should not be successfully performed by a fake method', async function () {
