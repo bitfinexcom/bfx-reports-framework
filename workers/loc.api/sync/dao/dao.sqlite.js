@@ -332,7 +332,8 @@ class SqliteDAO extends DAO {
       symbolFieldName,
       sort: _sort,
       model,
-      dataStructureConverter
+      dataStructureConverter,
+      name
     } = { ...methodColl }
     params.limit = maxLimit
       ? getLimitNotMoreThan(params.limit, maxLimit)
@@ -395,7 +396,8 @@ class SqliteDAO extends DAO {
         params.notThrowError,
         params.notCheckNextPage,
         symbols,
-        symbolFieldName
+        symbolFieldName,
+        name
       )
     }
 

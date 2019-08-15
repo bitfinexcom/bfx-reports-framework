@@ -92,7 +92,10 @@ class ReportService extends BaseReportService {
         'mts',
         params.limit,
         params.notThrowError,
-        params.notCheckNextPage
+        params.notCheckNextPage,
+        null,
+        null,
+        'candles'
       )
     }, '_getCandles')
   }
