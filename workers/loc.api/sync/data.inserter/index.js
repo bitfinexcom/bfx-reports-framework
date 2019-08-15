@@ -639,7 +639,8 @@ class DataInserter extends EventEmitter {
       await this.dao.insertElemsToDb(
         collName,
         isPublic ? null : { ..._args.auth },
-        normalizeApiData(res, model)
+        normalizeApiData(res, model),
+        { isReplacedIfExists: true }
       )
 
       count += res.length

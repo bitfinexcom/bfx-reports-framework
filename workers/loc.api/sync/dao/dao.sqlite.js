@@ -219,7 +219,14 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async insertElemsToDb (name, auth, data = []) {
+  async insertElemsToDb (
+    name,
+    auth,
+    data = [],
+    {
+      isReplacedIfExists
+    } = {}
+  ) {
     await mixUserIdToArrData(this, auth, data)
 
     await this._beginTrans(async () => {
@@ -235,8 +242,11 @@ class SqliteDAO extends DAO {
           placeholders,
           placeholderVal
         } = getPlaceholdersQuery(obj, keys)
+        const replace = isReplacedIfExists
+          ? ' OR REPLACE'
+          : ''
 
-        const sql = `INSERT INTO ${name}(${projection}) VALUES (${placeholders})`
+        const sql = `INSERT${replace} INTO ${name}(${projection}) VALUES (${placeholders})`
 
         await this._run(sql, placeholderVal)
       }
