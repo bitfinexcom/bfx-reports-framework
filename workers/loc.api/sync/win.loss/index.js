@@ -23,21 +23,22 @@ class WinLoss {
     dao,
     syncSchema,
     ALLOWED_COLLS,
-    balanceHistory
+    balanceHistory,
+    FOREX_SYMBS
   ) {
     this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.balanceHistory = balanceHistory
+    this.FOREX_SYMBS = FOREX_SYMBS
   }
 
   _sumMovementsWithPrevRes (
-    symbol,
     prevMovementsRes,
     movementsGroupedByTimeframe
   ) {
-    return symbol.reduce((accum, symb) => {
+    return this.FOREX_SYMBS.reduce((accum, symb) => {
       const prevMovement = Number.isFinite(prevMovementsRes[symb])
         ? prevMovementsRes[symb]
         : 0
@@ -53,10 +54,7 @@ class WinLoss {
     }, {})
   }
 
-  _getWinLossByTimeframe (
-    symbol = [],
-    startWalletsVals = {}
-  ) {
+  _getWinLossByTimeframe (startWalletsVals = {}) {
     let prevMovementsRes = {}
 
     return ({
@@ -64,12 +62,11 @@ class WinLoss {
       movementsGroupedByTimeframe
     } = {}) => {
       prevMovementsRes = this._sumMovementsWithPrevRes(
-        symbol,
         prevMovementsRes,
         { ...movementsGroupedByTimeframe }
       )
 
-      return symbol.reduce((accum, symb) => {
+      return this.FOREX_SYMBS.reduce((accum, symb) => {
         const startWallet = Number.isFinite(startWalletsVals[symb])
           ? startWalletsVals[symb]
           : 0
@@ -80,6 +77,10 @@ class WinLoss {
           ? prevMovementsRes[symb]
           : 0
         const res = wallet - startWallet - movements
+
+        if (!res) {
+          return { ...accum }
+        }
 
         return {
           ...accum,
@@ -98,10 +99,14 @@ class WinLoss {
       const { amount, amountUsd } = { ...movement }
       const currSymb = movement[symbolFieldName]
       const _isForexSymb = isForexSymb(currSymb, symbol)
-      const _amount = _isForexSymb
+      const _isNotUsedAmountUsdField = (
+        _isForexSymb &&
+        !Number.isFinite(amountUsd)
+      )
+      const _amount = _isNotUsedAmountUsdField
         ? amount
         : amountUsd
-      const symb = _isForexSymb
+      const symb = _isNotUsedAmountUsdField
         ? currSymb
         : 'USD'
 
@@ -118,8 +123,8 @@ class WinLoss {
     }, {})
   }
 
-  _getStartWallets (symbol = []) {
-    return symbol.reduce((accum, symb) => {
+  _getStartWallets () {
+    return this.FOREX_SYMBS.reduce((accum, symb) => {
       return {
         ...accum,
         [symb]: 0
@@ -129,16 +134,19 @@ class WinLoss {
 
   _calcFirstWallets (
     data = [],
-    symbol = [],
     startWallets = {}
   ) {
     return data.reduce((accum, movement = {}) => {
       const { balance, balanceUsd, currency } = { ...movement }
-      const _isForexSymb = isForexSymb(currency, symbol)
-      const _balance = _isForexSymb
+      const _isForexSymb = isForexSymb(currency, this.FOREX_SYMBS)
+      const _isNotUsedBalanceUsdField = (
+        _isForexSymb &&
+        !Number.isFinite(balanceUsd)
+      )
+      const _balance = _isNotUsedBalanceUsdField
         ? balance
         : balanceUsd
-      const symb = _isForexSymb
+      const symb = _isNotUsedBalanceUsdField
         ? currency
         : 'USD'
 
@@ -192,7 +200,6 @@ class WinLoss {
   } = {}) {
     const user = await this.dao.checkAuthInDb({ auth })
 
-    const symbol = ['EUR', 'JPY', 'GBP', 'USD']
     const args = {
       auth,
       params: {
@@ -234,7 +241,7 @@ class WinLoss {
     const movementsGroupedByTimeframe = await groupByTimeframe(
       movements,
       timeframe,
-      symbol,
+      this.FOREX_SYMBS,
       movementsDateFieldName,
       movementsSymbolFieldName,
       this._calcMovements.bind(this)
@@ -244,17 +251,15 @@ class WinLoss {
       auth,
       params: { end: start }
     })
-    const startWallets = this._getStartWallets(symbol)
+    const startWallets = this._getStartWallets()
     const startWalletsInForex = this._calcFirstWallets(
       firstWallets,
-      symbol,
       startWallets
     )
     const walletsGroupedByTimeframe = await this.balanceHistory
       .getBalanceHistory(
         args,
-        true,
-        symbol
+        true
       )
 
     const groupedData = await calcGroupedData(
@@ -263,7 +268,7 @@ class WinLoss {
         movementsGroupedByTimeframe
       },
       false,
-      this._getWinLossByTimeframe(symbol, startWalletsInForex),
+      this._getWinLossByTimeframe(startWalletsInForex),
       true
     )
     const res = this._shiftMtsToNextTimeframe(
@@ -285,5 +290,6 @@ decorate(inject(TYPES.DAO), WinLoss, 1)
 decorate(inject(TYPES.SyncSchema), WinLoss, 2)
 decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 3)
 decorate(inject(TYPES.BalanceHistory), WinLoss, 4)
+decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 5)
 
 module.exports = WinLoss

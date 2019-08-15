@@ -5,16 +5,28 @@ const {
   injectable,
   inject
 } = require('inversify')
+const {
+  FindMethodError
+} = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../../di/types')
 
 class CurrencyConverter {
   constructor (
+    rService,
     dao,
-    syncSchema
+    syncSchema,
+    FOREX_SYMBS
   ) {
+    this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
+    this.FOREX_SYMBS = FOREX_SYMBS
+
+    this._COLL_NAMES = {
+      PUBLIC_TRADES: 'publicTrades',
+      CANDLES: 'candles'
+    }
   }
 
   _isEmptyStr (str) {
@@ -24,7 +36,7 @@ class CurrencyConverter {
     )
   }
 
-  _getCandlesSymbFn (
+  _getSymb (
     item,
     {
       convertTo,
@@ -34,25 +46,178 @@ class CurrencyConverter {
     return `t${item[symbolFieldName]}${convertTo}`
   }
 
-  async convertByCandles (data, convSchema) {
+  _isRequiredConvFromForex (
+    item,
+    {
+      convertTo,
+      symbolFieldName
+    }
+  ) {
+    return this.FOREX_SYMBS
+      .filter(s => s !== convertTo)
+      .some(s => s === item[symbolFieldName])
+  }
+
+  _isRequiredConvToForex (convertTo) {
+    return this.FOREX_SYMBS
+      .some(s => s === convertTo)
+  }
+
+  async _getPublicTradesPrice (
+    reqSymb,
+    end
+  ) {
+    if (
+      !reqSymb ||
+      !Number.isInteger(end)
+    ) {
+      return null
+    }
+
+    const { res } = await this.rService._getPublicTrades({
+      params: {
+        reqSymb,
+        end,
+        limit: 1,
+        notThrowError: true,
+        notCheckNextPage: true
+      }
+    })
+
+    const publicTrade = Array.isArray(res)
+      ? res[0]
+      : res
+    const { price } = { ...publicTrade }
+
+    return price
+  }
+
+  async _getCandleClosedPrice (
+    reqSymb,
+    end
+  ) {
+    const candlesSchema = this.syncSchema.getMethodCollMap()
+      .get('_getCandles')
+
+    if (
+      !reqSymb ||
+      !Number.isInteger(end)
+    ) {
+      return null
+    }
+
+    const candle = await this.dao.getElemInCollBy(
+      candlesSchema.name,
+      {
+        [candlesSchema.symbolFieldName]: reqSymb,
+        end,
+        _dateFieldName: [candlesSchema.dateFieldName]
+      },
+      candlesSchema.sort
+    )
+    const { close } = { ...candle }
+
+    return close
+  }
+
+  _getPriceMethodName (collName) {
+    if (collName === this._COLL_NAMES.CANDLES) {
+      return '_getCandleClosedPrice'
+    }
+    if (collName === this._COLL_NAMES.PUBLIC_TRADES) {
+      return '_getPublicTradesPrice'
+    }
+
+    throw new FindMethodError()
+  }
+
+  _getPriceMethod (collName) {
+    const name = this._getPriceMethodName(collName)
+
+    return this[name].bind(this)
+  }
+
+  async _getPrice (
+    collName = this._COLL_NAMES.CANDLES,
+    item,
+    {
+      convertTo,
+      symbolFieldName,
+      dateFieldName,
+      mts
+    }
+  ) {
+    if (!this._isRequiredConvToForex(convertTo)) {
+      return null
+    }
+
+    const end = Number.isInteger(mts)
+      ? mts
+      : item[dateFieldName]
+    const isRequiredConvFromForex = this._isRequiredConvFromForex(
+      item,
+      {
+        convertTo,
+        symbolFieldName
+      }
+    )
+    const _getPrice = this._getPriceMethod(collName)
+
+    if (isRequiredConvFromForex) {
+      const btcPriseIn = await _getPrice(
+        `tBTC${item[symbolFieldName]}`,
+        end
+      )
+      const btcPriseOut = await _getPrice(
+        `tBTC${convertTo}`,
+        end
+      )
+
+      if (
+        !btcPriseIn ||
+        !btcPriseOut ||
+        !Number.isFinite(btcPriseIn) ||
+        !Number.isFinite(btcPriseOut)
+      ) {
+        return null
+      }
+
+      return btcPriseOut / btcPriseIn
+    }
+
+    const price = await _getPrice(
+      this._getSymb(
+        item,
+        {
+          convertTo,
+          symbolFieldName
+        }
+      ),
+      end
+    )
+
+    return Number.isFinite(price)
+      ? price
+      : null
+  }
+
+  async _convertBy (
+    collName,
+    data,
+    convSchema
+  ) {
     const _convSchema = {
       convertTo: 'USD',
       symbolFieldName: '',
       dateFieldName: '',
       convFields: [{ inputField: '', outputField: '' }],
-      getCandlesSymbFn: this._getCandlesSymbFn,
       ...convSchema
     }
     const {
       convertTo,
       symbolFieldName,
-      dateFieldName,
-      mts,
-      convFields,
-      getCandlesSymbFn
+      convFields
     } = _convSchema
-    const candlesSchema = this.syncSchema.getMethodCollMap()
-      .get('_getCandles')
     const isArr = Array.isArray(data)
     const elems = isArr
       ? data
@@ -76,34 +241,16 @@ class CurrencyConverter {
         continue
       }
 
-      const candlesSymb = getCandlesSymbFn(item, _convSchema)
-      const end = Number.isInteger(mts)
-        ? mts
-        : item[dateFieldName]
+      const isSameSymb = convertTo === item[symbolFieldName]
+      const price = isSameSymb
+        ? 1
+        : await this._getPrice(
+          collName,
+          item,
+          _convSchema
+        )
 
-      if (
-        !candlesSymb ||
-        !Number.isInteger(end)
-      ) {
-        continue
-      }
-
-      const candle = await this.dao.getElemInCollBy(
-        candlesSchema.name,
-        {
-          [candlesSchema.symbolFieldName]: candlesSymb,
-          end,
-          _dateFieldName: [candlesSchema.dateFieldName]
-        },
-        candlesSchema.sort
-      )
-
-      if (
-        !candle ||
-        typeof candle !== 'object' ||
-        !candle.close ||
-        !Number.isFinite(candle.close)
-      ) {
+      if (!Number.isFinite(price)) {
         continue
       }
 
@@ -116,16 +263,42 @@ class CurrencyConverter {
           return
         }
 
-        item[outputField] = item[inputField] * candle.close
+        item[outputField] = item[inputField] * price
       })
     }
 
     return isArr ? res : res[0]
   }
+
+  convertByCandles (data, convSchema) {
+    return this._convertBy(
+      this._COLL_NAMES.CANDLES,
+      data,
+      convSchema
+    )
+  }
+
+  convertByPublicTrades (data, convSchema) {
+    return this._convertBy(
+      this._COLL_NAMES.PUBLIC_TRADES,
+      data,
+      convSchema
+    )
+  }
+
+  async convert (data, convSchema) {
+    if (await this.rService.pingApi()) {
+      return this.convertByPublicTrades(data, convSchema)
+    }
+
+    return this.convertByCandles(data, convSchema)
+  }
 }
 
 decorate(injectable(), CurrencyConverter)
-decorate(inject(TYPES.DAO), CurrencyConverter, 0)
-decorate(inject(TYPES.SyncSchema), CurrencyConverter, 1)
+decorate(inject(TYPES.RService), CurrencyConverter, 0)
+decorate(inject(TYPES.DAO), CurrencyConverter, 1)
+decorate(inject(TYPES.SyncSchema), CurrencyConverter, 2)
+decorate(inject(TYPES.FOREX_SYMBS), CurrencyConverter, 3)
 
 module.exports = CurrencyConverter

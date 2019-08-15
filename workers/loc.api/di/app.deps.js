@@ -22,7 +22,8 @@ const syncSchema = require('../sync/schema')
 const Sync = require('../sync')
 const SyncQueue = require('../sync/sync.queue')
 const {
-  redirectRequestsToApi
+  redirectRequestsToApi,
+  FOREX_SYMBS
 } = require('../sync/helpers')
 const {
   searchClosePriceAndSumAmount
@@ -81,6 +82,7 @@ module.exports = ({
       ])
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
+    bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
     bind(TYPES.WSTransport)
       .to(WSTransport)
       .inSingletonScope()

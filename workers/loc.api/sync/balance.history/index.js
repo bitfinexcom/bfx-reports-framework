@@ -19,10 +19,12 @@ const {
 class BalanceHistory {
   constructor (
     rService,
-    dao
+    dao,
+    FOREX_SYMBS
   ) {
     this.rService = rService
     this.dao = dao
+    this.FOREX_SYMBS = FOREX_SYMBS
   }
 
   _calcWalletsInTimeframe (firstWallets) {
@@ -135,9 +137,8 @@ class BalanceHistory {
     candles,
     mts,
     timeframe,
-    currency
+    symb
   ) {
-    const symb = `t${currency}USD`
     const mtsMoment = moment.utc(mts)
 
     if (timeframe === 'day') {
@@ -166,7 +167,6 @@ class BalanceHistory {
   _getWalletsByTimeframe (
     firstWallets,
     candles,
-    symbol,
     timeframe
   ) {
     let prevRes = {}
@@ -194,10 +194,17 @@ class BalanceHistory {
         accum,
         [currency, balance]
       ) => {
-        const _isForexSymb = isForexSymb(currency, symbol)
+        const _isForexSymb = isForexSymb(currency, this.FOREX_SYMBS)
         const { close: closePrice } = _isForexSymb
           ? {}
-          : { ...this._getCandlesClosePrice(candles, mts, timeframe, currency) }
+          : {
+            ...this._getCandlesClosePrice(
+              candles,
+              mts,
+              timeframe,
+              `t${currency}USD`
+            )
+          }
 
         if (!_isForexSymb && !Number.isFinite(closePrice)) {
           return { ...accum }
@@ -226,8 +233,59 @@ class BalanceHistory {
         prevRes = { ...walletsGroupedByTimeframe }
       }
 
-      return res
+      const resInUsd = this._convertForexToUsd(
+        res,
+        candles,
+        mts,
+        timeframe
+      )
+
+      return { USD: resInUsd }
     }
+  }
+
+  _convertForexToUsd (
+    obj,
+    candles,
+    mts,
+    timeframe
+  ) {
+    return Object.entries(obj).reduce((accum, [symb, balance]) => {
+      if (symb === 'USD') {
+        return accum + balance
+      }
+
+      const { close: btcPriseInCurrSymb } = {
+        ...this._getCandlesClosePrice(
+          candles,
+          mts,
+          timeframe,
+          `tBTC${symb}`
+        )
+      }
+      const { close: btcPriseInUsd } = {
+        ...this._getCandlesClosePrice(
+          candles,
+          mts,
+          timeframe,
+          'tBTCUSD'
+        )
+      }
+
+      if (
+        !btcPriseInCurrSymb ||
+        !btcPriseInUsd ||
+        !Number.isFinite(btcPriseInCurrSymb) ||
+        !Number.isFinite(btcPriseInUsd) ||
+        !Number.isFinite(balance)
+      ) {
+        return accum
+      }
+
+      const prise = btcPriseInUsd / btcPriseInCurrSymb
+
+      return accum + balance * prise
+    }, 0)
   }
 
   async getBalanceHistory (
@@ -239,8 +297,7 @@ class BalanceHistory {
         end = Date.now()
       } = {}
     } = {},
-    isSubCalc = false,
-    symbol = ['EUR', 'JPY', 'GBP', 'USD']
+    isSubCalc = false
   ) {
     const args = {
       auth,
@@ -259,7 +316,7 @@ class BalanceHistory {
     const walletsGroupedByTimeframe = await groupByTimeframe(
       wallets,
       timeframe,
-      symbol,
+      this.FOREX_SYMBS,
       'mtsUpdate',
       'currency',
       this._calcWalletsInTimeframe(firstWallets)
@@ -279,7 +336,6 @@ class BalanceHistory {
       this._getWalletsByTimeframe(
         firstWallets,
         candles,
-        symbol,
         timeframe
       ),
       true
@@ -292,5 +348,6 @@ class BalanceHistory {
 decorate(injectable(), BalanceHistory)
 decorate(inject(TYPES.RService), BalanceHistory, 0)
 decorate(inject(TYPES.DAO), BalanceHistory, 1)
+decorate(inject(TYPES.FOREX_SYMBS), BalanceHistory, 2)
 
 module.exports = BalanceHistory
