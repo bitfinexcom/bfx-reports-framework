@@ -36,7 +36,8 @@ class PositionsSnapshot {
       {
         filter: {
           user_id: user._id,
-          $lte: { mtsCreate: endMts },
+          // TODO: need to test `mtsUpdate: endMts`
+          $lte: { mtsCreate: endMts, mtsUpdate: endMts },
           $gte: { mtsUpdate: startMts }
         },
         sort: [['mtsUpdate', -1]],
@@ -192,24 +193,11 @@ class PositionsSnapshot {
         continue
       }
 
-      const {
-        res: publicTrades
-      } = await this.rService._getPublicTrades({
-        params: {
-          symbol,
-          end,
-          limit: 1,
-          notThrowError: true,
-          notCheckNextPage: true
-        }
-      })
+      const actualPrice = await this.currencyConverter
+        .getPrice(symbol, end)
 
       if (
-        !Array.isArray(publicTrades) ||
-        publicTrades.length === 0 ||
-        !publicTrades[0] ||
-        typeof publicTrades[0] !== 'object' ||
-        !Number.isFinite(publicTrades[0].price) ||
+        !Number.isFinite(actualPrice) ||
         !Number.isFinite(basePrice) ||
         !Number.isFinite(amount)
       ) {
@@ -218,7 +206,6 @@ class PositionsSnapshot {
         continue
       }
 
-      const actualPrice = publicTrades[0].price
       const pl = (actualPrice - basePrice) * Math.abs(amount)
       const plPerc = ((actualPrice / basePrice) - 1) * 100
       const plUsd = await this._convertPlToUsd(
@@ -375,8 +362,11 @@ class PositionsSnapshot {
     const year = date.getUTCFullYear()
     const month = date.getUTCMonth()
     const day = date.getUTCDate()
+    const hours = date.getUTCHours()
+    const minutes = date.getUTCMinutes()
+    const seconds = date.getUTCSeconds()
     const startMts = Date.UTC(year, month, day)
-    const endMts = Date.UTC(year, month, day + 1) - 1
+    const endMts = Date.UTC(year, month, day, hours, minutes, seconds)
 
     const positionsHistory = await this._getPositionsHistory(
       user,
