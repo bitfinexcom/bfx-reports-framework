@@ -293,6 +293,23 @@ class CurrencyConverter {
 
     return this.convertByCandles(data, convSchema)
   }
+
+  async getPrice (
+    reqSymb,
+    end
+  ) {
+    if (await this.rService.pingApi()) {
+      return this._getPublicTradesPrice(
+        reqSymb,
+        end
+      )
+    }
+
+    return this._getCandleClosedPrice(
+      reqSymb,
+      end
+    )
+  }
 }
 
 decorate(injectable(), CurrencyConverter)
