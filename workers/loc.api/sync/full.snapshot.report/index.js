@@ -10,10 +10,10 @@ const TYPES = require('../../di/types')
 
 class FullSnapshotReport {
   constructor (
-    rService,
+    wallets,
     positionsSnapshot
   ) {
-    this.rService = rService
+    this.wallets = wallets
     this.positionsSnapshot = positionsSnapshot
   }
 
@@ -24,8 +24,11 @@ class FullSnapshotReport {
     const dayMts = Date.UTC(
       date.getUTCFullYear(),
       date.getUTCMonth(),
-      date.getUTCDate() + 1
-    ) - 1
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds()
+    )
     const walletsArgs = {
       ...args,
       params: {
@@ -36,10 +39,8 @@ class FullSnapshotReport {
 
     const positionsSnapshot = await this.positionsSnapshot
       .getPositionsSnapshot(args)
-    const walletsSnapshot = await this.rService.getWallets(
-      null,
-      walletsArgs
-    )
+    const walletsSnapshot = await this.wallets
+      .getWalletsConvertedByPublicTrades(walletsArgs)
 
     const res = {
       positionsSnapshot,
@@ -51,7 +52,7 @@ class FullSnapshotReport {
 }
 
 decorate(injectable(), FullSnapshotReport)
-decorate(inject(TYPES.RService), FullSnapshotReport, 0)
+decorate(inject(TYPES.Wallets), FullSnapshotReport, 0)
 decorate(inject(TYPES.PositionsSnapshot), FullSnapshotReport, 1)
 
 module.exports = FullSnapshotReport
