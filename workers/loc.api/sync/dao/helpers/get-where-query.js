@@ -6,12 +6,7 @@ const { serializeVal } = require('./serialization')
 
 const _getCompareOperator = (
   origFieldName,
-  isArr,
-  gtKeys,
-  gteKeys,
-  ltKeys,
-  lteKeys,
-  isNot
+  isArr
 ) => {
   if (origFieldName === 'start') {
     return '>='
@@ -19,35 +14,23 @@ const _getCompareOperator = (
   if (origFieldName === 'end') {
     return '<='
   }
-  if (
-    Array.isArray(gtKeys) &&
-    gtKeys.some(key => key === origFieldName)
-  ) {
+  if (origFieldName === '$gt') {
     return '>'
   }
-  if (
-    Array.isArray(gteKeys) &&
-    gteKeys.some(key => key === origFieldName)
-  ) {
+  if (origFieldName === '$gte') {
     return '>='
   }
-  if (
-    Array.isArray(ltKeys) &&
-    ltKeys.some(key => key === origFieldName)
-  ) {
+  if (origFieldName === '$lt') {
     return '<'
   }
-  if (
-    Array.isArray(lteKeys) &&
-    lteKeys.some(key => key === origFieldName)
-  ) {
+  if (origFieldName === '$lte') {
     return '<='
   }
   if (isArr) {
-    return isNot ? 'NOT IN' : 'IN'
+    return origFieldName === '$not' ? 'NOT IN' : 'IN'
   }
 
-  return isNot ? '!=' : '='
+  return origFieldName === '$not' ? '!=' : '='
 }
 
 const _getKeysAndValuesForWhereQuery = (
@@ -101,41 +84,74 @@ const _isOrOp = (filter) => (
   typeof filter.$or === 'object'
 )
 
+const _isCondition = (
+  conditions,
+  fieldName
+) => {
+  return conditions.some(condition => (
+    condition === fieldName
+  ))
+}
+
+const _getWhereQueryAndValues = (
+  op = '',
+  origFieldName,
+  filter,
+  accum,
+  isArr = false,
+  condName = ''
+) => {
+  const compareOperator = _getCompareOperator(
+    origFieldName,
+    isArr
+  )
+  const _isSetCondName = condName && typeof condName === 'string'
+  const _fieldNameWithCondName = _isSetCondName
+    ? `${condName}_${origFieldName}`
+    : origFieldName
+  const _fieldNameForStartEnd = (
+    origFieldName === 'start' ||
+    origFieldName === 'end'
+  )
+    ? filter._dateFieldName
+    : origFieldName
+  const _fieldName = _isSetCondName
+    ? condName
+    : _fieldNameForStartEnd
+  const _filter = _isSetCondName
+    ? {
+      ...filter,
+      [_fieldNameWithCondName]: filter[condName]
+    }
+    : { ...filter }
+  const {
+    key,
+    subValues
+  } = _getKeysAndValuesForWhereQuery(
+    _filter,
+    _fieldNameWithCondName,
+    isArr
+  )
+
+  return {
+    subValues,
+    subQuery: `${accum}${op}${_fieldName} ${compareOperator} ${key}`
+  }
+}
+
 module.exports = (filter = {}, isNotSetWhereClause) => {
   let values = {}
 
   const isOrOp = _isOrOp(filter)
-  const filterObj = isOrOp
+  const _filter = isOrOp
     ? { ...filter.$or }
     : { ...filter }
   const operator = isOrOp
     ? 'OR'
     : 'AND'
-
-  const gtObj = filterObj.$gt && typeof filterObj.$gt === 'object'
-    ? filterObj.$gt
-    : {}
-  const ltObj = filterObj.$lt && typeof filterObj.$lt === 'object'
-    ? filterObj.$lt
-    : {}
-  const gteObj = filterObj.$gte && typeof filterObj.$gte === 'object'
-    ? filterObj.$gte
-    : {}
-  const lteObj = filterObj.$lte && typeof filterObj.$lte === 'object'
-    ? filterObj.$lte
-    : {}
-  const notObj = filterObj.$not && typeof filterObj.$not === 'object'
-    ? filterObj.$not
-    : {}
-  const _filter = {
-    ...omit(filterObj, ['$gt', '$gte', '$lt', '$lte', '$not']),
-    ...gtObj,
-    ...gteObj,
-    ...ltObj,
-    ...lteObj,
-    ...notObj
-  }
-  const keys = Object.keys(omit(_filter, ['_dateFieldName']))
+  const conditions = ['$gt', '$gte', '$lt', '$lte']
+  const hiddenFields = ['_dateFieldName']
+  const keys = Object.keys(omit(_filter, hiddenFields))
   const where = keys.reduce(
     (accum, curr, i) => {
       const isArr = Array.isArray(_filter[curr])
@@ -145,28 +161,53 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
       if (isNullOp) {
         return `${accum}${op}${isNullOp}`
       }
+      if (_isCondition(
+        conditions,
+        curr
+      )) {
+        const condFilter = (
+          _filter[curr] &&
+          typeof _filter[curr] === 'object'
+        )
+          ? _filter[curr]
+          : {}
+        const condKeys = Object.keys(omit(condFilter, hiddenFields))
+        const query = condKeys.reduce(
+          (condAccum, currCond) => {
+            const {
+              subValues,
+              subQuery
+            } = _getWhereQueryAndValues(
+              op,
+              curr,
+              condFilter,
+              condAccum,
+              isArr,
+              currCond
+            )
 
-      const fieldName = (curr === 'start' || curr === 'end')
-        ? _filter._dateFieldName
-        : curr
-      const compareOperator = _getCompareOperator(
-        curr,
-        isArr,
-        Object.keys(gtObj),
-        Object.keys(gteObj),
-        Object.keys(ltObj),
-        Object.keys(lteObj),
-        Object.keys(notObj).length > 0
-      )
+            values = { ...values, ...subValues }
+
+            return subQuery
+          }, '')
+
+        return `${accum}${query}`
+      }
 
       const {
-        key,
-        subValues
-      } = _getKeysAndValuesForWhereQuery(_filter, curr, isArr)
+        subValues,
+        subQuery
+      } = _getWhereQueryAndValues(
+        op,
+        curr,
+        filter,
+        accum,
+        isArr
+      )
 
       values = { ...values, ...subValues }
 
-      return `${accum}${op}${fieldName} ${compareOperator} ${key}`
+      return subQuery
     },
     (isNotSetWhereClause || keys.length === 0)
       ? '' : 'WHERE '
