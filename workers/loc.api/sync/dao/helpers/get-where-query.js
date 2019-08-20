@@ -149,7 +149,7 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
   const operator = isOrOp
     ? 'OR'
     : 'AND'
-  const conditions = ['$gt', '$gte', '$lt', '$lte']
+  const conditions = ['$gt', '$gte', '$lt', '$lte', '$not']
   const hiddenFields = ['_dateFieldName']
   const keys = Object.keys(omit(_filter, hiddenFields))
   const where = keys.reduce(
@@ -173,16 +173,18 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
           : {}
         const condKeys = Object.keys(omit(condFilter, hiddenFields))
         const query = condKeys.reduce(
-          (condAccum, currCond) => {
+          (condAccum, currCond, j) => {
+            const isCondArr = Array.isArray(condFilter[currCond])
+            const condOp = i > 0 || j > 0 ? ` ${operator} ` : ''
             const {
               subValues,
               subQuery
             } = _getWhereQueryAndValues(
-              op,
+              condOp,
               curr,
               condFilter,
               condAccum,
-              isArr,
+              isCondArr,
               currCond
             )
 
