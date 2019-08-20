@@ -36,8 +36,7 @@ class PositionsSnapshot {
       {
         filter: {
           user_id: user._id,
-          // TODO: need to test `mtsUpdate: endMts`
-          $lte: { mtsCreate: endMts, mtsUpdate: endMts },
+          $lte: { mtsCreate: endMts },
           $gte: { mtsUpdate: startMts }
         },
         sort: [['mtsUpdate', -1]],
@@ -51,9 +50,8 @@ class PositionsSnapshot {
   _findPositions (
     positionsAudit,
     reqStatus,
-    year,
-    month,
-    day
+    startMts,
+    endMts
   ) {
     return positionsAudit.find((posAudit) => {
       const { mtsUpdate, status } = { ...posAudit }
@@ -62,44 +60,37 @@ class PositionsSnapshot {
         return false
       }
 
-      const date = new Date(mtsUpdate)
-
       return (
         status === reqStatus &&
-        year === date.getUTCFullYear() &&
-        month === date.getUTCMonth() &&
-        day === date.getUTCDate()
+        mtsUpdate >= startMts &&
+        mtsUpdate <= endMts
       )
     })
   }
 
   _findActivePositions (
     positionsAudit,
-    year,
-    month,
-    day
+    startMts,
+    endMts
   ) {
     return this._findPositions(
       positionsAudit,
       'ACTIVE',
-      year,
-      month,
-      day
+      startMts,
+      endMts
     )
   }
 
   _findClosedPositions (
     positionsAudit,
-    year,
-    month,
-    day
+    startMts,
+    endMts
   ) {
     return this._findPositions(
       positionsAudit,
       'CLOSED',
-      year,
-      month,
-      day
+      startMts,
+      endMts
     )
   }
 
@@ -246,9 +237,8 @@ class PositionsSnapshot {
   }
 
   async _getPositionsAudit (
-    year,
-    month,
-    day,
+    startMts,
+    endMts,
     {
       auth = {},
       params: { ids } = {}
@@ -301,9 +291,8 @@ class PositionsSnapshot {
 
         const closedPos = this._findClosedPositions(
           res,
-          year,
-          month,
-          day
+          startMts,
+          endMts
         )
 
         if (
@@ -315,9 +304,8 @@ class PositionsSnapshot {
 
         const activePos = this._findActivePositions(
           res,
-          year,
-          month,
-          day
+          startMts,
+          endMts
         )
 
         if (
@@ -350,23 +338,47 @@ class PositionsSnapshot {
     return positionsAudit
   }
 
-  async getPositionsSnapshot (args) {
-    const {
-      auth = {},
-      params = {}
-    } = { ...args }
-    const { end = Date.now() } = { ...params }
-    const user = await this.dao.checkAuthInDb({ auth })
-
-    const date = new Date(end)
+  _getMts (date) {
     const year = date.getUTCFullYear()
     const month = date.getUTCMonth()
     const day = date.getUTCDate()
     const hours = date.getUTCHours()
     const minutes = date.getUTCMinutes()
     const seconds = date.getUTCSeconds()
-    const startMts = Date.UTC(year, month, day)
-    const endMts = Date.UTC(year, month, day, hours, minutes, seconds)
+
+    return Date.UTC(
+      year,
+      month,
+      day,
+      hours,
+      minutes,
+      seconds
+    )
+  }
+
+  async getPositionsSnapshot (args) {
+    const {
+      auth = {},
+      params = {}
+    } = { ...args }
+    const {
+      end = Date.now(),
+      start
+    } = { ...params }
+    const user = await this.dao.checkAuthInDb({ auth })
+
+    const endDate = new Date(end)
+    const endYear = endDate.getUTCFullYear()
+    const endMonth = endDate.getUTCMonth()
+    const endDay = endDate.getUTCDate()
+    const endMts = this._getMts(endDate)
+
+    const startDate = start
+      ? new Date(start)
+      : false
+    const startMts = startDate
+      ? this._getMts(startDate)
+      : Date.UTC(endYear, endMonth, endDay)
 
     const positionsHistory = await this._getPositionsHistory(
       user,
@@ -383,9 +395,8 @@ class PositionsSnapshot {
 
     const ids = this._getPositionsHistoryIds(positionsHistory)
     const positionsAudit = await this._getPositionsAudit(
-      year,
-      month,
-      day,
+      startMts,
+      endMts,
       { auth, params: { ids } }
     )
 
