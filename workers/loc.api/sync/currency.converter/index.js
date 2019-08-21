@@ -297,29 +297,35 @@ class CurrencyConverter {
     })
   }
 
-  async convert (data, convSchema) {
-    if (await this.pingPublicTradesEndpoint()) {
+  /**
+   * if api is not available convert by candles
+   */
+  convert (data, convSchema) {
+    try {
       return this.convertByPublicTrades(data, convSchema)
+    } catch (err) {
+      return this.convertByCandles(data, convSchema)
     }
-
-    return this.convertByCandles(data, convSchema)
   }
 
-  async getPrice (
+  /**
+   * if api is not available get price from candles
+   */
+  getPrice (
     reqSymb,
     end
   ) {
-    if (await this.pingPublicTradesEndpoint()) {
+    try {
       return this._getPublicTradesPrice(
         reqSymb,
         end
       )
+    } catch (err) {
+      return this._getCandleClosedPrice(
+        reqSymb,
+        end
+      )
     }
-
-    return this._getCandleClosedPrice(
-      reqSymb,
-      end
-    )
   }
 }
 
