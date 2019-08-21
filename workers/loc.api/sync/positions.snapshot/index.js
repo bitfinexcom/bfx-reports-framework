@@ -50,9 +50,8 @@ class PositionsSnapshot {
   _findPositions (
     positionsAudit,
     reqStatus,
-    year,
-    month,
-    day
+    startMts,
+    endMts
   ) {
     return positionsAudit.find((posAudit) => {
       const { mtsUpdate, status } = { ...posAudit }
@@ -61,44 +60,37 @@ class PositionsSnapshot {
         return false
       }
 
-      const date = new Date(mtsUpdate)
-
       return (
         status === reqStatus &&
-        year === date.getUTCFullYear() &&
-        month === date.getUTCMonth() &&
-        day === date.getUTCDate()
+        mtsUpdate >= startMts &&
+        mtsUpdate <= endMts
       )
     })
   }
 
   _findActivePositions (
     positionsAudit,
-    year,
-    month,
-    day
+    startMts,
+    endMts
   ) {
     return this._findPositions(
       positionsAudit,
       'ACTIVE',
-      year,
-      month,
-      day
+      startMts,
+      endMts
     )
   }
 
   _findClosedPositions (
     positionsAudit,
-    year,
-    month,
-    day
+    startMts,
+    endMts
   ) {
     return this._findPositions(
       positionsAudit,
       'CLOSED',
-      year,
-      month,
-      day
+      startMts,
+      endMts
     )
   }
 
@@ -192,24 +184,11 @@ class PositionsSnapshot {
         continue
       }
 
-      const {
-        res: publicTrades
-      } = await this.rService._getPublicTrades({
-        params: {
-          symbol,
-          end,
-          limit: 1,
-          notThrowError: true,
-          notCheckNextPage: true
-        }
-      })
+      const actualPrice = await this.currencyConverter
+        .getPrice(symbol, end)
 
       if (
-        !Array.isArray(publicTrades) ||
-        publicTrades.length === 0 ||
-        !publicTrades[0] ||
-        typeof publicTrades[0] !== 'object' ||
-        !Number.isFinite(publicTrades[0].price) ||
+        !Number.isFinite(actualPrice) ||
         !Number.isFinite(basePrice) ||
         !Number.isFinite(amount)
       ) {
@@ -218,7 +197,6 @@ class PositionsSnapshot {
         continue
       }
 
-      const actualPrice = publicTrades[0].price
       const pl = (actualPrice - basePrice) * Math.abs(amount)
       const plPerc = ((actualPrice / basePrice) - 1) * 100
       const plUsd = await this._convertPlToUsd(
@@ -259,9 +237,8 @@ class PositionsSnapshot {
   }
 
   async _getPositionsAudit (
-    year,
-    month,
-    day,
+    startMts,
+    endMts,
     {
       auth = {},
       params: { ids } = {}
@@ -314,9 +291,8 @@ class PositionsSnapshot {
 
         const closedPos = this._findClosedPositions(
           res,
-          year,
-          month,
-          day
+          startMts,
+          endMts
         )
 
         if (
@@ -328,9 +304,8 @@ class PositionsSnapshot {
 
         const activePos = this._findActivePositions(
           res,
-          year,
-          month,
-          day
+          startMts,
+          endMts
         )
 
         if (
@@ -363,20 +338,51 @@ class PositionsSnapshot {
     return positionsAudit
   }
 
+  _getMts (date) {
+    const year = date.getUTCFullYear()
+    const month = date.getUTCMonth()
+    const day = date.getUTCDate()
+    const hours = date.getUTCHours()
+    const minutes = date.getUTCMinutes()
+    const seconds = date.getUTCSeconds()
+
+    return Date.UTC(
+      year,
+      month,
+      day,
+      hours,
+      minutes,
+      seconds
+    )
+  }
+
   async getPositionsSnapshot (args) {
     const {
       auth = {},
       params = {}
     } = { ...args }
-    const { end = Date.now() } = { ...params }
+    const {
+      end = Date.now(),
+      start,
+      isCertainMoment
+    } = { ...params }
     const user = await this.dao.checkAuthInDb({ auth })
 
-    const date = new Date(end)
-    const year = date.getUTCFullYear()
-    const month = date.getUTCMonth()
-    const day = date.getUTCDate()
-    const startMts = Date.UTC(year, month, day)
-    const endMts = Date.UTC(year, month, day + 1) - 1
+    const endDate = new Date(end)
+    const endYear = endDate.getUTCFullYear()
+    const endMonth = endDate.getUTCMonth()
+    const endDay = endDate.getUTCDate()
+    const endMts = this._getMts(endDate)
+
+    const _start = isCertainMoment
+      ? end
+      : start
+    const startDate = _start
+      ? new Date(_start)
+      : false
+    const startMts = startDate
+      ? this._getMts(startDate)
+      : Date.UTC(endYear, endMonth, endDay)
 
     const positionsHistory = await this._getPositionsHistory(
       user,
@@ -393,9 +399,8 @@ class PositionsSnapshot {
 
     const ids = this._getPositionsHistoryIds(positionsHistory)
     const positionsAudit = await this._getPositionsAudit(
-      year,
-      month,
-      day,
+      startMts,
+      endMts,
       { auth, params: { ids } }
     )
 

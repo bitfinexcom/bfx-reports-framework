@@ -75,13 +75,48 @@ describe('Sync mode API with SQLite', () => {
   after(async function () {
     this.timeout(5000)
 
+    await stopEnvironment()
+    await closeSQLite(db)
+    await rmDB(dbDirPath)
+    await rmAllFiles(tempDirPath, ['README.md'])
+
     try {
-      await stopEnvironment()
-      await closeSQLite(db)
-      await rmDB(dbDirPath)
-      await rmAllFiles(tempDirPath, ['README.md'])
       await mockRESTv2Srv.close()
-    } catch (err) { console.log('[1-ERR]'.bgRed, err) }
+    } catch (err) { }
+  })
+
+  it('it should be successfully performed by the pingApi method', async function () {
+    this.timeout(5000)
+
+    const args = {
+      method: 'pingApi',
+      id: 5
+    }
+    const argsArr = [
+      { ...args },
+      {
+        ...args,
+        pingMethod: '_getPublicTrades',
+        params: {
+          limit: 1,
+          notThrowError: true,
+          notCheckNextPage: true
+        }
+      }
+    ]
+
+    for (const args of argsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send(args)
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isOk(res.body.result)
+    }
   })
 
   it('it should be successfully performed by the isSyncModeConfig method', async function () {

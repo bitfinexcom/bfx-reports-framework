@@ -2,10 +2,12 @@
 
 const {
   pick,
+  omit,
   isEmpty
 } = require('lodash')
 const {
-  AuthError
+  AuthError,
+  FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
   isAuthError,
@@ -151,7 +153,14 @@ class FrameworkReportService extends ReportService {
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
-        await this._getSymbols()
+        const { pingMethod = '_getSymbols' } = { ...args }
+        const _args = omit(args, ['pingMethod'])
+
+        if (typeof this[pingMethod] !== 'function') {
+          throw new FindMethodError()
+        }
+
+        await this[pingMethod](_args)
 
         return true
       } catch (err) {

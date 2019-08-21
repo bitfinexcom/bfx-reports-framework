@@ -240,94 +240,106 @@ describe('Additional sync mode API with SQLite', () => {
   it('it should be successfully performed by the getPositionsSnapshot method', async function () {
     this.timeout(5000)
 
-    const res = await agent
-      .post(`${basePath}/get-data`)
-      .type('json')
-      .send({
-        auth,
-        method: 'getPositionsSnapshot',
-        params: {
-          end
-        },
-        id: 5
+    const paramsArr = [
+      { end },
+      { end, start: end - (10 * 60 * 60 * 1000) },
+      { end, isCertainMoment: true }
+    ]
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getPositionsSnapshot',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      res.body.result.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'id',
+          'symbol',
+          'amount',
+          'basePrice',
+          'actualPrice',
+          'pl',
+          'plUsd',
+          'plPerc',
+          'marginFunding',
+          'marginFundingType',
+          'status',
+          'mtsCreate',
+          'mtsUpdate'
+        ])
       })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isArray(res.body.result)
-
-    res.body.result.forEach((item) => {
-      assert.isObject(item)
-      assert.containsAllKeys(item, [
-        'id',
-        'symbol',
-        'amount',
-        'basePrice',
-        'actualPrice',
-        'pl',
-        'plUsd',
-        'plPerc',
-        'marginFunding',
-        'marginFundingType',
-        'status',
-        'mtsCreate',
-        'mtsUpdate'
-      ])
-    })
+    }
   })
 
   it('it should be successfully performed by the getFullSnapshotReport method', async function () {
     this.timeout(5000)
 
-    const res = await agent
-      .post(`${basePath}/get-data`)
-      .type('json')
-      .send({
-        auth,
-        method: 'getFullSnapshotReport',
-        params: {
-          end
-        },
-        id: 5
+    const paramsArr = [
+      { end },
+      { end, start: end - (10 * 60 * 60 * 1000) },
+      { end, isCertainMoment: true }
+    ]
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getFullSnapshotReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isObject(res.body.result)
+      assert.isArray(res.body.result.positionsSnapshot)
+      assert.isArray(res.body.result.walletsSnapshot)
+
+      res.body.result.positionsSnapshot.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'id',
+          'symbol',
+          'amount',
+          'basePrice',
+          'actualPrice',
+          'pl',
+          'plUsd',
+          'plPerc',
+          'marginFunding',
+          'marginFundingType',
+          'status',
+          'mtsCreate',
+          'mtsUpdate'
+        ])
       })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isObject(res.body.result)
-    assert.isArray(res.body.result.positionsSnapshot)
-    assert.isArray(res.body.result.walletsSnapshot)
-
-    res.body.result.positionsSnapshot.forEach((item) => {
-      assert.isObject(item)
-      assert.containsAllKeys(item, [
-        'id',
-        'symbol',
-        'amount',
-        'basePrice',
-        'actualPrice',
-        'pl',
-        'plUsd',
-        'plPerc',
-        'marginFunding',
-        'marginFundingType',
-        'status',
-        'mtsCreate',
-        'mtsUpdate'
-      ])
-    })
-    res.body.result.walletsSnapshot.forEach((item) => {
-      assert.isObject(item)
-      assert.containsAllKeys(item, [
-        'type',
-        'currency',
-        'balance',
-        'balanceUsd'
-      ])
-    })
+      res.body.result.walletsSnapshot.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'type',
+          'currency',
+          'balance',
+          'balanceUsd'
+        ])
+      })
+    }
   })
 
   it('it should be successfully performed by the getMultipleCsv method', async function () {

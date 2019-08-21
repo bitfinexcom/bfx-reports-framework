@@ -17,7 +17,22 @@ class Wallets {
     this.currencyConverter = currencyConverter
   }
 
-  async getWallets (args) {
+  _getConvSchema (args) {
+    const {
+      params: { end = Date.now() } = {}
+    } = { ...args }
+
+    return {
+      convertTo: 'USD',
+      symbolFieldName: 'currency',
+      mts: end,
+      convFields: [
+        { inputField: 'balance', outputField: 'balanceUsd' }
+      ]
+    }
+  }
+
+  async _getWallets (args) {
     const {
       auth = {},
       params: { end = Date.now() } = {}
@@ -45,18 +60,26 @@ class Wallets {
         currency.length >= 3
       ))
 
-    const wallets = _wallets.map(w => ({ balanceUsd: null, ...w }))
+    return _wallets.map(w => ({ balanceUsd: null, ...w }))
+  }
+
+  async getWallets (args) {
+    const wallets = await this._getWallets(args)
+    const convSchema = this._getConvSchema(args)
 
     return this.currencyConverter.convertByCandles(
       wallets,
-      {
-        convertTo: 'USD',
-        symbolFieldName: 'currency',
-        mts: end,
-        convFields: [
-          { inputField: 'balance', outputField: 'balanceUsd' }
-        ]
-      }
+      convSchema
+    )
+  }
+
+  async getWalletsConvertedByPublicTrades (args) {
+    const wallets = await this._getWallets(args)
+    const convSchema = this._getConvSchema(args)
+
+    return this.currencyConverter.convert(
+      wallets,
+      convSchema
     )
   }
 }
