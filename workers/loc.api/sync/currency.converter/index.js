@@ -286,8 +286,19 @@ class CurrencyConverter {
     )
   }
 
+  pingPublicTradesEndpoint () {
+    return this.rService.pingApi({
+      pingMethod: '_getPublicTrades',
+      params: {
+        limit: 1,
+        notThrowError: true,
+        notCheckNextPage: true
+      }
+    })
+  }
+
   async convert (data, convSchema) {
-    if (await this.rService.pingApi()) {
+    if (await this.pingPublicTradesEndpoint()) {
       return this.convertByPublicTrades(data, convSchema)
     }
 
@@ -298,7 +309,7 @@ class CurrencyConverter {
     reqSymb,
     end
   ) {
-    if (await this.rService.pingApi()) {
+    if (await this.pingPublicTradesEndpoint()) {
       return this._getPublicTradesPrice(
         reqSymb,
         end
