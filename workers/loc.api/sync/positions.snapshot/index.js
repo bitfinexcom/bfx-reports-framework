@@ -363,7 +363,8 @@ class PositionsSnapshot {
     } = { ...args }
     const {
       end = Date.now(),
-      start
+      start,
+      isCertainMoment
     } = { ...params }
     const user = await this.dao.checkAuthInDb({ auth })
 
@@ -373,8 +374,11 @@ class PositionsSnapshot {
     const endDay = endDate.getUTCDate()
     const endMts = this._getMts(endDate)
 
-    const startDate = start
-      ? new Date(start)
+    const _start = isCertainMoment
+      ? end
+      : start
+    const startDate = _start
+      ? new Date(_start)
       : false
     const startMts = startDate
       ? this._getMts(startDate)

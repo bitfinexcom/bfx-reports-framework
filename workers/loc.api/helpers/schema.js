@@ -95,6 +95,9 @@ const paramsSchemaForPositionsSnapshotApi = {
     },
     start: {
       type: 'integer'
+    },
+    isCertainMoment: {
+      type: 'boolean'
     }
   }
 }
@@ -107,6 +110,9 @@ const paramsSchemaForFullSnapshotReportApi = {
     },
     start: {
       type: 'integer'
+    },
+    isCertainMoment: {
+      type: 'boolean'
     }
   }
 }
@@ -172,6 +178,9 @@ const paramsSchemaForPositionsSnapshotCsv = {
     start: {
       type: 'integer'
     },
+    isCertainMoment: {
+      type: 'boolean'
+    },
     timezone,
     dateFormat
   }
@@ -185,6 +194,9 @@ const paramsSchemaForFullSnapshotReportCsv = {
     },
     start: {
       type: 'integer'
+    },
+    isCertainMoment: {
+      type: 'boolean'
     },
     timezone,
     dateFormat
