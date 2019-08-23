@@ -28,6 +28,45 @@ class CsvJobData extends BaseCsvJobData {
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
   }
 
+  _addColumnsBySchema (columnsCsv = {}, schema = {}) {
+    return Object.entries({ ...columnsCsv })
+      .reduce((accum, [key, val]) => {
+        return {
+          ...accum,
+          [key]: val,
+          ...(schema[key] && typeof schema[key] === 'object')
+            ? schema[key]
+            : {}
+        }
+      }, {})
+  }
+
+  async getMovementsCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    const _jobData = await super.getMovementsCsvJobData(
+      args,
+      uId,
+      uInfo
+    )
+
+    const jobData = {
+      ..._jobData,
+      columnsCsv: this._addColumnsBySchema(
+        _jobData.columnsCsv,
+        {
+          amount: {
+            amountUsd: 'AMOUNT USD'
+          }
+        }
+      )
+    }
+
+    return jobData
+  }
+
   async getWalletsCsvJobData (
     args,
     uId,
