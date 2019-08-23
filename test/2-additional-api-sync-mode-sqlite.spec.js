@@ -339,6 +339,13 @@ describe('Additional sync mode API with SQLite', () => {
           'balanceUsd'
         ])
       })
+      res.body.result.tickers.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'symbol',
+          'amount'
+        ])
+      })
     }
   })
 
