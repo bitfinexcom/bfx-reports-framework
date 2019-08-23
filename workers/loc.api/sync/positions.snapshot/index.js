@@ -356,7 +356,15 @@ class PositionsSnapshot {
     )
   }
 
-  async getPositionsSnapshot (args) {
+  _getTickers (positionsAudit = []) {
+    return positionsAudit.map((position) => {
+      const { symbol, amount } = { ...position }
+
+      return { symbol, amount }
+    })
+  }
+
+  async _getPositionsAuditAndSnapshot (args) {
     const {
       auth = {},
       params = {}
@@ -367,6 +375,10 @@ class PositionsSnapshot {
       isCertainMoment
     } = { ...params }
     const user = await this.dao.checkAuthInDb({ auth })
+    const emptyRes = {
+      positionsAudit: [],
+      positionsSnapshot: []
+    }
 
     const endDate = new Date(end)
     const endYear = endDate.getUTCFullYear()
@@ -394,7 +406,7 @@ class PositionsSnapshot {
       !Array.isArray(positionsHistory) ||
       positionsHistory.length === 0
     ) {
-      return []
+      return emptyRes
     }
 
     const ids = this._getPositionsHistoryIds(positionsHistory)
@@ -408,15 +420,39 @@ class PositionsSnapshot {
       !Array.isArray(positionsAudit) ||
       positionsAudit.length === 0
     ) {
-      return []
+      return emptyRes
     }
 
-    const res = await this._getCalculatedPositions(
+    const positionsSnapshot = await this._getCalculatedPositions(
       positionsAudit,
       endMts
     )
 
-    return res
+    return {
+      positionsAudit,
+      positionsSnapshot
+    }
+  }
+
+  async getPositionsSnapshot (args) {
+    const {
+      positionsSnapshot
+    } = await this._getPositionsAuditAndSnapshot(args)
+
+    return positionsSnapshot
+  }
+
+  async getPositionsSnapshotAndTickers (args) {
+    const {
+      positionsAudit,
+      positionsSnapshot
+    } = await this._getPositionsAuditAndSnapshot(args)
+    const tickers = this._getTickers(positionsAudit)
+
+    return {
+      positionsSnapshot,
+      tickers
+    }
   }
 }
 
