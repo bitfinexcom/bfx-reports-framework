@@ -10,6 +10,9 @@ const TYPES = require('../../di/types')
 const {
   getInsertableArrayObjectsFilter
 } = require('../dao/helpers')
+const {
+  isForexSymb
+} = require('../helpers')
 
 class FullTaxReport {
   constructor (
@@ -93,13 +96,35 @@ class FullTaxReport {
     return movements
   }
 
-  // TODO:
+  _filterMovementsByAmount (
+    movements,
+    {
+      isDeposits,
+      isWithdrawals
+    } = {}
+  ) {
+    if (
+      isDeposits ||
+      isWithdrawals
+    ) {
+      return movements.filter((movement) => {
+        const { amount } = { ...movement }
+
+        return isDeposits
+          ? amount > 0
+          : amount < 0
+      })
+    }
+
+    return movements
+  }
+
   _calcMovementsTotalAmount (
     movements,
     {
       isDeposits,
       isWithdrawals
-    }
+    } = {}
   ) {
     if (
       !Array.isArray(movements) ||
@@ -107,6 +132,43 @@ class FullTaxReport {
     ) {
       return null
     }
+
+    const _movements = this._filterMovementsByAmount(
+      movements,
+      {
+        isDeposits,
+        isWithdrawals
+      }
+    )
+
+    const res = _movements.reduce((accum, movement = {}) => {
+      const { amount, amountUsd, currency } = { ...movement }
+      const _isForexSymb = isForexSymb(currency)
+      const _isNotUsedAmountUsdField = (
+        _isForexSymb &&
+        !Number.isFinite(amountUsd)
+      )
+      const _amount = _isNotUsedAmountUsdField
+        ? amount
+        : amountUsd
+      const symb = _isNotUsedAmountUsdField
+        ? currency
+        : 'USD'
+
+      if (!Number.isFinite(_amount)) {
+        return { ...accum }
+      }
+
+      return {
+        ...accum,
+        [symb]: Number.isFinite(accum[symb])
+          ? accum[symb] + _amount
+          : _amount
+      }
+    }, {})
+    const { USD } = { ...res }
+
+    return USD
   }
 
   async getFullTaxReport ({
