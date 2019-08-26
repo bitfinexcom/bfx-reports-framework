@@ -49,6 +49,7 @@ const CsvJobData = require('../generate-csv/csv.job.data')
 const {
   fullSnapshotReportCsvWriter
 } = require('../generate-csv/csv-writer')
+const FullTaxReport = require('../sync/full.tax.report')
 
 decorate(injectable(), EventEmitter)
 
@@ -187,6 +188,8 @@ module.exports = ({
           [TYPES.RService]
         )
       )
+    bind(TYPES.FullTaxReport)
+      .to(FullTaxReport)
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)
       .inSingletonScope()
