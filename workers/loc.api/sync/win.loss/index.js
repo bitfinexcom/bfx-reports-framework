@@ -24,6 +24,7 @@ class WinLoss {
     syncSchema,
     ALLOWED_COLLS,
     balanceHistory,
+    positionsSnapshot,
     FOREX_SYMBS
   ) {
     this.rService = rService
@@ -31,7 +32,49 @@ class WinLoss {
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.balanceHistory = balanceHistory
+    this.positionsSnapshot = positionsSnapshot
     this.FOREX_SYMBS = FOREX_SYMBS
+  }
+
+  async _getPlFromPositionsSnapshot (args) {
+    const {
+      auth = {},
+      params = {}
+    } = { ...args }
+    const { mts: end = Date.now() } = { ...params }
+    const _args = {
+      auth,
+      params: {
+        end,
+        isCertainMoment: true
+      }
+    }
+
+    const positionsSnapshot = await this.positionsSnapshot
+      .getPositionsSnapshot(_args)
+
+    if (
+      !Array.isArray(positionsSnapshot) ||
+      positionsSnapshot.length === 0
+    ) {
+      return null
+    }
+
+    return positionsSnapshot.reduce((accum, curr) => {
+      const { plUsd } = { ...curr }
+      const symb = 'USD'
+
+      if (!Number.isFinite(plUsd)) {
+        return accum
+      }
+
+      return {
+        ...accum,
+        [symb]: Number.isFinite(accum[symb])
+          ? accum[symb] + plUsd
+          : plUsd
+      }
+    }, {})
   }
 
   _sumMovementsWithPrevRes (
@@ -54,13 +97,21 @@ class WinLoss {
     }, {})
   }
 
-  _getWinLossByTimeframe (startWalletsVals = {}) {
+  _getWinLossByTimeframe (
+    startWalletsVals = {},
+    startPl = {},
+    endPl = {}
+  ) {
     let prevMovementsRes = {}
 
     return ({
       walletsGroupedByTimeframe,
       movementsGroupedByTimeframe
-    } = {}) => {
+    } = {}, i) => {
+      const isLast = i === 0
+      const _startPl = { ...startPl }
+      const _endPl = isLast ? { ...endPl } : {}
+
       prevMovementsRes = this._sumMovementsWithPrevRes(
         prevMovementsRes,
         { ...movementsGroupedByTimeframe }
@@ -76,7 +127,14 @@ class WinLoss {
         const movements = Number.isFinite(prevMovementsRes[symb])
           ? prevMovementsRes[symb]
           : 0
-        const res = wallet - startWallet - movements
+        const _startPlVal = Number.isFinite(_startPl[symb])
+          ? _startPl[symb]
+          : 0
+        const _endPlVal = Number.isFinite(_endPl[symb])
+          ? _endPl[symb]
+          : 0
+        const res = (wallet - startWallet - movements) +
+          (_startPlVal + _endPlVal)
 
         if (!res) {
           return { ...accum }
@@ -261,6 +319,14 @@ class WinLoss {
         args,
         true
       )
+    const startPl = await this._getPlFromPositionsSnapshot({
+      auth,
+      params: { mts: start }
+    })
+    const endPl = await this._getPlFromPositionsSnapshot({
+      auth,
+      params: { mts: end }
+    })
 
     const groupedData = await calcGroupedData(
       {
@@ -268,7 +334,11 @@ class WinLoss {
         movementsGroupedByTimeframe
       },
       false,
-      this._getWinLossByTimeframe(startWalletsInForex),
+      this._getWinLossByTimeframe(
+        startWalletsInForex,
+        startPl,
+        endPl
+      ),
       true
     )
     const res = this._shiftMtsToNextTimeframe(
@@ -290,6 +360,7 @@ decorate(inject(TYPES.DAO), WinLoss, 1)
 decorate(inject(TYPES.SyncSchema), WinLoss, 2)
 decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 3)
 decorate(inject(TYPES.BalanceHistory), WinLoss, 4)
-decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 5)
+decorate(inject(TYPES.PositionsSnapshot), WinLoss, 5)
+decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 6)
 
 module.exports = WinLoss

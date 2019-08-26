@@ -64,11 +64,11 @@ class CurrencyConverter {
   }
 
   async _getPublicTradesPrice (
-    reqSymb,
+    symbol,
     end
   ) {
     if (
-      !reqSymb ||
+      !symbol ||
       !Number.isInteger(end)
     ) {
       return null
@@ -76,7 +76,7 @@ class CurrencyConverter {
 
     const { res } = await this.rService._getPublicTrades({
       params: {
-        reqSymb,
+        symbol,
         end,
         limit: 1,
         notThrowError: true,
