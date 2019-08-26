@@ -37,17 +37,19 @@ class FullSnapshotReport {
       }
     }
 
-    const positionsSnapshot = await this.positionsSnapshot
-      .getPositionsSnapshot(args)
+    const {
+      positionsSnapshot,
+      tickers
+    } = await this.positionsSnapshot
+      .getPositionsSnapshotAndTickers(args)
     const walletsSnapshot = await this.wallets
       .getWalletsConvertedByPublicTrades(walletsArgs)
 
-    const res = {
+    return {
       positionsSnapshot,
-      walletsSnapshot
+      walletsSnapshot,
+      tickers
     }
-
-    return res
   }
 }
 

@@ -266,6 +266,10 @@ class CsvJobData extends BaseCsvJobData {
           currency: 'CURRENCY',
           balance: 'BALANCE',
           balanceUsd: 'BALANCE USD'
+        },
+        tickers: {
+          symbol: 'PAIR',
+          amount: 'AMOUNT'
         }
       },
       formatSettings: {
@@ -277,6 +281,9 @@ class CsvJobData extends BaseCsvJobData {
         walletsSnapshot: {
           mtsUpdate: 'date',
           currency: 'symbol'
+        },
+        tickers: {
+          symbol: 'symbol'
         }
       },
       csvCustomWriter: this.fullSnapshotReportCsvWriter

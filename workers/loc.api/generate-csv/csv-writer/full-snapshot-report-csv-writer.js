@@ -53,11 +53,20 @@ module.exports = (rService) => async (
     header: true,
     columns: columnsCsv.walletsSnapshot
   })
+  const tickersNameStringifier = stringify(
+    { columns: ['name'] }
+  )
+  const tickersStringifier = stringify({
+    header: true,
+    columns: columnsCsv.tickers
+  })
 
   posNameStringifier.pipe(wStream)
   posStringifier.pipe(wStream)
   walletsNameStringifier.pipe(wStream)
   walletsStringifier.pipe(wStream)
+  tickersNameStringifier.pipe(wStream)
+  tickersStringifier.pipe(wStream)
 
   const res = await getDataFromApi(
     rService.getFullSnapshotReport.bind(rService),
@@ -73,9 +82,16 @@ module.exports = (rService) => async (
   )
   write([{ name: 'WALLETS' }], walletsNameStringifier)
   write(
-    res.walletsSnapshot,
+    [...res.walletsSnapshot, {}],
     walletsStringifier,
     formatSettings.walletsSnapshot,
+    params
+  )
+  write([{ name: 'TICKERS' }], tickersNameStringifier)
+  write(
+    res.tickers,
+    tickersStringifier,
+    formatSettings.tickers,
     params
   )
 
