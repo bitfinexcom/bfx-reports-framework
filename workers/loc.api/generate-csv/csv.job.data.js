@@ -21,11 +21,13 @@ const {
 class CsvJobData extends BaseCsvJobData {
   constructor (
     rService,
-    fullSnapshotReportCsvWriter
+    fullSnapshotReportCsvWriter,
+    fullTaxReportCsvWriter
   ) {
     super(rService)
 
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
+    this.fullTaxReportCsvWriter = fullTaxReportCsvWriter
   }
 
   _addColumnsBySchema (columnsCsv = {}, schema = {}) {
@@ -299,9 +301,97 @@ class CsvJobData extends BaseCsvJobData {
 
     return jobData
   }
+
+  async getFullTaxReportCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForFullTaxReportCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(
+      args,
+      null,
+      { isOnMomentInName: true }
+    )
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getFullTaxReport',
+      fileNamesMap: [['getFullTaxReport', 'full-tax-report']],
+      args: csvArgs,
+      columnsCsv: {
+        winLossTotalAmount: {
+          amount: 'WIN/LOSS TOTAL AMOUNT USD'
+        },
+        movementsTotalAmount: {
+          depositsTotalAmount: 'DEPOSITS TOTAL AMOUNT USD',
+          withdrawalsTotalAmount: 'WITHDRAWALS TOTAL AMOUNT USD',
+          movementsTotalAmount: 'MOVEMENTS TOTAL AMOUNT USD'
+        },
+        movements: {
+          id: '#',
+          mtsUpdated: 'DATE',
+          currency: 'CURRENCY',
+          status: 'STATUS',
+          amount: 'AMOUNT',
+          fees: 'FEES',
+          destinationAddress: 'DESCRIPTION',
+          transactionId: 'TRANSACTION ID'
+        },
+        positionsSnapshot: {
+          id: '#',
+          symbol: 'PAIR',
+          amount: 'AMOUNT',
+          basePrice: 'BASE PRICE',
+          actualPrice: 'ACTUAL PRICE',
+          pl: 'P/L',
+          plUsd: 'P/L USD',
+          plPerc: 'P/L%',
+          marginFunding: 'FUNDING COST',
+          marginFundingType: 'FUNDING TYPE',
+          status: 'STATUS',
+          mtsUpdate: 'UPDATED',
+          mtsCreate: 'CREATED'
+        },
+        tickers: {
+          symbol: 'PAIR',
+          amount: 'AMOUNT'
+        }
+      },
+      formatSettings: {
+        movements: {
+          mtsUpdated: 'date'
+        },
+        positionsSnapshot: {
+          mtsUpdate: 'date',
+          mtsCreate: 'date',
+          symbol: 'symbol'
+        },
+        tickers: {
+          symbol: 'symbol'
+        }
+      },
+      csvCustomWriter: this.fullTaxReportCsvWriter
+    }
+
+    return jobData
+  }
 }
 
 decorate(inject(TYPES.RService), CsvJobData, 0)
 decorate(inject(TYPES.FullSnapshotReportCsvWriter), CsvJobData, 1)
+decorate(inject(TYPES.FullTaxReportCsvWriter), CsvJobData, 2)
 
 module.exports = CsvJobData
