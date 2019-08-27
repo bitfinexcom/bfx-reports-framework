@@ -47,7 +47,8 @@ const FullSnapshotReport = require('../sync/full.snapshot.report')
 const CurrencyConverter = require('../sync/currency.converter')
 const CsvJobData = require('../generate-csv/csv.job.data')
 const {
-  fullSnapshotReportCsvWriter
+  fullSnapshotReportCsvWriter,
+  fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
 
@@ -186,6 +187,13 @@ module.exports = ({
       .toConstantValue(
         bindDepsToFn(
           fullSnapshotReportCsvWriter,
+          [TYPES.RService]
+        )
+      )
+    bind(TYPES.FullTaxReportCsvWriter)
+      .toConstantValue(
+        bindDepsToFn(
+          fullTaxReportCsvWriter,
           [TYPES.RService]
         )
       )
