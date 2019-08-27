@@ -222,15 +222,15 @@ class FullTaxReport {
     const winLossTotalAmount = this._calcWinLossTotalAmount(winLoss)
 
     const {
-      startPositionsSnapshot,
-      startTickers
+      positionsSnapshot: startPositionsSnapshot,
+      tickers: startTickers
     } = await this._getPositionsSnapshotAndTickers({
       auth,
       params: { mts: start }
     })
     const {
-      endPositionsSnapshot,
-      endTickers
+      positionsSnapshot: endPositionsSnapshot,
+      tickers: endTickers
     } = await this._getPositionsSnapshotAndTickers({
       auth,
       params: { mts: end }
