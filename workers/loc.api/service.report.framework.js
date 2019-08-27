@@ -811,6 +811,18 @@ class FrameworkReportService extends ReportService {
     }, 'getFullSnapshotReport', cb)
   }
 
+  getFullTaxReport (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForFullTaxReportApi')
+
+      return this._fullTaxReport.getFullTaxReport(args)
+    }, 'getFullTaxReport', cb)
+  }
+
   /**
    * @override
    */

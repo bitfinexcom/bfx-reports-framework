@@ -73,7 +73,8 @@ module.exports = ({
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
-          ['_fullSnapshotReport', TYPES.FullSnapshotReport]
+          ['_fullSnapshotReport', TYPES.FullSnapshotReport],
+          ['_fullTaxReport', TYPES.FullTaxReport]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
