@@ -47,7 +47,6 @@ class FullTaxReport {
       .getPositionsSnapshotAndTickers(_args)
   }
 
-  // TODO:
   _calcWinLossTotalAmount (winLoss) {
     if (
       !Array.isArray(winLoss) ||
@@ -55,6 +54,35 @@ class FullTaxReport {
     ) {
       return null
     }
+
+    const res = winLoss.reduce((accum, item = {}) => {
+      const itemArr = Object.entries({ ...item })
+      const subRes = itemArr.reduce((subAccum, [symb, amount]) => {
+        const _subAccum = { ...accum, ...subAccum }
+
+        if (
+          !isForexSymb(symb) ||
+          !Number.isFinite(amount)
+        ) {
+          return _subAccum
+        }
+
+        return {
+          ..._subAccum,
+          [symb]: Number.isFinite(_subAccum[symb])
+            ? _subAccum[symb] + amount
+            : amount
+        }
+      }, {})
+
+      return {
+        ...accum,
+        ...subRes
+      }
+    }, {})
+    const { USD } = { ...res }
+
+    return USD
   }
 
   async _getMovements ({
