@@ -218,6 +218,7 @@ class FullTaxReport {
       }
     }
 
+    // TODO: need to change form timeframe to allPeriod (without calc)
     const winLoss = await this.winLoss.getWinLoss(args)
     const winLossTotalAmount = this._calcWinLossTotalAmount(winLoss)
 
