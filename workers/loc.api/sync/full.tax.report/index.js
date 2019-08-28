@@ -202,7 +202,6 @@ class FullTaxReport {
   async getFullTaxReport ({
     auth = {},
     params: {
-      timeframe = 'day',
       start = 0,
       end = Date.now()
     } = {}
@@ -212,7 +211,7 @@ class FullTaxReport {
     const args = {
       auth,
       params: {
-        timeframe,
+        timeframe: end,
         start,
         end
       }

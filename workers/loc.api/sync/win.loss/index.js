@@ -103,9 +103,9 @@ class WinLoss {
     let prevMovementsRes = {}
 
     return ({
-      walletsGroupedByTimeframe,
-      withdrawalsGroupedByTimeframe,
-      depositsGroupedByTimeframe
+      walletsGroupedByTimeframe = {},
+      withdrawalsGroupedByTimeframe = {},
+      depositsGroupedByTimeframe = {}
     } = {}, i) => {
       const isLast = i === 0
       const _startPl = { ...startPl }
@@ -248,6 +248,43 @@ class WinLoss {
     })
   }
 
+  // TODO: maybe need to move to BalanceHistory service
+  async _getWalletsGroupedByTimeframe (
+    timeframe,
+    args = {},
+    startWallets
+  ) {
+    if (
+      timeframe &&
+      typeof timeframe === 'string'
+    ) {
+      return this.balanceHistory
+        .getBalanceHistory(
+          args,
+          true
+        )
+    }
+
+    const {
+      auth,
+      params: { end } = {}
+    } = { ...args }
+    const lastWallets = await this.rService.getWallets(null, {
+      auth,
+      params: { end }
+    })
+
+    const vals = this._calcFirstWallets(
+      lastWallets,
+      startWallets
+    )
+
+    return [{
+      mts: end,
+      vals
+    }]
+  }
+
   async getWinLoss ({
     auth = {},
     params: {
@@ -330,11 +367,17 @@ class WinLoss {
       firstWallets,
       startWallets
     )
-    const walletsGroupedByTimeframe = await this.balanceHistory
-      .getBalanceHistory(
-        args,
-        true
-      )
+    // TODO: need to change form timeframe to allPeriod
+    // const walletsGroupedByTimeframe = await this.balanceHistory
+    //   .getBalanceHistory(
+    //     args,
+    //     true
+    //   )
+    const walletsGroupedByTimeframe = await this._getWalletsGroupedByTimeframe(
+      timeframe,
+      args,
+      startWallets
+    )
     const startPl = await this._getPlFromPositionsSnapshot({
       auth,
       params: { mts: start }
