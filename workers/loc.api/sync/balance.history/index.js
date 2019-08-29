@@ -231,14 +231,12 @@ class BalanceHistory {
         prevRes = { ...walletsGroupedByTimeframe }
       }
 
-      const resInUsd = this._convertForexToUsd(
+      return this._convertForexToUsd(
         res,
         candles,
         mts,
         timeframe
       )
-
-      return { USD: resInUsd }
     }
   }
 
@@ -248,7 +246,13 @@ class BalanceHistory {
     mts,
     timeframe
   ) {
-    return Object.entries(obj).reduce((accum, [symb, balance]) => {
+    const dataArr = Object.entries(obj)
+
+    if (dataArr.length === 0) {
+      return {}
+    }
+
+    const resInUsd = dataArr.reduce((accum, [symb, balance]) => {
       if (symb === 'USD') {
         return accum + balance
       }
@@ -284,6 +288,8 @@ class BalanceHistory {
 
       return accum + balance * prise
     }, 0)
+
+    return { USD: resInUsd }
   }
 
   async getBalanceHistory (
