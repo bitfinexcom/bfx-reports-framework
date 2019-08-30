@@ -27,6 +27,24 @@ class BalanceHistory {
     this.FOREX_SYMBS = FOREX_SYMBS
   }
 
+  _groupWalletsByCurrency (wallets = []) {
+    return wallets.reduce((
+      accum,
+      { currency, balance }
+    ) => {
+      if (!Number.isFinite(balance)) {
+        return { ...accum }
+      }
+
+      return {
+        ...accum,
+        [currency]: (Number.isFinite(accum[currency]))
+          ? accum[currency] + balance
+          : balance
+      }
+    }, {})
+  }
+
   _calcWalletsInTimeframe (firstWallets) {
     let wallets = [...firstWallets]
 
@@ -39,21 +57,7 @@ class BalanceHistory {
 
       wallets = [...data, ...missingWallets]
 
-      return wallets.reduce((
-        accum,
-        { currency, balance }
-      ) => {
-        if (!Number.isFinite(balance)) {
-          return { ...accum }
-        }
-
-        return {
-          ...accum,
-          [currency]: (Number.isFinite(accum[currency]))
-            ? accum[currency] + balance
-            : balance
-        }
-      }, {})
+      return this._groupWalletsByCurrency(wallets)
     }
   }
 
@@ -169,20 +173,14 @@ class BalanceHistory {
     candles,
     timeframe
   ) {
-    let prevRes = {}
+    let prevRes = { ...firstWallets }
 
     return (
       {
         walletsGroupedByTimeframe = {},
         mtsGroupedByTimeframe: { mts } = {}
-      } = {},
-      i,
-      arr
+      } = {}
     ) => {
-      if (i === (arr.length - 1)) {
-        prevRes = { ...firstWallets }
-      }
-
       const isReturnedPrevRes = (
         isEmpty(walletsGroupedByTimeframe) &&
         !isEmpty(prevRes)
@@ -233,14 +231,12 @@ class BalanceHistory {
         prevRes = { ...walletsGroupedByTimeframe }
       }
 
-      const resInUsd = this._convertForexToUsd(
+      return this._convertForexToUsd(
         res,
         candles,
         mts,
         timeframe
       )
-
-      return { USD: resInUsd }
     }
   }
 
@@ -250,7 +246,13 @@ class BalanceHistory {
     mts,
     timeframe
   ) {
-    return Object.entries(obj).reduce((accum, [symb, balance]) => {
+    const dataArr = Object.entries(obj)
+
+    if (dataArr.length === 0) {
+      return {}
+    }
+
+    const resInUsd = dataArr.reduce((accum, [symb, balance]) => {
       if (symb === 'USD') {
         return accum + balance
       }
@@ -286,6 +288,8 @@ class BalanceHistory {
 
       return accum + balance * prise
     }, 0)
+
+    return { USD: resInUsd }
   }
 
   async getBalanceHistory (
@@ -313,6 +317,9 @@ class BalanceHistory {
     const wallets = await this._getWallets(args)
     const candles = await this._getCandles(args)
 
+    const firstWalletsGroupedByCurrency = this._groupWalletsByCurrency(
+      firstWallets
+    )
     const walletsGroupedByTimeframe = await groupByTimeframe(
       wallets,
       timeframe,
@@ -334,7 +341,7 @@ class BalanceHistory {
       },
       isSubCalc,
       this._getWalletsByTimeframe(
-        firstWallets,
+        firstWalletsGroupedByCurrency,
         candles,
         timeframe
       ),
