@@ -267,7 +267,12 @@ class CsvJobData extends BaseCsvJobData {
           balance: 'BALANCE',
           balanceUsd: 'BALANCE USD'
         },
-        tickers: {
+        positionsTickers: {
+          symbol: 'PAIR',
+          amount: 'AMOUNT'
+        },
+        walletsTickers: {
+          walletType: 'WALLET TYPE',
           symbol: 'PAIR',
           amount: 'AMOUNT'
         }
@@ -282,7 +287,10 @@ class CsvJobData extends BaseCsvJobData {
           mtsUpdate: 'date',
           currency: 'symbol'
         },
-        tickers: {
+        positionsTickers: {
+          symbol: 'symbol'
+        },
+        walletsTickers: {
           symbol: 'symbol'
         }
       },

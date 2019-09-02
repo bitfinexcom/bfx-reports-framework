@@ -53,20 +53,29 @@ module.exports = (rService) => async (
     header: true,
     columns: columnsCsv.walletsSnapshot
   })
-  const tickersNameStringifier = stringify(
+  const positionsTickersNameStringifier = stringify(
     { columns: ['name'] }
   )
-  const tickersStringifier = stringify({
+  const positionsTickersStringifier = stringify({
     header: true,
-    columns: columnsCsv.tickers
+    columns: columnsCsv.positionsTickers
+  })
+  const walletsTickersNameStringifier = stringify(
+    { columns: ['name'] }
+  )
+  const walletsTickersStringifier = stringify({
+    header: true,
+    columns: columnsCsv.walletsTickers
   })
 
   posNameStringifier.pipe(wStream)
   posStringifier.pipe(wStream)
   walletsNameStringifier.pipe(wStream)
   walletsStringifier.pipe(wStream)
-  tickersNameStringifier.pipe(wStream)
-  tickersStringifier.pipe(wStream)
+  positionsTickersNameStringifier.pipe(wStream)
+  positionsTickersStringifier.pipe(wStream)
+  walletsTickersNameStringifier.pipe(wStream)
+  walletsTickersStringifier.pipe(wStream)
 
   const res = await getDataFromApi(
     rService.getFullSnapshotReport.bind(rService),
@@ -87,11 +96,18 @@ module.exports = (rService) => async (
     formatSettings.walletsSnapshot,
     params
   )
-  write([{ name: 'TICKERS' }], tickersNameStringifier)
+  write([{ name: 'POSITIONS TICKERS' }], positionsTickersNameStringifier)
   write(
-    res.tickers,
-    tickersStringifier,
-    formatSettings.tickers,
+    [...res.positionsTickers, {}],
+    positionsTickersStringifier,
+    formatSettings.positionsTickers,
+    params
+  )
+  write([{ name: 'WALLETS TICKERS' }], walletsTickersNameStringifier)
+  write(
+    res.walletsTickers,
+    walletsTickersStringifier,
+    formatSettings.walletsTickers,
     params
   )
 
@@ -101,4 +117,8 @@ module.exports = (rService) => async (
   posStringifier.end()
   walletsNameStringifier.end()
   walletsStringifier.end()
+  positionsTickersNameStringifier.end()
+  positionsTickersStringifier.end()
+  walletsTickersNameStringifier.end()
+  walletsTickersStringifier.end()
 }
