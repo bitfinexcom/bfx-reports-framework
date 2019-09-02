@@ -211,6 +211,7 @@ class PositionsSnapshot {
 
       if (
         currency &&
+        currency !== 'USD' &&
         Number.isFinite(pl) &&
         Number.isFinite(plUsd) &&
         pl !== 0 &&
