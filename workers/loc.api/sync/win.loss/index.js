@@ -44,10 +44,7 @@ class WinLoss {
     const { mts: end = Date.now() } = { ...params }
     const _args = {
       auth,
-      params: {
-        end,
-        isCertainMoment: true
-      }
+      params: { end }
     }
 
     const positionsSnapshot = await this.positionsSnapshot
