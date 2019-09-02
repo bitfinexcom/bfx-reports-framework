@@ -154,7 +154,8 @@ class PositionsSnapshot {
     positions,
     end
   ) {
-    const res = []
+    const positionsSnapshot = []
+    const tickers = []
 
     for (const position of positions) {
       const {
@@ -172,7 +173,7 @@ class PositionsSnapshot {
       }
 
       if (typeof symbol !== 'string') {
-        res.push(resPositions)
+        positionsSnapshot.push(resPositions)
 
         continue
       }
@@ -185,7 +186,7 @@ class PositionsSnapshot {
         !Number.isFinite(basePrice) ||
         !Number.isFinite(amount)
       ) {
-        res.push(resPositions)
+        positionsSnapshot.push(resPositions)
 
         continue
       }
@@ -198,16 +199,34 @@ class PositionsSnapshot {
         end
       )
 
-      res.push({
+      positionsSnapshot.push({
         ...resPositions,
         actualPrice,
         pl,
         plUsd,
         plPerc
       })
+
+      const currency = this._splitSymbolPairs(symbol)[1]
+
+      if (
+        currency &&
+        Number.isFinite(pl) &&
+        Number.isFinite(plUsd) &&
+        pl !== 0 &&
+        plUsd !== 0
+      ) {
+        tickers.push({
+          symbol: `t${currency}USD`,
+          amount: plUsd / pl
+        })
+      }
     }
 
-    return res
+    return {
+      positionsSnapshot,
+      tickers
+    }
   }
 
   _filterDuplicate (accum = [], curr = []) {
@@ -328,14 +347,6 @@ class PositionsSnapshot {
     return positionsAudit
   }
 
-  _getTickers (positionsAudit = []) {
-    return positionsAudit.map((position) => {
-      const { symbol, amount } = { ...position }
-
-      return { symbol, amount }
-    })
-  }
-
   async _getPositionsAuditAndSnapshot (args) {
     const {
       auth = {},
@@ -346,8 +357,8 @@ class PositionsSnapshot {
     } = { ...params }
     const user = await this.dao.checkAuthInDb({ auth })
     const emptyRes = {
-      positionsAudit: [],
-      positionsSnapshot: []
+      positionsSnapshot: [],
+      tickers: []
     }
 
     const positionsHistory = await this._getPositionsHistory(
@@ -375,14 +386,17 @@ class PositionsSnapshot {
       return emptyRes
     }
 
-    const positionsSnapshot = await this._getCalculatedPositions(
+    const {
+      positionsSnapshot,
+      tickers
+    } = await this._getCalculatedPositions(
       positionsAudit,
       end
     )
 
     return {
-      positionsAudit,
-      positionsSnapshot
+      positionsSnapshot,
+      tickers
     }
   }
 
@@ -396,10 +410,9 @@ class PositionsSnapshot {
 
   async getPositionsSnapshotAndTickers (args) {
     const {
-      positionsAudit,
-      positionsSnapshot
+      positionsSnapshot,
+      tickers
     } = await this._getPositionsAuditAndSnapshot(args)
-    const tickers = this._getTickers(positionsAudit)
 
     return {
       positionsSnapshot,

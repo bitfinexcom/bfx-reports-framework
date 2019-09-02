@@ -17,6 +17,45 @@ class FullSnapshotReport {
     this.positionsSnapshot = positionsSnapshot
   }
 
+  _getWalletsTickers (walletsSnapshot = []) {
+    if (!Array.isArray(walletsSnapshot)) {
+      return []
+    }
+
+    const walletsWithoutUsdType = walletsSnapshot
+      .filter((wallets) => {
+        const {
+          currency,
+          balance,
+          balanceUsd
+        } = { ...wallets }
+
+        return (
+          currency !== 'USD' &&
+          Number.isFinite(balance) &&
+          Number.isFinite(balanceUsd) &&
+          balance !== 0 &&
+          balanceUsd !== 0
+        )
+      })
+
+    return walletsWithoutUsdType.map((wallets) => {
+      const {
+        type: walletType,
+        currency,
+        balance,
+        balanceUsd
+      } = { ...wallets }
+      const symbol = `t${currency}USD`
+
+      return {
+        walletType,
+        symbol,
+        amount: balanceUsd / balance
+      }
+    })
+  }
+
   async getFullSnapshotReport (args) {
     const { params = {} } = { ...args }
     const { end = Date.now() } = { ...params }
@@ -31,16 +70,20 @@ class FullSnapshotReport {
 
     const {
       positionsSnapshot,
-      tickers
+      tickers: positionsTickers
     } = await this.positionsSnapshot
       .getPositionsSnapshotAndTickers(_args)
     const walletsSnapshot = await this.wallets
       .getWalletsConvertedByPublicTrades(_args)
+    const walletsTickers = this._getWalletsTickers(
+      walletsSnapshot
+    )
 
     return {
       positionsSnapshot,
       walletsSnapshot,
-      tickers
+      positionsTickers,
+      walletsTickers
     }
   }
 }
