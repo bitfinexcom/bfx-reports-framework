@@ -92,12 +92,6 @@ const paramsSchemaForPositionsSnapshotApi = {
   properties: {
     end: {
       type: 'integer'
-    },
-    start: {
-      type: 'integer'
-    },
-    isCertainMoment: {
-      type: 'boolean'
     }
   }
 }
@@ -107,12 +101,6 @@ const paramsSchemaForFullSnapshotReportApi = {
   properties: {
     end: {
       type: 'integer'
-    },
-    start: {
-      type: 'integer'
-    },
-    isCertainMoment: {
-      type: 'boolean'
     }
   }
 }
@@ -175,12 +163,6 @@ const paramsSchemaForPositionsSnapshotCsv = {
     end: {
       type: 'integer'
     },
-    start: {
-      type: 'integer'
-    },
-    isCertainMoment: {
-      type: 'boolean'
-    },
     timezone,
     dateFormat
   }
@@ -191,12 +173,6 @@ const paramsSchemaForFullSnapshotReportCsv = {
   properties: {
     end: {
       type: 'integer'
-    },
-    start: {
-      type: 'integer'
-    },
-    isCertainMoment: {
-      type: 'boolean'
     },
     timezone,
     dateFormat

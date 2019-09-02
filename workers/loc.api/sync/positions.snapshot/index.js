@@ -25,8 +25,7 @@ class PositionsSnapshot {
 
   _getPositionsHistory (
     user,
-    endMts,
-    startMts
+    endMts
   ) {
     const positionsHistoryModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
@@ -37,7 +36,7 @@ class PositionsSnapshot {
         filter: {
           user_id: user._id,
           $lte: { mtsCreate: endMts },
-          $gte: { mtsUpdate: startMts }
+          $gte: { mtsUpdate: endMts }
         },
         sort: [['mtsUpdate', -1]],
         projection: positionsHistoryModel,
@@ -50,7 +49,6 @@ class PositionsSnapshot {
   _findPositions (
     positionsAudit,
     reqStatus,
-    startMts,
     endMts
   ) {
     return positionsAudit.find((posAudit) => {
@@ -62,7 +60,6 @@ class PositionsSnapshot {
 
       return (
         status === reqStatus &&
-        mtsUpdate >= startMts &&
         mtsUpdate <= endMts
       )
     })
@@ -70,26 +67,22 @@ class PositionsSnapshot {
 
   _findActivePositions (
     positionsAudit,
-    startMts,
     endMts
   ) {
     return this._findPositions(
       positionsAudit,
       'ACTIVE',
-      startMts,
       endMts
     )
   }
 
   _findClosedPositions (
     positionsAudit,
-    startMts,
     endMts
   ) {
     return this._findPositions(
       positionsAudit,
       'CLOSED',
-      startMts,
       endMts
     )
   }
@@ -237,7 +230,6 @@ class PositionsSnapshot {
   }
 
   async _getPositionsAudit (
-    startMts,
     endMts,
     {
       auth = {},
@@ -291,7 +283,6 @@ class PositionsSnapshot {
 
         const closedPos = this._findClosedPositions(
           res,
-          startMts,
           endMts
         )
 
@@ -304,7 +295,6 @@ class PositionsSnapshot {
 
         const activePos = this._findActivePositions(
           res,
-          startMts,
           endMts
         )
 
@@ -338,24 +328,6 @@ class PositionsSnapshot {
     return positionsAudit
   }
 
-  _getMts (date) {
-    const year = date.getUTCFullYear()
-    const month = date.getUTCMonth()
-    const day = date.getUTCDate()
-    const hours = date.getUTCHours()
-    const minutes = date.getUTCMinutes()
-    const seconds = date.getUTCSeconds()
-
-    return Date.UTC(
-      year,
-      month,
-      day,
-      hours,
-      minutes,
-      seconds
-    )
-  }
-
   _getTickers (positionsAudit = []) {
     return positionsAudit.map((position) => {
       const { symbol, amount } = { ...position }
@@ -370,9 +342,7 @@ class PositionsSnapshot {
       params = {}
     } = { ...args }
     const {
-      end = Date.now(),
-      start,
-      isCertainMoment
+      end = Date.now()
     } = { ...params }
     const user = await this.dao.checkAuthInDb({ auth })
     const emptyRes = {
@@ -380,26 +350,9 @@ class PositionsSnapshot {
       positionsSnapshot: []
     }
 
-    const endDate = new Date(end)
-    const endYear = endDate.getUTCFullYear()
-    const endMonth = endDate.getUTCMonth()
-    const endDay = endDate.getUTCDate()
-    const endMts = this._getMts(endDate)
-
-    const _start = isCertainMoment
-      ? end
-      : start
-    const startDate = _start
-      ? new Date(_start)
-      : false
-    const startMts = startDate
-      ? this._getMts(startDate)
-      : Date.UTC(endYear, endMonth, endDay)
-
     const positionsHistory = await this._getPositionsHistory(
       user,
-      endMts,
-      startMts
+      end
     )
 
     if (
@@ -411,8 +364,7 @@ class PositionsSnapshot {
 
     const ids = this._getPositionsHistoryIds(positionsHistory)
     const positionsAudit = await this._getPositionsAudit(
-      startMts,
-      endMts,
+      end,
       { auth, params: { ids } }
     )
 
@@ -425,7 +377,7 @@ class PositionsSnapshot {
 
     const positionsSnapshot = await this._getCalculatedPositions(
       positionsAudit,
-      endMts
+      end
     )
 
     return {

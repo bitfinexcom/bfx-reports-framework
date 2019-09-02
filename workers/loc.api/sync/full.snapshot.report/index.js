@@ -20,20 +20,12 @@ class FullSnapshotReport {
   async getFullSnapshotReport (args) {
     const { params = {} } = { ...args }
     const { end = Date.now() } = { ...params }
-    const date = new Date(end)
-    const dayMts = Date.UTC(
-      date.getUTCFullYear(),
-      date.getUTCMonth(),
-      date.getUTCDate(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      date.getUTCSeconds()
-    )
-    const walletsArgs = {
+
+    const _args = {
       ...args,
       params: {
         ...params,
-        end: dayMts
+        end
       }
     }
 
@@ -41,9 +33,9 @@ class FullSnapshotReport {
       positionsSnapshot,
       tickers
     } = await this.positionsSnapshot
-      .getPositionsSnapshotAndTickers(args)
+      .getPositionsSnapshotAndTickers(_args)
     const walletsSnapshot = await this.wallets
-      .getWalletsConvertedByPublicTrades(walletsArgs)
+      .getWalletsConvertedByPublicTrades(_args)
 
     return {
       positionsSnapshot,
