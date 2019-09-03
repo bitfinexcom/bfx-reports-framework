@@ -9,9 +9,6 @@ const {
 
 const TYPES = require('../../di/types')
 const {
-  getInsertableArrayObjectsFilter
-} = require('../dao/helpers')
-const {
   calcGroupedData,
   groupByTimeframe,
   isForexSymb
@@ -76,16 +73,20 @@ class WinLoss {
 
   _sumMovementsWithPrevRes (
     prevMovementsRes,
-    movementsGroupedByTimeframe
+    withdrawalsGroupedByTimeframe,
+    depositsGroupedByTimefram
   ) {
     return this.FOREX_SYMBS.reduce((accum, symb) => {
       const prevMovement = Number.isFinite(prevMovementsRes[symb])
         ? prevMovementsRes[symb]
         : 0
-      const movement = Number.isFinite(movementsGroupedByTimeframe[symb])
-        ? movementsGroupedByTimeframe[symb]
+      const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe[symb])
+        ? withdrawalsGroupedByTimeframe[symb]
         : 0
-      const res = prevMovement + movement
+      const deposits = Number.isFinite(depositsGroupedByTimefram[symb])
+        ? depositsGroupedByTimefram[symb]
+        : 0
+      const res = prevMovement + withdrawals + deposits
 
       return {
         ...accum,
@@ -103,7 +104,8 @@ class WinLoss {
 
     return ({
       walletsGroupedByTimeframe,
-      movementsGroupedByTimeframe
+      withdrawalsGroupedByTimeframe,
+      depositsGroupedByTimeframe
     } = {}, i) => {
       const isLast = i === 0
       const _startPl = { ...startPl }
@@ -111,7 +113,8 @@ class WinLoss {
 
       prevMovementsRes = this._sumMovementsWithPrevRes(
         prevMovementsRes,
-        { ...movementsGroupedByTimeframe }
+        { ...withdrawalsGroupedByTimeframe },
+        { ...depositsGroupedByTimeframe }
       )
 
       return this.FOREX_SYMBS.reduce((accum, symb) => {
@@ -268,23 +271,31 @@ class WinLoss {
     const movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get('_getMovements')
     const {
-      dateFieldName: movementsDateFieldName,
       symbolFieldName: movementsSymbolFieldName
     } = movementsMethodColl
 
-    const movementsBaseFilter = getInsertableArrayObjectsFilter(
-      movementsMethodColl,
-      {
-        start,
-        end
-      }
-    )
-
-    const movements = await this.dao.getElemsInCollBy(
+    const withdrawals = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.MOVEMENTS,
       {
         filter: {
-          ...movementsBaseFilter,
+          $lt: { amount: 0 },
+          $gte: { mtsStarted: start },
+          $lte: { mtsStarted: end },
+          user_id: user._id
+        },
+        sort: [['mtsStarted', -1]],
+        projection: movementsModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+    const deposits = await this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.MOVEMENTS,
+      {
+        filter: {
+          $gt: { amount: 0 },
+          $gte: { mtsUpdated: start },
+          $lte: { mtsUpdated: end },
           user_id: user._id
         },
         sort: [['mtsUpdated', -1]],
@@ -293,11 +304,19 @@ class WinLoss {
         isExcludePrivate: true
       }
     )
-    const movementsGroupedByTimeframe = await groupByTimeframe(
-      movements,
+    const withdrawalsGroupedByTimeframe = await groupByTimeframe(
+      withdrawals,
       timeframe,
       this.FOREX_SYMBS,
-      movementsDateFieldName,
+      'mtsStarted',
+      movementsSymbolFieldName,
+      this._calcMovements.bind(this)
+    )
+    const depositsGroupedByTimeframe = await groupByTimeframe(
+      deposits,
+      timeframe,
+      this.FOREX_SYMBS,
+      'mtsUpdated',
       movementsSymbolFieldName,
       this._calcMovements.bind(this)
     )
@@ -328,7 +347,8 @@ class WinLoss {
     const groupedData = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
-        movementsGroupedByTimeframe
+        withdrawalsGroupedByTimeframe,
+        depositsGroupedByTimeframe
       },
       false,
       this._getWinLossByTimeframe(
