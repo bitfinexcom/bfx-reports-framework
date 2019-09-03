@@ -9,9 +9,6 @@ const {
 
 const TYPES = require('../../di/types')
 const {
-  getInsertableArrayObjectsFilter
-} = require('../dao/helpers')
-const {
   calcGroupedData,
   groupByTimeframe,
   isForexSymb
@@ -268,26 +265,18 @@ class WinLoss {
     const movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get('_getMovements')
     const {
-      dateFieldName: movementsDateFieldName,
       symbolFieldName: movementsSymbolFieldName
     } = movementsMethodColl
-
-    const movementsBaseFilter = getInsertableArrayObjectsFilter(
-      movementsMethodColl,
-      {
-        start,
-        end
-      }
-    )
 
     const movements = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.MOVEMENTS,
       {
         filter: {
-          ...movementsBaseFilter,
+          $gte: { mtsStarted: start },
+          $lte: { mtsStarted: end },
           user_id: user._id
         },
-        sort: [['mtsUpdated', -1]],
+        sort: [['mtsStarted', -1]],
         projection: movementsModel,
         exclude: ['user_id'],
         isExcludePrivate: true
@@ -297,7 +286,7 @@ class WinLoss {
       movements,
       timeframe,
       this.FOREX_SYMBS,
-      movementsDateFieldName,
+      'mtsStarted',
       movementsSymbolFieldName,
       this._calcMovements.bind(this)
     )
