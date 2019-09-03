@@ -105,7 +105,7 @@ class WinLoss {
     return ({
       walletsGroupedByTimeframe,
       withdrawalsGroupedByTimeframe,
-      depositsGroupedByTimefram
+      depositsGroupedByTimeframe
     } = {}, i) => {
       const isLast = i === 0
       const _startPl = { ...startPl }
@@ -114,7 +114,7 @@ class WinLoss {
       prevMovementsRes = this._sumMovementsWithPrevRes(
         prevMovementsRes,
         { ...withdrawalsGroupedByTimeframe },
-        { ...depositsGroupedByTimefram }
+        { ...depositsGroupedByTimeframe }
       )
 
       return this.FOREX_SYMBS.reduce((accum, symb) => {
