@@ -300,6 +300,8 @@ describe('Additional sync mode API with SQLite', () => {
     assert.isObject(res.body.result)
     assert.isArray(res.body.result.positionsSnapshot)
     assert.isArray(res.body.result.walletsSnapshot)
+    assert.isArray(res.body.result.positionsTickers)
+    assert.isArray(res.body.result.walletsTickers)
 
     res.body.result.positionsSnapshot.forEach((item) => {
       assert.isObject(item)
@@ -328,9 +330,17 @@ describe('Additional sync mode API with SQLite', () => {
         'balanceUsd'
       ])
     })
-    res.body.result.tickers.forEach((item) => {
+    res.body.result.positionsTickers.forEach((item) => {
       assert.isObject(item)
       assert.containsAllKeys(item, [
+        'symbol',
+        'amount'
+      ])
+    })
+    res.body.result.walletsTickers.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'walletType',
         'symbol',
         'amount'
       ])
