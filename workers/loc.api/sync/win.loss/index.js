@@ -16,18 +16,18 @@ const {
 
 class WinLoss {
   constructor (
-    rService,
     dao,
     syncSchema,
     ALLOWED_COLLS,
+    wallets,
     balanceHistory,
     positionsSnapshot,
     FOREX_SYMBS
   ) {
-    this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.wallets = wallets
     this.balanceHistory = balanceHistory
     this.positionsSnapshot = positionsSnapshot
     this.FOREX_SYMBS = FOREX_SYMBS
@@ -248,43 +248,6 @@ class WinLoss {
     })
   }
 
-  // TODO: maybe need to move to BalanceHistory service
-  async _getWalletsGroupedByTimeframe (
-    timeframe,
-    args = {},
-    startWallets
-  ) {
-    if (
-      timeframe &&
-      typeof timeframe === 'string'
-    ) {
-      return this.balanceHistory
-        .getBalanceHistory(
-          args,
-          true
-        )
-    }
-
-    const {
-      auth,
-      params: { end } = {}
-    } = { ...args }
-    const lastWallets = await this.rService.getWallets(null, {
-      auth,
-      params: { end }
-    })
-
-    const vals = this._calcFirstWallets(
-      lastWallets,
-      startWallets
-    )
-
-    return [{
-      mts: end,
-      vals
-    }]
-  }
-
   async getWinLoss ({
     auth = {},
     params: {
@@ -358,7 +321,7 @@ class WinLoss {
       this._calcMovements.bind(this)
     )
 
-    const firstWallets = await this.rService.getWallets(null, {
+    const firstWallets = await this.wallets.getWallets({
       auth,
       params: { end: start }
     })
@@ -367,17 +330,12 @@ class WinLoss {
       firstWallets,
       startWallets
     )
-    // TODO: need to change form timeframe to allPeriod
-    // const walletsGroupedByTimeframe = await this.balanceHistory
-    //   .getBalanceHistory(
-    //     args,
-    //     true
-    //   )
-    const walletsGroupedByTimeframe = await this._getWalletsGroupedByTimeframe(
-      timeframe,
-      args,
-      startWallets
-    )
+    const walletsGroupedByTimeframe = await this.balanceHistory
+      .getBalanceHistory(
+        args,
+        true
+      )
+
     const startPl = await this._getPlFromPositionsSnapshot({
       auth,
       params: { mts: start }
@@ -415,10 +373,10 @@ class WinLoss {
 }
 
 decorate(injectable(), WinLoss)
-decorate(inject(TYPES.RService), WinLoss, 0)
-decorate(inject(TYPES.DAO), WinLoss, 1)
-decorate(inject(TYPES.SyncSchema), WinLoss, 2)
-decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 3)
+decorate(inject(TYPES.DAO), WinLoss, 0)
+decorate(inject(TYPES.SyncSchema), WinLoss, 1)
+decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 2)
+decorate(inject(TYPES.Wallets), WinLoss, 3)
 decorate(inject(TYPES.BalanceHistory), WinLoss, 4)
 decorate(inject(TYPES.PositionsSnapshot), WinLoss, 5)
 decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 6)
