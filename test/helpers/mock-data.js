@@ -337,7 +337,7 @@ module.exports = new Map([
         'COMPLETED',
         null,
         null,
-        12345,
+        -12345,
         -0.012345,
         null,
         null,
