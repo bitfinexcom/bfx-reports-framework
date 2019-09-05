@@ -1,5 +1,7 @@
 'use strict'
 
+const { orderBy } = require('lodash')
+
 const {
   decorate,
   injectable,
@@ -7,9 +9,6 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
-const {
-  getInsertableArrayObjectsFilter
-} = require('../dao/helpers')
 const {
   isForexSymb
 } = require('../helpers')
@@ -89,22 +88,29 @@ class FullTaxReport {
   }) {
     const movementsModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.MOVEMENTS)
-    const movementsMethodColl = this.syncSchema.getMethodCollMap()
-      .get('_getMovements')
 
-    const movementsBaseFilter = getInsertableArrayObjectsFilter(
-      movementsMethodColl,
-      {
-        start,
-        end
-      }
-    )
-
-    const movements = await this.dao.getElemsInCollBy(
+    const _withdrawals = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.MOVEMENTS,
       {
         filter: {
-          ...movementsBaseFilter,
+          $lt: { amount: 0 },
+          $gte: { mtsStarted: start },
+          $lte: { mtsStarted: end },
+          user_id: user._id
+        },
+        sort: [['mtsStarted', -1]],
+        projection: movementsModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+    const _deposits = await this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.MOVEMENTS,
+      {
+        filter: {
+          $gt: { amount: 0 },
+          $gte: { mtsUpdated: start },
+          $lte: { mtsUpdated: end },
           user_id: user._id
         },
         sort: [['mtsUpdated', -1]],
@@ -114,43 +120,30 @@ class FullTaxReport {
       }
     )
 
-    if (!Array.isArray(movements)) {
-      return []
-    }
+    const withdrawals = Array.isArray(_withdrawals)
+      ? _withdrawals
+      : []
+    const deposits = Array.isArray(_deposits)
+      ? _deposits
+      : []
+    const _movements = [
+      ..._withdrawals,
+      ..._deposits
+    ]
+    const movements = orderBy(
+      _movements,
+      ['mtsUpdated'],
+      ['desc']
+    )
 
-    return movements
+    return {
+      movements,
+      withdrawals,
+      deposits
+    }
   }
 
-  _filterMovementsByAmount (
-    movements,
-    {
-      isDeposits,
-      isWithdrawals
-    } = {}
-  ) {
-    if (
-      isDeposits ||
-      isWithdrawals
-    ) {
-      return movements.filter((movement) => {
-        const { amount } = { ...movement }
-
-        return isDeposits
-          ? amount > 0
-          : amount < 0
-      })
-    }
-
-    return movements
-  }
-
-  _calcMovementsTotalAmount (
-    movements,
-    {
-      isDeposits,
-      isWithdrawals
-    } = {}
-  ) {
+  _calcMovementsTotalAmount (movements) {
     if (
       !Array.isArray(movements) ||
       movements.length === 0
@@ -158,15 +151,7 @@ class FullTaxReport {
       return null
     }
 
-    const _movements = this._filterMovementsByAmount(
-      movements,
-      {
-        isDeposits,
-        isWithdrawals
-      }
-    )
-
-    const res = _movements.reduce((accum, movement = {}) => {
+    const res = movements.reduce((accum, movement = {}) => {
       const { amount, amountUsd, currency } = { ...movement }
       const _isForexSymb = isForexSymb(currency)
       const _isNotUsedAmountUsdField = (
@@ -232,7 +217,11 @@ class FullTaxReport {
       params: { mts: end }
     })
 
-    const movements = await this._getMovements({
+    const {
+      movements,
+      withdrawals,
+      deposits
+    } = await this._getMovements({
       user,
       start,
       end
@@ -241,12 +230,10 @@ class FullTaxReport {
       movements
     )
     const depositsTotalAmount = this._calcMovementsTotalAmount(
-      movements,
-      { isDeposits: true }
+      deposits
     )
     const withdrawalsTotalAmount = this._calcMovementsTotalAmount(
-      movements,
-      { isWithdrawals: true }
+      withdrawals
     )
 
     return {
