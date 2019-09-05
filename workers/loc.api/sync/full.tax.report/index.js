@@ -37,10 +37,7 @@ class FullTaxReport {
     const { mts: end = Date.now() } = { ...params }
     const _args = {
       auth,
-      params: {
-        end,
-        isCertainMoment: true
-      }
+      params: { end }
     }
 
     return this.positionsSnapshot
