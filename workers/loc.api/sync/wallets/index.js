@@ -60,7 +60,16 @@ class Wallets {
         currency.length >= 3
       ))
 
-    return _wallets.map(w => ({ balanceUsd: null, ...w }))
+    return _wallets.map((wallet) => {
+      const { currency, balance } = { ...wallet }
+
+      return {
+        balanceUsd: currency === 'USD'
+          ? balance
+          : null,
+        ...wallet
+      }
+    })
   }
 
   async getWallets (args) {
