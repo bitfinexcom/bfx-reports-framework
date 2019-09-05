@@ -1,5 +1,7 @@
 'use strict'
 
+const { orderBy } = require('lodash')
+
 const {
   decorate,
   injectable,
@@ -87,7 +89,7 @@ class PositionsSnapshot {
     )
   }
 
-  _getPositionsHistoryIds (positionsHistory) {
+  _getPositionsIds (positionsHistory) {
     return positionsHistory.reduce(
       (accum, { id } = {}) => {
         if (Number.isInteger(id)) {
@@ -213,13 +215,20 @@ class PositionsSnapshot {
         currency &&
         currency !== 'USD' &&
         Number.isFinite(pl) &&
-        Number.isFinite(plUsd) &&
-        pl !== 0 &&
-        plUsd !== 0
+        Number.isFinite(plUsd)
       ) {
+        const symbol = `t${currency}USD`
+        const amount = (
+          pl !== 0 &&
+          plUsd !== 0
+        )
+          ? plUsd / pl
+          : await this.currencyConverter
+            .getPrice(symbol, end)
+
         tickers.push({
-          symbol: `t${currency}USD`,
-          amount: plUsd / pl
+          symbol,
+          amount
         })
       }
     }
@@ -348,6 +357,48 @@ class PositionsSnapshot {
     return positionsAudit
   }
 
+  async _getActivePositions (
+    auth,
+    end
+  ) {
+    const activePositions = await this.rService.getActivePositions(
+      null,
+      { auth }
+    )
+
+    if (
+      !Array.isArray(activePositions) ||
+      activePositions.length === 0
+    ) {
+      return []
+    }
+
+    return activePositions
+      .filter((position) => {
+        const { mtsCreate } = { ...position }
+
+        return mtsCreate <= end
+      })
+  }
+
+  _mergePositions (
+    positionsHistory = [],
+    activePositions = []
+  ) {
+    const _activePositions = Array.isArray(activePositions)
+      ? activePositions
+      : []
+    const _positionsHistory = Array.isArray(positionsHistory)
+      ? positionsHistory
+      : []
+    const positions = [
+      ..._activePositions,
+      ..._positionsHistory
+    ]
+
+    return orderBy(positions, ['mtsUpdate'], ['desc'])
+  }
+
   async _getPositionsAuditAndSnapshot (args) {
     const {
       auth = {},
@@ -366,15 +417,23 @@ class PositionsSnapshot {
       user,
       end
     )
+    const activePositions = await this._getActivePositions(
+      auth,
+      end
+    )
+    const positions = this._mergePositions(
+      positionsHistory,
+      activePositions
+    )
 
     if (
-      !Array.isArray(positionsHistory) ||
-      positionsHistory.length === 0
+      !Array.isArray(positions) ||
+      positions.length === 0
     ) {
       return emptyRes
     }
 
-    const ids = this._getPositionsHistoryIds(positionsHistory)
+    const ids = this._getPositionsIds(positions)
     const positionsAudit = await this._getPositionsAudit(
       end,
       { auth, params: { ids } }
