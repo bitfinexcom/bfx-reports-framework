@@ -18,12 +18,12 @@ const {
 
 class BalanceHistory {
   constructor (
-    rService,
     dao,
+    wallets,
     FOREX_SYMBS
   ) {
-    this.rService = rService
     this.dao = dao
+    this.wallets = wallets
     this.FOREX_SYMBS = FOREX_SYMBS
   }
 
@@ -292,6 +292,57 @@ class BalanceHistory {
     return { USD: resInUsd }
   }
 
+  async _getWalletsGroupedByOneTimeframe (
+    args,
+    isSubCalc
+  ) {
+    const {
+      params: { end } = {}
+    } = { ...args }
+    const startWallets = this.FOREX_SYMBS
+      .reduce((accum, symb) => {
+        return {
+          ...accum,
+          [symb]: 0
+        }
+      }, {})
+    const lastWallets = await this.wallets.getWallets(args)
+
+    const res = lastWallets.reduce((accum, movement = {}) => {
+      const { balance, balanceUsd, currency } = { ...movement }
+      const _isForexSymb = isForexSymb(currency, this.FOREX_SYMBS)
+      const _isNotUsedBalanceUsdField = (
+        _isForexSymb &&
+        !Number.isFinite(balanceUsd)
+      )
+      const _balance = _isNotUsedBalanceUsdField
+        ? balance
+        : balanceUsd
+      const symb = _isNotUsedBalanceUsdField
+        ? currency
+        : 'USD'
+
+      if (!Number.isFinite(_balance)) {
+        return { ...accum }
+      }
+
+      return {
+        ...accum,
+        [symb]: (Number.isFinite(accum[symb]))
+          ? accum[symb] + _balance
+          : _balance
+      }
+    }, startWallets)
+    const vals = isSubCalc
+      ? { vals: res }
+      : res
+
+    return [{
+      mts: end,
+      ...vals
+    }]
+  }
+
   async getBalanceHistory (
     {
       auth = {},
@@ -303,6 +354,16 @@ class BalanceHistory {
     } = {},
     isSubCalc = false
   ) {
+    if (Number.isInteger(timeframe)) {
+      return this._getWalletsGroupedByOneTimeframe(
+        {
+          auth,
+          params: { end }
+        },
+        isSubCalc
+      )
+    }
+
     const args = {
       auth,
       timeframe,
@@ -310,7 +371,7 @@ class BalanceHistory {
       end
     }
 
-    const firstWallets = await this.rService.getWallets(null, {
+    const firstWallets = await this.wallets.getWallets({
       auth,
       params: { end: start }
     })
@@ -353,8 +414,8 @@ class BalanceHistory {
 }
 
 decorate(injectable(), BalanceHistory)
-decorate(inject(TYPES.RService), BalanceHistory, 0)
-decorate(inject(TYPES.DAO), BalanceHistory, 1)
+decorate(inject(TYPES.DAO), BalanceHistory, 0)
+decorate(inject(TYPES.Wallets), BalanceHistory, 1)
 decorate(inject(TYPES.FOREX_SYMBS), BalanceHistory, 2)
 
 module.exports = BalanceHistory

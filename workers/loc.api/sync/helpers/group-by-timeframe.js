@@ -75,18 +75,35 @@ const _isNotEmptyGroupItem = ({ mts, vals }) => {
   )
 }
 
+const _isTimeframe = (timeframe) => {
+  return (
+    timeframe === 'day' ||
+    timeframe === 'month' ||
+    timeframe === 'year'
+  )
+}
+
 const _getGroupItem = async (
   data,
   timeframe,
   symbol,
   dateFieldName,
   symbolFieldName,
-  calcDataFn,
-  dao
+  calcDataFn
 ) => {
-  const { last } = _getFirstAndLastDate(data, dateFieldName)
-  const mts = getStartMtsByTimeframe(last, timeframe)
-  const vals = await calcDataFn(data, symbolFieldName, symbol, dao)
+  const {
+    last
+  } = _getFirstAndLastDate(data, dateFieldName)
+  const lastMts = last instanceof Date
+    ? last.getTime()
+    : last
+  const _mts = Number.isInteger(timeframe)
+    ? timeframe
+    : lastMts
+  const mts = _isTimeframe(timeframe)
+    ? getStartMtsByTimeframe(last, timeframe)
+    : _mts
+  const vals = await calcDataFn(data, symbolFieldName, symbol)
 
   return {
     mts,
@@ -108,8 +125,7 @@ module.exports = async (
   symbol,
   dateFieldName,
   symbolFieldName,
-  calcDataFn,
-  dao
+  calcDataFn
 ) => {
   if (
     !Array.isArray(data) ||
@@ -142,7 +158,25 @@ module.exports = async (
       timeframe,
       isLastIter
     }
+    const isWithoutTimeframe = (
+      !_isTimeframe(timeframe) &&
+      isLastIter
+    )
 
+    if (isWithoutTimeframe) {
+      const groupItem = await _getGroupItem(
+        subRes,
+        timeframe,
+        symbol,
+        dateFieldName,
+        symbolFieldName,
+        calcDataFn
+      )
+
+      _addFragment(res, subRes, groupItem)
+
+      continue
+    }
     if (_isDailyTimeframe(paramsToCheck)) {
       const groupItem = await _getGroupItem(
         subRes,
@@ -150,8 +184,7 @@ module.exports = async (
         symbol,
         dateFieldName,
         symbolFieldName,
-        calcDataFn,
-        dao
+        calcDataFn
       )
 
       _addFragment(res, subRes, groupItem)
@@ -165,8 +198,7 @@ module.exports = async (
         symbol,
         dateFieldName,
         symbolFieldName,
-        calcDataFn,
-        dao
+        calcDataFn
       )
 
       _addFragment(res, subRes, groupItem)
@@ -180,8 +212,7 @@ module.exports = async (
         symbol,
         dateFieldName,
         symbolFieldName,
-        calcDataFn,
-        dao
+        calcDataFn
       )
 
       _addFragment(res, subRes, groupItem)

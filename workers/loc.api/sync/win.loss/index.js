@@ -16,18 +16,18 @@ const {
 
 class WinLoss {
   constructor (
-    rService,
     dao,
     syncSchema,
     ALLOWED_COLLS,
+    wallets,
     balanceHistory,
     positionsSnapshot,
     FOREX_SYMBS
   ) {
-    this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.wallets = wallets
     this.balanceHistory = balanceHistory
     this.positionsSnapshot = positionsSnapshot
     this.FOREX_SYMBS = FOREX_SYMBS
@@ -103,9 +103,9 @@ class WinLoss {
     let prevMovementsRes = {}
 
     return ({
-      walletsGroupedByTimeframe,
-      withdrawalsGroupedByTimeframe,
-      depositsGroupedByTimeframe
+      walletsGroupedByTimeframe = {},
+      withdrawalsGroupedByTimeframe = {},
+      depositsGroupedByTimeframe = {}
     } = {}, i) => {
       const isLast = i === 0
       const _startPl = { ...startPl }
@@ -321,7 +321,7 @@ class WinLoss {
       this._calcMovements.bind(this)
     )
 
-    const firstWallets = await this.rService.getWallets(null, {
+    const firstWallets = await this.wallets.getWallets({
       auth,
       params: { end: start }
     })
@@ -335,6 +335,7 @@ class WinLoss {
         args,
         true
       )
+
     const startPl = await this._getPlFromPositionsSnapshot({
       auth,
       params: { mts: start }
@@ -372,10 +373,10 @@ class WinLoss {
 }
 
 decorate(injectable(), WinLoss)
-decorate(inject(TYPES.RService), WinLoss, 0)
-decorate(inject(TYPES.DAO), WinLoss, 1)
-decorate(inject(TYPES.SyncSchema), WinLoss, 2)
-decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 3)
+decorate(inject(TYPES.DAO), WinLoss, 0)
+decorate(inject(TYPES.SyncSchema), WinLoss, 1)
+decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 2)
+decorate(inject(TYPES.Wallets), WinLoss, 3)
 decorate(inject(TYPES.BalanceHistory), WinLoss, 4)
 decorate(inject(TYPES.PositionsSnapshot), WinLoss, 5)
 decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 6)

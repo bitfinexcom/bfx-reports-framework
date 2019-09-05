@@ -347,6 +347,92 @@ describe('Additional sync mode API with SQLite', () => {
     })
   })
 
+  it('it should be successfully performed by the getFullTaxReport method', async function () {
+    this.timeout(5000)
+
+    const paramsArr = [
+      { end },
+      { end, start: end - (10 * 60 * 60 * 1000) }
+    ]
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getFullTaxReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isObject(res.body.result)
+
+      assert.isNumber(res.body.result.winLossTotalAmount)
+      assert.isNumber(res.body.result.movementsTotalAmount)
+      assert.isNumber(res.body.result.depositsTotalAmount)
+      assert.isNumber(res.body.result.withdrawalsTotalAmount)
+      assert.isArray(res.body.result.startPositionsSnapshot)
+      assert.isArray(res.body.result.startTickers)
+      assert.isArray(res.body.result.endPositionsSnapshot)
+      assert.isArray(res.body.result.endTickers)
+      assert.isArray(res.body.result.movements)
+
+      const positions = [
+        ...res.body.result.startPositionsSnapshot,
+        ...res.body.result.endPositionsSnapshot
+      ]
+      const tickers = [
+        ...res.body.result.startTickers,
+        ...res.body.result.endTickers
+      ]
+      positions.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'id',
+          'symbol',
+          'amount',
+          'basePrice',
+          'actualPrice',
+          'pl',
+          'plUsd',
+          'plPerc',
+          'marginFunding',
+          'marginFundingType',
+          'status',
+          'mtsCreate',
+          'mtsUpdate'
+        ])
+      })
+      tickers.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'symbol',
+          'amount'
+        ])
+      })
+      res.body.result.movements.forEach((item) => {
+        assert.isObject(item)
+        assert.containsAllKeys(item, [
+          'id',
+          'currency',
+          'currencyName',
+          'mtsStarted',
+          'mtsUpdated',
+          'status',
+          'amount',
+          'fees',
+          'destinationAddress',
+          'transactionId'
+        ])
+      })
+    }
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
@@ -476,6 +562,31 @@ describe('Additional sync mode API with SQLite', () => {
         method: 'getPositionsSnapshotCsv',
         params: {
           end,
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getFullTaxReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullTaxReportCsv',
+        params: {
+          end,
+          start,
           email
         },
         id: 5

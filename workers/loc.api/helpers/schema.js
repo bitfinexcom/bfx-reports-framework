@@ -105,6 +105,26 @@ const paramsSchemaForFullSnapshotReportApi = {
   }
 }
 
+const paramsSchemaForFullTaxReportApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'month',
+        'year'
+      ]
+    },
+    end: {
+      type: 'integer'
+    },
+    start: {
+      type: 'integer'
+    }
+  }
+}
+
 const paramsSchemaForWinLossApi = {
   type: 'object',
   properties: {
@@ -179,6 +199,15 @@ const paramsSchemaForFullSnapshotReportCsv = {
   }
 }
 
+const paramsSchemaForFullTaxReportCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForFullTaxReportApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
@@ -186,9 +215,11 @@ module.exports = {
   paramsSchemaForWinLossApi,
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
+  paramsSchemaForFullTaxReportApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
   paramsSchemaForPositionsSnapshotCsv,
-  paramsSchemaForFullSnapshotReportCsv
+  paramsSchemaForFullSnapshotReportCsv,
+  paramsSchemaForFullTaxReportCsv
 }

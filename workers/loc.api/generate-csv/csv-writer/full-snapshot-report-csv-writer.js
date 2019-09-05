@@ -15,7 +15,8 @@ module.exports = (rService) => async (
   const {
     args: _args,
     columnsCsv,
-    formatSettings
+    formatSettings,
+    name
   } = { ...jobData }
   const { params: _params } = { ..._args }
   const params = {
@@ -78,7 +79,7 @@ module.exports = (rService) => async (
   walletsTickersStringifier.pipe(wStream)
 
   const res = await getDataFromApi(
-    rService.getFullSnapshotReport.bind(rService),
+    rService[name].bind(rService),
     args
   )
 

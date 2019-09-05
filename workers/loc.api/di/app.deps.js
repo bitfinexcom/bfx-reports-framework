@@ -47,8 +47,10 @@ const FullSnapshotReport = require('../sync/full.snapshot.report')
 const CurrencyConverter = require('../sync/currency.converter')
 const CsvJobData = require('../generate-csv/csv.job.data')
 const {
-  fullSnapshotReportCsvWriter
+  fullSnapshotReportCsvWriter,
+  fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
+const FullTaxReport = require('../sync/full.tax.report')
 
 decorate(injectable(), EventEmitter)
 
@@ -72,7 +74,8 @@ module.exports = ({
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
-          ['_fullSnapshotReport', TYPES.FullSnapshotReport]
+          ['_fullSnapshotReport', TYPES.FullSnapshotReport],
+          ['_fullTaxReport', TYPES.FullTaxReport]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -187,6 +190,15 @@ module.exports = ({
           [TYPES.RService]
         )
       )
+    bind(TYPES.FullTaxReportCsvWriter)
+      .toConstantValue(
+        bindDepsToFn(
+          fullTaxReportCsvWriter,
+          [TYPES.RService]
+        )
+      )
+    bind(TYPES.FullTaxReport)
+      .to(FullTaxReport)
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)
       .inSingletonScope()
