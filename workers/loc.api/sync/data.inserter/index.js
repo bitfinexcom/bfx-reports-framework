@@ -93,7 +93,6 @@ class DataInserter extends EventEmitter {
       this.currencyConverter,
       this.ALLOWED_COLLS,
       this.convertTo,
-      this.convertTo,
       this.syncColls
     ))
   }

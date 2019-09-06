@@ -30,7 +30,6 @@ module.exports = (
   dao,
   currencyConverter,
   ALLOWED_COLLS,
-  candlesSkippedSymbs,
   convertTo,
   syncColls
 ) => async () => {
@@ -56,7 +55,6 @@ module.exports = (
         collName,
         {
           filter: {
-            $not: { [schema.symbolFieldName]: candlesSkippedSymbs },
             $gt: { _id },
             $isNull: schema.convFields.map(obj => obj.outputField)
           },
