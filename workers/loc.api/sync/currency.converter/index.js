@@ -286,17 +286,6 @@ class CurrencyConverter {
     )
   }
 
-  pingPublicTradesEndpoint () {
-    return this.rService.pingApi({
-      pingMethod: '_getPublicTrades',
-      params: {
-        limit: 1,
-        notThrowError: true,
-        notCheckNextPage: true
-      }
-    })
-  }
-
   /**
    * if api is not available convert by candles
    */
