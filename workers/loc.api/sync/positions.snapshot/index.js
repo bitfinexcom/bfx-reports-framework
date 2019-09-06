@@ -8,6 +8,7 @@ const {
   inject
 } = require('inversify')
 
+const { splitSymbolPairs } = require('../helpers')
 const TYPES = require('../../di/types')
 
 class PositionsSnapshot {
@@ -100,43 +101,26 @@ class PositionsSnapshot {
       }, [])
   }
 
-  _splitSymbolPairs (symbol) {
-    const str = (
-      symbol[0] === 't' ||
-      symbol[0] === 'f'
-    )
-      ? symbol.slice(1)
-      : symbol
-
-    if (
-      str.length > 5 &&
-      /.+[:].+/.test(str)
-    ) {
-      return str.split(':')
-    }
-    if (str.length < 6) {
-      return [str]
-    }
-
-    return [str.slice(0, 3), str.slice(-3)]
-  }
-
   async _convertPlToUsd (
     pl,
     symbol,
     end
   ) {
-    const currency = this._splitSymbolPairs(symbol)[1]
+    const currency = splitSymbolPairs(symbol)[1]
 
     if (
       !currency ||
       currency.length < 3 ||
       !Number.isFinite(pl)
     ) {
-      return null
+      return {
+        plUsd: null,
+        currency
+      }
     }
 
     const plData = { pl, plUsd: null, currency }
+    // TODO: the issue related with XXXF0:USD pairs
     const { plUsd } = await this.currencyConverter.convert(
       plData,
       {
@@ -149,7 +133,10 @@ class PositionsSnapshot {
       }
     )
 
-    return plUsd
+    return {
+      plUsd,
+      currency
+    }
   }
 
   async _getCalculatedPositions (
@@ -180,6 +167,7 @@ class PositionsSnapshot {
         continue
       }
 
+      // TODO: the issue related with XXXF0:USD pairs
       const actualPrice = await this.currencyConverter
         .getPrice(symbol, end)
 
@@ -195,7 +183,10 @@ class PositionsSnapshot {
 
       const pl = (actualPrice - basePrice) * Math.abs(amount)
       const plPerc = ((actualPrice / basePrice) - 1) * 100
-      const plUsd = await this._convertPlToUsd(
+      const {
+        plUsd,
+        currency
+      } = await this._convertPlToUsd(
         pl,
         symbol,
         end
@@ -208,8 +199,6 @@ class PositionsSnapshot {
         plUsd,
         plPerc
       })
-
-      const currency = this._splitSymbolPairs(symbol)[1]
 
       if (
         currency &&
