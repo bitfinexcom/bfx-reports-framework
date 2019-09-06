@@ -143,6 +143,7 @@ class BalanceHistory {
     )
   }
 
+  // TODO: the issue related with XXXF0:USD pairs
   _getCandlesClosePrice (
     candles,
     mts,
@@ -206,7 +207,7 @@ class BalanceHistory {
               candles,
               mts,
               timeframe,
-              `t${currency}USD`
+              `t${currency}USD` // TODO: the issue related with XXXF0:USD pairs
             )
           }
 

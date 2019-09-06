@@ -9,6 +9,7 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
+const { splitSymbolPairs } = require('../helpers')
 const TYPES = require('../../di/types')
 
 class CurrencyConverter {
@@ -36,14 +37,58 @@ class CurrencyConverter {
     )
   }
 
-  _getSymb (
+  _getConvertingSymb (symbol) {
+    if (typeof symbol !== 'string') {
+      return ''
+    }
+    if (symbol.length < 4) {
+      return symbol
+    }
+
+    return symbol.replace(/F0$/i, '')
+  }
+
+  _getPair (
     item,
     {
       convertTo,
       symbolFieldName
     }
   ) {
-    return `t${item[symbolFieldName]}${convertTo}`
+    const symbol = this._getConvertingSymb(item[symbolFieldName])
+    const separator = symbol.length > 3
+      ? ':'
+      : ''
+
+    return `t${symbol}${separator}${convertTo}`
+  }
+
+  _getPairFromPair (symbol) {
+    if (typeof symbol !== 'string') {
+      return ''
+    }
+    if (symbol.length < 8) {
+      return symbol
+    }
+    if (
+      symbol[0] !== 't' &&
+      symbol[0] !== 'f'
+    ) {
+      return symbol
+    }
+
+    const flag = symbol[0]
+    const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
+    const _firstSymb = this._getConvertingSymb(firstSymb)
+    const _lastSymb = this._getConvertingSymb(lastSymb)
+    const separator = (
+      _firstSymb.length > 3 ||
+      _lastSymb.length > 3
+    )
+      ? ':'
+      : ''
+
+    return `${flag}${_firstSymb}${separator}${_lastSymb}`
   }
 
   _isRequiredConvFromForex (
@@ -64,16 +109,17 @@ class CurrencyConverter {
   }
 
   async _getPublicTradesPrice (
-    symbol,
+    reqSymb,
     end
   ) {
     if (
-      !symbol ||
+      !reqSymb ||
       !Number.isInteger(end)
     ) {
       return null
     }
 
+    const symbol = this._getPairFromPair(reqSymb)
     const { res } = await this.rService._getPublicTrades({
       params: {
         symbol,
@@ -106,10 +152,11 @@ class CurrencyConverter {
       return null
     }
 
+    const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
       candlesSchema.name,
       {
-        [candlesSchema.symbolFieldName]: reqSymb,
+        [candlesSchema.symbolFieldName]: symbol,
         end,
         _dateFieldName: [candlesSchema.dateFieldName]
       },
@@ -186,7 +233,7 @@ class CurrencyConverter {
     }
 
     const price = await _getPrice(
-      this._getSymb(
+      this._getPair(
         item,
         {
           convertTo,
@@ -241,7 +288,8 @@ class CurrencyConverter {
         continue
       }
 
-      const isSameSymb = convertTo === item[symbolFieldName]
+      const symbol = this._getConvertingSymb(item[symbolFieldName])
+      const isSameSymb = convertTo === symbol
       const price = isSameSymb
         ? 1
         : await this._getPrice(
