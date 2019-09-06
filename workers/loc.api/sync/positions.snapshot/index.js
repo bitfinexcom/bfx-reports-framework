@@ -120,7 +120,6 @@ class PositionsSnapshot {
     }
 
     const plData = { pl, plUsd: null, currency }
-    // TODO: the issue related with XXXF0:USD pairs
     const { plUsd } = await this.currencyConverter.convert(
       plData,
       {
@@ -167,7 +166,6 @@ class PositionsSnapshot {
         continue
       }
 
-      // TODO: the issue related with XXXF0:USD pairs
       const actualPrice = await this.currencyConverter
         .getPrice(symbol, end)
 
@@ -206,7 +204,10 @@ class PositionsSnapshot {
         Number.isFinite(pl) &&
         Number.isFinite(plUsd)
       ) {
-        const symbol = `t${currency}USD`
+        const separator = currency.length > 3
+          ? ':'
+          : ''
+        const symbol = `t${currency}${separator}USD`
         const amount = (
           pl !== 0 &&
           plUsd !== 0

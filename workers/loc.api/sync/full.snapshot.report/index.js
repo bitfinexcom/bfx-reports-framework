@@ -46,7 +46,10 @@ class FullSnapshotReport {
         balance,
         balanceUsd
       } = { ...wallets }
-      const symbol = `t${currency}USD`
+      const separator = currency.length > 3
+        ? ':'
+        : ''
+      const symbol = `t${currency}${separator}USD`
 
       return {
         walletType,
