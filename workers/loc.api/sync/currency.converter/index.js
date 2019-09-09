@@ -9,7 +9,10 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
-const { splitSymbolPairs } = require('../helpers')
+const {
+  splitSymbolPairs,
+  isForexSymb
+} = require('../helpers')
 const TYPES = require('../../di/types')
 
 class CurrencyConverter {
@@ -318,6 +321,144 @@ class CurrencyConverter {
     return isArr ? res : res[0]
   }
 
+  _findCandlesPrice (
+    candles,
+    symbol,
+    end
+  ) {
+    const candle = candles.find(({
+      mts,
+      close,
+      _symbol
+    }) => (
+      symbol === _symbol &&
+      Number.isFinite(close) &&
+      mts <= end
+    ))
+    const { close } = { ...candle }
+
+    return close
+  }
+
+  _findPublicTradesPrice (
+    publicTrades,
+    symbol,
+    end
+  ) {
+    const publicTrade = publicTrades.find(({
+      mts,
+      price,
+      _symbol
+    }) => (
+      symbol === _symbol &&
+      Number.isFinite(price) &&
+      mts <= end
+    ))
+    const { price } = { ...publicTrade }
+
+    return price
+  }
+
+  _getCandlesPriceFromData (
+    candles,
+    symbol,
+    end
+  ) {
+    const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
+
+    if (
+      firstSymb &&
+      firstSymb === lastSymb
+    ) {
+      return 1
+    }
+
+    const _isForexSymb = isForexSymb(
+      firstSymb,
+      this.FOREX_SYMBS.filter(s => s !== lastSymb)
+    )
+
+    if (_isForexSymb) {
+      const btcPriseIn = this._findCandlesPrice(
+        candles,
+        `tBTC${firstSymb}`,
+        end
+      )
+      const btcPriseOut = this._findCandlesPrice(
+        candles,
+        `tBTC${lastSymb}`,
+        end
+      )
+
+      if (
+        !btcPriseIn ||
+        !btcPriseOut ||
+        !Number.isFinite(btcPriseIn) ||
+        !Number.isFinite(btcPriseOut)
+      ) {
+        return null
+      }
+
+      return btcPriseOut / btcPriseIn
+    }
+
+    return this._findCandlesPrice(
+      candles,
+      symbol,
+      end
+    )
+  }
+
+  _getPublicTradesPriceFromData (
+    publicTrades,
+    symbol,
+    end
+  ) {
+    const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
+
+    if (
+      firstSymb &&
+      firstSymb === lastSymb
+    ) {
+      return 1
+    }
+
+    const _isForexSymb = isForexSymb(
+      firstSymb,
+      this.FOREX_SYMBS.filter(s => s !== lastSymb)
+    )
+
+    if (_isForexSymb) {
+      const btcPriseIn = this._findPublicTradePrice(
+        publicTrades,
+        `tBTC${firstSymb}`,
+        end
+      )
+      const btcPriseOut = this._findPublicTradePrice(
+        publicTrades,
+        `tBTC${lastSymb}`,
+        end
+      )
+
+      if (
+        !btcPriseIn ||
+        !btcPriseOut ||
+        !Number.isFinite(btcPriseIn) ||
+        !Number.isFinite(btcPriseOut)
+      ) {
+        return null
+      }
+
+      return btcPriseOut / btcPriseIn
+    }
+
+    return this._findPublicTradePrice(
+      publicTrades,
+      symbol,
+      end
+    )
+  }
+
   convertByCandles (data, convSchema) {
     return this._convertBy(
       this._COLL_NAMES.CANDLES,
@@ -363,6 +504,34 @@ class CurrencyConverter {
         end
       )
     }
+  }
+
+  getPriceFromData (
+    reqSymb,
+    end,
+    {
+      candles,
+      publicTrades
+    }
+  ) {
+    const symbol = this._getPairFromPair(reqSymb)
+
+    if (Array.isArray(candles)) {
+      return this._getCandlesPriceFromData(
+        candles,
+        symbol,
+        end
+      )
+    }
+    if (Array.isArray(publicTrades)) {
+      return this._getPublicTradesPriceFromData(
+        publicTrades,
+        symbol,
+        end
+      )
+    }
+
+    throw new Error('ERR_DATA_IS_NOT_FOUND') // TODO:
   }
 }
 
