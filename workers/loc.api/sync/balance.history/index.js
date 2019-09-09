@@ -20,11 +20,13 @@ class BalanceHistory {
   constructor (
     dao,
     wallets,
-    FOREX_SYMBS
+    FOREX_SYMBS,
+    currencyConverter
   ) {
     this.dao = dao
     this.wallets = wallets
     this.FOREX_SYMBS = FOREX_SYMBS
+    this.currencyConverter = currencyConverter
   }
 
   _groupWalletsByCurrency (wallets = []) {
@@ -143,7 +145,6 @@ class BalanceHistory {
     )
   }
 
-  // TODO: the issue related with XXXF0:USD pairs
   _getCandlesClosePrice (
     candles,
     mts,
@@ -164,15 +165,13 @@ class BalanceHistory {
 
     const _mts = mtsMoment.valueOf() - 1
 
-    return candles.find(({
-      mts: cMts,
-      close,
-      _symbol
-    }) => (
-      symb === _symbol &&
-      Number.isFinite(close) &&
-      cMts <= _mts
-    ))
+    const price = this.currencyConverter.getPriceFromData(
+      symb,
+      _mts,
+      { candles }
+    )
+
+    return price
   }
 
   _getWalletsByTimeframe (
@@ -200,24 +199,22 @@ class BalanceHistory {
         [currency, balance]
       ) => {
         const _isForexSymb = isForexSymb(currency, this.FOREX_SYMBS)
-        const { close: closePrice } = _isForexSymb
-          ? {}
-          : {
-            ...this._getCandlesClosePrice(
-              candles,
-              mts,
-              timeframe,
-              `t${currency}USD` // TODO: the issue related with XXXF0:USD pairs
-            )
-          }
+        const price = _isForexSymb
+          ? null
+          : this._getCandlesClosePrice(
+            candles,
+            mts,
+            timeframe,
+            `t${currency}USD`
+          )
 
-        if (!_isForexSymb && !Number.isFinite(closePrice)) {
+        if (!_isForexSymb && !Number.isFinite(price)) {
           return { ...accum }
         }
 
         const _balance = _isForexSymb
           ? balance
-          : balance * closePrice
+          : balance * price
         const symb = _isForexSymb
           ? currency
           : 'USD'
@@ -264,34 +261,21 @@ class BalanceHistory {
         return accum + balance
       }
 
-      const { close: btcPriseInCurrSymb } = {
+      const prise = {
         ...this._getCandlesClosePrice(
           candles,
           mts,
           timeframe,
-          `tBTC${symb}`
-        )
-      }
-      const { close: btcPriseInUsd } = {
-        ...this._getCandlesClosePrice(
-          candles,
-          mts,
-          timeframe,
-          'tBTCUSD'
+          `t${symb}USD`
         )
       }
 
       if (
-        !btcPriseInCurrSymb ||
-        !btcPriseInUsd ||
-        !Number.isFinite(btcPriseInCurrSymb) ||
-        !Number.isFinite(btcPriseInUsd) ||
+        !Number.isFinite(prise) ||
         !Number.isFinite(balance)
       ) {
         return accum
       }
-
-      const prise = btcPriseInUsd / btcPriseInCurrSymb
 
       return accum + balance * prise
     }, 0)
@@ -424,5 +408,6 @@ decorate(injectable(), BalanceHistory)
 decorate(inject(TYPES.DAO), BalanceHistory, 0)
 decorate(inject(TYPES.Wallets), BalanceHistory, 1)
 decorate(inject(TYPES.FOREX_SYMBS), BalanceHistory, 2)
+decorate(inject(TYPES.CurrencyConverter), BalanceHistory, 3)
 
 module.exports = BalanceHistory
