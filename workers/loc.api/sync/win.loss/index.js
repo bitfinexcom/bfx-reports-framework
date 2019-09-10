@@ -365,7 +365,7 @@ class WinLoss {
     )
     res.push({
       mts: start,
-      ...startWallets
+      USD: 0
     })
 
     return res
