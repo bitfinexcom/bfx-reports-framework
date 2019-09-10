@@ -1,6 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events')
+const moment = require('moment')
 const {
   isEmpty,
   cloneDeep
@@ -819,7 +820,13 @@ class DataInserter extends EventEmitter {
       return accum
     }, _collСonfig)
 
-    for (const { symbol, start: _start } of collСonfig) {
+    for (const { symbol, start: configStart } of collСonfig) {
+      const mtsMoment = moment.utc(configStart)
+        .add(-1, 'days')
+        .valueOf()
+      const _start = configStart
+        ? mtsMoment
+        : configStart
       const params = {
         timeframe: this._candlesTimeframe,
         section: this._candlesSection,
