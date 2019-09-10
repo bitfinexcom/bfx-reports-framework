@@ -10,6 +10,9 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
+  CurrencyConversionDataFindingError
+} = require('../../errors')
+const {
   splitSymbolPairs,
   isForexSymb
 } = require('../helpers')
@@ -531,7 +534,7 @@ class CurrencyConverter {
       )
     }
 
-    throw new Error('ERR_DATA_IS_NOT_FOUND') // TODO:
+    throw new CurrencyConversionDataFindingError()
   }
 }
 

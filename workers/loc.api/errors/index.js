@@ -76,6 +76,12 @@ class DuringSyncMethodAccessError extends BaseError {
   }
 }
 
+class CurrencyConversionDataFindingError extends BaseError {
+  constructor (message = 'ERR_DATA_IS_NOT_FOUND_TO_CONVERT_CURRENCY') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -89,5 +95,6 @@ module.exports = {
   DAOInitializationError,
   ServerAvailabilityError,
   ObjectMappingError,
-  DuringSyncMethodAccessError
+  DuringSyncMethodAccessError,
+  CurrencyConversionDataFindingError
 }
