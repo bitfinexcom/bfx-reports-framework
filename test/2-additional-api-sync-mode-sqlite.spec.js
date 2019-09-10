@@ -348,7 +348,7 @@ describe('Additional sync mode API with SQLite', () => {
   })
 
   it('it should be successfully performed by the getFullTaxReport method', async function () {
-    this.timeout(5000)
+    this.timeout(10000)
 
     const paramsArr = [
       { end },

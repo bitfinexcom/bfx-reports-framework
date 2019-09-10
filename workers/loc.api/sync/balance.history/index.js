@@ -126,9 +126,15 @@ class BalanceHistory {
     start = 0,
     end = Date.now()
   }) {
+    const mtsMoment = moment.utc(start)
+      .add(-1, 'days')
+      .valueOf()
+    const _start = start
+      ? mtsMoment
+      : start
     return this.dao.findInCollBy(
       '_getCandles',
-      { params: { start, end } },
+      { params: { start: _start, end } },
       {
         isPublic: true,
         schema: { maxLimit: null },
