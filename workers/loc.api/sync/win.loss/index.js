@@ -278,6 +278,7 @@ class WinLoss {
       this.ALLOWED_COLLS.MOVEMENTS,
       {
         filter: {
+          $not: { status: 'CANCELED' },
           $lt: { amount: 0 },
           $gte: { mtsStarted: start },
           $lte: { mtsStarted: end },
@@ -293,6 +294,7 @@ class WinLoss {
       this.ALLOWED_COLLS.MOVEMENTS,
       {
         filter: {
+          status: 'COMPLETED',
           $gt: { amount: 0 },
           $gte: { mtsUpdated: start },
           $lte: { mtsUpdated: end },
