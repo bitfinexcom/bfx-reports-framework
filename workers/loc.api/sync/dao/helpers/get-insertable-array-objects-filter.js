@@ -34,9 +34,11 @@ module.exports = (
   const {
     start = 0,
     end = Date.now(),
-    isMarginFundingPayment
-  } = params
+    isMarginFundingPayment,
+    filter: reqFilter = {}
+  } = { ...params }
   const filter = {
+    ...reqFilter,
     _dateFieldName: dateFieldName,
     start,
     end,
