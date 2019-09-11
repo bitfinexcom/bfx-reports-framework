@@ -93,7 +93,6 @@ class DataInserter extends EventEmitter {
       this.currencyConverter,
       this.ALLOWED_COLLS,
       this.convertTo,
-      this.convertTo,
       this.syncColls
     ))
   }
@@ -802,8 +801,18 @@ class DataInserter extends EventEmitter {
     }
 
     const _collСonfig = uniqueLedgersSymbs.map(({ currency }) => {
+      const _currency = typeof currency === 'string'
+        ? currency.replace(/F0$/i, '')
+        : currency
+      const separator = (
+        typeof _currency === 'string' &&
+        _currency.length > 3
+      )
+        ? ':'
+        : ''
+
       return {
-        symbol: `t${currency}${this.convertTo}`,
+        symbol: `t${_currency}${separator}${this.convertTo}`,
         start: lastElemLedgers.mts
       }
     })
