@@ -26,6 +26,9 @@ const _getCompareOperator = (
   if (origFieldName === '$lte') {
     return '<='
   }
+  if (origFieldName === '$like') {
+    return 'LIKE'
+  }
   if (isArr) {
     return origFieldName === '$not' ? 'NOT IN' : 'IN'
   }
@@ -149,7 +152,7 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
   const operator = isOrOp
     ? 'OR'
     : 'AND'
-  const conditions = ['$gt', '$gte', '$lt', '$lte', '$not']
+  const conditions = ['$gt', '$gte', '$lt', '$lte', '$not', '$like']
   const hiddenFields = ['_dateFieldName']
   const keys = Object.keys(omit(_filter, hiddenFields))
   const where = keys.reduce(
