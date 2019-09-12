@@ -29,11 +29,28 @@ const _getCompareOperator = (
   if (origFieldName === '$like') {
     return 'LIKE'
   }
+  if (origFieldName === '$ne') {
+    return '!='
+  }
+  if (origFieldName === '$eq') {
+    return '='
+  }
   if (isArr) {
-    return origFieldName === '$not' ? 'NOT IN' : 'IN'
+    if (origFieldName === '$in') {
+      return 'IN'
+    }
+    if (origFieldName === '$nin') {
+      return 'NOT IN'
+    }
+
+    return origFieldName === '$not'
+      ? 'NOT IN'
+      : 'IN'
   }
 
-  return origFieldName === '$not' ? '!=' : '='
+  return origFieldName === '$not'
+    ? '!='
+    : '='
 }
 
 const _getKeysAndValuesForWhereQuery = (
@@ -152,7 +169,18 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
   const operator = isOrOp
     ? 'OR'
     : 'AND'
-  const conditions = ['$gt', '$gte', '$lt', '$lte', '$not', '$like']
+  const conditions = [
+    '$gt',
+    '$gte',
+    '$lt',
+    '$lte',
+    '$not',
+    '$like',
+    '$eq',
+    '$ne',
+    '$in',
+    '$nin'
+  ]
   const hiddenFields = ['_dateFieldName']
   const keys = Object.keys(omit(_filter, hiddenFields))
   const where = keys.reduce(
