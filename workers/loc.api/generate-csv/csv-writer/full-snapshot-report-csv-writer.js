@@ -40,6 +40,8 @@ module.exports = (rService) => async (
     return
   }
 
+  wStream.setMaxListeners(20)
+
   const posNameStringifier = stringify(
     { columns: ['name'] }
   )
@@ -47,12 +49,20 @@ module.exports = (rService) => async (
     header: true,
     columns: columnsCsv.positionsSnapshot
   })
+  const positionsTotalPlUsdStringifier = stringify({
+    header: true,
+    columns: columnsCsv.positionsTotalPlUsd
+  })
   const walletsNameStringifier = stringify(
     { columns: ['name'] }
   )
   const walletsStringifier = stringify({
     header: true,
     columns: columnsCsv.walletsSnapshot
+  })
+  const walletsTotalBalanceUsdStringifier = stringify({
+    header: true,
+    columns: columnsCsv.walletsTotalBalanceUsd
   })
   const positionsTickersNameStringifier = stringify(
     { columns: ['name'] }
@@ -71,8 +81,10 @@ module.exports = (rService) => async (
 
   posNameStringifier.pipe(wStream)
   posStringifier.pipe(wStream)
+  positionsTotalPlUsdStringifier.pipe(wStream)
   walletsNameStringifier.pipe(wStream)
   walletsStringifier.pipe(wStream)
+  walletsTotalBalanceUsdStringifier.pipe(wStream)
   positionsTickersNameStringifier.pipe(wStream)
   positionsTickersStringifier.pipe(wStream)
   walletsTickersNameStringifier.pipe(wStream)
@@ -83,30 +95,51 @@ module.exports = (rService) => async (
     args
   )
 
+  const {
+    positionsSnapshot,
+    walletsSnapshot,
+    positionsTickers,
+    walletsTickers,
+    positionsTotalPlUsd,
+    walletsTotalBalanceUsd
+  } = { ...res }
+
   write([{ name: 'POSITIONS' }], posNameStringifier)
   write(
-    [...res.positionsSnapshot, {}],
+    [...positionsSnapshot, {}],
     posStringifier,
     formatSettings.positionsSnapshot,
     params
   )
+  write(
+    [{ plUsd: positionsTotalPlUsd }, {}],
+    positionsTotalPlUsdStringifier,
+    formatSettings.positionsTotalPlUsd,
+    params
+  )
   write([{ name: 'WALLETS' }], walletsNameStringifier)
   write(
-    [...res.walletsSnapshot, {}],
+    [...walletsSnapshot, {}],
     walletsStringifier,
     formatSettings.walletsSnapshot,
     params
   )
+  write(
+    [{ balanceUsd: walletsTotalBalanceUsd }, {}],
+    walletsTotalBalanceUsdStringifier,
+    formatSettings.walletsTotalBalanceUsd,
+    params
+  )
   write([{ name: 'POSITIONS TICKERS' }], positionsTickersNameStringifier)
   write(
-    [...res.positionsTickers, {}],
+    [...positionsTickers, {}],
     positionsTickersStringifier,
     formatSettings.positionsTickers,
     params
   )
   write([{ name: 'WALLETS TICKERS' }], walletsTickersNameStringifier)
   write(
-    res.walletsTickers,
+    walletsTickers,
     walletsTickersStringifier,
     formatSettings.walletsTickers,
     params
@@ -116,8 +149,10 @@ module.exports = (rService) => async (
 
   posNameStringifier.end()
   posStringifier.end()
+  positionsTotalPlUsdStringifier.end()
   walletsNameStringifier.end()
   walletsStringifier.end()
+  walletsTotalBalanceUsdStringifier.end()
   positionsTickersNameStringifier.end()
   positionsTickersStringifier.end()
   walletsTickersNameStringifier.end()

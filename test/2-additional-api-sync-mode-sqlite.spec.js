@@ -302,6 +302,8 @@ describe('Additional sync mode API with SQLite', () => {
     assert.isArray(res.body.result.walletsSnapshot)
     assert.isArray(res.body.result.positionsTickers)
     assert.isArray(res.body.result.walletsTickers)
+    assert.isNumber(res.body.result.positionsTotalPlUsd)
+    assert.isNumber(res.body.result.walletsTotalBalanceUsd)
 
     res.body.result.positionsSnapshot.forEach((item) => {
       assert.isObject(item)
