@@ -277,6 +277,12 @@ class CsvJobData extends BaseCsvJobData {
           walletType: 'WALLET TYPE',
           symbol: 'PAIR',
           amount: 'AMOUNT'
+        },
+        positionsTotalPlUsd: {
+          plUsd: 'POSITIONS TOTAL P/L USD'
+        },
+        walletsTotalBalanceUsd: {
+          balanceUsd: 'WALLETS TOTAL BALANCE USD'
         }
       },
       formatSettings: {

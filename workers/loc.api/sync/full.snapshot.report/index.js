@@ -59,6 +59,42 @@ class FullSnapshotReport {
     })
   }
 
+  _calcObjFieldInArr (array, fieldName) {
+    if (
+      !Array.isArray(array) ||
+      array.length === 0
+    ) {
+      return null
+    }
+
+    return array.reduce((accum, curr) => {
+      const obj = { ...curr }
+      const fieldVal = obj[fieldName]
+
+      if (!Number.isFinite(fieldVal)) {
+        return accum
+      }
+
+      return Number.isFinite(accum)
+        ? accum + fieldVal
+        : fieldVal
+    }, 0)
+  }
+
+  _calcPositionsTotalPlUsd (positionsSnapshot) {
+    return this._calcObjFieldInArr(
+      positionsSnapshot,
+      'plUsd'
+    )
+  }
+
+  _calcWalletsTotalBalanceUsd (walletsSnapshot) {
+    return this._calcObjFieldInArr(
+      walletsSnapshot,
+      'balanceUsd'
+    )
+  }
+
   async getFullSnapshotReport (args) {
     const { params = {} } = { ...args }
     const { end = Date.now() } = { ...params }
@@ -81,12 +117,20 @@ class FullSnapshotReport {
     const walletsTickers = this._getWalletsTickers(
       walletsSnapshot
     )
+    const positionsTotalPlUsd = this._calcPositionsTotalPlUsd(
+      positionsSnapshot
+    )
+    const walletsTotalBalanceUsd = this._calcWalletsTotalBalanceUsd(
+      walletsSnapshot
+    )
 
     return {
       positionsSnapshot,
       walletsSnapshot,
       positionsTickers,
-      walletsTickers
+      walletsTickers,
+      positionsTotalPlUsd,
+      walletsTotalBalanceUsd
     }
   }
 }
