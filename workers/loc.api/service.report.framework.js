@@ -405,6 +405,15 @@ class FrameworkReportService extends ReportService {
         args,
         { isPublic: true }
       )
+
+      if (
+        isEmpty(symbols) &&
+        isEmpty(futures) &&
+        isEmpty(currencies)
+      ) {
+        return super.getSymbols(space, args)
+      }
+
       const symbolsArr = collObjToArr(symbols, symbolsField)
       const futuresArr = collObjToArr(futures, futuresField)
       const pairs = [...symbolsArr, ...futuresArr]
