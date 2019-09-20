@@ -70,7 +70,7 @@
       }
     },
     "test": {
-      "command": "standard && mocha --opts .mocha.opts",
+      "command": "standard && mocha './test/**/*.spec.js' --config .mocharc.json",
       "env": {
         "NODE_ENV": "test"
       }
