@@ -42,44 +42,29 @@ module.exports = (rService) => async (
 
   wStream.setMaxListeners(20)
 
-  const winLossTotalAmountStringifier = stringify({
-    header: true,
-    columns: columnsCsv.winLossTotalAmount
-  })
-  const startPosNameStringifier = stringify(
+  const startingPositionsSnapshotNameStringifier = stringify(
     { columns: ['name'] }
   )
-  const startPosStringifier = stringify({
+  const startingPositionsSnapshotStringifier = stringify({
     header: true,
     columns: columnsCsv.positionsSnapshot
   })
-  const startTickersNameStringifier = stringify(
+  const endingPositionsSnapshotNameStringifier = stringify(
     { columns: ['name'] }
   )
-  const startTickersStringifier = stringify({
-    header: true,
-    columns: columnsCsv.tickers
-  })
-  const endPosNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const endPosStringifier = stringify({
+  const endingPositionsSnapshotStringifier = stringify({
     header: true,
     columns: columnsCsv.positionsSnapshot
   })
-  const endTickersNameStringifier = stringify(
+  const finalStateNameStringifier = stringify(
     { columns: ['name'] }
   )
-  const endTickersStringifier = stringify({
-    header: true,
-    columns: columnsCsv.tickers
-  })
-  const movementsTotalAmountNameStringifier = stringify(
+  const startingPeriodBalancesNameStringifier = stringify(
     { columns: ['name'] }
   )
-  const movementsTotalAmountStringifier = stringify({
+  const startingPeriodBalancesStringifier = stringify({
     header: true,
-    columns: columnsCsv.movementsTotalAmount
+    columns: columnsCsv.periodBalances
   })
   const movementsNameStringifier = stringify(
     { columns: ['name'] }
@@ -88,108 +73,126 @@ module.exports = (rService) => async (
     header: true,
     columns: columnsCsv.movements
   })
+  const movementsTotalAmountStringifier = stringify({
+    header: true,
+    columns: columnsCsv.movementsTotalAmount
+  })
+  const endingPeriodBalancesNameStringifier = stringify(
+    { columns: ['name'] }
+  )
+  const endingPeriodBalancesStringifier = stringify({
+    header: true,
+    columns: columnsCsv.periodBalances
+  })
+  const totalResultStringifier = stringify({
+    header: true,
+    columns: columnsCsv.totalResult
+  })
 
-  winLossTotalAmountStringifier.pipe(wStream)
-  startPosNameStringifier.pipe(wStream)
-  startPosStringifier.pipe(wStream)
-  startTickersNameStringifier.pipe(wStream)
-  startTickersStringifier.pipe(wStream)
-  endPosNameStringifier.pipe(wStream)
-  endPosStringifier.pipe(wStream)
-  endTickersNameStringifier.pipe(wStream)
-  endTickersStringifier.pipe(wStream)
-  movementsTotalAmountNameStringifier.pipe(wStream)
-  movementsTotalAmountStringifier.pipe(wStream)
+  startingPositionsSnapshotNameStringifier.pipe(wStream)
+  startingPositionsSnapshotStringifier.pipe(wStream)
+  endingPositionsSnapshotNameStringifier.pipe(wStream)
+  endingPositionsSnapshotStringifier.pipe(wStream)
+  finalStateNameStringifier.pipe(wStream)
+  startingPeriodBalancesNameStringifier.pipe(wStream)
+  startingPeriodBalancesStringifier.pipe(wStream)
   movementsNameStringifier.pipe(wStream)
   movementsStringifier.pipe(wStream)
+  movementsTotalAmountStringifier.pipe(wStream)
+  endingPeriodBalancesNameStringifier.pipe(wStream)
+  endingPeriodBalancesStringifier.pipe(wStream)
+  totalResultStringifier.pipe(wStream)
 
   const res = await getDataFromApi(
     rService[name].bind(rService),
     args
   )
   const {
-    winLossTotalAmount,
-    startPositionsSnapshot,
-    startTickers,
-    endPositionsSnapshot,
-    endTickers,
-    depositsTotalAmount,
-    withdrawalsTotalAmount,
-    movementsTotalAmount,
-    movements
+    startingPositionsSnapshot,
+    endingPositionsSnapshot,
+    finalState: {
+      startingPeriodBalances,
+      movements,
+      movementsTotalAmount,
+      endingPeriodBalances,
+      totalResult
+    }
   } = { ...res }
 
   write(
-    [{ amount: winLossTotalAmount }, {}],
-    winLossTotalAmountStringifier,
-    formatSettings.winLossTotalAmount,
-    params
+    [{ name: 'STARTING POSITIONS SNAPSHOT' }],
+    startingPositionsSnapshotNameStringifier
   )
-
-  write([{ name: 'START POSITIONS' }], startPosNameStringifier)
   write(
-    [...startPositionsSnapshot, {}],
-    startPosStringifier,
+    [...startingPositionsSnapshot, {}],
+    startingPositionsSnapshotStringifier,
     formatSettings.positionsSnapshot,
     params
   )
-  write([{ name: 'START TICKERS' }], startTickersNameStringifier)
+
   write(
-    [...startTickers, {}],
-    startTickersStringifier,
-    formatSettings.tickers,
-    params
+    [{ name: 'ENDING POSITIONS SNAPSHOT' }],
+    endingPositionsSnapshotNameStringifier
   )
-  write([{ name: 'END POSITIONS' }], endPosNameStringifier)
   write(
-    [...endPositionsSnapshot, {}],
-    endPosStringifier,
+    [...endingPositionsSnapshot, {}],
+    endingPositionsSnapshotStringifier,
     formatSettings.positionsSnapshot,
     params
   )
-  write([{ name: 'END TICKERS' }], endTickersNameStringifier)
-  write(
-    [...endTickers, {}],
-    endTickersStringifier,
-    formatSettings.tickers,
-    params
-  )
 
-  write([{ name: 'MOVEMENTS TOTAL AMOUNT' }], movementsTotalAmountNameStringifier)
   write(
-    [
-      {
-        depositsTotalAmount,
-        withdrawalsTotalAmount,
-        movementsTotalAmount
-      },
-      {}
-    ],
-    movementsTotalAmountStringifier,
-    formatSettings.movementsTotalAmount,
-    params
+    [{ name: 'FINAL STATE' }],
+    finalStateNameStringifier
   )
-  write([{ name: 'MOVEMENTS DETAIL' }], movementsNameStringifier)
   write(
-    movements,
+    [{ name: 'STARTING PERIOD BALANCES' }],
+    startingPeriodBalancesNameStringifier
+  )
+  write(
+    [startingPeriodBalances, {}],
+    startingPeriodBalancesStringifier
+  )
+  write(
+    [{ name: 'MOVEMENTS DETAIL' }],
+    movementsNameStringifier
+  )
+  write(
+    [...movements, {}],
     movementsStringifier,
     formatSettings.movements,
     params
   )
+  write(
+    [{ movementsTotalAmount }, {}],
+    movementsTotalAmountStringifier
+  )
+  write(
+    [{ name: 'ENDING PERIOD BALANCES' }],
+    endingPeriodBalancesNameStringifier
+  )
+  write(
+    [endingPeriodBalances, {}],
+    endingPeriodBalancesStringifier
+  )
+  write(
+    [{ totalResult }],
+    totalResultStringifier
+  )
 
   queue.emit('progress', 100)
 
-  winLossTotalAmountStringifier.end()
-  startPosNameStringifier.end()
-  startPosStringifier.end()
-  startTickersNameStringifier.end()
-  startTickersStringifier.end()
-  endPosNameStringifier.end()
-  endPosStringifier.end()
-  endTickersNameStringifier.end()
-  endTickersStringifier.end()
-  movementsTotalAmountNameStringifier.end()
-  movementsTotalAmountStringifier.end()
+  startingPositionsSnapshotNameStringifier.end()
+  startingPositionsSnapshotStringifier.end()
+  endingPositionsSnapshotNameStringifier.end()
+  endingPositionsSnapshotStringifier.end()
+  finalStateNameStringifier.end()
+  startingPeriodBalancesNameStringifier.end()
+  startingPeriodBalancesStringifier.end()
   movementsNameStringifier.end()
   movementsStringifier.end()
+  movementsTotalAmountStringifier.end()
+  endingPeriodBalancesNameStringifier.end()
+  endingPeriodBalancesStringifier.end()
+  totalResultStringifier.end()
 }
