@@ -353,7 +353,7 @@ describe('Additional sync mode API with SQLite', () => {
     this.timeout(10000)
 
     const paramsArr = [
-      { end },
+      { end, start },
       { end, start: end - (10 * 60 * 60 * 1000) }
     ]
 
@@ -374,24 +374,24 @@ describe('Additional sync mode API with SQLite', () => {
       assert.propertyVal(res.body, 'id', 5)
       assert.isObject(res.body.result)
 
-      assert.isNumber(res.body.result.winLossTotalAmount)
-      assert.isNumber(res.body.result.movementsTotalAmount)
-      assert.isNumber(res.body.result.depositsTotalAmount)
-      assert.isNumber(res.body.result.withdrawalsTotalAmount)
-      assert.isArray(res.body.result.startPositionsSnapshot)
-      assert.isArray(res.body.result.startTickers)
-      assert.isArray(res.body.result.endPositionsSnapshot)
-      assert.isArray(res.body.result.endTickers)
-      assert.isArray(res.body.result.movements)
+      assert.isArray(res.body.result.startingPositionsSnapshot)
+      assert.isArray(res.body.result.endingPositionsSnapshot)
+      assert.isObject(res.body.result.finalState)
+      assert.isObject(res.body.result.finalState.startingPeriodBalances)
+      assert.isArray(res.body.result.finalState.movements)
+      assert.isNumber(res.body.result.finalState.movementsTotalAmount)
+      assert.isObject(res.body.result.finalState.endingPeriodBalances)
+      assert.isNumber(res.body.result.finalState.totalResult)
 
       const positions = [
-        ...res.body.result.startPositionsSnapshot,
-        ...res.body.result.endPositionsSnapshot
+        ...res.body.result.startingPositionsSnapshot,
+        ...res.body.result.endingPositionsSnapshot
       ]
-      const tickers = [
-        ...res.body.result.startTickers,
-        ...res.body.result.endTickers
+      const periodsBalances = [
+        res.body.result.finalState.startingPeriodBalances,
+        res.body.result.finalState.endingPeriodBalances
       ]
+
       positions.forEach((item) => {
         assert.isObject(item)
         assert.containsAllKeys(item, [
@@ -410,14 +410,18 @@ describe('Additional sync mode API with SQLite', () => {
           'mtsUpdate'
         ])
       })
-      tickers.forEach((item) => {
-        assert.isObject(item)
-        assert.containsAllKeys(item, [
-          'symbol',
-          'amount'
-        ])
+      periodsBalances.forEach((item) => {
+        const {
+          walletsTotalBalanceUsd,
+          positionsTotalPlUsd,
+          totalResult
+        } = item
+
+        assert.isNumber(walletsTotalBalanceUsd)
+        assert.isNumber(positionsTotalPlUsd)
+        assert.isNumber(totalResult)
       })
-      res.body.result.movements.forEach((item) => {
+      res.body.result.finalState.movements.forEach((item) => {
         assert.isObject(item)
         assert.containsAllKeys(item, [
           'id',
