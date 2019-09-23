@@ -11,7 +11,8 @@ const {
   inject
 } = require('inversify')
 const {
-  getLimitNotMoreThan
+  getLimitNotMoreThan,
+  checkFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   AuthError
@@ -37,7 +38,8 @@ const {
   getPlaceholdersQuery,
   serializeVal,
   getGroupQuery,
-  getSubQuery
+  getSubQuery,
+  filterModelNameMap
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -319,7 +321,12 @@ class SqliteDAO extends DAO {
       additionalModel,
       schema = {},
       isExcludePrivate = true
-    } = {}) {
+    } = {}
+  ) {
+    const filterModelName = filterModelNameMap.get(method)
+
+    checkFilterParams(filterModelName, args)
+
     const user = isPublic ? null : await this.checkAuthInDb(args)
     const methodColl = {
       ...this._getMethodCollMap().get(method),

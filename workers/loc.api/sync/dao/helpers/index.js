@@ -17,6 +17,7 @@ const getProjectionQuery = require('./get-projection-query')
 const getPlaceholdersQuery = require('./get-placeholders-query')
 const getGroupQuery = require('./get-group-query')
 const getSubQuery = require('./get-sub-query')
+const filterModelNameMap = require('./filter-model-name-map')
 
 module.exports = {
   mixUserIdToArrData,
@@ -31,5 +32,6 @@ module.exports = {
   getProjectionQuery,
   getPlaceholdersQuery,
   getGroupQuery,
-  getSubQuery
+  getSubQuery,
+  filterModelNameMap
 }
