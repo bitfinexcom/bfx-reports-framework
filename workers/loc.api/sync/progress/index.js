@@ -27,7 +27,10 @@ class Progress extends EventEmitter {
   }
 
   async setProgress (progress) {
-    const isError = progress instanceof Error
+    const isError = (
+      progress instanceof Error ||
+      (typeof progress === 'string' && /error/gi.test(progress))
+    )
     const _progress = isError
       ? progress.toString()
       : progress
