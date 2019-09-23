@@ -83,7 +83,10 @@ const _getIsNullOperator = (
   filter
 ) => {
   if (
-    fieldName !== '$isNull' ||
+    (
+      fieldName !== '$isNull' &&
+      fieldName !== '$isNotNull'
+    ) ||
     (
       Array.isArray(filter[fieldName]) &&
       filter[fieldName].length === 0
@@ -92,9 +95,14 @@ const _getIsNullOperator = (
     return false
   }
 
-  return Array.isArray(filter[fieldName])
-    ? filter[fieldName].map(name => `${name} IS NULL`).join(' AND ')
-    : `${filter[fieldName]} IS NULL`
+  const not = fieldName === '$isNotNull'
+    ? ' NOT'
+    : ''
+  const valueArr = Array.isArray(filter[fieldName])
+    ? filter[fieldName]
+    : [filter[fieldName]]
+
+  return valueArr.map(name => `${name} IS${not} NULL`).join(' AND ')
 }
 
 const _isOrOp = (filter) => (
