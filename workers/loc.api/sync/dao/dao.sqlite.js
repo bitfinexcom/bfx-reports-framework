@@ -141,7 +141,7 @@ class SqliteDAO extends DAO {
   }
 
   async _createIndexisIfNotExists () {
-    for (let currItem of this._getMethodCollMap()) {
+    for (const currItem of this._getMethodCollMap()) {
       const item = currItem[1]
 
       if (item.type === 'insertable:array:objects') {
@@ -533,7 +533,7 @@ class SqliteDAO extends DAO {
     const res = await this.updateCollBy(
       'users',
       pick(data, props),
-      omit(data, [ ...props, '_id' ])
+      omit(data, [...props, '_id'])
     )
 
     if (res && res.changes < 1) {

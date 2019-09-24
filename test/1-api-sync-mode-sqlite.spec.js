@@ -1725,7 +1725,7 @@ describe('Sync mode API with SQLite', () => {
     assert.isArray(res.body.result.res)
     assert.isNumber(res.body.result.nextPage)
 
-    let resItem = res.body.result.res[0]
+    const resItem = res.body.result.res[0]
 
     assert.isObject(resItem)
     assert.containsAllKeys(resItem, [

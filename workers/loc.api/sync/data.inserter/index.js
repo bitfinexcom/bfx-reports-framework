@@ -240,7 +240,7 @@ class DataInserter extends EventEmitter {
   }
 
   async _checkNewDataPublicArrObjType (methodCollMap) {
-    for (let [method, schema] of methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
       if (!this._isInsertableArrObjTypeOfColl(schema, true)) {
         continue
       }
@@ -399,7 +399,7 @@ class DataInserter extends EventEmitter {
   }
 
   async _checkNewDataArrObjType (auth, methodCollMap) {
-    for (let [method, item] of methodCollMap) {
+    for (const [method, item] of methodCollMap) {
       if (!this._isInsertableArrObjTypeOfColl(item)) {
         continue
       }
