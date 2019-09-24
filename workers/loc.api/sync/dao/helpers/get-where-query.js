@@ -121,6 +121,36 @@ const _isCondition = (
   ))
 }
 
+const _getCompareOpAndKey = (
+  compareOperator,
+  key,
+  subValues
+) => {
+  if (
+    compareOperator === '=' &&
+    subValues[key] === null
+  ) {
+    return {
+      compareOperator: 'IS NULL',
+      key: ''
+    }
+  }
+  if (
+    compareOperator === '!=' &&
+    subValues[key] === null
+  ) {
+    return {
+      compareOperator: 'IS NOT NULL',
+      key: ''
+    }
+  }
+
+  return {
+    compareOperator,
+    key: ` ${key}`
+  }
+}
+
 const _getWhereQueryAndValues = (
   op = '',
   origFieldName,
@@ -129,7 +159,7 @@ const _getWhereQueryAndValues = (
   isArr = false,
   condName = ''
 ) => {
-  const compareOperator = _getCompareOperator(
+  const _compareOperator = _getCompareOperator(
     origFieldName,
     isArr
   )
@@ -153,17 +183,25 @@ const _getWhereQueryAndValues = (
     }
     : { ...filter }
   const {
-    key,
+    key: _key,
     subValues
   } = _getKeysAndValuesForWhereQuery(
     _filter,
     _fieldNameWithCondName,
     isArr
   )
+  const {
+    compareOperator,
+    key
+  } = _getCompareOpAndKey(
+    _compareOperator,
+    _key,
+    subValues
+  )
 
   return {
     subValues,
-    subQuery: `${accum}${op}${_fieldName} ${compareOperator} ${key}`
+    subQuery: `${accum}${op}${_fieldName} ${compareOperator}${key}`
   }
 }
 
