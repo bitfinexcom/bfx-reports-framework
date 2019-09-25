@@ -18,6 +18,7 @@ const getPlaceholdersQuery = require('./get-placeholders-query')
 const getGroupQuery = require('./get-group-query')
 const getSubQuery = require('./get-sub-query')
 const filterModelNameMap = require('./filter-model-name-map')
+const SQL_OPERATORS = require('./sql.operators')
 
 module.exports = {
   mixUserIdToArrData,
@@ -33,5 +34,6 @@ module.exports = {
   getPlaceholdersQuery,
   getGroupQuery,
   getSubQuery,
-  filterModelNameMap
+  filterModelNameMap,
+  SQL_OPERATORS
 }
