@@ -1,7 +1,5 @@
 'use strict'
 
-const { orderBy } = require('lodash')
-
 const {
   decorate,
   injectable,
@@ -18,67 +16,12 @@ class FullTaxReport {
     dao,
     syncSchema,
     ALLOWED_COLLS,
-    winLoss,
-    positionsSnapshot
+    fullSnapshotReport
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
-    this.winLoss = winLoss
-    this.positionsSnapshot = positionsSnapshot
-  }
-
-  _getPositionsSnapshotAndTickers (args) {
-    const {
-      auth = {},
-      params = {}
-    } = { ...args }
-    const { mts: end = Date.now() } = { ...params }
-    const _args = {
-      auth,
-      params: { end }
-    }
-
-    return this.positionsSnapshot
-      .getPositionsSnapshotAndTickers(_args)
-  }
-
-  _calcWinLossTotalAmount (winLoss) {
-    if (
-      !Array.isArray(winLoss) ||
-      winLoss.length === 0
-    ) {
-      return null
-    }
-
-    const res = winLoss.reduce((accum, item = {}) => {
-      const itemArr = Object.entries({ ...item })
-      const subRes = itemArr.reduce((subAccum, [symb, amount]) => {
-        const _subAccum = { ...accum, ...subAccum }
-
-        if (
-          !isForexSymb(symb) ||
-          !Number.isFinite(amount)
-        ) {
-          return _subAccum
-        }
-
-        return {
-          ..._subAccum,
-          [symb]: Number.isFinite(_subAccum[symb])
-            ? _subAccum[symb] + amount
-            : amount
-        }
-      }, {})
-
-      return {
-        ...accum,
-        ...subRes
-      }
-    }, {})
-    const { USD } = { ...res }
-
-    return USD
+    this.fullSnapshotReport = fullSnapshotReport
   }
 
   async _getMovements ({
@@ -89,26 +32,10 @@ class FullTaxReport {
     const movementsModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.MOVEMENTS)
 
-    const _withdrawals = await this.dao.getElemsInCollBy(
+    const movements = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.MOVEMENTS,
       {
         filter: {
-          $lt: { amount: 0 },
-          $gte: { mtsStarted: start },
-          $lte: { mtsStarted: end },
-          user_id: user._id
-        },
-        sort: [['mtsStarted', -1]],
-        projection: movementsModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
-    )
-    const _deposits = await this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.MOVEMENTS,
-      {
-        filter: {
-          $gt: { amount: 0 },
           $gte: { mtsUpdated: start },
           $lte: { mtsUpdated: end },
           user_id: user._id
@@ -120,27 +47,9 @@ class FullTaxReport {
       }
     )
 
-    const withdrawals = Array.isArray(_withdrawals)
-      ? _withdrawals
+    return Array.isArray(movements)
+      ? movements
       : []
-    const deposits = Array.isArray(_deposits)
-      ? _deposits
-      : []
-    const _movements = [
-      ..._withdrawals,
-      ..._deposits
-    ]
-    const movements = orderBy(
-      _movements,
-      ['mtsUpdated'],
-      ['desc']
-    )
-
-    return {
-      movements,
-      withdrawals,
-      deposits
-    }
   }
 
   _calcMovementsTotalAmount (movements) {
@@ -181,6 +90,44 @@ class FullTaxReport {
     return USD
   }
 
+  _getPeriodBalances (
+    walletsTotalBalanceUsd,
+    positionsTotalPlUsd
+  ) {
+    const _walletsTotalBalanceUsd = Number.isFinite(walletsTotalBalanceUsd)
+      ? walletsTotalBalanceUsd
+      : 0
+    const _positionsTotalPlUsd = Number.isFinite(positionsTotalPlUsd)
+      ? positionsTotalPlUsd
+      : 0
+
+    const totalResult = _walletsTotalBalanceUsd + _positionsTotalPlUsd
+
+    return {
+      walletsTotalBalanceUsd,
+      positionsTotalPlUsd,
+      totalResult
+    }
+  }
+
+  _calcTotalResult (
+    endingTotalResult,
+    movementsTotalAmount,
+    startingTotalResult
+  ) {
+    const _endingTotalResult = Number.isFinite(endingTotalResult)
+      ? endingTotalResult
+      : 0
+    const _movementsTotalAmount = Number.isFinite(movementsTotalAmount)
+      ? movementsTotalAmount
+      : 0
+    const _startingTotalResult = Number.isFinite(startingTotalResult)
+      ? startingTotalResult
+      : 0
+
+    return _endingTotalResult - _movementsTotalAmount - _startingTotalResult
+  }
+
   async getFullTaxReport ({
     auth = {},
     params: {
@@ -190,38 +137,33 @@ class FullTaxReport {
   } = {}) {
     const user = await this.dao.checkAuthInDb({ auth })
 
-    const args = {
-      auth,
-      params: {
-        timeframe: end,
-        start,
-        end
-      }
-    }
-
-    const winLoss = await this.winLoss.getWinLoss(args)
-    const winLossTotalAmount = this._calcWinLossTotalAmount(winLoss)
-
     const {
-      positionsSnapshot: startPositionsSnapshot,
-      tickers: startTickers
-    } = await this._getPositionsSnapshotAndTickers({
+      positionsSnapshot: startingPositionsSnapshot,
+      walletsTotalBalanceUsd: startingWalletsTotalBalanceUsd,
+      positionsTotalPlUsd: startingPositionsTotalPlUsd
+    } = await this.fullSnapshotReport.getFullSnapshotReport({
       auth,
-      params: { mts: start }
+      params: { end: start }
     })
     const {
-      positionsSnapshot: endPositionsSnapshot,
-      tickers: endTickers
-    } = await this._getPositionsSnapshotAndTickers({
+      positionsSnapshot: endingPositionsSnapshot,
+      walletsTotalBalanceUsd: endingWalletsTotalBalanceUsd,
+      positionsTotalPlUsd: endingPositionsTotalPlUsd
+    } = await this.fullSnapshotReport.getFullSnapshotReport({
       auth,
-      params: { mts: end }
+      params: { end }
     })
 
-    const {
-      movements,
-      withdrawals,
-      deposits
-    } = await this._getMovements({
+    const startingPeriodBalances = this._getPeriodBalances(
+      startingWalletsTotalBalanceUsd,
+      startingPositionsTotalPlUsd
+    )
+    const endingPeriodBalances = this._getPeriodBalances(
+      endingWalletsTotalBalanceUsd,
+      endingPositionsTotalPlUsd
+    )
+
+    const movements = await this._getMovements({
       user,
       start,
       end
@@ -229,23 +171,29 @@ class FullTaxReport {
     const movementsTotalAmount = this._calcMovementsTotalAmount(
       movements
     )
-    const depositsTotalAmount = this._calcMovementsTotalAmount(
-      deposits
-    )
-    const withdrawalsTotalAmount = this._calcMovementsTotalAmount(
-      withdrawals
+
+    const {
+      totalResult: endingTotalResult
+    } = { ...endingPeriodBalances }
+    const {
+      totalResult: startingTotalResult
+    } = { ...startingPeriodBalances }
+    const totalResult = this._calcTotalResult(
+      endingTotalResult,
+      movementsTotalAmount,
+      startingTotalResult
     )
 
     return {
-      winLossTotalAmount,
-      startPositionsSnapshot,
-      startTickers,
-      endPositionsSnapshot,
-      endTickers,
-      movements,
-      movementsTotalAmount,
-      depositsTotalAmount,
-      withdrawalsTotalAmount
+      startingPositionsSnapshot,
+      endingPositionsSnapshot,
+      finalState: {
+        startingPeriodBalances,
+        movements,
+        movementsTotalAmount,
+        endingPeriodBalances,
+        totalResult
+      }
     }
   }
 }
@@ -254,7 +202,6 @@ decorate(injectable(), FullTaxReport)
 decorate(inject(TYPES.DAO), FullTaxReport, 0)
 decorate(inject(TYPES.SyncSchema), FullTaxReport, 1)
 decorate(inject(TYPES.ALLOWED_COLLS), FullTaxReport, 2)
-decorate(inject(TYPES.WinLoss), FullTaxReport, 3)
-decorate(inject(TYPES.PositionsSnapshot), FullTaxReport, 4)
+decorate(inject(TYPES.FullSnapshotReport), FullTaxReport, 3)
 
 module.exports = FullTaxReport

@@ -338,24 +338,6 @@ class CsvJobData extends BaseCsvJobData {
       fileNamesMap: [['getFullTaxReport', 'full-tax-report']],
       args: csvArgs,
       columnsCsv: {
-        winLossTotalAmount: {
-          amount: 'WIN/LOSS TOTAL AMOUNT USD'
-        },
-        movementsTotalAmount: {
-          depositsTotalAmount: 'DEPOSITS TOTAL AMOUNT USD',
-          withdrawalsTotalAmount: 'WITHDRAWALS TOTAL AMOUNT USD',
-          movementsTotalAmount: 'MOVEMENTS TOTAL AMOUNT USD'
-        },
-        movements: {
-          id: '#',
-          mtsUpdated: 'DATE',
-          currency: 'CURRENCY',
-          status: 'STATUS',
-          amount: 'AMOUNT',
-          fees: 'FEES',
-          destinationAddress: 'DESCRIPTION',
-          transactionId: 'TRANSACTION ID'
-        },
         positionsSnapshot: {
           id: '#',
           symbol: 'PAIR',
@@ -371,22 +353,36 @@ class CsvJobData extends BaseCsvJobData {
           mtsUpdate: 'UPDATED',
           mtsCreate: 'CREATED'
         },
-        tickers: {
-          symbol: 'PAIR',
-          amount: 'AMOUNT'
+        movements: {
+          id: '#',
+          mtsUpdated: 'DATE',
+          currency: 'CURRENCY',
+          status: 'STATUS',
+          amount: 'AMOUNT',
+          fees: 'FEES',
+          destinationAddress: 'DESCRIPTION',
+          transactionId: 'TRANSACTION ID'
+        },
+        periodBalances: {
+          walletsTotalBalanceUsd: 'WALLETS TOTAL BALANCE USD',
+          positionsTotalPlUsd: 'POSITIONS TOTAL P/L USD',
+          totalResult: 'TOTAL RESULT USD'
+        },
+        movementsTotalAmount: {
+          movementsTotalAmount: 'MOVEMENTS TOTAL AMOUNT USD'
+        },
+        totalResult: {
+          totalResult: 'TOTAL RESULT USD'
         }
       },
       formatSettings: {
-        movements: {
-          mtsUpdated: 'date'
-        },
         positionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
           symbol: 'symbol'
         },
-        tickers: {
-          symbol: 'symbol'
+        movements: {
+          mtsUpdated: 'date'
         }
       },
       csvCustomWriter: this.fullTaxReportCsvWriter
