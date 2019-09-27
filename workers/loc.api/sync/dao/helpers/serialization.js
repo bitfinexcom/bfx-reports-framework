@@ -8,7 +8,10 @@ const serializeVal = (val) => {
   if (typeof val === 'boolean') {
     return +val
   }
-  if (typeof val === 'object') {
+  if (
+    val &&
+    typeof val === 'object'
+  ) {
     return JSON.stringify(val)
   }
 
@@ -27,12 +30,6 @@ const deserializeVal = (
     '_isMarginFundingPayment'
   ]
 ) => {
-  if (
-    typeof val === 'string' &&
-    /^null$/.test(val)
-  ) {
-    return null
-  }
   if (
     typeof val === 'number' &&
     boolFields.some(item => item === key)

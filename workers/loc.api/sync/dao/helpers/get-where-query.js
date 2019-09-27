@@ -1,36 +1,60 @@
 'use strict'
 
 const { omit } = require('lodash')
+const {
+  FILTER_CONDITIONS
+} = require('bfx-report/workers/loc.api/helpers')
 
 const { serializeVal } = require('./serialization')
+const SQL_OPERATORS = require('./sql.operators')
 
 const _getCompareOperator = (
   origFieldName,
   isArr
 ) => {
   if (origFieldName === 'start') {
-    return '>='
+    return SQL_OPERATORS.GTE
   }
   if (origFieldName === 'end') {
-    return '<='
+    return SQL_OPERATORS.LTE
   }
-  if (origFieldName === '$gt') {
-    return '>'
+  if (origFieldName === FILTER_CONDITIONS.GT) {
+    return SQL_OPERATORS.GT
   }
-  if (origFieldName === '$gte') {
-    return '>='
+  if (origFieldName === FILTER_CONDITIONS.GTE) {
+    return SQL_OPERATORS.GTE
   }
-  if (origFieldName === '$lt') {
-    return '<'
+  if (origFieldName === FILTER_CONDITIONS.LT) {
+    return SQL_OPERATORS.LT
   }
-  if (origFieldName === '$lte') {
-    return '<='
+  if (origFieldName === FILTER_CONDITIONS.LTE) {
+    return SQL_OPERATORS.LTE
+  }
+  if (origFieldName === FILTER_CONDITIONS.LIKE) {
+    return SQL_OPERATORS.LIKE
+  }
+  if (origFieldName === FILTER_CONDITIONS.NE) {
+    return SQL_OPERATORS.NE
+  }
+  if (origFieldName === FILTER_CONDITIONS.EQ) {
+    return SQL_OPERATORS.EQ
   }
   if (isArr) {
-    return origFieldName === '$not' ? 'NOT IN' : 'IN'
+    if (origFieldName === FILTER_CONDITIONS.IN) {
+      return SQL_OPERATORS.IN
+    }
+    if (origFieldName === FILTER_CONDITIONS.NIN) {
+      return SQL_OPERATORS.NIN
+    }
+
+    return origFieldName === FILTER_CONDITIONS.NOT
+      ? SQL_OPERATORS.NIN
+      : SQL_OPERATORS.IN
   }
 
-  return origFieldName === '$not' ? '!=' : '='
+  return origFieldName === FILTER_CONDITIONS.NOT
+    ? SQL_OPERATORS.NE
+    : SQL_OPERATORS.EQ
 }
 
 const _getKeysAndValuesForWhereQuery = (
@@ -63,7 +87,10 @@ const _getIsNullOperator = (
   filter
 ) => {
   if (
-    fieldName !== '$isNull' ||
+    (
+      fieldName !== FILTER_CONDITIONS.IS_NULL &&
+      fieldName !== FILTER_CONDITIONS.IS_NOT_NULL
+    ) ||
     (
       Array.isArray(filter[fieldName]) &&
       filter[fieldName].length === 0
@@ -72,16 +99,23 @@ const _getIsNullOperator = (
     return false
   }
 
-  return Array.isArray(filter[fieldName])
-    ? filter[fieldName].map(name => `${name} IS NULL`).join(' AND ')
-    : `${filter[fieldName]} IS NULL`
+  const operator = fieldName === FILTER_CONDITIONS.IS_NOT_NULL
+    ? SQL_OPERATORS.IS_NOT_NULL
+    : SQL_OPERATORS.IS_NULL
+  const valueArr = Array.isArray(filter[fieldName])
+    ? filter[fieldName]
+    : [filter[fieldName]]
+
+  return valueArr
+    .map(name => `${name} ${operator}`)
+    .join(` ${SQL_OPERATORS.AND} `)
 }
 
 const _isOrOp = (filter) => (
   filter &&
   typeof filter === 'object' &&
-  filter.$or &&
-  typeof filter.$or === 'object'
+  filter[FILTER_CONDITIONS.OR] &&
+  typeof filter[FILTER_CONDITIONS.OR] === 'object'
 )
 
 const _isCondition = (
@@ -93,6 +127,42 @@ const _isCondition = (
   ))
 }
 
+const _getCompareOpAndKey = (
+  compareOperator,
+  key,
+  subValues
+) => {
+  if (
+    compareOperator === SQL_OPERATORS.EQ &&
+    subValues[key] === null
+  ) {
+    return {
+      compareOperator: SQL_OPERATORS.IS_NULL,
+      key: ''
+    }
+  }
+  if (
+    compareOperator === SQL_OPERATORS.NE &&
+    subValues[key] === null
+  ) {
+    return {
+      compareOperator: SQL_OPERATORS.IS_NOT_NULL,
+      key: ''
+    }
+  }
+  if (compareOperator === SQL_OPERATORS.LIKE) {
+    return {
+      compareOperator,
+      key: ` ${key} ${SQL_OPERATORS.ESCAPE} "\\"`
+    }
+  }
+
+  return {
+    compareOperator,
+    key: ` ${key}`
+  }
+}
+
 const _getWhereQueryAndValues = (
   op = '',
   origFieldName,
@@ -101,7 +171,7 @@ const _getWhereQueryAndValues = (
   isArr = false,
   condName = ''
 ) => {
-  const compareOperator = _getCompareOperator(
+  const _compareOperator = _getCompareOperator(
     origFieldName,
     isArr
   )
@@ -125,17 +195,25 @@ const _getWhereQueryAndValues = (
     }
     : { ...filter }
   const {
-    key,
+    key: _key,
     subValues
   } = _getKeysAndValuesForWhereQuery(
     _filter,
     _fieldNameWithCondName,
     isArr
   )
+  const {
+    compareOperator,
+    key
+  } = _getCompareOpAndKey(
+    _compareOperator,
+    _key,
+    subValues
+  )
 
   return {
     subValues,
-    subQuery: `${accum}${op}${_fieldName} ${compareOperator} ${key}`
+    subQuery: `${accum}${op}${_fieldName} ${compareOperator}${key}`
   }
 }
 
@@ -144,12 +222,23 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
 
   const isOrOp = _isOrOp(filter)
   const _filter = isOrOp
-    ? { ...filter.$or }
+    ? { ...filter[FILTER_CONDITIONS.OR] }
     : { ...filter }
   const operator = isOrOp
-    ? 'OR'
-    : 'AND'
-  const conditions = ['$gt', '$gte', '$lt', '$lte', '$not']
+    ? SQL_OPERATORS.OR
+    : SQL_OPERATORS.AND
+  const conditions = [
+    FILTER_CONDITIONS.GT,
+    FILTER_CONDITIONS.GTE,
+    FILTER_CONDITIONS.LT,
+    FILTER_CONDITIONS.LTE,
+    FILTER_CONDITIONS.NOT,
+    FILTER_CONDITIONS.LIKE,
+    FILTER_CONDITIONS.EQ,
+    FILTER_CONDITIONS.NE,
+    FILTER_CONDITIONS.IN,
+    FILTER_CONDITIONS.NIN
+  ]
   const hiddenFields = ['_dateFieldName']
   const keys = Object.keys(omit(_filter, hiddenFields))
   const where = keys.reduce(
@@ -212,7 +301,7 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
       return subQuery
     },
     (isNotSetWhereClause || keys.length === 0)
-      ? '' : 'WHERE '
+      ? '' : `${SQL_OPERATORS.WHERE} `
   )
 
   return { where, values }

@@ -11,7 +11,8 @@ const {
   inject
 } = require('inversify')
 const {
-  getLimitNotMoreThan
+  getLimitNotMoreThan,
+  checkFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   AuthError
@@ -37,7 +38,8 @@ const {
   getPlaceholdersQuery,
   serializeVal,
   getGroupQuery,
-  getSubQuery
+  getSubQuery,
+  filterModelNameMap
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -139,7 +141,7 @@ class SqliteDAO extends DAO {
   }
 
   async _createIndexisIfNotExists () {
-    for (let currItem of this._getMethodCollMap()) {
+    for (const currItem of this._getMethodCollMap()) {
       const item = currItem[1]
 
       if (item.type === 'insertable:array:objects') {
@@ -319,7 +321,12 @@ class SqliteDAO extends DAO {
       additionalModel,
       schema = {},
       isExcludePrivate = true
-    } = {}) {
+    } = {}
+  ) {
+    const filterModelName = filterModelNameMap.get(method)
+
+    checkFilterParams(filterModelName, args)
+
     const user = isPublic ? null : await this.checkAuthInDb(args)
     const methodColl = {
       ...this._getMethodCollMap().get(method),
@@ -526,7 +533,7 @@ class SqliteDAO extends DAO {
     const res = await this.updateCollBy(
       'users',
       pick(data, props),
-      omit(data, [ ...props, '_id' ])
+      omit(data, [...props, '_id'])
     )
 
     if (res && res.changes < 1) {
