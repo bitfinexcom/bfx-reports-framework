@@ -38,6 +38,10 @@ class ReportService extends BaseReportService {
     return super.getPublicTrades(null, args)
   }
 
+  _getStatusMessages (args) {
+    return super.getStatusMessages(null, args)
+  }
+
   _getOrders (args) {
     return super.getOrders(null, args)
   }

@@ -604,6 +604,42 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
+   * @override
+   */
+  getStatusMessages (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getStatusMessages(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForStatusMessagesApi')
+
+      const confs = await this._publicСollsСonfAccessors
+        .getPublicСollsСonf(
+          'statusMessagesConf',
+          args
+        )
+
+      if (isEmpty(confs)) {
+        return emptyRes()
+      }
+
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
+
+      return this._dao.findInCollBy(
+        '_getStatusMessages',
+        _args,
+        {
+          isPrepareResponse: true,
+          isPublic: true
+        }
+      )
+    }, 'getStatusMessages', cb)
+  }
+
+  /**
    * @override
    */
   getOrderTrades (space, args, cb) {
