@@ -1,6 +1,6 @@
 'use strict'
 
-const { pick } = require('lodash')
+const { pick, isEmpty } = require('lodash')
 const {
   decorate,
   injectable,
@@ -103,13 +103,20 @@ class PublicСollsСonfAccessors {
 
   async getPublicСollsСonf (confName, args) {
     const { _id } = await this.dao.checkAuthInDb(args)
+    const { params } = { ...args }
+    const { symbol } = { ...params }
+    const baseFilter = {
+      confName,
+      user_id: _id
+    }
+    const filter = isEmpty(symbol)
+      ? baseFilter
+      : { ...baseFilter, symbol }
+
     const conf = await this.dao.getElemsInCollBy(
       'publicСollsСonf',
       {
-        filter: {
-          confName,
-          user_id: _id
-        },
+        filter,
         sort: [['symbol', 1]]
       }
     )
