@@ -18,5 +18,6 @@ module.exports = {
   SYMBOLS: 'symbols',
   FUTURES: 'futures',
   CURRENCIES: 'currencies',
-  CANDLES: 'candles'
+  CANDLES: 'candles',
+  STATUS_MESSAGES: 'statusMessages'
 }

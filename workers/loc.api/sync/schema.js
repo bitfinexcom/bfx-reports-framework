@@ -278,6 +278,19 @@ const _models = new Map([
     }
   ],
   [
+    ALLOWED_COLLS.STATUS_MESSAGES,
+    {
+      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      key: 'VARCHAR(255)',
+      timestamp: 'BIGINT',
+      price: 'DECIMAL(22,12)',
+      priceSpot: 'DECIMAL(22,12)',
+      fundBal: 'DECIMAL(22,12)',
+      fundingAccrued: 'DECIMAL(22,12)',
+      fundingStep: 'DECIMAL(22,12)'
+    }
+  ],
+  [
     'publicСollsСonf',
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
