@@ -423,6 +423,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getTickersHistory (space, args, cb) {
@@ -443,44 +444,12 @@ class FrameworkReportService extends ReportService {
         return emptyRes()
       }
 
-      const _symb = args.params.symbol
-        ? [args.params.symbol]
-        : []
-      const symbols = Array.isArray(args.params.symbol)
-        ? args.params.symbol
-        : _symb
-      const filteredSymbols = symbols.filter(symb => {
-        return confs.some(conf => symb === conf.symbol)
-      })
-
-      if (
-        !isEmpty(symbols) &&
-        isEmpty(filteredSymbols)
-      ) {
-        return emptyRes()
-      }
-
-      args.params.symbol = filteredSymbols
-
-      const minConfStart = confs.reduce(
-        (accum, conf) => {
-          return (accum === null || conf.start < accum)
-            ? conf.start
-            : accum
-        },
-        null
-      )
-
-      if (
-        Number.isFinite(args.params.start) &&
-        args.params.start < minConfStart
-      ) {
-        args.params.start = minConfStart
-      }
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
 
       return this._dao.findInCollBy(
         '_getTickersHistory',
-        args,
+        _args,
         {
           isPrepareResponse: true,
           isPublic: true
@@ -580,6 +549,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getPublicTrades (space, args, cb) {
@@ -590,34 +560,22 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
 
-      const symbol = Array.isArray(args.params.symbol)
-        ? args.params.symbol[0]
-        : args.params.symbol
-      const { _id } = await this._dao.checkAuthInDb(args)
-      const conf = await this._dao.getElemInCollBy(
-        'publicСollsСonf',
-        {
-          confName: 'publicTradesConf',
-          user_id: _id,
-          symbol
-        },
-        [['symbol', 1]]
-      )
+      const confs = await this._publicСollsСonfAccessors
+        .getPublicСollsСonf(
+          'tickersHistoryConf',
+          args
+        )
 
-      if (isEmpty(conf)) {
+      if (isEmpty(confs)) {
         return emptyRes()
       }
 
-      if (
-        Number.isFinite(args.params.start) &&
-        args.params.start < conf.start
-      ) {
-        args.params.start = conf.start
-      }
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
 
       return this._dao.findInCollBy(
         '_getPublicTrades',
-        args,
+        _args,
         {
           isPrepareResponse: true,
           isPublic: true
