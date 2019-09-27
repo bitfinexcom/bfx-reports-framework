@@ -124,6 +124,61 @@ class PublicСollsСonfAccessors {
 
     return res
   }
+
+  getStart (confs, start = 0) {
+    const _confs = Array.isArray(confs)
+      ? confs
+      : [confs]
+    const minConfStart = _confs.reduce(
+      (accum, conf) => {
+        return (accum === null || conf.start < accum)
+          ? conf.start
+          : accum
+      },
+      null
+    )
+
+    return (
+      Number.isFinite(start) &&
+      start < minConfStart
+    )
+      ? minConfStart
+      : start
+  }
+
+  getSymbol (confs, symbol) {
+    const isSymbolArr = Array.isArray(symbol)
+    const _confs = Array.isArray(confs)
+      ? confs
+      : [confs]
+    const confsSymbols = _confs.map(({ symbol }) => symbol)
+
+    return isSymbolArr
+      ? confsSymbols
+      : confsSymbols[0]
+  }
+
+  getArgs (confs, args) {
+    const { params } = { ...args }
+
+    const symbol = this.getSymbol(
+      confs,
+      params.symbol
+    )
+    const start = this.getStart(
+      confs,
+      params.start
+    )
+
+    return {
+      ...args,
+      params: {
+        ...params,
+        symbol,
+        start
+      }
+    }
+  }
 }
 
 decorate(injectable(), PublicСollsСonfAccessors)
