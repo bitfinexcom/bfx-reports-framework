@@ -436,6 +436,22 @@ const _methodCollMap = new Map([
     }
   ],
   [
+    '_getStatusMessages',
+    {
+      name: ALLOWED_COLLS.STATUS_MESSAGES,
+      maxLimit: 5000,
+      dateFieldName: 'timestamp',
+      symbolFieldName: 'key',
+      sort: [['timestamp', -1]],
+      hasNewData: false,
+      start: [],
+      confName: 'statusMessagesConf',
+      type: 'public:updatable:array:objects', // TODO:
+      fieldsOfUniqueIndex: ['timestamp', 'key'],
+      model: { ..._models.get(ALLOWED_COLLS.PUBLIC_TRADES) }
+    }
+  ],
+  [
     '_getOrders',
     {
       name: ALLOWED_COLLS.ORDERS,
