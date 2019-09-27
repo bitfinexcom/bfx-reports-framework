@@ -316,6 +316,13 @@ class FrameworkReportService extends ReportService {
     }, 'getTickersHistoryConf', cb)
   }
 
+  getStatusMessagesConf (space, args = {}, cb) {
+    return this._responder(() => {
+      return this._publicСollsСonfAccessors
+        .getPublicСollsСonf('statusMessagesConf', args)
+    }, 'getStatusMessagesConf', cb)
+  }
+
   editPublicTradesConf (space, args = {}, cb) {
     return this._responder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
@@ -338,6 +345,18 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'editTickersHistoryConf', cb)
+  }
+
+  editStatusMessagesConf (space, args = {}, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+
+      await this._publicСollsСonfAccessors
+        .editPublicСollsСonf('statusMessagesConf', args)
+      await this._sync.start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
+
+      return true
+    }, 'editStatusMessagesConf', cb)
   }
 
   /**
