@@ -544,6 +544,85 @@ describe('Sync mode API with SQLite', () => {
     assert.propertyVal(res.body.result[1], 'start', start)
   })
 
+  it('it should be successfully performed by the editStatusMessagesConf method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'editStatusMessagesConf',
+        params: [
+          {
+            start,
+            symbol: 'tBTCF0:USTF0'
+          }
+        ],
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isOk(res.body.result)
+  })
+
+  it('it should be successfully performed by the getSyncProgress method', async function () {
+    this.timeout(60000)
+
+    while (true) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getSyncProgress',
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isNumber(res.body.result)
+
+      if (
+        typeof res.body.result !== 'number' ||
+        res.body.result === 100
+      ) {
+        break
+      }
+
+      await delay()
+    }
+  })
+
+  it('it should be successfully performed by the getStatusMessagesConf method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getStatusMessagesConf',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.equal(res.body.result.length, 1)
+
+    assert.isObject(res.body.result[0])
+    assert.propertyVal(res.body.result[0], 'symbol', 'tBTCF0:USTF0')
+    assert.propertyVal(res.body.result[0], 'start', start)
+  })
+
   it('it should be successfully performed by the syncNow method', async function () {
     this.timeout(60000)
 
@@ -1475,6 +1554,43 @@ describe('Sync mode API with SQLite', () => {
     assert.propertyVal(res.body, 'id', 5)
   })
 
+  it('it should be successfully performed by the getStatusMessages method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getStatusMessages',
+        params: {
+          symbol: 'tBTCF0:USTF0'
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isBoolean(res.body.result.nextPage)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'key',
+      'timestamp',
+      'price',
+      'priceSpot',
+      'fundBal',
+      'fundingAccrued',
+      'fundingStep'
+    ])
+  })
+
   it('it should be successfully performed by the getOrderTrades method', async function () {
     this.timeout(5000)
 
@@ -2318,6 +2434,31 @@ describe('Sync mode API with SQLite', () => {
     assert.propertyVal(res.body.error, 'code', 500)
     assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
     assert.propertyVal(res.body, 'id', 5)
+  })
+
+  it('it should be successfully performed by the getStatusMessagesCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getStatusMessagesCsv',
+        params: {
+          symbol: ['tBTCF0:USTF0'],
+          timezone: 'America/Los_Angeles',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getOrderTradesCsv method', async function () {
