@@ -440,15 +440,23 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.STATUS_MESSAGES,
       maxLimit: 5000,
+      fields: [
+        'key',
+        'timestamp',
+        'price',
+        'priceSpot',
+        'fundBal',
+        'fundingAccrued',
+        'fundingStep'
+      ],
       dateFieldName: 'timestamp',
       symbolFieldName: 'key',
       sort: [['timestamp', -1]],
-      hasNewData: false,
-      start: [],
+      hasNewData: true,
       confName: 'statusMessagesConf',
-      type: 'public:updatable:array:objects', // TODO:
+      type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['timestamp', 'key'],
-      model: { ..._models.get(ALLOWED_COLLS.PUBLIC_TRADES) }
+      model: { ..._models.get(ALLOWED_COLLS.STATUS_MESSAGES) }
     }
   ],
   [
