@@ -442,7 +442,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getTickersHistory (space, args, cb) {
@@ -568,7 +567,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getPublicTrades (space, args, cb) {
@@ -581,7 +579,7 @@ class FrameworkReportService extends ReportService {
 
       const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
-          'tickersHistoryConf',
+          'publicTradesConf',
           args
         )
 
@@ -604,7 +602,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getStatusMessages (space, args, cb) {
