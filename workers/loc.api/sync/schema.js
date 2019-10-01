@@ -287,7 +287,8 @@ const _models = new Map([
       priceSpot: 'DECIMAL(22,12)',
       fundBal: 'DECIMAL(22,12)',
       fundingAccrued: 'DECIMAL(22,12)',
-      fundingStep: 'DECIMAL(22,12)'
+      fundingStep: 'DECIMAL(22,12)',
+      _type: 'VARCHAR(255)'
     }
   ],
   [

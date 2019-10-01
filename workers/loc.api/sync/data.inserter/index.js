@@ -731,7 +731,8 @@ class DataInserter extends EventEmitter {
           symbol,
           filter: {
             $gte: { [dateFieldName]: start }
-          }
+          },
+          type: 'deriv' // TODO:
         }
       )
       const apiRes = await this._getDataFromApi(methodApi, args)

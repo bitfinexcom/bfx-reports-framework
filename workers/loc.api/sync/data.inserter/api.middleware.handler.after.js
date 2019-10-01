@@ -7,6 +7,7 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
+const { addPropsToResIfExist } = require('./helpers')
 
 class ApiMiddlewareHandlerAfter {
   constructor (
@@ -88,19 +89,11 @@ class ApiMiddlewareHandlerAfter {
   }
 
   _getPublicTrades (args, apiRes) {
-    if (args.params.symbol) {
-      const res = apiRes.res.map(item => ({
-        ...item,
-        _symbol: args.params.symbol
-      }))
-
-      return {
-        ...apiRes,
-        res
-      }
-    }
-
-    return apiRes
+    return addPropsToResIfExist(
+      args,
+      apiRes,
+      [{ from: 'symbol', to: '_symbol' }]
+    )
   }
 
   _getLedgers (args, apiRes) {
@@ -118,19 +111,20 @@ class ApiMiddlewareHandlerAfter {
   }
 
   _getCandles (args, apiRes) {
-    if (args.params.symbol) {
-      const res = apiRes.res.map(item => ({
-        ...item,
-        _symbol: args.params.symbol
-      }))
+    return addPropsToResIfExist(
+      args,
+      apiRes,
+      [{ from: 'symbol', to: '_symbol' }]
+    )
+  }
 
-      return {
-        ...apiRes,
-        res
-      }
-    }
-
-    return apiRes
+  _getStatusMessages (args, apiRes) {
+    console.log('[status-mess-args]:'.bgBlue, args)
+    return addPropsToResIfExist(
+      args,
+      apiRes,
+      [{ from: 'type', to: '_type' }]
+    )
   }
 }
 
