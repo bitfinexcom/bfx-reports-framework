@@ -612,10 +612,33 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForStatusMessagesApi')
 
+      const { params } = { ...args }
+      const {
+        type = 'deriv',
+        symbol = ['ALL']
+      } = { ...params }
+      const preparedArgs = {
+        ...args,
+        params: {
+          ...params,
+          type,
+          symbol: (
+            symbol === 'ALL' ||
+            (
+              Array.isArray(symbol) &&
+              symbol[0] === 'ALL'
+            )
+          )
+            ? null
+            : symbol
+        }
+      }
+      console.log('[preparedArgs]:'.bgGreen, preparedArgs)
+
       const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
           'statusMessagesConf',
-          args
+          preparedArgs
         )
 
       if (isEmpty(confs)) {
@@ -623,7 +646,8 @@ class FrameworkReportService extends ReportService {
       }
 
       const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
+        .getArgs(confs, preparedArgs)
+      console.log('[_args]:'.bgBlue, _args)
 
       return this._dao.findInCollBy(
         '_getStatusMessages',

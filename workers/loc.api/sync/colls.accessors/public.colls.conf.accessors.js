@@ -146,24 +146,20 @@ class PublicСollsСonfAccessors {
       : start
   }
 
-  getSymbol (confs, symbol) {
-    const isSymbolArr = Array.isArray(symbol)
+  getSymbol (confs) {
     const _confs = Array.isArray(confs)
       ? confs
       : [confs]
     const confsSymbols = _confs.map(({ symbol }) => symbol)
 
-    return isSymbolArr
-      ? confsSymbols
-      : confsSymbols[0]
+    return confsSymbols
   }
 
   getArgs (confs, args) {
     const { params } = { ...args }
 
     const symbol = this.getSymbol(
-      confs,
-      params.symbol
+      confs
     )
     const start = this.getStart(
       confs,

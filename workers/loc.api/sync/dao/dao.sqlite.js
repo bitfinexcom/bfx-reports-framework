@@ -34,6 +34,7 @@ const {
   getOrderQuery,
   getUniqueIndexQuery,
   getInsertableArrayObjectsFilter,
+  getStatusMessagesFilter,
   getProjectionQuery,
   getPlaceholdersQuery,
   serializeVal,
@@ -348,10 +349,18 @@ class SqliteDAO extends DAO {
     const _model = { ...model, ...additionalModel }
 
     const exclude = ['_id']
-    const filter = getInsertableArrayObjectsFilter(
+    const statusMessagesfilter = getStatusMessagesFilter(
       methodColl,
       params
     )
+    const insertableArrayObjectsFilter = getInsertableArrayObjectsFilter(
+      methodColl,
+      params
+    )
+    const filter = {
+      ...insertableArrayObjectsFilter,
+      ...statusMessagesfilter
+    }
 
     if (!isPublic) {
       exclude.push('user_id')
