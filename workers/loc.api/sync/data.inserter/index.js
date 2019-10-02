@@ -718,38 +718,41 @@ class DataInserter extends EventEmitter {
       return
     }
 
+    const syncingTypes = ['deriv']
     const elemsFromApi = []
 
     for (const { symbol, start } of publicСollsСonf) {
-      const args = this._getMethodArgMap(
-        methodApi,
-        {},
-        null,
-        null,
-        null,
-        {
-          symbol,
-          filter: {
-            $gte: { [dateFieldName]: start }
-          },
-          type: 'deriv' // TODO:
+      for (const type of syncingTypes) {
+        const args = this._getMethodArgMap(
+          methodApi,
+          {},
+          null,
+          null,
+          null,
+          {
+            symbol,
+            filter: {
+              $gte: { [dateFieldName]: start }
+            },
+            type
+          }
+        )
+        const apiRes = await this._getDataFromApi(methodApi, args)
+        const oneSymbElemsFromApi = (
+          apiRes &&
+          typeof apiRes === 'object' &&
+          !Array.isArray(apiRes) &&
+          Array.isArray(apiRes.res)
+        )
+          ? apiRes.res
+          : apiRes
+
+        if (!Array.isArray(oneSymbElemsFromApi)) {
+          continue
         }
-      )
-      const apiRes = await this._getDataFromApi(methodApi, args)
-      const oneSymbElemsFromApi = (
-        apiRes &&
-        typeof apiRes === 'object' &&
-        !Array.isArray(apiRes) &&
-        Array.isArray(apiRes.res)
-      )
-        ? apiRes.res
-        : apiRes
 
-      if (!Array.isArray(oneSymbElemsFromApi)) {
-        continue
+        elemsFromApi.push(...oneSymbElemsFromApi)
       }
-
-      elemsFromApi.push(...oneSymbElemsFromApi)
     }
 
     if (elemsFromApi.length > 0) {

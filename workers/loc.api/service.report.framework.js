@@ -633,7 +633,6 @@ class FrameworkReportService extends ReportService {
             : symbol
         }
       }
-      console.log('[preparedArgs]:'.bgGreen, preparedArgs)
 
       const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
@@ -647,7 +646,6 @@ class FrameworkReportService extends ReportService {
 
       const _args = this._publicСollsСonfAccessors
         .getArgs(confs, preparedArgs)
-      console.log('[_args]:'.bgBlue, _args)
 
       return this._dao.findInCollBy(
         '_getStatusMessages',

@@ -119,7 +119,6 @@ class ApiMiddlewareHandlerAfter {
   }
 
   _getStatusMessages (args, apiRes) {
-    console.log('[status-mess-args]:'.bgBlue, args)
     return addPropsToResIfExist(
       args,
       apiRes,
