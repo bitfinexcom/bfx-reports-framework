@@ -316,6 +316,13 @@ class FrameworkReportService extends ReportService {
     }, 'getTickersHistoryConf', cb)
   }
 
+  getStatusMessagesConf (space, args = {}, cb) {
+    return this._responder(() => {
+      return this._publicСollsСonfAccessors
+        .getPublicСollsСonf('statusMessagesConf', args)
+    }, 'getStatusMessagesConf', cb)
+  }
+
   editPublicTradesConf (space, args = {}, cb) {
     return this._responder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
@@ -338,6 +345,18 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'editTickersHistoryConf', cb)
+  }
+
+  editStatusMessagesConf (space, args = {}, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+
+      await this._publicСollsСonfAccessors
+        .editPublicСollsСonf('statusMessagesConf', args)
+      await this._sync.start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
+
+      return true
+    }, 'editStatusMessagesConf', cb)
   }
 
   /**
@@ -443,44 +462,12 @@ class FrameworkReportService extends ReportService {
         return emptyRes()
       }
 
-      const _symb = args.params.symbol
-        ? [args.params.symbol]
-        : []
-      const symbols = Array.isArray(args.params.symbol)
-        ? args.params.symbol
-        : _symb
-      const filteredSymbols = symbols.filter(symb => {
-        return confs.some(conf => symb === conf.symbol)
-      })
-
-      if (
-        !isEmpty(symbols) &&
-        isEmpty(filteredSymbols)
-      ) {
-        return emptyRes()
-      }
-
-      args.params.symbol = filteredSymbols
-
-      const minConfStart = confs.reduce(
-        (accum, conf) => {
-          return (accum === null || conf.start < accum)
-            ? conf.start
-            : accum
-        },
-        null
-      )
-
-      if (
-        Number.isFinite(args.params.start) &&
-        args.params.start < minConfStart
-      ) {
-        args.params.start = minConfStart
-      }
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
 
       return this._dao.findInCollBy(
         '_getTickersHistory',
-        args,
+        _args,
         {
           isPrepareResponse: true,
           isPublic: true
@@ -590,40 +577,85 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
 
-      const symbol = Array.isArray(args.params.symbol)
-        ? args.params.symbol[0]
-        : args.params.symbol
-      const { _id } = await this._dao.checkAuthInDb(args)
-      const conf = await this._dao.getElemInCollBy(
-        'publicСollsСonf',
-        {
-          confName: 'publicTradesConf',
-          user_id: _id,
-          symbol
-        },
-        [['symbol', 1]]
-      )
+      const confs = await this._publicСollsСonfAccessors
+        .getPublicСollsСonf(
+          'publicTradesConf',
+          args
+        )
 
-      if (isEmpty(conf)) {
+      if (isEmpty(confs)) {
         return emptyRes()
       }
 
-      if (
-        Number.isFinite(args.params.start) &&
-        args.params.start < conf.start
-      ) {
-        args.params.start = conf.start
-      }
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
 
       return this._dao.findInCollBy(
         '_getPublicTrades',
-        args,
+        _args,
         {
           isPrepareResponse: true,
           isPublic: true
         }
       )
     }, 'getPublicTrades', cb)
+  }
+
+  /**
+   * @override
+   */
+  getStatusMessages (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getStatusMessages(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForStatusMessagesApi')
+
+      const { params } = { ...args }
+      const {
+        type = 'deriv',
+        symbol = ['ALL']
+      } = { ...params }
+      const preparedArgs = {
+        ...args,
+        params: {
+          ...params,
+          type,
+          symbol: (
+            symbol === 'ALL' ||
+            (
+              Array.isArray(symbol) &&
+              symbol[0] === 'ALL'
+            )
+          )
+            ? null
+            : symbol
+        }
+      }
+
+      const confs = await this._publicСollsСonfAccessors
+        .getPublicСollsСonf(
+          'statusMessagesConf',
+          preparedArgs
+        )
+
+      if (isEmpty(confs)) {
+        return emptyRes()
+      }
+
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, preparedArgs)
+
+      return this._dao.findInCollBy(
+        '_getStatusMessages',
+        _args,
+        {
+          isPrepareResponse: true,
+          isPublic: true
+        }
+      )
+    }, 'getStatusMessages', cb)
   }
 
   /**

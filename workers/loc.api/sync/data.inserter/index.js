@@ -694,6 +694,86 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  async _updateConfigurableApiDataArrObjTypeToDb (
+    methodApi,
+    schema
+  ) {
+    const {
+      dateFieldName,
+      name: collName,
+      fields,
+      model
+    } = { ...schema }
+
+    const publicСollsСonf = await this.dao.getElemsInCollBy(
+      'publicСollsСonf',
+      {
+        filter: { confName: schema.confName },
+        minPropName: 'start',
+        groupPropName: 'symbol'
+      }
+    )
+
+    if (isEmpty(publicСollsСonf)) {
+      return
+    }
+
+    const syncingTypes = ['deriv']
+    const elemsFromApi = []
+
+    for (const { symbol, start } of publicСollsСonf) {
+      for (const type of syncingTypes) {
+        const args = this._getMethodArgMap(
+          methodApi,
+          {},
+          null,
+          null,
+          null,
+          {
+            symbol,
+            filter: {
+              $gte: { [dateFieldName]: start }
+            },
+            type
+          }
+        )
+        const apiRes = await this._getDataFromApi(methodApi, args)
+        const oneSymbElemsFromApi = (
+          apiRes &&
+          typeof apiRes === 'object' &&
+          !Array.isArray(apiRes) &&
+          Array.isArray(apiRes.res)
+        )
+          ? apiRes.res
+          : apiRes
+
+        if (!Array.isArray(oneSymbElemsFromApi)) {
+          continue
+        }
+
+        elemsFromApi.push(...oneSymbElemsFromApi)
+      }
+    }
+
+    if (elemsFromApi.length > 0) {
+      const lists = fields.reduce((obj, curr) => {
+        obj[curr] = elemsFromApi.map(item => item[curr])
+
+        return obj
+      }, {})
+
+      await this.dao.removeElemsFromDbIfNotInLists(
+        collName,
+        lists
+      )
+      await this.dao.insertElemsToDbIfNotExists(
+        collName,
+        null,
+        normalizeApiData(elemsFromApi, model)
+      )
+    }
+  }
+
   async _updateApiDataArrObjTypeToDb (
     methodApi,
     schema
@@ -706,10 +786,33 @@ class DataInserter extends EventEmitter {
       name: collName,
       fields,
       model
-    } = schema
+    } = { ...schema }
 
-    const args = this._getMethodArgMap(methodApi, {}, null, null, null)
-    const elemsFromApi = await this._getDataFromApi(methodApi, args)
+    if (collName === this.ALLOWED_COLLS.STATUS_MESSAGES) {
+      await this._updateConfigurableApiDataArrObjTypeToDb(
+        methodApi,
+        schema
+      )
+
+      return
+    }
+
+    const args = this._getMethodArgMap(
+      methodApi,
+      {},
+      null,
+      null,
+      null
+    )
+    const apiRes = await this._getDataFromApi(methodApi, args)
+    const elemsFromApi = (
+      apiRes &&
+      typeof apiRes === 'object' &&
+      !Array.isArray(apiRes) &&
+      Array.isArray(apiRes.res)
+    )
+      ? apiRes.res
+      : apiRes
 
     if (
       Array.isArray(elemsFromApi) &&
@@ -738,8 +841,13 @@ class DataInserter extends EventEmitter {
     auth,
     limit,
     start = 0,
-    end = Date.now()
+    end = Date.now(),
+    params
   ) {
+    const _limit = limit !== null
+      ? limit
+      : this._methodCollMap.get(method).maxLimit
+
     return {
       auth: {
         ...(auth && typeof auth === 'object'
@@ -750,9 +858,8 @@ class DataInserter extends EventEmitter {
           })
       },
       params: {
-        limit: limit !== null
-          ? limit
-          : this._methodCollMap.get(method).maxLimit,
+        ...params,
+        limit: _limit,
         end,
         start
       }

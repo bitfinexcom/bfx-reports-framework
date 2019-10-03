@@ -19,6 +19,8 @@ const getGroupQuery = require('./get-group-query')
 const getSubQuery = require('./get-sub-query')
 const filterModelNameMap = require('./filter-model-name-map')
 const SQL_OPERATORS = require('./sql.operators')
+const getSymbolFilter = require('./get-symbol-filter')
+const getStatusMessagesFilter = require('./get-status-messages-filter')
 
 module.exports = {
   mixUserIdToArrData,
@@ -35,5 +37,7 @@ module.exports = {
   getGroupQuery,
   getSubQuery,
   filterModelNameMap,
-  SQL_OPERATORS
+  SQL_OPERATORS,
+  getSymbolFilter,
+  getStatusMessagesFilter
 }

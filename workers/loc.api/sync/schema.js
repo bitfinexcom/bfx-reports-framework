@@ -278,6 +278,20 @@ const _models = new Map([
     }
   ],
   [
+    ALLOWED_COLLS.STATUS_MESSAGES,
+    {
+      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      key: 'VARCHAR(255)',
+      timestamp: 'BIGINT',
+      price: 'DECIMAL(22,12)',
+      priceSpot: 'DECIMAL(22,12)',
+      fundBal: 'DECIMAL(22,12)',
+      fundingAccrued: 'DECIMAL(22,12)',
+      fundingStep: 'DECIMAL(22,12)',
+      _type: 'VARCHAR(255)'
+    }
+  ],
+  [
     'publicСollsСonf',
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
@@ -420,6 +434,30 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
       model: { ..._models.get(ALLOWED_COLLS.PUBLIC_TRADES) }
+    }
+  ],
+  [
+    '_getStatusMessages',
+    {
+      name: ALLOWED_COLLS.STATUS_MESSAGES,
+      maxLimit: 5000,
+      fields: [
+        'key',
+        'timestamp',
+        'price',
+        'priceSpot',
+        'fundBal',
+        'fundingAccrued',
+        'fundingStep'
+      ],
+      dateFieldName: 'timestamp',
+      symbolFieldName: 'key',
+      sort: [['timestamp', -1]],
+      hasNewData: true,
+      confName: 'statusMessagesConf',
+      type: 'public:updatable:array:objects',
+      fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
+      model: { ..._models.get(ALLOWED_COLLS.STATUS_MESSAGES) }
     }
   ],
   [

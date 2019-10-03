@@ -13,7 +13,8 @@ const {
   compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
-  getAllowedCollsNames
+  getAllowedCollsNames,
+  addPropsToResIfExist
 } = require('./utils')
 const convertCurrency = require('./convert-currency')
 
@@ -27,5 +28,6 @@ module.exports = {
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  convertCurrency
+  convertCurrency,
+  addPropsToResIfExist
 }

@@ -1,20 +1,10 @@
 'use strict'
 
+const getSymbolFilter = require('./get-symbol-filter')
+
 const _isInsertableArrayObjects = (type = '') => {
   return /^((hidden:)|(public:)|())insertable:array:objects$/i
     .test(type)
-}
-
-const _getSymbFilter = ({ symbol } = {}) => {
-  if (typeof symbol === 'string') {
-    return symbol
-  }
-  if (
-    Array.isArray(symbol) &&
-    symbol.length === 1
-  ) {
-    return symbol[0]
-  }
 }
 
 module.exports = (
@@ -34,15 +24,18 @@ module.exports = (
   const {
     start = 0,
     end = Date.now(),
+    symbol,
     isMarginFundingPayment,
     filter: reqFilter = {}
   } = { ...params }
+  const symbFilter = getSymbolFilter(symbol, symbolFieldName)
   const filter = {
     ...reqFilter,
     _dateFieldName: dateFieldName,
     start,
     end,
-    ...additionalFilteringProps
+    ...additionalFilteringProps,
+    ...symbFilter
   }
 
   if (
@@ -51,12 +44,6 @@ module.exports = (
       .some(key => key === '_isMarginFundingPayment')
   ) {
     filter._isMarginFundingPayment = Number(isMarginFundingPayment)
-  }
-
-  const symbFilter = _getSymbFilter(params)
-
-  if (symbFilter) {
-    filter[symbolFieldName] = symbFilter
   }
 
   return filter

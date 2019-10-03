@@ -1,6 +1,6 @@
 'use strict'
 
-const { pick } = require('lodash')
+const { pick, isEmpty } = require('lodash')
 const {
   decorate,
   injectable,
@@ -103,19 +103,77 @@ class PublicСollsСonfAccessors {
 
   async getPublicСollsСonf (confName, args) {
     const { _id } = await this.dao.checkAuthInDb(args)
+    const { params } = { ...args }
+    const { symbol } = { ...params }
+    const baseFilter = {
+      confName,
+      user_id: _id
+    }
+    const filter = isEmpty(symbol)
+      ? baseFilter
+      : { ...baseFilter, symbol }
+
     const conf = await this.dao.getElemsInCollBy(
       'publicСollsСonf',
       {
-        filter: {
-          confName,
-          user_id: _id
-        },
+        filter,
         sort: [['symbol', 1]]
       }
     )
     const res = conf.map(item => pick(item, ['symbol', 'start']))
 
     return res
+  }
+
+  getStart (confs, start = 0) {
+    const _confs = Array.isArray(confs)
+      ? confs
+      : [confs]
+    const minConfStart = _confs.reduce(
+      (accum, conf) => {
+        return (accum === null || conf.start < accum)
+          ? conf.start
+          : accum
+      },
+      null
+    )
+
+    return (
+      Number.isFinite(start) &&
+      start < minConfStart
+    )
+      ? minConfStart
+      : start
+  }
+
+  getSymbol (confs) {
+    const _confs = Array.isArray(confs)
+      ? confs
+      : [confs]
+    const confsSymbols = _confs.map(({ symbol }) => symbol)
+
+    return confsSymbols
+  }
+
+  getArgs (confs, args) {
+    const { params } = { ...args }
+
+    const symbol = this.getSymbol(
+      confs
+    )
+    const start = this.getStart(
+      confs,
+      params.start
+    )
+
+    return {
+      ...args,
+      params: {
+        ...params,
+        symbol,
+        start
+      }
+    }
   }
 }
 
