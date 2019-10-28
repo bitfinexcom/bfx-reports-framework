@@ -55,16 +55,23 @@ git stash
 cd $backendFolder
 
 git submodule sync
-git submodule update --remote
+git submodule update --init --recursive
 git pull --recurse-submodules
+git submodule update --remote
 npm i
 
 cd $expressFolder
 git submodule sync
+git submodule update --init --recursive
+git pull --recurse-submodules
+git submodule update --remote
+
 git stash
 cd $frontendFolder
-git submodule update --remote
+git submodule sync
+git submodule update --init --recursive
 git pull --recurse-submodules
+git submodule update --remote
 npm i
 
 if [ $isDevEnv != 0 ]; then
