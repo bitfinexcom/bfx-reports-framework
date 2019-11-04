@@ -373,7 +373,6 @@ describe('API filter', () => {
               'plPerc',
               'liquidationPrice',
               'leverage',
-              'placeholder',
               'id',
               'mtsCreate',
               'mtsUpdate',

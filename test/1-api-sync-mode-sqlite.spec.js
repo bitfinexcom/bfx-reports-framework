@@ -950,7 +950,6 @@ describe('Sync mode API with SQLite', () => {
       'plPerc',
       'liquidationPrice',
       'leverage',
-      'placeholder',
       'id',
       'mtsCreate',
       'mtsUpdate'
