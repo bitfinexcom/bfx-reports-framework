@@ -27,7 +27,8 @@ const deserializeVal = (
     'renew',
     'noClose',
     'maker',
-    '_isMarginFundingPayment'
+    '_isMarginFundingPayment',
+    '_isAffiliateRebate'
   ]
 ) => {
   if (
