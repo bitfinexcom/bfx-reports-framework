@@ -7,6 +7,31 @@ const _isInsertableArrayObjects = (type = '') => {
     .test(type)
 }
 
+const getFieldsFilters = (
+  fieldNames = [],
+  params,
+  model
+) => {
+  return fieldNames.reduce((accum, fieldName) => {
+    const modelFieldName = `_${fieldName}`
+    const _params = { ...params }
+    const field = _params[fieldName]
+
+    if (
+      typeof field === 'boolean' &&
+      Object.keys(model)
+        .some(key => key === modelFieldName)
+    ) {
+      return {
+        ...accum,
+        [modelFieldName]: Number(field)
+      }
+    }
+
+    return accum
+  }, {})
+}
+
 module.exports = (
   {
     type,
@@ -25,25 +50,22 @@ module.exports = (
     start = 0,
     end = Date.now(),
     symbol,
-    isMarginFundingPayment,
     filter: reqFilter = {}
   } = { ...params }
   const symbFilter = getSymbolFilter(symbol, symbolFieldName)
+  const fieldsFilters = getFieldsFilters(
+    ['isMarginFundingPayment', 'isAffiliateRebate'],
+    params,
+    model
+  )
   const filter = {
     ...reqFilter,
     _dateFieldName: dateFieldName,
     start,
     end,
     ...additionalFilteringProps,
-    ...symbFilter
-  }
-
-  if (
-    typeof isMarginFundingPayment === 'boolean' &&
-    Object.keys(model)
-      .some(key => key === '_isMarginFundingPayment')
-  ) {
-    filter._isMarginFundingPayment = Number(isMarginFundingPayment)
+    ...symbFilter,
+    ...fieldsFilters
   }
 
   return filter

@@ -33,6 +33,7 @@ const _models = new Map([
       description: 'TEXT',
       wallet: 'VARCHAR(255)',
       _isMarginFundingPayment: 'INT',
+      _isAffiliateRebate: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT ledgers_fk_#{field}
         FOREIGN KEY (#{field})

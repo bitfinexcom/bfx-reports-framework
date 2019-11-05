@@ -7,7 +7,10 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
-const { addPropsToResIfExist } = require('./helpers')
+const {
+  addPropsToResIfExist,
+  getFlagsFromLedgerDescription
+} = require('./helpers')
 
 class ApiMiddlewareHandlerAfter {
   constructor (
@@ -99,8 +102,18 @@ class ApiMiddlewareHandlerAfter {
   _getLedgers (args, apiRes) {
     const res = apiRes.res.map(item => ({
       ...item,
-      _isMarginFundingPayment: /Margin Funding Payment/gi.test(
-        item.description
+      ...getFlagsFromLedgerDescription(
+        item,
+        [
+          {
+            fieldName: '_isMarginFundingPayment',
+            pattern: 'Margin Funding Payment'
+          },
+          {
+            fieldName: '_isAffiliateRebate',
+            pattern: 'Affiliate Rebate'
+          }
+        ]
       )
     }))
 
