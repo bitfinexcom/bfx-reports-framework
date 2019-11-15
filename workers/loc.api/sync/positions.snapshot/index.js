@@ -179,7 +179,7 @@ class PositionsSnapshot {
         continue
       }
 
-      const pl = (actualPrice - basePrice) * Math.abs(amount)
+      const pl = (actualPrice - basePrice) * amount
       const plPerc = ((actualPrice / basePrice) - 1) * 100
       const {
         plUsd,
