@@ -1,5 +1,10 @@
 'use strict'
 
+/**
+ * The version must be increased when DB schema is chenged
+ */
+const SUPPORTED_DB_VERSION = 1
+
 const { cloneDeep } = require('lodash')
 
 const ALLOWED_COLLS = require('./allowed.colls')
@@ -667,6 +672,7 @@ const getModelsMap = (models = _models) => {
 }
 
 module.exports = {
+  SUPPORTED_DB_VERSION,
   getMethodCollMap,
   getModelsMap
 }

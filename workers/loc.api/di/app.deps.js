@@ -51,6 +51,9 @@ const {
   fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
+const SqliteDbMigration = require(
+  '../sync/dao/db.migration/sqlite.db.migration'
+)
 
 decorate(injectable(), EventEmitter)
 
@@ -101,6 +104,52 @@ module.exports = ({
     bind(TYPES.SyncSchema).toConstantValue(
       syncSchema
     )
+    bind(TYPES.MigrationsFactory)
+      .toFactory((ctx) => {
+        return (migrationsVer = []) => {
+          const dao = ctx.container.get(
+            TYPES.DAO
+          )
+
+          const migrations = migrationsVer.map((ver) => {
+            try {
+              const Migration = require(
+                `../sync/dao/db.migration/migrations/migration-v-${ver}`
+              )
+
+              return new Migration(dao)
+            } catch (err) {
+              return false
+            }
+          })
+
+          return migrations
+        }
+      })
+    bind(TYPES.SqliteDbMigration)
+      .to(SqliteDbMigration)
+      .inSingletonScope()
+    bind(TYPES.DbMigrationFactory)
+      .toFactory((ctx) => {
+        const { dbDriver } = ctx.container.get(
+          TYPES.CONF
+        )
+
+        return () => {
+          const dao = ctx.container.get(
+            TYPES.DAO
+          )
+
+          if (dbDriver === 'sqlite') {
+            const sqliteDbMigration = ctx.container.get(
+              TYPES.SqliteDbMigration
+            )
+            sqliteDbMigration.setDao(dao)
+
+            return sqliteDbMigration
+          }
+        }
+      })
     bind(TYPES.DB)
       .toDynamicValue((ctx) => {
         const { dbDriver } = ctx.container.get(

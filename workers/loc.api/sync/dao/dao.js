@@ -14,11 +14,13 @@ class DAO {
   constructor (
     db,
     syncSchema,
-    prepareResponse
+    prepareResponse,
+    dbMigrationFactory
   ) {
     this.db = db
     this.syncSchema = syncSchema
     this.prepareResponse = prepareResponse
+    this.dbMigrationFactory = dbMigrationFactory
   }
 
   _getModelsMap () {
@@ -36,11 +38,14 @@ class DAO {
   /**
    * @abstract
    */
-  databaseInitialize (db) {
+  async databaseInitialize (db) {
     if (db) this.setDB(db)
     if (!this.db) {
       throw new DAOInitializationError()
     }
+
+    const dbMigration = this.dbMigrationFactory()
+    await dbMigration.upFromCurrToSupportedVer()
   }
 
   /**

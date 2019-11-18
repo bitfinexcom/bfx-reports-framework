@@ -193,7 +193,7 @@ class SqliteDAO extends DAO {
    * @override
    */
   async databaseInitialize (db) {
-    super.databaseInitialize(db)
+    await super.databaseInitialize(db)
 
     await this._beginTrans(async () => {
       await this._createTablesIfNotExists()
@@ -788,5 +788,6 @@ decorate(injectable(), SqliteDAO)
 decorate(inject(TYPES.DB), SqliteDAO, 0)
 decorate(inject(TYPES.SyncSchema), SqliteDAO, 1)
 decorate(inject(TYPES.PrepareResponse), SqliteDAO, 2)
+decorate(inject(TYPES.DbMigrationFactory), SqliteDAO, 3)
 
 module.exports = SqliteDAO
