@@ -107,17 +107,21 @@ module.exports = ({
     bind(TYPES.MigrationsFactory)
       .toFactory((ctx) => {
         return (migrationsVer = []) => {
-          const dao = ctx.container.get(
-            TYPES.DAO
-          )
+          const depTypes = [
+            TYPES.DAO,
+            TYPES.SyncSchema
+          ]
+          const deps = depTypes.map((type) => {
+            return ctx.container.get(type)
+          })
 
           const migrations = migrationsVer.map((ver) => {
             try {
               const Migration = require(
-                `../sync/dao/db.migration/migrations/migration-v-${ver}`
+                `../sync/dao/db.migration/migrations/migration.v${ver}`
               )
 
-              return new Migration(dao)
+              return new Migration(...deps)
             } catch (err) {
               return false
             }
