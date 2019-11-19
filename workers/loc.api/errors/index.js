@@ -88,6 +88,18 @@ class SqlCorrectnessError extends BaseError {
   }
 }
 
+class DbMigrationVerCorrectnessError extends BaseError {
+  constructor (message = 'ERR_DB_MIGRATION_VERSION_IS_NOT_CORRECT') {
+    super(message)
+  }
+}
+
+class DbVersionTypeError extends BaseError {
+  constructor (message = 'ERR_DB_VERSION_IS_NOT_INTEGER') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -103,5 +115,7 @@ module.exports = {
   ObjectMappingError,
   DuringSyncMethodAccessError,
   CurrencyConversionDataFindingError,
-  SqlCorrectnessError
+  SqlCorrectnessError,
+  DbMigrationVerCorrectnessError,
+  DbVersionTypeError
 }

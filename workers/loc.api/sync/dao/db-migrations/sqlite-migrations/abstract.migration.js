@@ -5,28 +5,9 @@ const {
   SqlCorrectnessError
 } = require('../../../../errors')
 
-class AbstractMigration {
-  constructor (
-    dao,
-    syncSchema
-  ) {
-    this.dao = dao
-    this.syncSchema = syncSchema
+const Migrations = require('../migrations')
 
-    this.sqlArr = []
-  }
-
-  addSql (sql) {
-    if (
-      !sql ||
-      typeof sql !== 'string'
-    ) {
-      throw new SqlCorrectnessError()
-    }
-
-    this.sqlArr.push(sql)
-  }
-
+class AbstractMigration extends Migrations {
   async launch (isDown) {
     this.sqlArr = []
     const modelsMap = this.syncSchema.getModelsMap()
@@ -52,6 +33,20 @@ class AbstractMigration {
 
     await this.afterUp(modelsMap)
     await this.after(modelsMap)
+  }
+
+  addSql (sql) {
+    if (
+      !sql ||
+      typeof sql !== 'string'
+    ) {
+      throw new SqlCorrectnessError()
+    }
+
+    this.sqlArr = Array.isArray(this.sqlArr)
+      ? this.sqlArr
+      : []
+    this.sqlArr.push(sql)
   }
 
   /**

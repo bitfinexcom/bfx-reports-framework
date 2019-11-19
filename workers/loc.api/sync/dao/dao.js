@@ -15,12 +15,12 @@ class DAO {
     db,
     syncSchema,
     prepareResponse,
-    dbMigrationFactory
+    dbMigratorFactory
   ) {
     this.db = db
     this.syncSchema = syncSchema
     this.prepareResponse = prepareResponse
-    this.dbMigrationFactory = dbMigrationFactory
+    this.dbMigratorFactory = dbMigratorFactory
   }
 
   _getModelsMap () {
@@ -44,8 +44,8 @@ class DAO {
       throw new DAOInitializationError()
     }
 
-    const dbMigration = this.dbMigrationFactory()
-    await dbMigration.upFromCurrToSupportedVer()
+    const dbMigrator = this.dbMigratorFactory()
+    await dbMigrator.migrateFromCurrToSupportedVer()
   }
 
   /**

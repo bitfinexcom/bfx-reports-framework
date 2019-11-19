@@ -11,6 +11,13 @@ const ALLOWED_COLLS = require('./allowed.colls')
 
 const _models = new Map([
   [
+    'dbConfigs',
+    {
+      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      version: 'INT'
+    }
+  ],
+  [
     'users',
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',

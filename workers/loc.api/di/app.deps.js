@@ -51,8 +51,8 @@ const {
   fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
-const SqliteDbMigration = require(
-  '../sync/dao/db.migration/sqlite.db.migration'
+const SqliteDbMigrator = require(
+  '../sync/dao/db-migrations/sqlite.db.migrator'
 )
 
 decorate(injectable(), EventEmitter)
@@ -106,6 +106,10 @@ module.exports = ({
     )
     bind(TYPES.MigrationsFactory)
       .toFactory((ctx) => {
+        const { dbDriver } = ctx.container.get(
+          TYPES.CONF
+        )
+
         return (migrationsVer = []) => {
           const depTypes = [
             TYPES.DAO,
@@ -118,7 +122,7 @@ module.exports = ({
           const migrations = migrationsVer.map((ver) => {
             try {
               const Migration = require(
-                `../sync/dao/db.migration/migrations/migration.v${ver}`
+                `../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`
               )
 
               return new Migration(...deps)
@@ -130,10 +134,10 @@ module.exports = ({
           return migrations
         }
       })
-    bind(TYPES.SqliteDbMigration)
-      .to(SqliteDbMigration)
+    bind(TYPES.SqliteDbMigrator)
+      .to(SqliteDbMigrator)
       .inSingletonScope()
-    bind(TYPES.DbMigrationFactory)
+    bind(TYPES.DbMigratorFactory)
       .toFactory((ctx) => {
         const { dbDriver } = ctx.container.get(
           TYPES.CONF
@@ -145,12 +149,12 @@ module.exports = ({
           )
 
           if (dbDriver === 'sqlite') {
-            const sqliteDbMigration = ctx.container.get(
-              TYPES.SqliteDbMigration
+            const sqliteDbMigrator = ctx.container.get(
+              TYPES.SqliteDbMigrator
             )
-            sqliteDbMigration.setDao(dao)
+            sqliteDbMigrator.setDao(dao)
 
-            return sqliteDbMigration
+            return sqliteDbMigrator
           }
         }
       })
