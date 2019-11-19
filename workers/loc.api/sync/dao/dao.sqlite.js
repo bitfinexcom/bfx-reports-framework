@@ -45,7 +45,8 @@ const {
 const {
   RemoveListElemsError,
   UpdateStateCollError,
-  UpdateSyncProgressError
+  UpdateSyncProgressError,
+  SqlCorrectnessError
 } = require('../../errors')
 
 class SqliteDAO extends DAO {
@@ -198,6 +199,28 @@ class SqliteDAO extends DAO {
     await this._beginTrans(async () => {
       await this._createTablesIfNotExists()
       await this._createIndexisIfNotExists()
+    })
+  }
+
+  /**
+   * @override
+   */
+  async executeSql (sql) {
+    const sqlArr = Array.isArray(sql)
+      ? sql
+      : [sql]
+
+    await this._beginTrans(async () => {
+      for (const sql of sqlArr) {
+        if (
+          !sql ||
+          typeof sql !== 'string'
+        ) {
+          throw new SqlCorrectnessError()
+        }
+
+        await this._run(sql)
+      }
     })
   }
 

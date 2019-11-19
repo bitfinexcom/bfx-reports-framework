@@ -51,6 +51,11 @@ class DAO {
   /**
    * @abstract
    */
+  async executeSql () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async getLastElemFromDb () { throw new ImplementationError() }
 
   /**
