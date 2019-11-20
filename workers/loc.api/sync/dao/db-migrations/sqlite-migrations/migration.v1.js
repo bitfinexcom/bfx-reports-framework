@@ -13,12 +13,13 @@ class MigrationV1 extends AbstractMigration {
   up (modelsMap, TABLES_NAMES) {
     console.log('[migration.v1 is upped]'.bgBlue)
 
-    const dbConfigsModel = modelsMap.get(
-      TABLES_NAMES.DB_CONFIGS
-    )
+    const dbConfigsModelMap = new Map([[
+      TABLES_NAMES.DB_CONFIGS,
+      modelsMap.get(TABLES_NAMES.DB_CONFIGS)
+    ]])
     const dbConfigsTableCreationQuery = getTableCreationQuery(
-      dbConfigsModel
-    )
+      dbConfigsModelMap
+    ).map((sql) => ({ sql }))
     this.addSql(dbConfigsTableCreationQuery)
   }
 

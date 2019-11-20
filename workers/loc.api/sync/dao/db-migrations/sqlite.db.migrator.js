@@ -23,7 +23,9 @@ class SqliteDbMigrator extends DbMigrator {
       await super.migrateFromCurrToSupportedVer()
     } catch (err) {
       if (err instanceof MigrationLaunchingError) {
-        await this.removeAllTable() // TODO:
+        await this.removeAllTable()
+
+        return
       }
 
       throw err

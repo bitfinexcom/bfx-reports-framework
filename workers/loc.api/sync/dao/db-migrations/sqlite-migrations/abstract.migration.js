@@ -57,20 +57,28 @@ class AbstractMigration extends Migration {
     this.addSql({ sql, values })
   }
 
-  addSql (sqlObj) {
-    const { sql, values } = { ...sqlObj }
+  addSql (sqlArr) {
+    const _sqlArr = Array.isArray(sqlArr)
+      ? sqlArr
+      : [sqlArr]
 
-    if (
-      !sql ||
-      typeof sql !== 'string'
-    ) {
-      throw new SqlCorrectnessError()
-    }
+    const data = _sqlArr.map((sqlObj) => {
+      const { sql, values } = { ...sqlObj }
+
+      if (
+        !sql ||
+        typeof sql !== 'string'
+      ) {
+        throw new SqlCorrectnessError()
+      }
+
+      return { sql, values }
+    })
 
     this.sqlArr = Array.isArray(this.sqlArr)
       ? this.sqlArr
       : []
-    this.sqlArr.push({ sql, values })
+    this.sqlArr.push(...data)
   }
 
   /**
