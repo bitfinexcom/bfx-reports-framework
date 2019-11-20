@@ -212,7 +212,8 @@ class SqliteDAO extends DAO {
       : [sql]
 
     await this._beginTrans(async () => {
-      for (const sql of sqlArr) {
+      for (const sqlObj of sqlArr) {
+        const { sql, values } = { ...sqlObj }
         if (
           !sql ||
           typeof sql !== 'string'
@@ -220,7 +221,7 @@ class SqliteDAO extends DAO {
           throw new SqlCorrectnessError()
         }
 
-        await this._run(sql)
+        await this._run(sql, values)
       }
     })
   }
