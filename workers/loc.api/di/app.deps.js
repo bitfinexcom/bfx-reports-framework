@@ -12,6 +12,7 @@ const { bindDepsToFn } = require(
 
 const TYPES = require('./types')
 
+const TABLES_NAMES = require('../sync/dao/tables-names')
 const ALLOWED_COLLS = require('../sync/allowed.colls')
 const WSTransport = require('../ws-transport')
 const WSEventEmitter = require(
@@ -67,6 +68,7 @@ module.exports = ({
           ['_conf', TYPES.CONF],
           ['_sync', TYPES.Sync],
           ['_wsEventEmitter', TYPES.WSEventEmitter],
+          ['_TABLES_NAMES', TYPES.TABLES_NAMES],
           ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS],
           ['_prepareResponse', TYPES.PrepareResponse],
           ['_progress', TYPES.Progress],
@@ -86,6 +88,7 @@ module.exports = ({
         ...ctx.container.get(TYPES.RServiceDepsSchema),
         ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
       ])
+    bind(TYPES.TABLES_NAMES).toConstantValue(TABLES_NAMES)
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
@@ -201,6 +204,7 @@ module.exports = ({
         redirectRequestsToApi,
         [
           TYPES.DAO,
+          TYPES.TABLES_NAMES,
           TYPES.WSEventEmitter
         ]
       )

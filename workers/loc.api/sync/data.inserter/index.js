@@ -48,6 +48,7 @@ class DataInserter extends EventEmitter {
     dao,
     apiMiddleware,
     syncSchema,
+    TABLES_NAMES,
     ALLOWED_COLLS,
     currencyConverter,
     FOREX_SYMBS
@@ -58,6 +59,7 @@ class DataInserter extends EventEmitter {
     this.dao = dao
     this.apiMiddleware = apiMiddleware
     this.syncSchema = syncSchema
+    this.TABLES_NAMES = TABLES_NAMES
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.currencyConverter = currencyConverter
     this.FOREX_SYMBS = FOREX_SYMBS
@@ -267,7 +269,7 @@ class DataInserter extends EventEmitter {
 
     const symbFieldName = schema.symbolFieldName
     const publicСollsСonf = await this.dao.getElemsInCollBy(
-      'publicСollsСonf',
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName: schema.confName },
         minPropName: 'start',
@@ -706,7 +708,7 @@ class DataInserter extends EventEmitter {
     } = { ...schema }
 
     const publicСollsСonf = await this.dao.getElemsInCollBy(
-      'publicСollsСonf',
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName: schema.confName },
         minPropName: 'start',
@@ -1081,8 +1083,9 @@ decorate(inject(TYPES.RService), DataInserter, 0)
 decorate(inject(TYPES.DAO), DataInserter, 1)
 decorate(inject(TYPES.ApiMiddleware), DataInserter, 2)
 decorate(inject(TYPES.SyncSchema), DataInserter, 3)
-decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 4)
-decorate(inject(TYPES.CurrencyConverter), DataInserter, 5)
-decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 6)
+decorate(inject(TYPES.TABLES_NAMES), DataInserter, 4)
+decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 5)
+decorate(inject(TYPES.CurrencyConverter), DataInserter, 6)
+decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
 
 module.exports = DataInserter

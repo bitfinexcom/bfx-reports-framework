@@ -37,11 +37,14 @@ class SqliteDbMigrator extends DbMigrator {
 
     console.log('[migration is upped to]:'.bgGreen, versions)
     await this.migrate(versions, isDown)
+
+    // TODO: need to set new version to db
   }
 }
 
 decorate(injectable(), SqliteDbMigrator)
 decorate(inject(TYPES.MigrationsFactory), SqliteDbMigrator, 0)
-decorate(inject(TYPES.SyncSchema), SqliteDbMigrator, 1)
+decorate(inject(TYPES.TABLES_NAMES), SqliteDbMigrator, 1)
+decorate(inject(TYPES.SyncSchema), SqliteDbMigrator, 2)
 
 module.exports = SqliteDbMigrator

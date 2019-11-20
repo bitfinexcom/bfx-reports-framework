@@ -10,12 +10,15 @@ const {
 const TYPES = require('../../di/types')
 
 class PublicСollsСonfAccessors {
-  constructor (dao) {
+  constructor (
+    dao,
+    TABLES_NAMES
+  ) {
     this.dao = dao
+    this.TABLES_NAMES = TABLES_NAMES
   }
 
   async editPublicСollsСonf (confName, args) {
-    const name = 'publicСollsСonf'
     const data = []
 
     if (Array.isArray(args.params)) {
@@ -26,7 +29,7 @@ class PublicСollsСonfAccessors {
 
     const { _id } = await this.dao.checkAuthInDb(args)
     const conf = await this.dao.getElemsInCollBy(
-      name,
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: {
           confName,
@@ -76,14 +79,14 @@ class PublicСollsСonfAccessors {
 
     if (newData.length > 0) {
       await this.dao.insertElemsToDb(
-        name,
+        this.TABLES_NAMES.PUBLIC_COLLS_CONF,
         null,
         newData
       )
     }
     if (removedSymbols.length > 0) {
       await this.dao.removeElemsFromDb(
-        name,
+        this.TABLES_NAMES.PUBLIC_COLLS_CONF,
         args.auth,
         {
           confName,
@@ -94,7 +97,7 @@ class PublicСollsСonfAccessors {
     }
 
     await this.dao.updateElemsInCollBy(
-      name,
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       updatedData,
       ['confName', 'user_id', 'symbol'],
       ['start']
@@ -114,7 +117,7 @@ class PublicСollsСonfAccessors {
       : { ...baseFilter, symbol }
 
     const conf = await this.dao.getElemsInCollBy(
-      'publicСollsСonf',
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter,
         sort: [['symbol', 1]]
@@ -179,5 +182,6 @@ class PublicСollsСonfAccessors {
 
 decorate(injectable(), PublicСollsСonfAccessors)
 decorate(inject(TYPES.DAO), PublicСollsСonfAccessors, 0)
+decorate(inject(TYPES.TABLES_NAMES), PublicСollsСonfAccessors, 1)
 
 module.exports = PublicСollsСonfAccessors

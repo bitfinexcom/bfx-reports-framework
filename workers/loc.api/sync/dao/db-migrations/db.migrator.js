@@ -14,9 +14,11 @@ const {
 class DbMigrator {
   constructor (
     migrationsFactory,
+    TABLES_NAMES,
     syncSchema
   ) {
     this.migrationsFactory = migrationsFactory
+    this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
   }
 
@@ -31,7 +33,7 @@ class DbMigrator {
   async getCurrDbVer () {
     try {
       const dbConfigs = await this.dao.getElemInCollBy(
-        'dbConfigs',
+        this.TABLES_NAMES.DB_CONFIGS,
         null,
         [['version', -1]]
       )

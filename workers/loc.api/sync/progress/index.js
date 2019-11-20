@@ -16,12 +16,14 @@ const {
 class Progress extends EventEmitter {
   constructor (
     dao,
+    TABLES_NAMES,
     wsEventEmitter,
     logger
   ) {
     super()
 
     this.dao = dao
+    this.TABLES_NAMES = TABLES_NAMES
     this.wsEventEmitter = wsEventEmitter
     this.logger = logger
   }
@@ -54,7 +56,7 @@ class Progress extends EventEmitter {
 
   async getProgress () {
     const progress = await this.dao
-      .getFirstElemInCollBy('progress')
+      .getFirstElemInCollBy(this.TABLES_NAMES.PROGRESS)
 
     return (
       !isEmpty(progress) &&
@@ -67,7 +69,8 @@ class Progress extends EventEmitter {
 
 decorate(injectable(), Progress)
 decorate(inject(TYPES.DAO), Progress, 0)
-decorate(inject(TYPES.WSEventEmitter), Progress, 1)
-decorate(inject(TYPES.Logger), Progress, 2)
+decorate(inject(TYPES.TABLES_NAMES), Progress, 1)
+decorate(inject(TYPES.WSEventEmitter), Progress, 2)
+decorate(inject(TYPES.Logger), Progress, 3)
 
 module.exports = Progress
