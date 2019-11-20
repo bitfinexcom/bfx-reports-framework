@@ -40,7 +40,8 @@ const {
   serializeVal,
   getGroupQuery,
   getSubQuery,
-  filterModelNameMap
+  filterModelNameMap,
+  getTableCreationQuery
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -125,19 +126,10 @@ class SqliteDAO extends DAO {
   }
 
   async _createTablesIfNotExists () {
-    for (const [name, model] of this._getModelsMap()) {
-      const keys = Object.keys(model)
-      const columnDefs = keys.reduce((accum, field, i, arr) => {
-        const isLast = arr.length === (i + 1)
-        const type = model[field].replace(/[#]\{field\}/g, field)
+    const models = this._getModelsMap()
+    const sqlArr = getTableCreationQuery(models)
 
-        return `${accum}${field} ${type}${isLast ? '' : ', \n'}`
-      }, '')
-
-      const sql = `CREATE TABLE IF NOT EXISTS ${name} (
-        ${columnDefs}
-        )`
-
+    for (const sql of sqlArr) {
       await this._run(sql)
     }
   }
