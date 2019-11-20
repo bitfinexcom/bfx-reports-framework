@@ -100,6 +100,12 @@ class DbVersionTypeError extends BaseError {
   }
 }
 
+class MigrationLaunchingError extends BaseError {
+  constructor (message = 'ERR_DB_MIGRATION_HAS_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -117,5 +123,6 @@ module.exports = {
   CurrencyConversionDataFindingError,
   SqlCorrectnessError,
   DbMigrationVerCorrectnessError,
-  DbVersionTypeError
+  DbVersionTypeError,
+  MigrationLaunchingError
 }

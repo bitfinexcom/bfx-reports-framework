@@ -127,7 +127,7 @@ class SqliteDAO extends DAO {
 
   async _createTablesIfNotExists () {
     const models = this._getModelsMap()
-    const sqlArr = getTableCreationQuery(models)
+    const sqlArr = getTableCreationQuery(models, true)
 
     for (const sql of sqlArr) {
       await this._run(sql)
@@ -198,7 +198,7 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async executeSql (sql) {
+  async executeQueriesInTrans (sql) {
     const sqlArr = Array.isArray(sql)
       ? sql
       : [sql]

@@ -6,9 +6,9 @@ const {
 } = require('inversify')
 
 const {
-  ImplementationError,
   DbMigrationVerCorrectnessError,
-  DbVersionTypeError
+  DbVersionTypeError,
+  MigrationLaunchingError
 } = require('../../../errors')
 
 class DbMigrator {
@@ -59,11 +59,11 @@ class DbMigrator {
       throw new DbVersionTypeError()
     }
 
-    const isRevert = start > end
-    const _start = isRevert
+    const isReverse = start > end
+    const _start = isReverse
       ? end
       : start
-    const _end = isRevert
+    const _end = isReverse
       ? start
       : end
     const offset = _start + 1
@@ -72,7 +72,7 @@ class DbMigrator {
       .fill()
       .map((item, i) => offset + i)
 
-    return isRevert
+    return isReverse
       ? range.reverse()
       : range
   }
@@ -89,20 +89,51 @@ class DbMigrator {
       ? ver
       : [ver]
     const migrations = this.getMigrations(versions)
+    const migrationsData = versions.reduce((accum, version, i) => {
+      const migration = migrations[i]
 
-    for (const migration of migrations) {
+      if (migration) {
+        accum.push({ migration, version })
+      }
+
+      return accum
+    }, [])
+
+    for (const { migration, version } of migrationsData) {
       if (!migration) {
         continue
       }
 
-      await migration.launch(isDown)
+      try {
+        await migration.launch(version, isDown)
+      } catch (err) {
+        throw new MigrationLaunchingError()
+      }
     }
   }
 
   /**
    * @abstract
    */
-  migrateFromCurrToSupportedVer () { throw new ImplementationError() }
+  async migrateFromCurrToSupportedVer () {
+    const supportedVer = this.getSupportedDbVer()
+    const currVer = await this.getCurrDbVer()
+
+    if (
+      !Number.isInteger(supportedVer) ||
+      !Number.isInteger(currVer)
+    ) {
+      throw new DbVersionTypeError()
+    }
+    if (currVer === supportedVer) {
+      return
+    }
+
+    const isDown = currVer > supportedVer
+    const versions = this.range(currVer, supportedVer)
+
+    await this.migrate(versions, isDown)
+  }
 }
 
 decorate(injectable(), DbMigrator)

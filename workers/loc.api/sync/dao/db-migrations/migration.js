@@ -4,12 +4,14 @@ const {
   ImplementationError
 } = require('../../../errors')
 
-class Migrations {
+class Migration {
   constructor (
     dao,
+    TABLES_NAMES,
     syncSchema
   ) {
     this.dao = dao
+    this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
   }
 
@@ -19,4 +21,4 @@ class Migrations {
   async launch () { throw new ImplementationError() }
 }
 
-module.exports = Migrations
+module.exports = Migration

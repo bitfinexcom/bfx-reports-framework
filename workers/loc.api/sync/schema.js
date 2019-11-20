@@ -15,7 +15,7 @@ const _models = new Map([
     TABLES_NAMES.DB_CONFIGS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
-      version: 'INT'
+      version: 'INT NOT NULL'
     }
   ],
   [

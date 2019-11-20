@@ -2,40 +2,64 @@
 
 const {
   ImplementationError,
-  SqlCorrectnessError
+  SqlCorrectnessError,
+  DbVersionTypeError
 } = require('../../../../errors')
 
-const Migrations = require('../migrations')
+const Migration = require('../migration')
 
-class AbstractMigration extends Migrations {
-  async launch (isDown) {
+class AbstractMigration extends Migration {
+  async launch (version, isDown) {
     this.sqlArr = []
     const modelsMap = this.syncSchema.getModelsMap()
+    const args = [modelsMap, this.TABLES_NAMES]
 
-    await this.before(modelsMap)
+    await this.before(...args)
 
     if (isDown) {
-      await this.beforeDown(modelsMap)
+      await this.beforeDown(...args)
 
-      await this.down(modelsMap)
-      await this.dao.executeSql(this.sqlArr)
+      await this.down(...args)
+      this.addSqlForSettingCurrDbVer(version)
+      await this.dao.executeQueriesInTrans(this.sqlArr)
 
-      await this.afterDown(modelsMap)
-      await this.after(modelsMap)
+      await this.afterDown(...args)
+      await this.after(...args)
 
       return
     }
 
-    await this.beforeUp(modelsMap)
+    await this.beforeUp(...args)
 
-    await this.up(modelsMap)
-    await this.dao.executeSql(this.sqlArr)
+    await this.up(...args)
+    this.addSqlForSettingCurrDbVer(version)
+    await this.dao.executeQueriesInTrans(this.sqlArr)
 
-    await this.afterUp(modelsMap)
-    await this.after(modelsMap)
+    await this.afterUp(...args)
+    await this.after(...args)
   }
 
-  addSql (sql) {
+  addSqlForSettingCurrDbVer (version) {
+    if (
+      !version ||
+      !Array.isArray(this.sqlArr) ||
+      this.sqlArr.length === 0
+    ) {
+      return
+    }
+    if (!Number.isInteger(version)) {
+      throw new DbVersionTypeError()
+    }
+
+    const sql = `INSERT INTO ${this.TABLES_NAMES.DB_CONFIGS}(version) VALUES ($version)`
+    const values = { $version: version }
+
+    this.addSql({ sql, values })
+  }
+
+  addSql (sqlObj) {
+    const { sql, values } = { ...sqlObj }
+
     if (
       !sql ||
       typeof sql !== 'string'
@@ -46,7 +70,7 @@ class AbstractMigration extends Migrations {
     this.sqlArr = Array.isArray(this.sqlArr)
       ? this.sqlArr
       : []
-    this.sqlArr.push(sql)
+    this.sqlArr.push({ sql, values })
   }
 
   /**

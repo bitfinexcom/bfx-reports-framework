@@ -10,7 +10,7 @@ const TYPES = require('../../../di/types')
 
 const DbMigrator = require('./db.migrator')
 const {
-  DbVersionTypeError
+  MigrationLaunchingError
 } = require('../../../errors')
 
 class SqliteDbMigrator extends DbMigrator {
@@ -19,27 +19,19 @@ class SqliteDbMigrator extends DbMigrator {
    * @override
    */
   async migrateFromCurrToSupportedVer () {
-    const supportedVer = this.getSupportedDbVer()
-    const currVer = await this.getCurrDbVer()
+    try {
+      await super.migrateFromCurrToSupportedVer()
+    } catch (err) {
+      if (err instanceof MigrationLaunchingError) {
+        await this.removeAllTable() // TODO:
+      }
 
-    if (
-      !Number.isInteger(supportedVer) ||
-      !Number.isInteger(currVer)
-    ) {
-      throw new DbVersionTypeError()
+      throw err
     }
-    if (currVer === supportedVer) {
-      return
-    }
-
-    const isDown = currVer > supportedVer
-    const versions = this.range(currVer, supportedVer)
-
-    console.log('[migration is upped to]:'.bgGreen, versions)
-    await this.migrate(versions, isDown)
-
-    // TODO: need to set new version to db
   }
+
+  // TODO:
+  removeAllTable () {}
 }
 
 decorate(injectable(), SqliteDbMigrator)

@@ -114,15 +114,19 @@ module.exports = ({
         )
 
         return (migrationsVer = []) => {
+          const versions = Array.isArray(migrationsVer)
+            ? migrationsVer
+            : [migrationsVer]
           const depTypes = [
             TYPES.DAO,
+            TYPES.TABLES_NAMES,
             TYPES.SyncSchema
           ]
           const deps = depTypes.map((type) => {
             return ctx.container.get(type)
           })
 
-          const migrations = migrationsVer.map((ver) => {
+          const migrations = versions.map((ver) => {
             try {
               const Migration = require(
                 `../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`

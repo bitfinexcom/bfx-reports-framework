@@ -53,7 +53,7 @@ class DAO {
   /**
    * @abstract
    */
-  async executeSql () { throw new ImplementationError() }
+  async executeQueriesInTrans () { throw new ImplementationError() }
 
   /**
    * @abstract
