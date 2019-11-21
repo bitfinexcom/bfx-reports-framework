@@ -204,8 +204,12 @@ class SqliteDAO extends DAO {
       : [sql]
 
     await this._beginTrans(async () => {
-      for (const sqlObj of sqlArr) {
+      for (const sqlData of sqlArr) {
+        const sqlObj = typeof sqlData === 'string'
+          ? { sql: sqlData, values: null }
+          : sqlData
         const { sql, values } = { ...sqlObj }
+
         if (
           !sql ||
           typeof sql !== 'string'
