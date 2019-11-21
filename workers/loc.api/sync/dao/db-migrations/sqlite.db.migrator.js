@@ -15,7 +15,6 @@ const {
 
 class SqliteDbMigrator extends DbMigrator {
   /**
-   * TODO:
    * @override
    */
   async migrateFromCurrToSupportedVer () {
@@ -32,10 +31,20 @@ class SqliteDbMigrator extends DbMigrator {
     }
   }
 
-  // TODO:
-  removeAllTable () {
-    this.dao.executeQueriesInTrans([
-      'PRAGMA foreign_keys = OFF'
+  async removeAllTable () {
+    const tablesNames = await this.dao.getTablesNames()
+    const sqlArr = tablesNames.map((name) => {
+      return `DROP TABLE IF EXISTS ${name}`
+    })
+
+    if (sqlArr.length === 0) {
+      return
+    }
+
+    await this.dao.executeQueriesInTrans([
+      'PRAGMA foreign_keys = OFF',
+      ...sqlArr,
+      'PRAGMA foreign_keys = ON'
     ])
   }
 }

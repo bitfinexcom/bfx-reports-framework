@@ -183,6 +183,21 @@ class SqliteDAO extends DAO {
     return res
   }
 
+  async getTablesNames () {
+    const data = await this._all(
+      `SELECT name FROM sqlite_master
+        WHERE type='table' AND
+        name NOT LIKE 'sqlite_%'
+        ORDER BY name`
+    )
+
+    if (!Array.isArray(data)) {
+      return []
+    }
+
+    return data.map(({ name }) => name)
+  }
+
   /**
    * @override
    */
