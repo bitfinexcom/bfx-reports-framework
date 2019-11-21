@@ -55,6 +55,11 @@ const FullTaxReport = require('../sync/full.tax.report')
 const SqliteDbMigrator = require(
   '../sync/dao/db-migrations/sqlite.db.migrator'
 )
+const {
+  migrationsFactory,
+  dbMigratorFactory,
+  dataInserterFactory
+} = require('./factories')
 
 decorate(injectable(), EventEmitter)
 
@@ -108,63 +113,12 @@ module.exports = ({
       syncSchema
     )
     bind(TYPES.MigrationsFactory)
-      .toFactory((ctx) => {
-        const { dbDriver } = ctx.container.get(
-          TYPES.CONF
-        )
-
-        return (migrationsVer = []) => {
-          const versions = Array.isArray(migrationsVer)
-            ? migrationsVer
-            : [migrationsVer]
-          const depTypes = [
-            TYPES.DAO,
-            TYPES.TABLES_NAMES,
-            TYPES.SyncSchema
-          ]
-          const deps = depTypes.map((type) => {
-            return ctx.container.get(type)
-          })
-
-          const migrations = versions.map((ver) => {
-            try {
-              const Migration = require(
-                `../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`
-              )
-
-              return new Migration(ver, ...deps)
-            } catch (err) {
-              return false
-            }
-          })
-
-          return migrations
-        }
-      })
+      .toFactory(migrationsFactory)
     bind(TYPES.SqliteDbMigrator)
       .to(SqliteDbMigrator)
       .inSingletonScope()
     bind(TYPES.DbMigratorFactory)
-      .toFactory((ctx) => {
-        const { dbDriver } = ctx.container.get(
-          TYPES.CONF
-        )
-
-        return () => {
-          const dao = ctx.container.get(
-            TYPES.DAO
-          )
-
-          if (dbDriver === 'sqlite') {
-            const sqliteDbMigrator = ctx.container.get(
-              TYPES.SqliteDbMigrator
-            )
-            sqliteDbMigrator.setDao(dao)
-
-            return sqliteDbMigrator
-          }
-        }
-      })
+      .toFactory(dbMigratorFactory)
     bind(TYPES.DB)
       .toDynamicValue((ctx) => {
         const { dbDriver } = ctx.container.get(
@@ -222,16 +176,7 @@ module.exports = ({
     bind(TYPES.DataInserter)
       .to(DataInserter)
     bind(TYPES.DataInserterFactory)
-      .toFactory((ctx) => {
-        return (syncColls) => {
-          const dataInserter = ctx.container.get(
-            TYPES.DataInserter
-          )
-          dataInserter.init(syncColls)
-
-          return dataInserter
-        }
-      })
+      .toFactory(dataInserterFactory)
     bind(TYPES.SyncQueue)
       .to(SyncQueue)
       .inSingletonScope()
