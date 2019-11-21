@@ -31,7 +31,7 @@ module.exports = (ctx) => {
         }
 
         const Migration = require(
-          `../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`
+          `../../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`
         )
 
         return new Migration(ver, ...deps)
