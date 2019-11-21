@@ -32,24 +32,6 @@ class DbMigrator {
     return this.syncSchema.SUPPORTED_DB_VERSION
   }
 
-  // TODO:
-  async getCurrDbVer () {
-    try {
-      const dbConfigs = await this.dao.getElemInCollBy(
-        this.TABLES_NAMES.DB_CONFIGS,
-        null,
-        [['version', -1]]
-      )
-      const { version } = { ...dbConfigs }
-
-      return Number.isInteger(version)
-        ? version
-        : 0
-    } catch (err) {
-      return 0
-    }
-  }
-
   getMigrations (versions = [1]) {
     return this.migrationsFactory(versions)
   }
@@ -111,7 +93,7 @@ class DbMigrator {
    */
   async migrateFromCurrToSupportedVer () {
     const supportedVer = this.getSupportedDbVer()
-    const currVer = await this.getCurrDbVer()
+    const currVer = await this.dao.getCurrDbVer()
 
     if (
       !Number.isInteger(supportedVer) ||

@@ -198,6 +198,16 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  async getCurrDbVer () {
+    const data = await this._get('PRAGMA user_version')
+    const { user_version: version } = { ...data }
+
+    return version
+  }
+
+  /**
+   * @override
+   */
   async executeQueriesInTrans (sql) {
     const sqlArr = Array.isArray(sql)
       ? sql
@@ -206,7 +216,7 @@ class SqliteDAO extends DAO {
     await this._beginTrans(async () => {
       for (const sqlData of sqlArr) {
         const sqlObj = typeof sqlData === 'string'
-          ? { sql: sqlData, values: null }
+          ? { sql: sqlData }
           : sqlData
         const { sql, values } = { ...sqlObj }
 

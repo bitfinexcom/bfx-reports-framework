@@ -26,7 +26,6 @@ class AbstractMigration extends Migration {
     await this.dao.executeQueriesInTrans(this.sqlArr)
   }
 
-  // TODO:
   addSqlForSettingCurrDbVer () {
     const version = this.getVersion()
 
@@ -41,10 +40,7 @@ class AbstractMigration extends Migration {
       throw new DbVersionTypeError()
     }
 
-    const sql = `INSERT INTO ${this.TABLES_NAMES.DB_CONFIGS}(version) VALUES ($version)`
-    const values = { $version: version }
-
-    this.addSql({ sql, values })
+    this.addSql(`PRAGMA user_version = ${version}`)
   }
 
   addSql (sql) {
@@ -54,7 +50,7 @@ class AbstractMigration extends Migration {
 
     const data = sqlArr.map((sqlData) => {
       const sqlObj = typeof sqlData === 'string'
-        ? { sql: sqlData, values: null }
+        ? { sql: sqlData }
         : sqlData
       const { sql, values } = { ...sqlObj }
 

@@ -53,6 +53,11 @@ class DAO {
   /**
    * @abstract
    */
+  async getCurrDbVer () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async executeQueriesInTrans () { throw new ImplementationError() }
 
   /**
