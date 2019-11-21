@@ -1,7 +1,6 @@
 'use strict'
 
 const {
-  ImplementationError,
   SqlCorrectnessError,
   DbVersionTypeError
 } = require('../../../../errors')
@@ -9,37 +8,28 @@ const {
 const Migration = require('../migration')
 
 class AbstractMigration extends Migration {
-  async launch (version, isDown) {
+  /**
+   * @override
+   */
+  async launch (isDown) {
     this.sqlArr = []
-    const modelsMap = this.syncSchema.getModelsMap()
-    const args = [modelsMap, this.TABLES_NAMES]
 
-    await this.before(...args)
-
-    if (isDown) {
-      await this.beforeDown(...args)
-
-      await this.down(...args)
-      this.addSqlForSettingCurrDbVer(version)
-      await this.dao.executeQueriesInTrans(this.sqlArr)
-
-      await this.afterDown(...args)
-      await this.after(...args)
-
-      return
-    }
-
-    await this.beforeUp(...args)
-
-    await this.up(...args)
-    this.addSqlForSettingCurrDbVer(version)
-    await this.dao.executeQueriesInTrans(this.sqlArr)
-
-    await this.afterUp(...args)
-    await this.after(...args)
+    await super.launch(isDown)
   }
 
-  addSqlForSettingCurrDbVer (version) {
+  /**
+   * @override
+   */
+  async execute () {
+    this.addSqlForSettingCurrDbVer()
+
+    await this.dao.executeQueriesInTrans(this.sqlArr)
+  }
+
+  // TODO:
+  addSqlForSettingCurrDbVer () {
+    const version = this.getVersion()
+
     if (
       !version ||
       !Array.isArray(this.sqlArr) ||
@@ -83,44 +73,6 @@ class AbstractMigration extends Migration {
       : []
     this.sqlArr.push(...data)
   }
-
-  /**
-   * @abstract
-   */
-  async before () {}
-  /**
-   * @abstract
-   */
-  async beforeUp () {}
-  /**
-   * @abstract
-   */
-  async beforeDown () {}
-
-  /**
-   * @abstract
-   */
-  async after () {}
-
-  /**
-   * @abstract
-   */
-  async afterUp () {}
-
-  /**
-   * @abstract
-   */
-  async afterDown () {}
-
-  /**
-   * @abstract
-   */
-  async up () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
-  async down () { throw new ImplementationError() }
 }
 
 module.exports = AbstractMigration

@@ -11,6 +11,8 @@ const {
   MigrationLaunchingError
 } = require('../../../errors')
 
+const Migration = require('./migration')
+
 class DbMigrator {
   constructor (
     migrationsFactory,
@@ -30,6 +32,7 @@ class DbMigrator {
     return this.syncSchema.SUPPORTED_DB_VERSION
   }
 
+  // TODO:
   async getCurrDbVer () {
     try {
       const dbConfigs = await this.dao.getElemInCollBy(
@@ -89,23 +92,14 @@ class DbMigrator {
       ? ver
       : [ver]
     const migrations = this.getMigrations(versions)
-    const migrationsData = versions.reduce((accum, version, i) => {
-      const migration = migrations[i]
 
-      if (migration) {
-        accum.push({ migration, version })
-      }
-
-      return accum
-    }, [])
-
-    for (const { migration, version } of migrationsData) {
-      if (!migration) {
+    for (const migration of migrations) {
+      if (!(migration instanceof Migration)) {
         continue
       }
 
       try {
-        await migration.launch(version, isDown)
+        await migration.launch(isDown)
       } catch (err) {
         throw new MigrationLaunchingError()
       }

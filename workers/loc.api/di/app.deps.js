@@ -132,7 +132,7 @@ module.exports = ({
                 `../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`
               )
 
-              return new Migration(...deps)
+              return new Migration(ver, ...deps)
             } catch (err) {
               return false
             }

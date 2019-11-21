@@ -33,7 +33,11 @@ class SqliteDbMigrator extends DbMigrator {
   }
 
   // TODO:
-  removeAllTable () {}
+  removeAllTable () {
+    this.dao.executeQueriesInTrans([
+      'PRAGMA foreign_keys = OFF'
+    ])
+  }
 }
 
 decorate(injectable(), SqliteDbMigrator)
