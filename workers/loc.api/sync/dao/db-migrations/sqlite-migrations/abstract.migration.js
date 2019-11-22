@@ -49,19 +49,22 @@ class AbstractMigration extends Migration {
       : [sql]
 
     const data = sqlArr.map((sqlData) => {
-      const sqlObj = typeof sqlData === 'string'
+      const _sqlObj = typeof sqlData === 'string'
         ? { sql: sqlData }
         : sqlData
-      const { sql, values } = { ...sqlObj }
+      const sqlObj = typeof _sqlObj === 'function'
+        ? { execQueryFn: _sqlObj }
+        : _sqlObj
+      const { sql, values, execQueryFn } = { ...sqlObj }
 
       if (
-        !sql ||
-        typeof sql !== 'string'
+        (!sql || typeof sql !== 'string') &&
+        typeof execQueryFn !== 'function'
       ) {
         throw new SqlCorrectnessError()
       }
 
-      return { sql, values }
+      return { sql, values, execQueryFn }
     })
 
     this.sqlArr = Array.isArray(this.sqlArr)

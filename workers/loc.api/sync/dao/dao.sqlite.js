@@ -230,19 +230,27 @@ class SqliteDAO extends DAO {
 
     await this._beginTrans(async () => {
       for (const sqlData of sqlArr) {
-        const sqlObj = typeof sqlData === 'string'
+        const _sqlObj = typeof sqlData === 'string'
           ? { sql: sqlData }
           : sqlData
-        const { sql, values } = { ...sqlObj }
+        const sqlObj = typeof _sqlObj === 'function'
+          ? { execQueryFn: _sqlObj }
+          : _sqlObj
+        const { sql, values, execQueryFn } = { ...sqlObj }
 
         if (
-          !sql ||
-          typeof sql !== 'string'
+          (!sql || typeof sql !== 'string') &&
+          typeof execQueryFn !== 'function'
         ) {
           throw new SqlCorrectnessError()
         }
 
-        await this._run(sql, values)
+        if (sql) {
+          await this._run(sql, values)
+        }
+        if (execQueryFn) {
+          await execQueryFn()
+        }
       }
     })
   }
