@@ -31,7 +31,7 @@ class Migration {
       await this.beforeDown(...args)
 
       await this.down(...args)
-      await this.execute()
+      await this.execute(isDown)
 
       await this.afterDown(...args)
       await this.after(...args)
@@ -42,7 +42,7 @@ class Migration {
     await this.beforeUp(...args)
 
     await this.up(...args)
-    await this.execute()
+    await this.execute(isDown)
 
     await this.afterUp(...args)
     await this.after(...args)
@@ -51,7 +51,7 @@ class Migration {
   /**
    * @abstract
    */
-  async execute () {}
+  async execute () { throw new ImplementationError() }
 
   /**
    * @abstract

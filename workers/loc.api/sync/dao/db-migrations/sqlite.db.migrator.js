@@ -44,7 +44,8 @@ class SqliteDbMigrator extends DbMigrator {
     await this.dao.executeQueriesInTrans([
       () => this.dao.disableForeignKeys(),
       ...sqlArr,
-      () => this.dao.enableForeignKeys()
+      () => this.dao.enableForeignKeys(),
+      () => this.dao.setCurrDbVer(0)
     ])
   }
 }

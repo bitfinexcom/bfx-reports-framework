@@ -3,7 +3,8 @@
 const TYPES = require('../types')
 
 const {
-  DbVersionTypeError
+  DbVersionTypeError,
+  MigrationLaunchingError
 } = require('../../errors')
 
 module.exports = (ctx) => {
@@ -36,7 +37,7 @@ module.exports = (ctx) => {
 
         return new Migration(ver, ...deps)
       } catch (err) {
-        return false
+        throw new MigrationLaunchingError()
       }
     })
 

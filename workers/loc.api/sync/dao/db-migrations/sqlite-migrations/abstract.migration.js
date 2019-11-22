@@ -1,8 +1,7 @@
 'use strict'
 
 const {
-  SqlCorrectnessError,
-  DbVersionTypeError
+  SqlCorrectnessError
 } = require('../../../../errors')
 
 const Migration = require('../migration')
@@ -20,13 +19,7 @@ class AbstractMigration extends Migration {
   /**
    * @override
    */
-  async execute () {
-    this.addSqlForSettingCurrDbVer()
-
-    await this.dao.executeQueriesInTrans(this.sqlArr)
-  }
-
-  addSqlForSettingCurrDbVer () {
+  async execute (isDown) {
     const version = this.getVersion()
 
     if (
@@ -36,11 +29,18 @@ class AbstractMigration extends Migration {
     ) {
       return
     }
-    if (!Number.isInteger(version)) {
-      throw new DbVersionTypeError()
-    }
 
-    this.addSql(`PRAGMA user_version = ${version}`)
+    const _version = isDown
+      ? version - 1
+      : version
+    const verNoLessZero = _version < 0
+      ? 0
+      : _version
+
+    await this.dao.executeQueriesInTrans([
+      ...this.sqlArr,
+      () => this.dao.setCurrDbVer(verNoLessZero)
+    ])
   }
 
   addSql (sql) {

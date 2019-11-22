@@ -47,7 +47,8 @@ const {
   RemoveListElemsError,
   UpdateStateCollError,
   UpdateSyncProgressError,
-  SqlCorrectnessError
+  SqlCorrectnessError,
+  DbVersionTypeError
 } = require('../../errors')
 
 class SqliteDAO extends DAO {
@@ -230,6 +231,7 @@ class SqliteDAO extends DAO {
     await this._beginTrans(async () => {
       await this._createTablesIfNotExists()
       await this._createIndexisIfNotExists()
+      await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
     })
   }
 
@@ -241,6 +243,17 @@ class SqliteDAO extends DAO {
     const { user_version: version } = { ...data }
 
     return version
+  }
+
+  /**
+   * @override
+   */
+  async setCurrDbVer (version) {
+    if (!Number.isInteger(version)) {
+      throw new DbVersionTypeError()
+    }
+
+    this._run(`PRAGMA user_version = ${version}`)
   }
 
   /**
