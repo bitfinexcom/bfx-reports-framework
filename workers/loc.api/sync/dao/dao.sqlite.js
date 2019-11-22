@@ -198,6 +198,14 @@ class SqliteDAO extends DAO {
     return data.map(({ name }) => name)
   }
 
+  enableForeignKeys () {
+    return this._run('PRAGMA foreign_keys = ON')
+  }
+
+  disableForeignKeys () {
+    return this._run('PRAGMA foreign_keys = OFF')
+  }
+
   /**
    * @override
    */
