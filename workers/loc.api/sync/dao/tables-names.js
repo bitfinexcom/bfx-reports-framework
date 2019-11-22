@@ -1,7 +1,6 @@
 'use strict'
 
 module.exports = {
-  DB_CONFIGS: 'dbConfigs',
   USERS: 'users',
   LEDGERS: 'ledgers',
   TRADES: 'trades',
