@@ -30,7 +30,7 @@ class MigrationV1 extends AbstractMigration {
   down (modelsMap, TABLES_NAMES) {
     console.log('[migration.v1 is downed]'.bgBlue)
 
-    this.addSql(`DROP TABLE ${TABLES_NAMES.DB_CONFIGS}`)
+    this.addSql(() => this.dao.dropTable(TABLES_NAMES.DB_CONFIGS))
   }
 }
 

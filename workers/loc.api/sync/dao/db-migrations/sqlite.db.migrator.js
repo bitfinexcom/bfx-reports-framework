@@ -34,7 +34,7 @@ class SqliteDbMigrator extends DbMigrator {
   async removeAllTable () {
     const tablesNames = await this.dao.getTablesNames()
     const sqlArr = tablesNames.map((name) => {
-      return `DROP TABLE IF EXISTS ${name}`
+      return () => this.dao.dropTable(name, true)
     })
 
     if (sqlArr.length === 0) {

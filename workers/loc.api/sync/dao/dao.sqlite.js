@@ -206,6 +206,21 @@ class SqliteDAO extends DAO {
     return this._run('PRAGMA foreign_keys = OFF')
   }
 
+  dropTable (name, isDroppedIfExists) {
+    if (
+      !name ||
+      typeof name !== 'string'
+    ) {
+      throw new SqlCorrectnessError()
+    }
+
+    const condition = isDroppedIfExists
+      ? ' IF EXISTS'
+      : ''
+
+    return this._run(`DROP TABLE${condition} ${name}`)
+  }
+
   /**
    * @override
    */
