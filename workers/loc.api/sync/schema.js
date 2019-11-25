@@ -1,7 +1,11 @@
 'use strict'
 
 /**
- * The version must be increased when DB schema is chenged
+ * The version must be increased when DB schema is changed
+ *
+ * For each new DB version need to implement new migration
+ * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
+ * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 const SUPPORTED_DB_VERSION = 1
 
