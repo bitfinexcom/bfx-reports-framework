@@ -26,6 +26,7 @@ class SqliteDbMigrator extends DbMigrator {
     } catch (err) {
       if (err instanceof MigrationLaunchingError) {
         await this.removeAllTables()
+        this.logger.debug('[All tables have been deleted]')
 
         return
       }
@@ -51,5 +52,6 @@ decorate(injectable(), SqliteDbMigrator)
 decorate(inject(TYPES.MigrationsFactory), SqliteDbMigrator, 0)
 decorate(inject(TYPES.TABLES_NAMES), SqliteDbMigrator, 1)
 decorate(inject(TYPES.SyncSchema), SqliteDbMigrator, 2)
+decorate(inject(TYPES.Logger), SqliteDbMigrator, 3)
 
 module.exports = SqliteDbMigrator

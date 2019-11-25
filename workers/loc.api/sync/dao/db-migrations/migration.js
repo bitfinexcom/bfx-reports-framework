@@ -9,12 +9,14 @@ class Migration {
     version,
     dao,
     TABLES_NAMES,
-    syncSchema
+    syncSchema,
+    logger
   ) {
     this.version = version
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
+    this.logger = logger
   }
 
   getVersion () {
@@ -22,6 +24,8 @@ class Migration {
   }
 
   async launch (isDown) {
+    this.logger.debug(`[Launch migration v${this.version}]`)
+
     const modelsMap = this.syncSchema.getModelsMap()
     const args = [modelsMap, this.TABLES_NAMES]
 
@@ -36,6 +40,10 @@ class Migration {
       await this.afterDown(...args)
       await this.after(...args)
 
+      this.logger.debug(
+        `[Migration v${this.version} has been downed]`
+      )
+
       return
     }
 
@@ -46,6 +54,10 @@ class Migration {
 
     await this.afterUp(...args)
     await this.after(...args)
+
+    this.logger.debug(
+      `[Migration v${this.version} has been upped]`
+    )
   }
 
   /**

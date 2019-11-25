@@ -19,7 +19,8 @@ module.exports = (ctx) => {
     const depTypes = [
       TYPES.DAO,
       TYPES.TABLES_NAMES,
-      TYPES.SyncSchema
+      TYPES.SyncSchema,
+      TYPES.Logger
     ]
     const deps = depTypes.map((type) => {
       return ctx.container.get(type)

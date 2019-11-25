@@ -17,11 +17,13 @@ class DbMigrator {
   constructor (
     migrationsFactory,
     TABLES_NAMES,
-    syncSchema
+    syncSchema,
+    logger
   ) {
     this.migrationsFactory = migrationsFactory
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
+    this.logger = logger
   }
 
   setDao (dao) {
@@ -73,6 +75,8 @@ class DbMigrator {
     const versions = Array.isArray(ver)
       ? ver
       : [ver]
+    this.logger.debug(`[Start of migrations]: ${versions.join(', ')}`)
+
     const migrations = this.getMigrations(versions)
 
     for (const migration of migrations) {
@@ -80,12 +84,18 @@ class DbMigrator {
         continue
       }
 
+      const ver = migration.getVersion()
+
       try {
         await migration.launch(isDown)
       } catch (err) {
+        this.logger.debug(`[MIGRATION_V${ver}_ERROR]`)
+
         throw new MigrationLaunchingError()
       }
     }
+
+    this.logger.debug('[Migrations completed successfully]')
   }
 
   /**
