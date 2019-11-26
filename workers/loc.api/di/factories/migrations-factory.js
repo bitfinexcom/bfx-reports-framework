@@ -42,6 +42,7 @@ module.exports = (ctx) => {
         return new Migration(ver, ...deps)
       } catch (err) {
         logger.debug(err)
+        process.send({ state: 'error:migrations' })
 
         throw new MigrationLaunchingError()
       }
