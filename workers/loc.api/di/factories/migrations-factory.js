@@ -11,6 +11,9 @@ module.exports = (ctx) => {
   const { dbDriver } = ctx.container.get(
     TYPES.CONF
   )
+  const logger = ctx.container.get(
+    TYPES.Logger
+  )
 
   return (migrationsVer = []) => {
     const versions = Array.isArray(migrationsVer)
@@ -38,6 +41,8 @@ module.exports = (ctx) => {
 
         return new Migration(ver, ...deps)
       } catch (err) {
+        logger.debug(err)
+
         throw new MigrationLaunchingError()
       }
     })
