@@ -300,12 +300,12 @@ class SqliteDAO extends DAO {
    */
   async getLastElemFromDb (name, auth, sort = []) {
     const _sort = getOrderQuery(sort)
-    const utableName = this.TABLES_NAMES.USERS
+    const uTableName = this.TABLES_NAMES.USERS
 
     const sql = `SELECT ${name}.* FROM ${name}
-      INNER JOIN ${utableName} ON ${utableName}._id = ${name}.user_id
-      WHERE ${utableName}.apiKey = $apiKey
-      AND ${utableName}.apiSecret = $apiSecret
+      INNER JOIN ${uTableName} ON ${uTableName}._id = ${name}.user_id
+      WHERE ${uTableName}.apiKey = $apiKey
+      AND ${uTableName}.apiSecret = $apiSecret
       ${_sort}`
 
     return this._get(sql, {
