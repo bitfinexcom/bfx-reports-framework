@@ -1,6 +1,6 @@
 'use strict'
 
-const ALLOWED_COLLS = require('../../allowed.colls')
+const TABLES_NAMES = require('../tables-names')
 const getSymbolFilter = require('./get-symbol-filter')
 
 module.exports = (
@@ -11,7 +11,7 @@ module.exports = (
   } = {},
   params = {}
 ) => {
-  if (name !== ALLOWED_COLLS.STATUS_MESSAGES) {
+  if (name !== TABLES_NAMES.STATUS_MESSAGES) {
     return {}
   }
 

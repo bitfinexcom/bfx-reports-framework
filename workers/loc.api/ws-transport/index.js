@@ -21,13 +21,15 @@ class WSTransport {
     rService,
     dao,
     link,
-    grcBfxOpts
+    grcBfxOpts,
+    TABLES_NAMES
   ) {
     this.wsPort = wsPort
     this.rService = rService
     this.dao = dao
     this.link = link
     this.opts = { ...grcBfxOpts }
+    this.TABLES_NAMES = TABLES_NAMES
 
     this._active = false
     this._sockets = new Map()
@@ -185,7 +187,7 @@ class WSTransport {
     const apiKey = [...this._auth].map(([sid, user]) => user.apiKey)
 
     return this.dao.getElemsInCollBy(
-      'users',
+      this.TABLES_NAMES.USERS,
       {
         $or: { apiKey }
       }
@@ -323,5 +325,6 @@ decorate(inject(TYPES.RService), WSTransport, 1)
 decorate(inject(TYPES.DAO), WSTransport, 2)
 decorate(inject(TYPES.Link), WSTransport, 3)
 decorate(inject(TYPES.GRC_BFX_OPTS), WSTransport, 4)
+decorate(inject(TYPES.TABLES_NAMES), WSTransport, 5)
 
 module.exports = WSTransport

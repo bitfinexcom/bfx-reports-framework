@@ -12,6 +12,7 @@ const { bindDepsToFn } = require(
 
 const TYPES = require('./types')
 
+const TABLES_NAMES = require('../sync/dao/tables-names')
 const ALLOWED_COLLS = require('../sync/allowed.colls')
 const WSTransport = require('../ws-transport')
 const WSEventEmitter = require(
@@ -51,6 +52,14 @@ const {
   fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
+const SqliteDbMigrator = require(
+  '../sync/dao/db-migrations/sqlite.db.migrator'
+)
+const {
+  migrationsFactory,
+  dbMigratorFactory,
+  dataInserterFactory
+} = require('./factories')
 
 decorate(injectable(), EventEmitter)
 
@@ -64,6 +73,7 @@ module.exports = ({
           ['_conf', TYPES.CONF],
           ['_sync', TYPES.Sync],
           ['_wsEventEmitter', TYPES.WSEventEmitter],
+          ['_TABLES_NAMES', TYPES.TABLES_NAMES],
           ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS],
           ['_prepareResponse', TYPES.PrepareResponse],
           ['_progress', TYPES.Progress],
@@ -83,6 +93,7 @@ module.exports = ({
         ...ctx.container.get(TYPES.RServiceDepsSchema),
         ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
       ])
+    bind(TYPES.TABLES_NAMES).toConstantValue(TABLES_NAMES)
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
@@ -101,6 +112,13 @@ module.exports = ({
     bind(TYPES.SyncSchema).toConstantValue(
       syncSchema
     )
+    bind(TYPES.MigrationsFactory)
+      .toFactory(migrationsFactory)
+    bind(TYPES.SqliteDbMigrator)
+      .to(SqliteDbMigrator)
+      .inSingletonScope()
+    bind(TYPES.DbMigratorFactory)
+      .toFactory(dbMigratorFactory)
     bind(TYPES.DB)
       .toDynamicValue((ctx) => {
         const { dbDriver } = ctx.container.get(
@@ -144,6 +162,7 @@ module.exports = ({
         redirectRequestsToApi,
         [
           TYPES.DAO,
+          TYPES.TABLES_NAMES,
           TYPES.WSEventEmitter
         ]
       )
@@ -157,16 +176,7 @@ module.exports = ({
     bind(TYPES.DataInserter)
       .to(DataInserter)
     bind(TYPES.DataInserterFactory)
-      .toFactory((ctx) => {
-        return (syncColls) => {
-          const dataInserter = ctx.container.get(
-            TYPES.DataInserter
-          )
-          dataInserter.init(syncColls)
-
-          return dataInserter
-        }
-      })
+      .toFactory(dataInserterFactory)
     bind(TYPES.SyncQueue)
       .to(SyncQueue)
       .inSingletonScope()

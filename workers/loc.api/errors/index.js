@@ -82,6 +82,30 @@ class CurrencyConversionDataFindingError extends BaseError {
   }
 }
 
+class SqlCorrectnessError extends BaseError {
+  constructor (message = 'ERR_SQL_IS_NOT_CORRECT') {
+    super(message)
+  }
+}
+
+class DbMigrationVerCorrectnessError extends BaseError {
+  constructor (message = 'ERR_DB_MIGRATION_VERSION_IS_NOT_CORRECT') {
+    super(message)
+  }
+}
+
+class DbVersionTypeError extends BaseError {
+  constructor (message = 'ERR_DB_VERSION_IS_NOT_INTEGER') {
+    super(message)
+  }
+}
+
+class MigrationLaunchingError extends BaseError {
+  constructor (message = 'ERR_DB_MIGRATION_HAS_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -96,5 +120,9 @@ module.exports = {
   ServerAvailabilityError,
   ObjectMappingError,
   DuringSyncMethodAccessError,
-  CurrencyConversionDataFindingError
+  CurrencyConversionDataFindingError,
+  SqlCorrectnessError,
+  DbMigrationVerCorrectnessError,
+  DbVersionTypeError,
+  MigrationLaunchingError
 }

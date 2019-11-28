@@ -40,12 +40,15 @@ const {
   serializeVal,
   getGroupQuery,
   getSubQuery,
-  filterModelNameMap
+  filterModelNameMap,
+  getTableCreationQuery
 } = require('./helpers')
 const {
   RemoveListElemsError,
   UpdateStateCollError,
-  UpdateSyncProgressError
+  UpdateSyncProgressError,
+  SqlCorrectnessError,
+  DbVersionTypeError
 } = require('../../errors')
 
 class SqliteDAO extends DAO {
@@ -124,19 +127,10 @@ class SqliteDAO extends DAO {
   }
 
   async _createTablesIfNotExists () {
-    for (const [name, model] of this._getModelsMap()) {
-      const keys = Object.keys(model)
-      const columnDefs = keys.reduce((accum, field, i, arr) => {
-        const isLast = arr.length === (i + 1)
-        const type = model[field].replace(/[#]\{field\}/g, field)
+    const models = this._getModelsMap()
+    const sqlArr = getTableCreationQuery(models, true)
 
-        return `${accum}${field} ${type}${isLast ? '' : ', \n'}`
-      }, '')
-
-      const sql = `CREATE TABLE IF NOT EXISTS ${name} (
-        ${columnDefs}
-        )`
-
+    for (const sql of sqlArr) {
       await this._run(sql)
     }
   }
@@ -164,7 +158,7 @@ class SqliteDAO extends DAO {
     }
 
     const publicСollsСonfSql = getUniqueIndexQuery(
-      'publicСollsСonf',
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       ['symbol', 'user_id', 'confName']
     )
 
@@ -172,9 +166,10 @@ class SqliteDAO extends DAO {
   }
 
   async _getUserByAuth (auth) {
-    const sql = `SELECT * FROM users
-      WHERE users.apiKey = $apiKey
-      AND users.apiSecret = $apiSecret`
+    const tableName = this.TABLES_NAMES.USERS
+    const sql = `SELECT * FROM ${tableName}
+      WHERE ${tableName}.apiKey = $apiKey
+      AND ${tableName}.apiSecret = $apiSecret`
 
     const res = await this._get(sql, {
       $apiKey: auth.apiKey,
@@ -189,15 +184,114 @@ class SqliteDAO extends DAO {
     return res
   }
 
+  async getTablesNames () {
+    const data = await this._all(
+      `SELECT name FROM sqlite_master
+        WHERE type='table' AND
+        name NOT LIKE 'sqlite_%'
+        ORDER BY name`
+    )
+
+    if (!Array.isArray(data)) {
+      return []
+    }
+
+    return data.map(({ name }) => name)
+  }
+
+  enableForeignKeys () {
+    return this._run('PRAGMA foreign_keys = ON')
+  }
+
+  disableForeignKeys () {
+    return this._run('PRAGMA foreign_keys = OFF')
+  }
+
+  dropTable (name, isDroppedIfExists) {
+    if (
+      !name ||
+      typeof name !== 'string'
+    ) {
+      throw new SqlCorrectnessError()
+    }
+
+    const condition = isDroppedIfExists
+      ? ' IF EXISTS'
+      : ''
+
+    return this._run(`DROP TABLE${condition} ${name}`)
+  }
+
   /**
    * @override
    */
   async databaseInitialize (db) {
-    super.databaseInitialize(db)
+    await super.databaseInitialize(db)
 
     await this._beginTrans(async () => {
       await this._createTablesIfNotExists()
       await this._createIndexisIfNotExists()
+      await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
+    })
+  }
+
+  /**
+   * @override
+   */
+  async getCurrDbVer () {
+    const data = await this._get('PRAGMA user_version')
+    const { user_version: version } = { ...data }
+
+    return version
+  }
+
+  /**
+   * @override
+   */
+  async setCurrDbVer (version) {
+    if (!Number.isInteger(version)) {
+      throw new DbVersionTypeError()
+    }
+
+    this._run(`PRAGMA user_version = ${version}`)
+  }
+
+  /**
+   * @override
+   */
+  async executeQueriesInTrans (sql) {
+    const sqlArr = Array.isArray(sql)
+      ? sql
+      : [sql]
+
+    if (sqlArr.length === 0) {
+      return
+    }
+
+    await this._beginTrans(async () => {
+      for (const sqlData of sqlArr) {
+        const _sqlObj = typeof sqlData === 'string'
+          ? { sql: sqlData }
+          : sqlData
+        const sqlObj = typeof _sqlObj === 'function'
+          ? { execQueryFn: _sqlObj }
+          : _sqlObj
+        const { sql, values, execQueryFn } = { ...sqlObj }
+
+        if (
+          (!sql || typeof sql !== 'string') &&
+          typeof execQueryFn !== 'function'
+        ) {
+          throw new SqlCorrectnessError()
+        }
+
+        if (sql) {
+          await this._run(sql, values)
+        }
+        if (execQueryFn) {
+          await execQueryFn()
+        }
+      }
     })
   }
 
@@ -206,11 +300,12 @@ class SqliteDAO extends DAO {
    */
   async getLastElemFromDb (name, auth, sort = []) {
     const _sort = getOrderQuery(sort)
+    const uTableName = this.TABLES_NAMES.USERS
 
     const sql = `SELECT ${name}.* FROM ${name}
-      INNER JOIN users ON users._id = ${name}.user_id
-      WHERE users.apiKey = $apiKey
-      AND users.apiSecret = $apiSecret
+      INNER JOIN ${uTableName} ON ${uTableName}._id = ${name}.user_id
+      WHERE ${uTableName}.apiKey = $apiKey
+      AND ${uTableName}.apiSecret = $apiSecret
       ${_sort}`
 
     return this._get(sql, {
@@ -424,7 +519,7 @@ class SqliteDAO extends DAO {
    * @override
    */
   async getActiveUsers () {
-    const sql = 'SELECT * FROM users WHERE active = 1'
+    const sql = `SELECT * FROM ${this.TABLES_NAMES.USERS} WHERE active = 1`
 
     const res = await this._all(sql)
 
@@ -487,7 +582,7 @@ class SqliteDAO extends DAO {
       }
 
       await this.insertElemsToDb(
-        'users',
+        this.TABLES_NAMES.USERS,
         null,
         [{
           ...pick(
@@ -519,7 +614,7 @@ class SqliteDAO extends DAO {
     )
 
     const res = await this.updateCollBy(
-      'users',
+      this.TABLES_NAMES.USERS,
       { _id: user._id },
       omit(newData, ['_id'])
     )
@@ -540,7 +635,7 @@ class SqliteDAO extends DAO {
   async updateUserByAuth (data) {
     const props = ['apiKey', 'apiSecret']
     const res = await this.updateCollBy(
-      'users',
+      this.TABLES_NAMES.USERS,
       pick(data, props),
       omit(data, [...props, '_id'])
     )
@@ -735,7 +830,7 @@ class SqliteDAO extends DAO {
    * @override
    */
   async updateProgress (value) {
-    const name = 'progress'
+    const name = this.TABLES_NAMES.PROGRESS
     const elems = await this.getElemsInCollBy(name)
     const data = {
       value: JSON.stringify(value)
@@ -786,7 +881,9 @@ class SqliteDAO extends DAO {
 
 decorate(injectable(), SqliteDAO)
 decorate(inject(TYPES.DB), SqliteDAO, 0)
-decorate(inject(TYPES.SyncSchema), SqliteDAO, 1)
-decorate(inject(TYPES.PrepareResponse), SqliteDAO, 2)
+decorate(inject(TYPES.TABLES_NAMES), SqliteDAO, 1)
+decorate(inject(TYPES.SyncSchema), SqliteDAO, 2)
+decorate(inject(TYPES.PrepareResponse), SqliteDAO, 3)
+decorate(inject(TYPES.DbMigratorFactory), SqliteDAO, 4)
 
 module.exports = SqliteDAO

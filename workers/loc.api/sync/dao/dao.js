@@ -13,12 +13,16 @@ const {
 class DAO {
   constructor (
     db,
+    TABLES_NAMES,
     syncSchema,
-    prepareResponse
+    prepareResponse,
+    dbMigratorFactory
   ) {
     this.db = db
+    this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.prepareResponse = prepareResponse
+    this.dbMigratorFactory = dbMigratorFactory
   }
 
   _getModelsMap () {
@@ -36,12 +40,30 @@ class DAO {
   /**
    * @abstract
    */
-  databaseInitialize (db) {
+  async databaseInitialize (db) {
     if (db) this.setDB(db)
     if (!this.db) {
       throw new DAOInitializationError()
     }
+
+    const dbMigrator = this.dbMigratorFactory()
+    await dbMigrator.migrateFromCurrToSupportedVer()
   }
+
+  /**
+   * @abstract
+   */
+  async getCurrDbVer () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async setCurrDbVer () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async executeQueriesInTrans () { throw new ImplementationError() }
 
   /**
    * @abstract

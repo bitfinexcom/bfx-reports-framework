@@ -42,8 +42,8 @@ class FrameworkReportService extends ReportService {
   async _databaseInitialize (db) {
     await this._dao.databaseInitialize(db)
     await this._dao.updateProgress('SYNCHRONIZATION_HAS_NOT_STARTED_YET')
-    await this._dao.updateStateOf('syncMode', true)
-    await this._dao.updateStateOf('scheduler', true)
+    await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
+    await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, true)
   }
 
   /**
@@ -185,7 +185,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(async () => {
       checkParamsAuth(args)
 
-      await this._dao.updateStateOf('syncMode', true)
+      await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
       await this._dao.updateUserByAuth({
         ...pick(args.auth, ['apiKey', 'apiSecret']),
         isDataFromDb: 1
@@ -223,7 +223,9 @@ class FrameworkReportService extends ReportService {
   isSyncModeWithDbData (space, args, cb) {
     return this._responder(async () => {
       const user = await this._dao.checkAuthInDb(args, false)
-      const firstElem = await this._dao.getFirstElemInCollBy('syncMode')
+      const firstElem = await this._dao.getFirstElemInCollBy(
+        this._TABLES_NAMES.SYNC_MODE
+      )
 
       return (
         !isEmpty(firstElem) &&
@@ -237,7 +239,7 @@ class FrameworkReportService extends ReportService {
   enableScheduler (space, args, cb) {
     return this._responder(async () => {
       await this._dao.checkAuthInDb(args)
-      await this._dao.updateStateOf('scheduler', true)
+      await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, true)
 
       return this.syncNow()
     }, 'enableScheduler', cb)
@@ -246,7 +248,7 @@ class FrameworkReportService extends ReportService {
   disableScheduler (space, args, cb) {
     return this._responder(async () => {
       await this._dao.checkAuthInDb(args)
-      await this._dao.updateStateOf('scheduler', false)
+      await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, false)
 
       return true
     }, 'disableScheduler', cb)
@@ -256,7 +258,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(async () => {
       try {
         const firstElem = await this._dao.getFirstElemInCollBy(
-          'scheduler',
+          this._TABLES_NAMES.SCHEDULER,
           { isEnable: 1 }
         )
 

@@ -4,9 +4,10 @@ const { isEmpty } = require('lodash')
 
 module.exports = (
   dao,
+  TABLES_NAMES,
   wsEventEmitter
 ) => async (state = true) => {
-  await dao.updateStateOf('syncMode', !state)
+  await dao.updateStateOf(TABLES_NAMES.SYNC_MODE, !state)
   await wsEventEmitter.emitRedirectingRequestsStatusToApi(
     (user) => {
       return (

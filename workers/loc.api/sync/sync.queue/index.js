@@ -24,6 +24,7 @@ const ERROR_JOB_STATE = 'ERROR'
 
 class SyncQueue extends EventEmitter {
   constructor (
+    TABLES_NAMES,
     ALLOWED_COLLS,
     dao,
     dataInserterFactory,
@@ -31,11 +32,12 @@ class SyncQueue extends EventEmitter {
   ) {
     super()
 
+    this.TABLES_NAMES = TABLES_NAMES
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.dao = dao
     this.dataInserterFactory = dataInserterFactory
     this.progress = progress
-    this.name = 'syncQueue'
+    this.name = this.TABLES_NAMES.SYNC_QUEUE
 
     this._sort = [['_id', 1]]
     this._isFirstSync = true
@@ -212,9 +214,10 @@ class SyncQueue extends EventEmitter {
 }
 
 decorate(injectable(), SyncQueue)
-decorate(inject(TYPES.ALLOWED_COLLS), SyncQueue, 0)
-decorate(inject(TYPES.DAO), SyncQueue, 1)
-decorate(inject(TYPES.DataInserterFactory), SyncQueue, 2)
-decorate(inject(TYPES.Progress), SyncQueue, 3)
+decorate(inject(TYPES.TABLES_NAMES), SyncQueue, 0)
+decorate(inject(TYPES.ALLOWED_COLLS), SyncQueue, 1)
+decorate(inject(TYPES.DAO), SyncQueue, 2)
+decorate(inject(TYPES.DataInserterFactory), SyncQueue, 3)
+decorate(inject(TYPES.Progress), SyncQueue, 4)
 
 module.exports = SyncQueue

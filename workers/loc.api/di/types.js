@@ -4,6 +4,7 @@ const TYPES = require('bfx-report/workers/loc.api/di/types')
 
 module.exports = {
   ...TYPES,
+  TABLES_NAMES: Symbol.for('TABLES_NAMES'),
   ALLOWED_COLLS: Symbol.for('ALLOWED_COLLS'),
   FrameworkRServiceDepsSchema: Symbol.for('FrameworkRServiceDepsSchema'),
   GRC_BFX_OPTS: Symbol.for('GRC_BFX_OPTS'),
@@ -32,5 +33,8 @@ module.exports = {
   FullSnapshotReportCsvWriter: Symbol.for('FullSnapshotReportCsvWriter'),
   FOREX_SYMBS: Symbol.for('FOREX_SYMBS'),
   FullTaxReport: Symbol.for('FullTaxReport'),
-  FullTaxReportCsvWriter: Symbol.for('FullTaxReportCsvWriter')
+  FullTaxReportCsvWriter: Symbol.for('FullTaxReportCsvWriter'),
+  MigrationsFactory: Symbol.for('MigrationsFactory'),
+  DbMigratorFactory: Symbol.for('DbMigratorFactory'),
+  SqliteDbMigrator: Symbol.for('SqliteDbMigrator')
 }

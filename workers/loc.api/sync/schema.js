@@ -1,12 +1,22 @@
 'use strict'
 
+/**
+ * The version must be increased when DB schema is changed
+ *
+ * For each new DB version need to implement new migration
+ * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
+ * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
+ */
+const SUPPORTED_DB_VERSION = 1
+
 const { cloneDeep } = require('lodash')
 
+const TABLES_NAMES = require('./dao/tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
 
 const _models = new Map([
   [
-    'users',
+    TABLES_NAMES.USERS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -20,7 +30,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.LEDGERS,
+    TABLES_NAMES.LEDGERS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -43,7 +53,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.TRADES,
+    TABLES_NAMES.TRADES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -66,7 +76,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.FUNDING_TRADES,
+    TABLES_NAMES.FUNDING_TRADES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -86,7 +96,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.PUBLIC_TRADES,
+    TABLES_NAMES.PUBLIC_TRADES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -99,7 +109,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.ORDERS,
+    TABLES_NAMES.ORDERS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -131,7 +141,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.MOVEMENTS,
+    TABLES_NAMES.MOVEMENTS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -154,7 +164,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.FUNDING_OFFER_HISTORY,
+    TABLES_NAMES.FUNDING_OFFER_HISTORY,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -182,7 +192,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.FUNDING_LOAN_HISTORY,
+    TABLES_NAMES.FUNDING_LOAN_HISTORY,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -211,7 +221,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.FUNDING_CREDIT_HISTORY,
+    TABLES_NAMES.FUNDING_CREDIT_HISTORY,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -241,7 +251,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.POSITIONS_HISTORY,
+    TABLES_NAMES.POSITIONS_HISTORY,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'BIGINT',
@@ -268,7 +278,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.TICKERS_HISTORY,
+    TABLES_NAMES.TICKERS_HISTORY,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       symbol: 'VARCHAR(255)',
@@ -279,7 +289,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.STATUS_MESSAGES,
+    TABLES_NAMES.STATUS_MESSAGES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       key: 'VARCHAR(255)',
@@ -293,7 +303,7 @@ const _models = new Map([
     }
   ],
   [
-    'publicСollsСonf',
+    TABLES_NAMES.PUBLIC_COLLS_CONF,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       confName: 'VARCHAR(255)',
@@ -308,21 +318,21 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.SYMBOLS,
+    TABLES_NAMES.SYMBOLS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       pairs: 'VARCHAR(255)'
     }
   ],
   [
-    ALLOWED_COLLS.FUTURES,
+    TABLES_NAMES.FUTURES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       pairs: 'VARCHAR(255)'
     }
   ],
   [
-    ALLOWED_COLLS.CURRENCIES,
+    TABLES_NAMES.CURRENCIES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       id: 'VARCHAR(255)',
@@ -332,7 +342,7 @@ const _models = new Map([
     }
   ],
   [
-    ALLOWED_COLLS.CANDLES,
+    TABLES_NAMES.CANDLES,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       mts: 'BIGINT',
@@ -345,28 +355,28 @@ const _models = new Map([
     }
   ],
   [
-    'scheduler',
+    TABLES_NAMES.SCHEDULER,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       isEnable: 'INT'
     }
   ],
   [
-    'syncMode',
+    TABLES_NAMES.SYNC_MODE,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       isEnable: 'INT'
     }
   ],
   [
-    'progress',
+    TABLES_NAMES.PROGRESS,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       value: 'VARCHAR(255)'
     }
   ],
   [
-    'syncQueue',
+    TABLES_NAMES.SYNC_QUEUE,
     {
       _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
       collName: 'VARCHAR(255)',
@@ -388,7 +398,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mts'],
-      model: { ..._models.get(ALLOWED_COLLS.LEDGERS) }
+      model: { ..._models.get(TABLES_NAMES.LEDGERS) }
     }
   ],
   [
@@ -403,7 +413,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee'],
-      model: { ..._models.get(ALLOWED_COLLS.TRADES) }
+      model: { ..._models.get(TABLES_NAMES.TRADES) }
     }
   ],
   [
@@ -418,7 +428,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID'],
-      model: { ..._models.get(ALLOWED_COLLS.FUNDING_TRADES) }
+      model: { ..._models.get(TABLES_NAMES.FUNDING_TRADES) }
     }
   ],
   [
@@ -434,7 +444,7 @@ const _methodCollMap = new Map([
       confName: 'publicTradesConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
-      model: { ..._models.get(ALLOWED_COLLS.PUBLIC_TRADES) }
+      model: { ..._models.get(TABLES_NAMES.PUBLIC_TRADES) }
     }
   ],
   [
@@ -458,7 +468,7 @@ const _methodCollMap = new Map([
       confName: 'statusMessagesConf',
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
-      model: { ..._models.get(ALLOWED_COLLS.STATUS_MESSAGES) }
+      model: { ..._models.get(TABLES_NAMES.STATUS_MESSAGES) }
     }
   ],
   [
@@ -473,7 +483,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(ALLOWED_COLLS.ORDERS) }
+      model: { ..._models.get(TABLES_NAMES.ORDERS) }
     }
   ],
   [
@@ -488,7 +498,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdated'],
-      model: { ..._models.get(ALLOWED_COLLS.MOVEMENTS) }
+      model: { ..._models.get(TABLES_NAMES.MOVEMENTS) }
     }
   ],
   [
@@ -503,7 +513,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(ALLOWED_COLLS.FUNDING_OFFER_HISTORY) }
+      model: { ..._models.get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
     }
   ],
   [
@@ -518,7 +528,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(ALLOWED_COLLS.FUNDING_LOAN_HISTORY) }
+      model: { ..._models.get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
     }
   ],
   [
@@ -533,7 +543,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(ALLOWED_COLLS.FUNDING_CREDIT_HISTORY) }
+      model: { ..._models.get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
     }
   ],
   [
@@ -548,7 +558,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(ALLOWED_COLLS.POSITIONS_HISTORY) }
+      model: { ..._models.get(TABLES_NAMES.POSITIONS_HISTORY) }
     }
   ],
   [
@@ -564,7 +574,7 @@ const _methodCollMap = new Map([
       confName: 'tickersHistoryConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
-      model: { ..._models.get(ALLOWED_COLLS.TICKERS_HISTORY) }
+      model: { ..._models.get(TABLES_NAMES.TICKERS_HISTORY) }
     }
   ],
   [
@@ -579,7 +589,7 @@ const _methodCollMap = new Map([
         sort: [['mts', 1], ['id', 1]]
       },
       type: 'hidden:insertable:array:objects',
-      model: { ..._models.get(ALLOWED_COLLS.LEDGERS) },
+      model: { ..._models.get(TABLES_NAMES.LEDGERS) },
       dataStructureConverter: (accum, {
         wallet: type,
         currency,
@@ -609,7 +619,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ..._models.get(ALLOWED_COLLS.SYMBOLS) }
+      model: { ..._models.get(TABLES_NAMES.SYMBOLS) }
     }
   ],
   [
@@ -621,7 +631,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ..._models.get(ALLOWED_COLLS.FUTURES) }
+      model: { ..._models.get(TABLES_NAMES.FUTURES) }
     }
   ],
   [
@@ -634,7 +644,7 @@ const _methodCollMap = new Map([
       hasNewData: true,
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['id', 'name', 'pool', 'explorer'],
-      model: { ..._models.get(ALLOWED_COLLS.CURRENCIES) }
+      model: { ..._models.get(TABLES_NAMES.CURRENCIES) }
     }
   ],
   [
@@ -649,7 +659,7 @@ const _methodCollMap = new Map([
       start: [],
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
-      model: { ..._models.get(ALLOWED_COLLS.CANDLES) }
+      model: { ..._models.get(TABLES_NAMES.CANDLES) }
     }
   ]
 ])
@@ -667,6 +677,7 @@ const getModelsMap = (models = _models) => {
 }
 
 module.exports = {
+  SUPPORTED_DB_VERSION,
   getMethodCollMap,
   getModelsMap
 }
