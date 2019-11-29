@@ -429,6 +429,7 @@ class SqliteDAO extends DAO {
       ...schema
     }
     const params = { ...args.params }
+    const { filter: requestedFilter } = params
     const {
       maxLimit,
       dateFieldName,
@@ -470,7 +471,7 @@ class SqliteDAO extends DAO {
     const {
       where,
       values
-    } = getWhereQuery(filter)
+    } = getWhereQuery(filter, false, requestedFilter)
     const group = getGroupQuery(methodColl)
     const subQuery = getSubQuery(methodColl)
     const projection = getProjectionQuery(
