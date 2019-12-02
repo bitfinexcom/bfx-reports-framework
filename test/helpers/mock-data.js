@@ -62,7 +62,7 @@ module.exports = new Map([
         12.12345,
         12345.12345,
         null,
-        'Margin Funding Payment on wallet funding'
+        'Margin Funding Payment (some else data) on wallet funding'
       ],
       [
         20012345,
