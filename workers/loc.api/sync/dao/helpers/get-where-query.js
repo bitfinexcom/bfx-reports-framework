@@ -183,19 +183,19 @@ const _getCompareOpAndKey = (
     origFieldName,
     fieldsNamesToDisableCaseSensitivity
   )
-    ? ' COLLATE NOCASE'
+    ? 'COLLATE NOCASE'
     : ''
   const _compareOperator = (
     compareOperator === SQL_OPERATORS.IN ||
     compareOperator === SQL_OPERATORS.NIN
   )
-    ? `${compareOperator}${noCaseOp}`
+    ? `${noCaseOp} ${compareOperator}`
     : compareOperator
   const _key = (
     compareOperator === SQL_OPERATORS.EQ ||
     compareOperator === SQL_OPERATORS.NE
   )
-    ? ` ${key}${noCaseOp}`
+    ? ` ${key} ${noCaseOp}`
     : ` ${key}`
 
   return {
