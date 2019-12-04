@@ -390,7 +390,7 @@ const _methodCollMap = new Map([
     '_getLedgers',
     {
       name: ALLOWED_COLLS.LEDGERS,
-      maxLimit: 5000,
+      maxLimit: 2500,
       dateFieldName: 'mts',
       symbolFieldName: 'currency',
       sort: [['mts', -1]],
@@ -405,7 +405,7 @@ const _methodCollMap = new Map([
     '_getTrades',
     {
       name: ALLOWED_COLLS.TRADES,
-      maxLimit: 1500,
+      maxLimit: 2500,
       dateFieldName: 'mtsCreate',
       symbolFieldName: 'symbol',
       sort: [['mtsCreate', -1]],
@@ -435,7 +435,7 @@ const _methodCollMap = new Map([
     '_getPublicTrades',
     {
       name: ALLOWED_COLLS.PUBLIC_TRADES,
-      maxLimit: 1000,
+      maxLimit: 5000,
       dateFieldName: 'mts',
       symbolFieldName: '_symbol',
       sort: [['mts', -1]],
@@ -475,7 +475,7 @@ const _methodCollMap = new Map([
     '_getOrders',
     {
       name: ALLOWED_COLLS.ORDERS,
-      maxLimit: 5000,
+      maxLimit: 2500,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
@@ -490,7 +490,7 @@ const _methodCollMap = new Map([
     '_getMovements',
     {
       name: ALLOWED_COLLS.MOVEMENTS,
-      maxLimit: 25,
+      maxLimit: 250,
       dateFieldName: 'mtsUpdated',
       symbolFieldName: 'currency',
       sort: [['mtsUpdated', -1]],
@@ -505,7 +505,7 @@ const _methodCollMap = new Map([
     '_getFundingOfferHistory',
     {
       name: ALLOWED_COLLS.FUNDING_OFFER_HISTORY,
-      maxLimit: 5000,
+      maxLimit: 10000,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
@@ -520,7 +520,7 @@ const _methodCollMap = new Map([
     '_getFundingLoanHistory',
     {
       name: ALLOWED_COLLS.FUNDING_LOAN_HISTORY,
-      maxLimit: 5000,
+      maxLimit: 10000,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
@@ -535,7 +535,7 @@ const _methodCollMap = new Map([
     '_getFundingCreditHistory',
     {
       name: ALLOWED_COLLS.FUNDING_CREDIT_HISTORY,
-      maxLimit: 5000,
+      maxLimit: 10000,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
@@ -550,7 +550,7 @@ const _methodCollMap = new Map([
     '_getPositionsHistory',
     {
       name: ALLOWED_COLLS.POSITIONS_HISTORY,
-      maxLimit: 500,
+      maxLimit: 10000,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
@@ -565,7 +565,7 @@ const _methodCollMap = new Map([
     '_getTickersHistory',
     {
       name: ALLOWED_COLLS.TICKERS_HISTORY,
-      maxLimit: 2500,
+      maxLimit: 10000,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
@@ -614,7 +614,7 @@ const _methodCollMap = new Map([
     '_getSymbols',
     {
       name: ALLOWED_COLLS.SYMBOLS,
-      maxLimit: 5000,
+      maxLimit: 10000,
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
@@ -626,7 +626,7 @@ const _methodCollMap = new Map([
     '_getFutures',
     {
       name: ALLOWED_COLLS.FUTURES,
-      maxLimit: 5000,
+      maxLimit: 10000,
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
@@ -638,7 +638,7 @@ const _methodCollMap = new Map([
     '_getCurrencies',
     {
       name: ALLOWED_COLLS.CURRENCIES,
-      maxLimit: 5000,
+      maxLimit: 10000,
       fields: ['id', 'name', 'pool', 'explorer'],
       sort: [['name', 1]],
       hasNewData: true,
