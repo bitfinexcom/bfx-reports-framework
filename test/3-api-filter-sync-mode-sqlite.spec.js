@@ -839,6 +839,88 @@ describe('API filter', () => {
     }
   })
 
+  it('it should be successfully performed by not consider capital letters on filters', async function () {
+    this.timeout(60000)
+
+    const baseArgs = {
+      auth,
+      id: 5
+    }
+    const baseParams = {
+      start: 0,
+      end,
+      limit: 10
+    }
+    const argsArr = [
+      {
+        args: {
+          ...baseArgs,
+          method: 'getLedgers',
+          params: {
+            ...baseParams,
+            symbol: 'BTC',
+            filter: {
+              $eq: { wallet: 'fUnding' },
+              $ne: {
+                description: 'margin funDINg payment (some else data) on wallet funding'
+              },
+              $like: { description: 'margin funding%' },
+              $nin: { currency: ['eUR', 'JpY'] },
+              $in: { currency: ['BTc'] }
+            }
+          }
+        },
+        responseTest: (res) => {
+          assert.isAbove(res.length, 0)
+
+          res.forEach((item) => {
+            assert.isObject(item)
+            assert.containsAllKeys(item, [
+              'id',
+              'currency',
+              'mts',
+              'amount',
+              'balance',
+              'description',
+              'wallet'
+            ])
+
+            const {
+              currency,
+              description,
+              wallet
+            } = item
+
+            assert.strictEqual(wallet, 'funding')
+            assert.notStrictEqual(
+              description,
+              'Margin Funding Payment (some else data) on wallet funding'
+            )
+            assert.match(description, /^Margin Funding/)
+            assert.notInclude(['EUR', 'JPY'], currency)
+            assert.include(['BTC'], currency)
+          })
+        }
+      }
+    ]
+
+    for (const { args, responseTest } of argsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send(args)
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isObject(res.body.result)
+      assert.isArray(res.body.result.res)
+
+      responseTest(res.body.result.res)
+    }
+  })
+
   it('it should be successfully performed by the getLedgersCsv method', async function () {
     this.timeout(20000)
 

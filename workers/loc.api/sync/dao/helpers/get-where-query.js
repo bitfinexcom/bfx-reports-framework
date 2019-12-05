@@ -127,10 +127,31 @@ const _isCondition = (
   ))
 }
 
+const _isSetNoCaseOp = (
+  fieldName,
+  origFieldName,
+  fieldsNamesToDisableCaseSensitivity
+) => {
+  const fieldsNamesArr = Object.entries(
+    fieldsNamesToDisableCaseSensitivity
+  )
+
+  return fieldsNamesArr.some(([op, fieldNames]) => {
+    return (
+      op === origFieldName &&
+      Array.isArray(fieldNames) &&
+      fieldNames.some((name) => name === fieldName)
+    )
+  })
+}
+
 const _getCompareOpAndKey = (
   compareOperator,
   key,
-  subValues
+  subValues,
+  fieldName,
+  origFieldName,
+  fieldsNamesToDisableCaseSensitivity
 ) => {
   if (
     compareOperator === SQL_OPERATORS.EQ &&
@@ -157,9 +178,29 @@ const _getCompareOpAndKey = (
     }
   }
 
+  const noCaseOp = _isSetNoCaseOp(
+    fieldName,
+    origFieldName,
+    fieldsNamesToDisableCaseSensitivity
+  )
+    ? 'COLLATE NOCASE'
+    : ''
+  const _compareOperator = (
+    compareOperator === SQL_OPERATORS.IN ||
+    compareOperator === SQL_OPERATORS.NIN
+  )
+    ? `${noCaseOp} ${compareOperator}`
+    : compareOperator
+  const _key = (
+    compareOperator === SQL_OPERATORS.EQ ||
+    compareOperator === SQL_OPERATORS.NE
+  )
+    ? ` ${key} ${noCaseOp}`
+    : ` ${key}`
+
   return {
-    compareOperator,
-    key: ` ${key}`
+    compareOperator: _compareOperator,
+    key: _key
   }
 }
 
@@ -169,6 +210,7 @@ const _getWhereQueryAndValues = (
   filter,
   accum,
   isArr = false,
+  fieldsNamesToDisableCaseSensitivity,
   condName = ''
 ) => {
   const _compareOperator = _getCompareOperator(
@@ -208,7 +250,10 @@ const _getWhereQueryAndValues = (
   } = _getCompareOpAndKey(
     _compareOperator,
     _key,
-    subValues
+    subValues,
+    _fieldName,
+    origFieldName,
+    fieldsNamesToDisableCaseSensitivity
   )
 
   return {
@@ -217,7 +262,76 @@ const _getWhereQueryAndValues = (
   }
 }
 
-module.exports = (filter = {}, isNotSetWhereClause) => {
+const _isCondField = (fieldName, conditions) => {
+  const _conditions = Array.isArray(conditions)
+    ? conditions
+    : Object.values(FILTER_CONDITIONS)
+
+  return _conditions
+    .some((key) => key === fieldName)
+}
+
+const _getFieldsNamesToDisableCaseSensitivity = (
+  filter,
+  conditions,
+  outKey,
+  initAccum = {}
+) => {
+  if (
+    !filter ||
+    typeof filter !== 'object' ||
+    Array.isArray(filter)
+  ) {
+    return {}
+  }
+
+  const filterArr = Object.entries(filter)
+
+  return filterArr.reduce((accum, [key, val]) => {
+    if (_isCondField(key)) {
+      return {
+        ..._getFieldsNamesToDisableCaseSensitivity(
+          val,
+          conditions,
+          key,
+          accum
+        )
+      }
+    }
+    if (
+      _isCondField(outKey, conditions) &&
+      !_isCondField(key) &&
+      (
+        (
+          val &&
+          typeof val === 'string'
+        ) ||
+        (
+          Array.isArray(val) &&
+          val.some((item) => (
+            item &&
+            typeof item === 'string'
+          ))
+        )
+      )
+    ) {
+      return {
+        ...accum,
+        [outKey]: Array.isArray(accum[outKey])
+          ? [...new Set([...accum[outKey], key])]
+          : [key]
+      }
+    }
+
+    return accum
+  }, initAccum)
+}
+
+module.exports = (
+  filter = {},
+  isNotSetWhereClause,
+  requestedFilter
+) => {
   let values = {}
 
   const isOrOp = _isOrOp(filter)
@@ -241,6 +355,9 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
   ]
   const hiddenFields = ['_dateFieldName']
   const keys = Object.keys(omit(_filter, hiddenFields))
+  const fieldsNamesToDisableCaseSensitivity = _getFieldsNamesToDisableCaseSensitivity(
+    requestedFilter
+  )
   const where = keys.reduce(
     (accum, curr, i) => {
       const isArr = Array.isArray(_filter[curr])
@@ -274,6 +391,7 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
               condFilter,
               condAccum,
               isCondArr,
+              fieldsNamesToDisableCaseSensitivity,
               currCond
             )
 
@@ -293,7 +411,8 @@ module.exports = (filter = {}, isNotSetWhereClause) => {
         curr,
         filter,
         accum,
-        isArr
+        isArr,
+        fieldsNamesToDisableCaseSensitivity
       )
 
       values = { ...values, ...subValues }
