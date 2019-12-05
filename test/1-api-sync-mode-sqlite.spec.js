@@ -1875,7 +1875,7 @@ describe('Sync mode API with SQLite', () => {
     assert.propertyVal(res.body, 'id', 5)
     assert.isObject(res.body.result)
     assert.isArray(res.body.result.res)
-    assert.isNumber(res.body.result.nextPage)
+    assert.isBoolean(res.body.result.nextPage)
 
     const resItem = res.body.result.res[0]
 
