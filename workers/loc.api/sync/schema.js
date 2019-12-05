@@ -651,7 +651,7 @@ const _methodCollMap = new Map([
     '_getCandles',
     {
       name: ALLOWED_COLLS.CANDLES,
-      maxLimit: 5000,
+      maxLimit: 10000,
       dateFieldName: 'mts',
       symbolFieldName: '_symbol',
       sort: [['mts', -1]],
