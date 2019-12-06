@@ -6,7 +6,7 @@ const {
 
 const getMethodLimit = (sendLimit, method) => {
   const _methodsLimits = {
-    candles: { default: 500, max: 500 }
+    candles: { default: 500, max: 500, innerMax: 10000 }
   }
 
   return getMethodLimitBase(sendLimit, method, _methodsLimits)
