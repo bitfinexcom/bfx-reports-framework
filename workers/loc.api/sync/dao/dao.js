@@ -53,6 +53,11 @@ class DAO {
   /**
    * @abstract
    */
+  async isDBEmpty () {}
+
+  /**
+   * @abstract
+   */
   async getCurrDbVer () { throw new ImplementationError() }
 
   /**

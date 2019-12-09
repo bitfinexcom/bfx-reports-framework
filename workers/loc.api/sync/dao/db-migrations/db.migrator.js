@@ -104,6 +104,12 @@ class DbMigrator {
    * @abstract
    */
   async migrateFromCurrToSupportedVer () {
+    const isDBEmpty = await this.dao.isDBEmpty()
+
+    if (isDBEmpty) {
+      return
+    }
+
     const supportedVer = this.getSupportedDbVer()
     const currVer = await this.dao.getCurrDbVer()
 
