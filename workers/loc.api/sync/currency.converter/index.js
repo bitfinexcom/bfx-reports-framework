@@ -8,6 +8,9 @@ const {
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
+const {
+  getDataFromApi
+} = require('bfx-report/workers/loc.api/helpers')
 
 const {
   CurrencyConversionDataFindingError
@@ -126,15 +129,18 @@ class CurrencyConverter {
     }
 
     const symbol = this._getPairFromPair(reqSymb)
-    const { res } = await this.rService._getPublicTrades({
-      params: {
-        symbol,
-        end,
-        limit: 1,
-        notThrowError: true,
-        notCheckNextPage: true
+    const { res } = await getDataFromApi(
+      this.rService._getPublicTrades.bind(this.rService),
+      {
+        params: {
+          symbol,
+          end,
+          limit: 1,
+          notThrowError: true,
+          notCheckNextPage: true
+        }
       }
-    })
+    )
 
     const publicTrade = Array.isArray(res)
       ? res[0]
