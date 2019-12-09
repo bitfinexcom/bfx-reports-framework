@@ -16,7 +16,7 @@
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "yargs": "^13.2.4",
-    "sqlite3": "4.0.3"
+    "sqlite3": "4.1.1"
   },
   "devDependencies": {
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",

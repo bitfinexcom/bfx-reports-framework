@@ -238,6 +238,18 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  async isDBEmpty () {
+    const tablesNames = await this.getTablesNames()
+
+    return (
+      !Array.isArray(tablesNames) ||
+      tablesNames.length === 0
+    )
+  }
+
+  /**
+   * @override
+   */
   async getCurrDbVer () {
     const data = await this._get('PRAGMA user_version')
     const { user_version: version } = { ...data }
