@@ -7,8 +7,7 @@ const {
   cloneDeep
 } = require('lodash')
 const {
-  isRateLimitError,
-  isNonceSmallError
+  getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   FindMethodError
@@ -32,7 +31,6 @@ const {
   convertCurrency
 } = require('./helpers')
 const {
-  delay,
   checkCollPermission
 } = require('../helpers')
 const {
@@ -440,52 +438,17 @@ class DataInserter extends EventEmitter {
     )
   }
 
-  async _getDataFromApi (methodApi, args, isCheckCall) {
+  _getDataFromApi (methodApi, args, isCheckCall) {
     if (!this.apiMiddleware.hasMethod(methodApi)) {
       throw new FindMethodError()
     }
 
-    const ms = 80000
-
-    let countRateLimitError = 0
-    let countNonceSmallError = 0
-    let res = null
-
-    while (true) {
-      try {
-        res = await this.apiMiddleware.request(
-          methodApi,
-          cloneDeep(args),
-          isCheckCall
-        )
-
-        break
-      } catch (err) {
-        if (isRateLimitError(err)) {
-          countRateLimitError += 1
-
-          if (countRateLimitError > 2) {
-            throw err
-          }
-
-          await delay(ms)
-
-          continue
-        } else if (isNonceSmallError(err)) {
-          countNonceSmallError += 1
-
-          if (countNonceSmallError > 20) {
-            throw err
-          }
-
-          await delay(1000)
-
-          continue
-        } else throw err
-      }
-    }
-
-    return res
+    return getDataFromApi(
+      methodApi,
+      args,
+      this.apiMiddleware.request.bind(this.apiMiddleware),
+      isCheckCall
+    )
   }
 
   async _insertApiDataPublicArrObjTypeToDb (

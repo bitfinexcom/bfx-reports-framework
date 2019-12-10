@@ -3,9 +3,11 @@
 const { stringify } = require('csv')
 
 const {
-  write,
-  getDataFromApi
+  write
 } = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
+const {
+  getDataFromApi
+} = require('bfx-report/workers/loc.api/helpers')
 
 module.exports = (rService) => async (
   wStream,
