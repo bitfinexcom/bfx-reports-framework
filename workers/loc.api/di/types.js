@@ -36,5 +36,6 @@ module.exports = {
   FullTaxReportCsvWriter: Symbol.for('FullTaxReportCsvWriter'),
   MigrationsFactory: Symbol.for('MigrationsFactory'),
   DbMigratorFactory: Symbol.for('DbMigratorFactory'),
-  SqliteDbMigrator: Symbol.for('SqliteDbMigrator')
+  SqliteDbMigrator: Symbol.for('SqliteDbMigrator'),
+  TradedVolume: Symbol.for('TradedVolume')
 }

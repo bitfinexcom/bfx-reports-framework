@@ -145,6 +145,29 @@ const paramsSchemaForWinLossApi = {
   }
 }
 
+const paramsSchemaForTradedVolumeApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    },
+    symbol: {
+      type: 'string'
+    }
+  }
+}
+
 const {
   timezone,
   dateFormat
@@ -216,6 +239,7 @@ module.exports = {
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
+  paramsSchemaForTradedVolumeApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
