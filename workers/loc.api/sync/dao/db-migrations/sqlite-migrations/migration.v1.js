@@ -1,4 +1,4 @@
-'use strinc'
+'use strict'
 
 const AbstractMigration = require('./abstract.migration')
 const {
