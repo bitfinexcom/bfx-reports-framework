@@ -163,7 +163,7 @@ const paramsSchemaForTradedVolumeApi = {
       type: 'integer'
     },
     symbol: {
-      type: 'string'
+      type: ['string', 'array']
     }
   }
 }
