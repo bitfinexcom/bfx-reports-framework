@@ -7,6 +7,10 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
+const {
+  groupByTimeframe,
+  splitSymbolPairs
+} = require('../helpers')
 
 class TradedVolume {
   constructor (
@@ -55,6 +59,36 @@ class TradedVolume {
     )
   }
 
+  _calcTrades (
+    data = [],
+    symbolFieldName,
+    symbol = []
+  ) {
+    return data.reduce((accum, trade = {}) => {
+      const { execAmount, execPrice } = { ...trade }
+      const currSymb = trade[symbolFieldName]
+      const symb = splitSymbolPairs(currSymb)[1]
+
+      if (
+        !symb ||
+        typeof symb !== 'string' ||
+        !Number.isFinite(execAmount) ||
+        !Number.isFinite(execPrice)
+      ) {
+        return { ...accum }
+      }
+
+      const amount = Math.abs(execAmount * execPrice)
+
+      return {
+        ...accum,
+        [symb]: Number.isFinite(accum[symb])
+          ? accum[symb] + amount
+          : amount
+      }
+    }, {})
+  }
+
   // TODO:
   async getTradedVolume (
     {
@@ -81,9 +115,23 @@ class TradedVolume {
       symbol
     }
 
-    const trades = await this._getTrades(args)
+    const tradesMethodColl = this.syncSchema.getMethodCollMap()
+      .get('_getTrades')
+    const {
+      symbolFieldName: tradesSymbolFieldName
+    } = tradesMethodColl
 
-    return trades // TODO:
+    const trades = await this._getTrades(args)
+    const tradesGroupedByTimeframe = await groupByTimeframe(
+      trades,
+      timeframe,
+      this.FOREX_SYMBS,
+      'mtsCreate',
+      tradesSymbolFieldName,
+      this._calcTrades.bind(this)
+    )
+
+    return tradesGroupedByTimeframe // TODO:
   }
 }
 
