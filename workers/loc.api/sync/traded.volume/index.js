@@ -8,6 +8,7 @@ const {
 
 const TYPES = require('../../di/types')
 const {
+  calcGroupedData,
   groupByTimeframe,
   splitSymbolPairs
 } = require('../helpers')
@@ -59,6 +60,7 @@ class TradedVolume {
     )
   }
 
+  // TODO: need to add currency convert
   _calcTrades (
     data = [],
     symbolFieldName,
@@ -87,6 +89,30 @@ class TradedVolume {
           : amount
       }
     }, {})
+  }
+
+  _getTradesByTimeframe () {
+    return ({ tradesGroupedByTimeframe = {} }) => {
+      const tradesArr = Object.entries(tradesGroupedByTimeframe)
+      const res = tradesArr.reduce((
+        accum,
+        [symb, amount]
+      ) => {
+        if (
+          symb !== 'USD' ||
+          !Number.isFinite(amount)
+        ) {
+          return { ...accum }
+        }
+
+        return {
+          ...accum,
+          [symb]: amount
+        }
+      }, {})
+
+      return res
+    }
   }
 
   // TODO:
@@ -131,7 +157,14 @@ class TradedVolume {
       this._calcTrades.bind(this)
     )
 
-    return tradesGroupedByTimeframe // TODO:
+    const groupedData = await calcGroupedData(
+      { tradesGroupedByTimeframe },
+      false,
+      this._getTradesByTimeframe(),
+      true
+    )
+
+    return groupedData // TODO:
   }
 }
 
