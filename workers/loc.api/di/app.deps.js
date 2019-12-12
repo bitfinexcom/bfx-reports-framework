@@ -45,6 +45,7 @@ const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
 const PositionsSnapshot = require('../sync/positions.snapshot')
 const FullSnapshotReport = require('../sync/full.snapshot.report')
+const TradedVolume = require('../sync/traded.volume')
 const CurrencyConverter = require('../sync/currency.converter')
 const CsvJobData = require('../generate-csv/csv.job.data')
 const {
@@ -194,6 +195,8 @@ module.exports = ({
       .to(PositionsSnapshot)
     bind(TYPES.FullSnapshotReport)
       .to(FullSnapshotReport)
+    bind(TYPES.TradedVolume)
+      .to(TradedVolume)
     bind(TYPES.FullSnapshotReportCsvWriter)
       .toConstantValue(
         bindDepsToFn(
