@@ -1,5 +1,7 @@
 'use strict'
 
+const moment = require('moment')
+
 const {
   decorate,
   injectable,
@@ -26,12 +28,14 @@ class CurrencyConverter {
     rService,
     dao,
     syncSchema,
-    FOREX_SYMBS
+    FOREX_SYMBS,
+    ALLOWED_COLLS
   ) {
     this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
+    this.ALLOWED_COLLS = ALLOWED_COLLS
 
     this._COLL_NAMES = {
       PUBLIC_TRADES: 'publicTrades',
@@ -468,6 +472,59 @@ class CurrencyConverter {
     )
   }
 
+  _getCandles ({
+    start: _start = 0,
+    end = Date.now(),
+    symbol
+  }) {
+    const mtsMoment = moment.utc(_start)
+      .add(-1, 'days')
+      .valueOf()
+    const start = _start
+      ? mtsMoment
+      : _start
+    const {
+      symbolFieldName,
+      dateFieldName
+    } = this.syncSchema.getMethodCollMap()
+      .get('_getCandles')
+    const candlesModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.CANDLES)
+    const symbFilter = (
+      Array.isArray(symbol) &&
+      symbol.length !== 0
+    )
+      ? { $in: { [symbolFieldName]: symbol } }
+      : {}
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.CANDLES,
+      {
+        filter: {
+          $lte: { [dateFieldName]: end },
+          $gte: { [dateFieldName]: start },
+          ...symbFilter
+        },
+        sort: [[dateFieldName, -1]],
+        projection: candlesModel,
+        isExcludePrivate: true
+      }
+    )
+  }
+
+  _isNotIntStartAndEndMts (elems, dateFieldName) {
+    return (
+      !Array.isArray(elems) ||
+      elems.length === 0 ||
+      !elems[0] ||
+      !elems[elems.length - 1] ||
+      typeof elems[0] !== 'object' ||
+      typeof elems[elems.length - 1] !== 'object' ||
+      !Number.isInteger(elems[0][dateFieldName]) ||
+      !Number.isInteger(elems[elems.length - 1][dateFieldName])
+    )
+  }
+
   convertByCandles (data, convSchema) {
     return this._convertBy(
       this._COLL_NAMES.CANDLES,
@@ -542,6 +599,88 @@ class CurrencyConverter {
 
     throw new CurrencyConversionDataFindingError()
   }
+
+  async convertManyByCandles (data, convSchema) {
+    const _convSchema = {
+      convertTo: 'USD',
+      symbolFieldName: '',
+      dateFieldName: '',
+      convFields: [{ inputField: '', outputField: '' }],
+      ...convSchema
+    }
+    const {
+      convertTo,
+      symbolFieldName,
+      dateFieldName,
+      convFields
+    } = _convSchema
+    const isArr = Array.isArray(data)
+    const elems = isArr
+      ? data
+      : [data]
+
+    if (
+      !Array.isArray(convFields) ||
+      convFields.length === 0 ||
+      this._isEmptyStr(convertTo) ||
+      this._isEmptyStr(symbolFieldName) ||
+      this._isEmptyStr(dateFieldName) ||
+      this._isNotIntStartAndEndMts(elems, dateFieldName)
+    ) {
+      return data
+    }
+
+    const end = elems[0][dateFieldName]
+    const start = elems[elems.length - 1][dateFieldName]
+
+    const candles = await this._getCandles({ start, end })
+
+    const res = []
+
+    for (const obj of elems) {
+      const isNotObj = !obj || typeof obj !== 'object'
+      const item = isNotObj ? obj : { ...obj }
+
+      res.push(item)
+
+      if (
+        isNotObj ||
+        this._isEmptyStr(item[symbolFieldName]) ||
+        !Number.isInteger(item[dateFieldName])
+      ) {
+        continue
+      }
+
+      const _symbol = splitSymbolPairs(item[symbolFieldName])[1]
+      const symbol = this._getConvertingSymb(_symbol)
+      const isSameSymb = convertTo === symbol
+      const price = isSameSymb
+        ? 1
+        : this._getCandlesPriceFromData(
+          candles,
+          symbol,
+          item[dateFieldName]
+        )
+
+      if (!Number.isFinite(price)) {
+        continue
+      }
+
+      convFields.forEach(({ inputField, outputField }) => {
+        if (
+          this._isEmptyStr(inputField) ||
+          this._isEmptyStr(outputField) ||
+          !Number.isFinite(item[inputField])
+        ) {
+          return
+        }
+
+        item[outputField] = item[inputField] * price
+      })
+    }
+
+    return isArr ? res : res[0]
+  }
 }
 
 decorate(injectable(), CurrencyConverter)
@@ -549,5 +688,6 @@ decorate(inject(TYPES.RService), CurrencyConverter, 0)
 decorate(inject(TYPES.DAO), CurrencyConverter, 1)
 decorate(inject(TYPES.SyncSchema), CurrencyConverter, 2)
 decorate(inject(TYPES.FOREX_SYMBS), CurrencyConverter, 3)
+decorate(inject(TYPES.ALLOWED_COLLS), CurrencyConverter, 4)
 
 module.exports = CurrencyConverter
