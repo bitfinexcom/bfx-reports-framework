@@ -18,12 +18,14 @@ class TradedVolume {
     dao,
     ALLOWED_COLLS,
     syncSchema,
-    FOREX_SYMBS
+    FOREX_SYMBS,
+    currencyConverter
   ) {
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
+    this.currencyConverter = currencyConverter
   }
 
   async _getTrades ({
@@ -60,13 +62,28 @@ class TradedVolume {
     )
   }
 
-  // TODO: need to add currency convert
-  _calcTrades (
-    data = [],
-    symbolFieldName,
-    symbol = []
-  ) {
+  _calcTrades (data = []) {
     return data.reduce((accum, trade = {}) => {
+      const { amountUsd } = { ...trade }
+
+      if (!Number.isFinite(amountUsd)) {
+        return { ...accum }
+      }
+
+      return {
+        ...accum,
+        USD: Number.isFinite(accum.USD)
+          ? accum.USD + amountUsd
+          : amountUsd
+      }
+    }, {})
+  }
+
+  _calcTradesAmount (
+    data = [],
+    symbolFieldName
+  ) {
+    return data.map((trade = {}) => {
       const { execAmount, execPrice } = { ...trade }
       const currSymb = trade[symbolFieldName]
       const symb = splitSymbolPairs(currSymb)[1]
@@ -77,16 +94,15 @@ class TradedVolume {
         !Number.isFinite(execAmount) ||
         !Number.isFinite(execPrice)
       ) {
-        return { ...accum }
+        return {
+          ...trade,
+          calcAmount: null
+        }
       }
 
-      const amount = Math.abs(execAmount * execPrice)
-
       return {
-        ...accum,
-        [symb]: Number.isFinite(accum[symb])
-          ? accum[symb] + amount
-          : amount
+        ...trade,
+        calcAmount: Math.abs(execAmount * execPrice)
       }
     }, {})
   }
@@ -115,7 +131,6 @@ class TradedVolume {
     }
   }
 
-  // TODO:
   async getTradedVolume (
     {
       auth = {},
@@ -144,12 +159,29 @@ class TradedVolume {
     const tradesMethodColl = this.syncSchema.getMethodCollMap()
       .get('_getTrades')
     const {
-      symbolFieldName: tradesSymbolFieldName
+      symbolFieldName: tradesSymbolFieldName,
+      dateFieldName: tradesDateFieldName
     } = tradesMethodColl
 
     const trades = await this._getTrades(args)
-    const tradesGroupedByTimeframe = await groupByTimeframe(
+    const calcedTradesAmount = this._calcTradesAmount(
       trades,
+      tradesSymbolFieldName
+    )
+    const convertedTrades = await this.currencyConverter
+      .convertManyByCandles(
+        calcedTradesAmount,
+        {
+          symbolFieldName: tradesSymbolFieldName,
+          dateFieldName: tradesDateFieldName,
+          convFields: [{
+            inputField: 'calcAmount',
+            outputField: 'amountUsd'
+          }]
+        }
+      )
+    const tradesGroupedByTimeframe = await groupByTimeframe(
+      convertedTrades,
       timeframe,
       this.FOREX_SYMBS,
       'mtsCreate',
@@ -164,7 +196,7 @@ class TradedVolume {
       true
     )
 
-    return groupedData // TODO:
+    return groupedData
   }
 }
 
@@ -173,5 +205,6 @@ decorate(inject(TYPES.DAO), TradedVolume, 0)
 decorate(inject(TYPES.ALLOWED_COLLS), TradedVolume, 1)
 decorate(inject(TYPES.SyncSchema), TradedVolume, 2)
 decorate(inject(TYPES.FOREX_SYMBS), TradedVolume, 3)
+decorate(inject(TYPES.CurrencyConverter), TradedVolume, 4)
 
 module.exports = TradedVolume
