@@ -615,4 +615,30 @@ describe('Additional sync mode API with SQLite', () => {
 
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
+
+  it('it should be successfully performed by the getTradedVolumeCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTradedVolumeCsv',
+        params: {
+          end,
+          start,
+          timeframe: 'day',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
 })
