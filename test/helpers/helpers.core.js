@@ -39,8 +39,25 @@ const closeSQLite = (db) => {
 
 const delay = (mc = 500) => _delay(mc)
 
+const getParamsArrToTestTimeframeGrouping = (
+  params = {},
+  timeframes = ['day', 'month', 'year']
+) => {
+  return Array(timeframes.length)
+    .fill({ ...params })
+    .map((item, i) => {
+      const timeframeIndex = i % timeframes.length
+
+      return {
+        ...item,
+        timeframe: timeframes[timeframeIndex]
+      }
+    })
+}
+
 module.exports = {
   connToSQLite,
   closeSQLite,
-  delay
+  delay,
+  getParamsArrToTestTimeframeGrouping
 }
