@@ -390,6 +390,44 @@ class CsvJobData extends BaseCsvJobData {
 
     return jobData
   }
+
+  async getTradedVolumeCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForTradedVolumeCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getTradedVolume',
+      fileNamesMap: [['getTradedVolume', 'traded-volume']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        USD: 'USD',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
+  }
 }
 
 decorate(inject(TYPES.RService), CsvJobData, 0)
