@@ -231,6 +231,15 @@ const paramsSchemaForFullTaxReportCsv = {
   }
 }
 
+const paramsSchemaForTradedVolumeCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForTradedVolumeApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
@@ -245,5 +254,6 @@ module.exports = {
   paramsSchemaForWinLossCsv,
   paramsSchemaForPositionsSnapshotCsv,
   paramsSchemaForFullSnapshotReportCsv,
-  paramsSchemaForFullTaxReportCsv
+  paramsSchemaForFullTaxReportCsv,
+  paramsSchemaForTradedVolumeCsv
 }
