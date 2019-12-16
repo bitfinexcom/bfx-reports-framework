@@ -9,8 +9,7 @@ const {
 const TYPES = require('../../di/types')
 const {
   calcGroupedData,
-  groupByTimeframe,
-  splitSymbolPairs
+  groupByTimeframe
 } = require('../helpers')
 
 class TradedVolume {
@@ -79,18 +78,11 @@ class TradedVolume {
     }, {})
   }
 
-  _calcTradesAmount (
-    data = [],
-    symbolFieldName
-  ) {
+  _calcTradesAmount (data = []) {
     return data.map((trade = {}) => {
       const { execAmount, execPrice } = { ...trade }
-      const currSymb = trade[symbolFieldName]
-      const symb = splitSymbolPairs(currSymb)[1]
 
       if (
-        !symb ||
-        typeof symb !== 'string' ||
         !Number.isFinite(execAmount) ||
         !Number.isFinite(execPrice)
       ) {
