@@ -15,9 +15,9 @@ class FeesReport {
     this.trades = trades
   }
 
-  async getFeesReport (args) {
+  getFeesReport (args) {
     return this.trades.getGroupedDataIn(
-      'fee',
+      'feeUsd',
       args
     )
   }
