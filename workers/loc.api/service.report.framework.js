@@ -878,6 +878,18 @@ class FrameworkReportService extends ReportService {
     }, 'getTradedVolume', cb)
   }
 
+  getFeesReport (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForFeesReportApi')
+
+      return this._feesReport.getFeesReport(args)
+    }, 'getFeesReport', cb)
+  }
+
   /**
    * @override
    */
