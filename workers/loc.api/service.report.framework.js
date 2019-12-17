@@ -866,6 +866,18 @@ class FrameworkReportService extends ReportService {
     }, 'getFullTaxReport', cb)
   }
 
+  getTradedVolume (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForTradedVolumeApi')
+
+      return this._tradedVolume.getTradedVolume(args)
+    }, 'getTradedVolume', cb)
+  }
+
   /**
    * @override
    */
@@ -921,6 +933,15 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFullTaxReportCsv', cb)
+  }
+
+  getTradedVolumeCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getTradedVolumeCsvJobData',
+        args
+      )
+    }, 'getTradedVolumeCsv', cb)
   }
 }
 

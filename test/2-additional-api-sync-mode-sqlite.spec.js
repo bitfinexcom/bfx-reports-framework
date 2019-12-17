@@ -22,7 +22,8 @@ const {
 const {
   connToSQLite,
   closeSQLite,
-  delay
+  delay,
+  getParamsArrToTestTimeframeGrouping
 } = require('./helpers/helpers.core')
 const {
   createMockRESTv2SrvWithDate
@@ -156,17 +157,7 @@ describe('Additional sync mode API with SQLite', () => {
   it('it should be successfully performed by the getBalanceHistory method', async function () {
     this.timeout(5000)
 
-    const timeframeArr = ['day', 'month', 'year']
-    const paramsArr = Array(timeframeArr.length)
-      .fill({ start, end })
-      .map((item, i) => {
-        const timeframeIndex = i % timeframeArr.length
-
-        return {
-          ...item,
-          timeframe: timeframeArr[timeframeIndex]
-        }
-      })
+    const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
 
     for (const params of paramsArr) {
       const res = await agent
@@ -198,17 +189,7 @@ describe('Additional sync mode API with SQLite', () => {
   it('it should be successfully performed by the getWinLoss method', async function () {
     this.timeout(10000)
 
-    const timeframeArr = ['day', 'month', 'year']
-    const paramsArr = Array(timeframeArr.length)
-      .fill({ start, end })
-      .map((item, i) => {
-        const timeframeIndex = i % timeframeArr.length
-
-        return {
-          ...item,
-          timeframe: timeframeArr[timeframeIndex]
-        }
-      })
+    const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
 
     for (const params of paramsArr) {
       const res = await agent
@@ -439,6 +420,38 @@ describe('Additional sync mode API with SQLite', () => {
     }
   })
 
+  it('it should be successfully performed by the getTradedVolume method', async function () {
+    this.timeout(10000)
+
+    const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getTradedVolume',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      const resItem = res.body.result[0]
+
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'mts',
+        'USD'
+      ])
+    }
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
@@ -593,6 +606,32 @@ describe('Additional sync mode API with SQLite', () => {
         params: {
           end,
           start,
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getTradedVolumeCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTradedVolumeCsv',
+        params: {
+          end,
+          start,
+          timeframe: 'day',
           email
         },
         id: 5

@@ -145,6 +145,29 @@ const paramsSchemaForWinLossApi = {
   }
 }
 
+const paramsSchemaForTradedVolumeApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    },
+    symbol: {
+      type: ['string', 'array']
+    }
+  }
+}
+
 const {
   timezone,
   dateFormat
@@ -208,6 +231,15 @@ const paramsSchemaForFullTaxReportCsv = {
   }
 }
 
+const paramsSchemaForTradedVolumeCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForTradedVolumeApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForRiskApi,
@@ -216,10 +248,12 @@ module.exports = {
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
+  paramsSchemaForTradedVolumeApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
   paramsSchemaForPositionsSnapshotCsv,
   paramsSchemaForFullSnapshotReportCsv,
-  paramsSchemaForFullTaxReportCsv
+  paramsSchemaForFullTaxReportCsv,
+  paramsSchemaForTradedVolumeCsv
 }
