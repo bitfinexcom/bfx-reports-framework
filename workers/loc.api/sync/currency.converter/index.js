@@ -506,8 +506,7 @@ class CurrencyConverter {
           ...symbFilter
         },
         sort: [[dateFieldName, -1]],
-        projection: candlesModel,
-        isExcludePrivate: true
+        projection: candlesModel
       }
     )
   }
@@ -658,7 +657,7 @@ class CurrencyConverter {
         ? 1
         : this._getCandlesPriceFromData(
           candles,
-          symbol,
+          `t${symbol}${convertTo}`,
           item[dateFieldName]
         )
 
