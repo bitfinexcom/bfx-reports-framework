@@ -99,13 +99,20 @@ class Trades {
       )
         ? fee * execPrice
         : _feeUsd
-      const feeForCurrConv = (
+      const _feeForCurrConv = (
         !isFeeInUsd &&
         !isPriceInUsd &&
         Number.isFinite(fee)
       )
         ? fee
         : null
+      const feeForCurrConv = (
+        Number.isFinite(_feeForCurrConv) &&
+        Number.isFinite(execPrice) &&
+        symb !== feeCurrency
+      )
+        ? _feeForCurrConv * execPrice
+        : _feeForCurrConv
 
       return {
         ...trade,
@@ -189,8 +196,7 @@ class Trades {
 
     const trades = await this._getTrades(args)
     const calcedTradesAmount = this._calcAmounts(
-      trades,
-      tradesSymbolFieldName
+      trades
     )
     const convertedTrades = await this.currencyConverter
       .convertManyByCandles(
