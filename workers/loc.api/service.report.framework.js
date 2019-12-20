@@ -883,11 +883,22 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
-
       checkParams(args, 'paramsSchemaForFeesReportApi')
 
       return this._feesReport.getFeesReport(args)
     }, 'getFeesReport', cb)
+  }
+
+  getPerformingLoan (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForPerformingLoanApi')
+
+      return this._performingLoan.getPerformingLoan(args)
+    }, 'getPerformingLoan', cb)
   }
 
   /**
