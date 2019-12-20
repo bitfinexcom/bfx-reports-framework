@@ -191,6 +191,29 @@ const paramsSchemaForFeesReportApi = {
   }
 }
 
+const paramsSchemaForPerformingLoanApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    },
+    symbol: {
+      type: ['string', 'array']
+    }
+  }
+}
+
 const {
   timezone,
   dateFormat
@@ -282,6 +305,7 @@ module.exports = {
   paramsSchemaForFullTaxReportApi,
   paramsSchemaForTradedVolumeApi,
   paramsSchemaForFeesReportApi,
+  paramsSchemaForPerformingLoanApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
