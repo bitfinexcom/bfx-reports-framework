@@ -452,6 +452,38 @@ describe('Additional sync mode API with SQLite', () => {
     }
   })
 
+  it('it should be successfully performed by the getFeesReport method', async function () {
+    this.timeout(10000)
+
+    const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getFeesReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      const resItem = res.body.result[0]
+
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'mts',
+        'USD'
+      ])
+    }
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
@@ -628,6 +660,32 @@ describe('Additional sync mode API with SQLite', () => {
       .send({
         auth,
         method: 'getTradedVolumeCsv',
+        params: {
+          end,
+          start,
+          timeframe: 'day',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getFeesReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(processorQueue)
+    const aggrPromise = queueToPromise(aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFeesReportCsv',
         params: {
           end,
           start,

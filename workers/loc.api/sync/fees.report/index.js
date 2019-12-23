@@ -8,22 +8,22 @@ const {
 
 const TYPES = require('../../di/types')
 
-class TradedVolume {
+class FeesReport {
   constructor (
     trades
   ) {
     this.trades = trades
   }
 
-  getTradedVolume (args) {
+  getFeesReport (args) {
     return this.trades.getGroupedDataIn(
-      'amountUsd',
+      'feeUsd',
       args
     )
   }
 }
 
-decorate(injectable(), TradedVolume)
-decorate(inject(TYPES.Trades), TradedVolume, 0)
+decorate(injectable(), FeesReport)
+decorate(inject(TYPES.Trades), FeesReport, 0)
 
-module.exports = TradedVolume
+module.exports = FeesReport

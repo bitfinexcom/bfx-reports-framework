@@ -45,7 +45,9 @@ const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
 const PositionsSnapshot = require('../sync/positions.snapshot')
 const FullSnapshotReport = require('../sync/full.snapshot.report')
+const Trades = require('../sync/trades')
 const TradedVolume = require('../sync/traded.volume')
+const FeesReport = require('../sync/fees.report')
 const CurrencyConverter = require('../sync/currency.converter')
 const CsvJobData = require('../generate-csv/csv.job.data')
 const {
@@ -87,7 +89,8 @@ module.exports = ({
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
           ['_fullSnapshotReport', TYPES.FullSnapshotReport],
           ['_fullTaxReport', TYPES.FullTaxReport],
-          ['_tradedVolume', TYPES.TradedVolume]
+          ['_tradedVolume', TYPES.TradedVolume],
+          ['_feesReport', TYPES.FeesReport]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -195,8 +198,12 @@ module.exports = ({
       .to(PositionsSnapshot)
     bind(TYPES.FullSnapshotReport)
       .to(FullSnapshotReport)
+    bind(TYPES.Trades)
+      .to(Trades)
     bind(TYPES.TradedVolume)
       .to(TradedVolume)
+    bind(TYPES.FeesReport)
+      .to(FeesReport)
     bind(TYPES.FullSnapshotReportCsvWriter)
       .toConstantValue(
         bindDepsToFn(

@@ -428,6 +428,44 @@ class CsvJobData extends BaseCsvJobData {
 
     return jobData
   }
+
+  async getFeesReportCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForFeesReportCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getFeesReport',
+      fileNamesMap: [['getFeesReport', 'fees-report']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        USD: 'USD',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
+  }
 }
 
 decorate(inject(TYPES.RService), CsvJobData, 0)

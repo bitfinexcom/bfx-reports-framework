@@ -37,5 +37,7 @@ module.exports = {
   MigrationsFactory: Symbol.for('MigrationsFactory'),
   DbMigratorFactory: Symbol.for('DbMigratorFactory'),
   SqliteDbMigrator: Symbol.for('SqliteDbMigrator'),
-  TradedVolume: Symbol.for('TradedVolume')
+  Trades: Symbol.for('Trades'),
+  TradedVolume: Symbol.for('TradedVolume'),
+  FeesReport: Symbol.for('FeesReport')
 }
