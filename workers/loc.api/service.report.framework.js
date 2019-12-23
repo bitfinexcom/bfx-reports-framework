@@ -883,6 +883,7 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
+
       checkParams(args, 'paramsSchemaForFeesReportApi')
 
       return this._feesReport.getFeesReport(args)
