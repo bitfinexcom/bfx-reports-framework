@@ -975,6 +975,15 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getFeesReportCsv', cb)
   }
+
+  getPerformingLoanCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getPerformingLoanCsvCsvJobData',
+        args
+      )
+    }, 'getPerformingLoanCsv', cb)
+  }
 }
 
 module.exports = FrameworkReportService
