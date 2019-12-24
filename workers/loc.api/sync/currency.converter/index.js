@@ -134,7 +134,7 @@ class CurrencyConverter {
 
     const symbol = this._getPairFromPair(reqSymb)
     const { res } = await getDataFromApi(
-      this.rService._getPublicTrades.bind(this.rService),
+      (space, args) => this.rService._getPublicTrades.bind(this.rService)(args),
       {
         params: {
           symbol,
