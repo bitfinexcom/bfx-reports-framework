@@ -586,7 +586,7 @@ const _methodCollMap = new Map([
       sort: [['mts', -1]],
       groupResBy: ['wallet', 'currency'],
       subQuery: {
-        sort: [['mts', 1], ['id', 1]]
+        sort: [['mts', -1], ['id', -1]]
       },
       type: 'hidden:insertable:array:objects',
       model: { ..._models.get(TABLES_NAMES.LEDGERS) },
