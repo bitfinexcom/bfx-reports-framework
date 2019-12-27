@@ -466,6 +466,44 @@ class CsvJobData extends BaseCsvJobData {
 
     return jobData
   }
+
+  async getPerformingLoanCsvCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForPerformingLoanCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      args,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getPerformingLoan',
+      fileNamesMap: [['getPerformingLoan', 'performing-loan']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        USD: 'USD',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
+  }
 }
 
 decorate(inject(TYPES.RService), CsvJobData, 0)

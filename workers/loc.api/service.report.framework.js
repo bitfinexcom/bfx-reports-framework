@@ -890,6 +890,18 @@ class FrameworkReportService extends ReportService {
     }, 'getFeesReport', cb)
   }
 
+  getPerformingLoan (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        throw new DuringSyncMethodAccessError()
+      }
+
+      checkParams(args, 'paramsSchemaForPerformingLoanApi')
+
+      return this._performingLoan.getPerformingLoan(args)
+    }, 'getPerformingLoan', cb)
+  }
+
   /**
    * @override
    */
@@ -963,6 +975,15 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFeesReportCsv', cb)
+  }
+
+  getPerformingLoanCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getPerformingLoanCsvCsvJobData',
+        args
+      )
+    }, 'getPerformingLoanCsv', cb)
   }
 }
 
