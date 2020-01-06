@@ -22,6 +22,9 @@ const argv = require('yargs')
   .option('wsPort', {
     type: 'number'
   })
+  .option('grape', {
+    type: 'string'
+  })
   .help('help')
   .argv
 
@@ -36,6 +39,13 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
     this.appDeps.push(_appDeps)
     this.container.load(_appDeps)
+  }
+
+  getGrcConf () {
+    return {
+      ...super.getGrcConf(),
+      grape: argv.grape
+    }
   }
 
   getApiConf () {
