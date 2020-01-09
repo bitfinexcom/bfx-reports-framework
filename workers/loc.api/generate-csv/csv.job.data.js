@@ -467,7 +467,7 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getPerformingLoanCsvCsvJobData (
+  async getPerformingLoanCsvJobData (
     args,
     uId,
     uInfo

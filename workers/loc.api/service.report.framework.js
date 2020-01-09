@@ -980,7 +980,7 @@ class FrameworkReportService extends ReportService {
   getPerformingLoanCsv (space, args, cb) {
     return this._responder(() => {
       return this._generateCsv(
-        'getPerformingLoanCsvCsvJobData',
+        'getPerformingLoanCsvJobData',
         args
       )
     }, 'getPerformingLoanCsv', cb)
