@@ -22,6 +22,9 @@ const argv = require('yargs')
   .option('wsPort', {
     type: 'number'
   })
+  .option('grape', {
+    type: 'string'
+  })
   .help('help')
   .argv
 
@@ -36,6 +39,13 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
     this.appDeps.push(_appDeps)
     this.container.load(_appDeps)
+  }
+
+  getGrcConf () {
+    return {
+      ...super.getGrcConf(),
+      grape: argv.grape
+    }
   }
 
   getApiConf () {
@@ -78,6 +88,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
   init () {
     super.init()
 
+    const dbFolder = path.isAbsolute(argv.dbFolder)
+      ? argv.dbFolder
+      : path.join(this.ctx.root, argv.dbFolder)
     const conf = this.conf[this.group]
     const facs = []
 
@@ -95,7 +108,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
           `bfx-facs-db-${conf.dbDriver}`,
           'm0',
           'm0',
-          { name: 'sync' }
+          { name: 'sync', dbFolder }
         ]
       )
     }
