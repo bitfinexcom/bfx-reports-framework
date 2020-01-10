@@ -495,6 +495,8 @@ class CsvJobData extends BaseCsvJobData {
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
+        cumulative: 'CUMULATIVE USD',
+        perc: 'PERCENT FOR YEAR',
         mts: 'DATE'
       },
       formatSettings: {
