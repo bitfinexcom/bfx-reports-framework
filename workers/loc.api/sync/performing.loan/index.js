@@ -32,7 +32,10 @@ class PerformingLoan {
     auth,
     start,
     end,
-    symbol
+    symbol,
+    filter = {
+      $eq: { _isMarginFundingPayment: 1 }
+    }
   }) {
     const user = await this.dao.checkAuthInDb({ auth })
 
@@ -49,10 +52,10 @@ class PerformingLoan {
       this.ALLOWED_COLLS.LEDGERS,
       {
         filter: {
+          ...filter,
           user_id: user._id,
           $lte: { mts: end },
           $gte: { mts: start },
-          $eq: { _isMarginFundingPayment: 1 },
           ...symbFilter
         },
         sort: [['mts', -1]],
@@ -190,8 +193,18 @@ class PerformingLoan {
       end,
       symbol
     }
+    const startYear = (new Date(start)).getUTCFullYear()
+    const endYear = (new Date(end)).getUTCFullYear()
 
     const ledgers = await this._getLedgers(args)
+    const fundingWalletLedgers = await this._getLedgers({
+      ...args,
+      start: Date.UTC(startYear),
+      end: Date.UTC(endYear + 1) - 1,
+      filter: {
+        $eq: { wallet: 'funding' }
+      }
+    })
 
     const {
       dateFieldName: ledgersDateFieldName,
@@ -207,7 +220,7 @@ class PerformingLoan {
       this._calcLedgers()
     )
     const amountsGroupedByYear = await groupByTimeframe(
-      ledgers,
+      fundingWalletLedgers,
       'year',
       this.FOREX_SYMBS,
       ledgersDateFieldName,
