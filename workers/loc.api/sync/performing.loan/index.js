@@ -66,33 +66,56 @@ class PerformingLoan {
     )
   }
 
-  _calcLedgers () {
-    return (data = []) => data.reduce((accum, trade = {}) => {
-      const { amountUsd } = { ...trade }
+  // TODO:
+  _calcDailyPercs (data) {
+    return data.reduce((accum, ledger = {}) => {
+      const { amount, balance, mts } = { ...ledger }
 
-      if (!Number.isFinite(amountUsd)) {
-        return { ...accum }
-      }
-
-      return {
-        ...accum,
-        USD: Number.isFinite(accum.USD)
-          ? accum.USD + amountUsd
-          : amountUsd
-      }
-    }, {})
+      return accum
+    }, [])
   }
 
-  _calcAmountPerc (res, amountForAllYear) {
-    const { USD: amount } = { ...res }
+  _calcLedgers () {
+    return (data = []) => {
+      const res = data.reduce((accum, ledger = {}) => {
+        const { amountUsd } = { ...ledger }
 
-    return (
-      Number.isFinite(amount) &&
-      Number.isFinite(amountForAllYear) &&
-      amountForAllYear !== 0
-    )
-      ? (amount / amountForAllYear) * 100
-      : null
+        if (!Number.isFinite(amountUsd)) {
+          return { ...accum }
+        }
+
+        return {
+          ...accum,
+          USD: Number.isFinite(accum.USD)
+            ? accum.USD + amountUsd
+            : amountUsd
+        }
+      }, {})
+      const dailyPercs = this._calcDailyPercs(data)
+
+      return {
+        ...res,
+        dailyPercs
+      }
+    }
+  }
+
+  _calcAmountPerc (ledgersGroupedByTimeframe) {
+    const { dailyPercs = [] } = { ...ledgersGroupedByTimeframe }
+
+    if (
+      !Array.isArray(dailyPercs) ||
+      dailyPercs.length === 0 ||
+      dailyPercs.some((item) => !Number.isFinite(item))
+    ) {
+      return null
+    }
+
+    const total = dailyPercs.reduce((accum, item) => {
+      return accum + item
+    }, 0)
+
+    return total / dailyPercs.length
   }
 
   _calcPrevAmount (res, cumulative) {
@@ -106,33 +129,7 @@ class PerformingLoan {
       : cumulative
   }
 
-  _amountForAllYear (mts, amountsGroupedByYear = []) {
-    if (
-      !Number.isInteger(mts) ||
-      !Array.isArray(amountsGroupedByYear) ||
-      amountsGroupedByYear.length === 0
-    ) {
-      return null
-    }
-
-    const amountObj = amountsGroupedByYear.find((item) => {
-      const { mts: amountMts } = { ...item }
-
-      if (!Number.isInteger(mts)) {
-        return false
-      }
-
-      const year = (new Date(mts)).getUTCFullYear()
-      const amountYear = (new Date(amountMts)).getUTCFullYear()
-
-      return year === amountYear
-    })
-    const { vals: { USD: amount } = {} } = { ...amountObj }
-
-    return amount
-  }
-
-  _getLedgersByTimeframe (amountsGroupedByYear = []) {
+  _getLedgersByTimeframe () {
     let _cumulative = 0
 
     return ({ ledgersGroupedByTimeframe = {}, mts }) => {
@@ -153,11 +150,7 @@ class PerformingLoan {
           [symb]: amount
         }
       }, {})
-      const amountForAllYear = this._amountForAllYear(
-        mts,
-        amountsGroupedByYear
-      )
-      const perc = this._calcAmountPerc(res, amountForAllYear)
+      const perc = this._calcAmountPerc(ledgersGroupedByTimeframe)
       const cumulative = _cumulative
       _cumulative = this._calcPrevAmount(res, cumulative)
 
@@ -193,18 +186,8 @@ class PerformingLoan {
       end,
       symbol
     }
-    const startYear = (new Date(start)).getUTCFullYear()
-    const endYear = (new Date(end)).getUTCFullYear()
 
     const ledgers = await this._getLedgers(args)
-    const fundingWalletLedgers = await this._getLedgers({
-      ...args,
-      start: Date.UTC(startYear),
-      end: Date.UTC(endYear + 1) - 1,
-      filter: {
-        $eq: { wallet: 'funding' }
-      }
-    })
 
     const {
       dateFieldName: ledgersDateFieldName,
@@ -219,19 +202,11 @@ class PerformingLoan {
       ledgersSymbolFieldName,
       this._calcLedgers()
     )
-    const amountsGroupedByYear = await groupByTimeframe(
-      fundingWalletLedgers,
-      'year',
-      this.FOREX_SYMBS,
-      ledgersDateFieldName,
-      ledgersSymbolFieldName,
-      this._calcLedgers()
-    )
 
     const groupedData = await calcGroupedData(
       { ledgersGroupedByTimeframe },
       false,
-      this._getLedgersByTimeframe(amountsGroupedByYear),
+      this._getLedgersByTimeframe(),
       true
     )
 
