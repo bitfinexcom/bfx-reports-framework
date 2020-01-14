@@ -88,7 +88,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
   init () {
     super.init()
 
-    const dbFolder = path.isAbsolute(argv.dbFolder)
+    const dbPathAbsolute = path.isAbsolute(argv.dbFolder)
       ? argv.dbFolder
       : path.join(this.ctx.root, argv.dbFolder)
     const conf = this.conf[this.group]
@@ -108,7 +108,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
           `bfx-facs-db-${conf.dbDriver}`,
           'm0',
           'm0',
-          { name: 'sync', dbFolder }
+          { name: 'sync', dbPathAbsolute }
         ]
       )
     }
