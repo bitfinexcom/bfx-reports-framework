@@ -9,7 +9,8 @@ const {
 const TYPES = require('../../di/types')
 const {
   calcGroupedData,
-  groupByTimeframe
+  groupByTimeframe,
+  getStartMtsByTimeframe
 } = require('../helpers')
 
 class PerformingLoan {
@@ -66,13 +67,64 @@ class PerformingLoan {
     )
   }
 
-  // TODO:
-  _calcDailyPercs (data) {
-    return data.reduce((accum, ledger = {}) => {
-      const { amount, balance, mts } = { ...ledger }
+  _calcPercsArr (percs) {
+    if (
+      !Array.isArray(percs) ||
+      percs.length === 0 ||
+      percs.some((item) => !Number.isFinite(item))
+    ) {
+      return null
+    }
 
-      return accum
-    }, [])
+    const total = percs.reduce((accum, item) => {
+      return accum + item
+    }, 0)
+
+    return total / percs.length
+  }
+
+  _isSameDay (prevMts, mts) {
+    return getStartMtsByTimeframe(prevMts, 'day') === getStartMtsByTimeframe(mts, 'day')
+  }
+
+  _calcPerc (amount, balance) {
+    if (
+      !Number.isFinite(amount) ||
+      !Number.isFinite(balance)
+    ) {
+      return 0
+    }
+
+    return (amount / balance) * 365 * 100
+  }
+
+  _calcDailyPercs (data) {
+    let prevMts = 0
+
+    const percsGroupedByDays = data.reduce(
+      (accum, ledger = {}) => {
+        const { amount, balance, mts } = { ...ledger }
+
+        if (
+          accum.length !== 0 &&
+          this._isSameDay(prevMts, mts)
+        ) {
+          accum[accum.length - 1].push(
+            this._calcPerc(amount, balance)
+          )
+        }
+
+        accum.push([this._calcPerc(amount, balance)])
+        prevMts = mts
+
+        return accum
+      },
+      []
+    )
+
+    return percsGroupedByDays.map((percs) => {
+      return this._calcPercsArr(percs)
+    })
   }
 
   _calcLedgers () {
@@ -101,21 +153,11 @@ class PerformingLoan {
   }
 
   _calcAmountPerc (ledgersGroupedByTimeframe) {
-    const { dailyPercs = [] } = { ...ledgersGroupedByTimeframe }
-
-    if (
-      !Array.isArray(dailyPercs) ||
-      dailyPercs.length === 0 ||
-      dailyPercs.some((item) => !Number.isFinite(item))
-    ) {
-      return null
+    const { dailyPercs = [] } = {
+      ...ledgersGroupedByTimeframe
     }
 
-    const total = dailyPercs.reduce((accum, item) => {
-      return accum + item
-    }, 0)
-
-    return total / dailyPercs.length
+    return this._calcPercsArr(dailyPercs)
   }
 
   _calcPrevAmount (res, cumulative) {
