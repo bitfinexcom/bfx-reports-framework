@@ -112,6 +112,9 @@ class PerformingLoan {
           accum[accum.length - 1].push(
             this._calcPerc(amount, balance)
           )
+          prevMts = mts
+
+          return accum
         }
 
         accum.push([this._calcPerc(amount, balance)])
