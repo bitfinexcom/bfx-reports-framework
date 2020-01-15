@@ -175,7 +175,7 @@ class PerformingLoan {
   }
 
   _getLedgersByTimeframe () {
-    let _cumulative = 0
+    let cumulative = 0
 
     return ({ ledgersGroupedByTimeframe = {}, mts }) => {
       const ledgersArr = Object.entries(ledgersGroupedByTimeframe)
@@ -196,8 +196,7 @@ class PerformingLoan {
         }
       }, {})
       const perc = this._calcAmountPerc(ledgersGroupedByTimeframe)
-      const cumulative = _cumulative
-      _cumulative = this._calcPrevAmount(res, cumulative)
+      cumulative = this._calcPrevAmount(res, cumulative)
 
       return {
         cumulative,
