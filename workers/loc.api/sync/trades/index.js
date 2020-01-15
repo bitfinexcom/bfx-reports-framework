@@ -10,7 +10,8 @@ const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
-  splitSymbolPairs
+  splitSymbolPairs,
+  getMtsGroupedByTimeframe
 } = require('../helpers')
 
 class Trades {
@@ -144,6 +145,11 @@ class Trades {
   _getTradesByTimeframe () {
     return ({ tradesGroupedByTimeframe = {} }) => {
       const tradesArr = Object.entries(tradesGroupedByTimeframe)
+
+      if (tradesArr.length === 0) {
+        return { USD: 0 }
+      }
+
       const res = tradesArr.reduce((
         accum,
         [symb, amount]
@@ -220,6 +226,19 @@ class Trades {
     return convertedTrades
   }
 
+  _getStartMtsFromTrades (trades) {
+    if (
+      !Array.isArray(trades) ||
+      trades.length === 0
+    ) {
+      return 0
+    }
+
+    const { mtsCreate } = { ...trades[trades.length - 1] }
+
+    return mtsCreate
+  }
+
   async getGroupedDataIn (
     fieldName,
     {
@@ -228,6 +247,8 @@ class Trades {
     } = {}
   ) {
     const {
+      start = 0,
+      end = Date.now(),
       timeframe = 'day'
     } = { ...params }
     const {
@@ -238,6 +259,8 @@ class Trades {
       auth,
       params: {
         ...params,
+        start,
+        end,
         timeframe
       }
     })
@@ -250,9 +273,17 @@ class Trades {
       tradesSymbolFieldName,
       this._calcTrades(fieldName)
     )
+    const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
+      this._getStartMtsFromTrades(trades),
+      end,
+      timeframe
+    )
 
     const groupedData = await calcGroupedData(
-      { tradesGroupedByTimeframe },
+      {
+        tradesGroupedByTimeframe,
+        mtsGroupedByTimeframe
+      },
       false,
       this._getTradesByTimeframe(),
       true
