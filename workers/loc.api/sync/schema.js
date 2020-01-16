@@ -14,11 +14,13 @@ const { cloneDeep } = require('lodash')
 const TABLES_NAMES = require('./dao/tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
 
+const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
+
 const _models = new Map([
   [
     TABLES_NAMES.USERS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       email: 'VARCHAR(255)',
       apiKey: 'VARCHAR(255)',
@@ -32,7 +34,7 @@ const _models = new Map([
   [
     TABLES_NAMES.LEDGERS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       currency: 'VARCHAR(255)',
       mts: 'BIGINT',
@@ -55,7 +57,7 @@ const _models = new Map([
   [
     TABLES_NAMES.TRADES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       mtsCreate: 'BIGINT',
@@ -78,7 +80,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_TRADES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       mtsCreate: 'BIGINT',
@@ -98,7 +100,7 @@ const _models = new Map([
   [
     TABLES_NAMES.PUBLIC_TRADES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       mts: 'BIGINT',
       rate: 'DECIMAL(22,12)',
@@ -111,7 +113,7 @@ const _models = new Map([
   [
     TABLES_NAMES.ORDERS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       gid: 'BIGINT',
       cid: 'BIGINT',
@@ -143,7 +145,7 @@ const _models = new Map([
   [
     TABLES_NAMES.MOVEMENTS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       currency: 'VARCHAR(255)',
       currencyName: 'VARCHAR(255)',
@@ -166,7 +168,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_OFFER_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       mtsCreate: 'BIGINT',
@@ -194,7 +196,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_LOAN_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       side: 'INT',
@@ -223,7 +225,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_CREDIT_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       side: 'INT',
@@ -253,7 +255,7 @@ const _models = new Map([
   [
     TABLES_NAMES.POSITIONS_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       status: 'VARCHAR(255)',
@@ -296,7 +298,7 @@ const _models = new Map([
   [
     TABLES_NAMES.TICKERS_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       symbol: 'VARCHAR(255)',
       bid: 'DECIMAL(22,12)',
       bidPeriod: 'INT',
@@ -307,7 +309,7 @@ const _models = new Map([
   [
     TABLES_NAMES.STATUS_MESSAGES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       key: 'VARCHAR(255)',
       timestamp: 'BIGINT',
       price: 'DECIMAL(22,12)',
@@ -321,7 +323,7 @@ const _models = new Map([
   [
     TABLES_NAMES.PUBLIC_COLLS_CONF,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       confName: 'VARCHAR(255)',
       symbol: 'VARCHAR(255)',
       start: 'BIGINT',
@@ -336,21 +338,21 @@ const _models = new Map([
   [
     TABLES_NAMES.SYMBOLS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       pairs: 'VARCHAR(255)'
     }
   ],
   [
     TABLES_NAMES.FUTURES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       pairs: 'VARCHAR(255)'
     }
   ],
   [
     TABLES_NAMES.CURRENCIES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'VARCHAR(255)',
       name: 'VARCHAR(255)',
       pool: 'VARCHAR(255)',
@@ -360,7 +362,7 @@ const _models = new Map([
   [
     TABLES_NAMES.CANDLES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       mts: 'BIGINT',
       open: 'DECIMAL(22,12)',
       close: 'DECIMAL(22,12)',
@@ -373,28 +375,28 @@ const _models = new Map([
   [
     TABLES_NAMES.SCHEDULER,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       isEnable: 'INT'
     }
   ],
   [
     TABLES_NAMES.SYNC_MODE,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       isEnable: 'INT'
     }
   ],
   [
     TABLES_NAMES.PROGRESS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       value: 'VARCHAR(255)'
     }
   ],
   [
     TABLES_NAMES.SYNC_QUEUE,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
       state: 'VARCHAR(255)'
     }
