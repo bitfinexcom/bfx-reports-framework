@@ -9,7 +9,8 @@ const {
 const TYPES = require('../../di/types')
 const {
   calcGroupedData,
-  groupByTimeframe
+  groupByTimeframe,
+  getStartMtsByTimeframe
 } = require('../helpers')
 
 class PerformingLoan {
@@ -32,7 +33,10 @@ class PerformingLoan {
     auth,
     start,
     end,
-    symbol
+    symbol,
+    filter = {
+      $eq: { _isMarginFundingPayment: 1 }
+    }
   }) {
     const user = await this.dao.checkAuthInDb({ auth })
 
@@ -49,10 +53,10 @@ class PerformingLoan {
       this.ALLOWED_COLLS.LEDGERS,
       {
         filter: {
+          ...filter,
           user_id: user._id,
           $lte: { mts: end },
           $gte: { mts: start },
-          $eq: { _isMarginFundingPayment: 1 },
           ...symbFilter
         },
         sort: [['mts', -1]],
@@ -63,25 +67,117 @@ class PerformingLoan {
     )
   }
 
-  _calcLedgers () {
-    return (data = []) => data.reduce((accum, trade = {}) => {
-      const { amountUsd } = { ...trade }
+  _calcPercsArr (percs) {
+    if (
+      !Array.isArray(percs) ||
+      percs.length === 0 ||
+      percs.some((item) => !Number.isFinite(item))
+    ) {
+      return null
+    }
 
-      if (!Number.isFinite(amountUsd)) {
-        return { ...accum }
-      }
+    const total = percs.reduce((accum, item) => {
+      return accum + item
+    }, 0)
+
+    return total / percs.length
+  }
+
+  _isSameDay (prevMts, mts) {
+    return getStartMtsByTimeframe(prevMts, 'day') === getStartMtsByTimeframe(mts, 'day')
+  }
+
+  _calcPerc (amount, balance) {
+    if (
+      !Number.isFinite(amount) ||
+      !Number.isFinite(balance)
+    ) {
+      return 0
+    }
+
+    return (amount / balance) * 365 * 100
+  }
+
+  _calcDailyPercs (data) {
+    let prevMts = 0
+
+    const percsGroupedByDays = data.reduce(
+      (accum, ledger = {}) => {
+        const { amount, balance, mts } = { ...ledger }
+
+        if (
+          accum.length !== 0 &&
+          this._isSameDay(prevMts, mts)
+        ) {
+          accum[accum.length - 1].push(
+            this._calcPerc(amount, balance)
+          )
+          prevMts = mts
+
+          return accum
+        }
+
+        accum.push([this._calcPerc(amount, balance)])
+        prevMts = mts
+
+        return accum
+      },
+      []
+    )
+
+    return percsGroupedByDays.map((percs) => {
+      return this._calcPercsArr(percs)
+    })
+  }
+
+  _calcLedgers () {
+    return (data = []) => {
+      const res = data.reduce((accum, ledger = {}) => {
+        const { amountUsd } = { ...ledger }
+
+        if (!Number.isFinite(amountUsd)) {
+          return { ...accum }
+        }
+
+        return {
+          ...accum,
+          USD: Number.isFinite(accum.USD)
+            ? accum.USD + amountUsd
+            : amountUsd
+        }
+      }, {})
+      const dailyPercs = this._calcDailyPercs(data)
 
       return {
-        ...accum,
-        USD: Number.isFinite(accum.USD)
-          ? accum.USD + amountUsd
-          : amountUsd
+        ...res,
+        dailyPercs
       }
-    }, {})
+    }
+  }
+
+  _calcAmountPerc (ledgersGroupedByTimeframe) {
+    const { dailyPercs = [] } = {
+      ...ledgersGroupedByTimeframe
+    }
+
+    return this._calcPercsArr(dailyPercs)
+  }
+
+  _calcPrevAmount (res, cumulative) {
+    const { USD: amount } = { ...res }
+
+    return (
+      Number.isFinite(amount) &&
+      Number.isFinite(cumulative)
+    )
+      ? amount + cumulative
+      : cumulative
   }
 
   _getLedgersByTimeframe () {
-    return ({ ledgersGroupedByTimeframe = {} }) => {
+    let cumulative = 0
+
+    return ({ ledgersGroupedByTimeframe = {}, mts }) => {
       const ledgersArr = Object.entries(ledgersGroupedByTimeframe)
       const res = ledgersArr.reduce((
         accum,
@@ -99,8 +195,14 @@ class PerformingLoan {
           [symb]: amount
         }
       }, {})
+      const perc = this._calcAmountPerc(ledgersGroupedByTimeframe)
+      cumulative = this._calcPrevAmount(res, cumulative)
 
-      return res
+      return {
+        cumulative,
+        perc,
+        ...res
+      }
     }
   }
 

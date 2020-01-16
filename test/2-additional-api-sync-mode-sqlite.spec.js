@@ -511,7 +511,9 @@ describe('Additional sync mode API with SQLite', () => {
       assert.isObject(resItem)
       assert.containsAllKeys(resItem, [
         'mts',
-        'USD'
+        'USD',
+        'cumulative',
+        'perc'
       ])
     }
   })
