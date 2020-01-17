@@ -18,6 +18,7 @@ const WSTransport = require('../ws-transport')
 const WSEventEmitter = require(
   '../ws-transport/ws.event.emitter'
 )
+const SubAccount = require('../sync/sub.account')
 const Progress = require('../sync/progress')
 const syncSchema = require('../sync/schema')
 const Sync = require('../sync')
@@ -80,6 +81,7 @@ module.exports = ({
           ['_TABLES_NAMES', TYPES.TABLES_NAMES],
           ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS],
           ['_prepareResponse', TYPES.PrepareResponse],
+          ['_subAccount', TYPES.SubAccount],
           ['_progress', TYPES.Progress],
           ['_syncSchema', TYPES.SyncSchema],
           ['_dao', TYPES.DAO],
@@ -116,6 +118,8 @@ module.exports = ({
     bind(TYPES.Progress)
       .to(Progress)
       .inSingletonScope()
+    bind(TYPES.SubAccount)
+      .to(SubAccount)
     bind(TYPES.SyncSchema).toConstantValue(
       syncSchema
     )
