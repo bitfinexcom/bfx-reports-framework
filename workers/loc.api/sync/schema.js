@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 2
+const SUPPORTED_DB_VERSION = 3
 
 const { cloneDeep } = require('lodash')
 
@@ -31,6 +31,25 @@ const _models = new Map([
       username: 'VARCHAR(255)'
     }
   ],
+  // TODO:
+  [
+    TABLES_NAMES.SUB_ACCOUNTS,
+    {
+      _id: ID_PRIMARY_KEY,
+      masterUserId: 'INT NOT NULL',
+      subUserId: `INT NOT NULL,
+        CONSTRAINT sub_accounts_fk_#{field}
+        FOREIGN KEY (#{field})
+        REFERENCES users(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+        CONSTRAINT sub_accounts_fk_#{masterUserId}
+        FOREIGN KEY (#{masterUserId})
+        REFERENCES users(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+    }
+  ],
   [
     TABLES_NAMES.LEDGERS,
     {
@@ -46,6 +65,7 @@ const _models = new Map([
       wallet: 'VARCHAR(255)',
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT ledgers_fk_#{field}
         FOREIGN KEY (#{field})
@@ -69,6 +89,7 @@ const _models = new Map([
       maker: 'INT',
       fee: 'DECIMAL(22,12)',
       feeCurrency: 'VARCHAR(255)',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT trades_fk_#{field}
         FOREIGN KEY (#{field})
@@ -89,6 +110,7 @@ const _models = new Map([
       rate: 'DECIMAL(22,12)',
       period: 'BIGINT',
       maker: 'INT',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT fundingTrades_fk_#{field}
         FOREIGN KEY (#{field})
@@ -134,6 +156,7 @@ const _models = new Map([
       placedId: 'BIGINT',
       _lastAmount: 'DECIMAL(22,12)',
       amountExecuted: 'DECIMAL(22,12)',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT orders_fk_#{field}
         FOREIGN KEY (#{field})
@@ -157,6 +180,7 @@ const _models = new Map([
       fees: 'DECIMAL(22,12)',
       destinationAddress: 'VARCHAR(255)',
       transactionId: 'VARCHAR(255)',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT movements_fk_#{field}
         FOREIGN KEY (#{field})
@@ -185,6 +209,7 @@ const _models = new Map([
       renew: 'INT',
       rateReal: 'INT',
       amountExecuted: 'DECIMAL(22,12)',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT fundingOfferHistory_fk_#{field}
         FOREIGN KEY (#{field})
@@ -214,6 +239,7 @@ const _models = new Map([
       renew: 'INT',
       rateReal: 'INT',
       noClose: 'INT',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT fundingLoanHistory_fk_#{field}
         FOREIGN KEY (#{field})
@@ -244,6 +270,7 @@ const _models = new Map([
       rateReal: 'INT',
       noClose: 'INT',
       positionPair: 'VARCHAR(255)',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT fundingCreditHistory_fk_#{field}
         FOREIGN KEY (#{field})
@@ -271,6 +298,7 @@ const _models = new Map([
       placeholder: 'TEXT',
       mtsCreate: 'BIGINT',
       mtsUpdate: 'BIGINT',
+      subUserId: 'INT',
       user_id: `INT NOT NULL,
         CONSTRAINT positionsHistory_fk_#{field}
         FOREIGN KEY (#{field})
@@ -415,7 +443,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mts'],
+      fieldsOfUniqueIndex: ['id', 'mts', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.LEDGERS) }
     }
   ],
@@ -430,7 +458,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee'],
+      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.TRADES) }
     }
   ],
@@ -445,7 +473,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID'],
+      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.FUNDING_TRADES) }
     }
   ],
@@ -500,7 +528,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.ORDERS) }
     }
   ],
@@ -515,7 +543,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdated'],
+      fieldsOfUniqueIndex: ['id', 'mtsUpdated', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.MOVEMENTS) }
     }
   ],
@@ -530,7 +558,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
     }
   ],
@@ -545,7 +573,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
     }
   ],
@@ -560,7 +588,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
     }
   ],
@@ -575,7 +603,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
       model: { ..._models.get(TABLES_NAMES.POSITIONS_HISTORY) }
     }
   ],
