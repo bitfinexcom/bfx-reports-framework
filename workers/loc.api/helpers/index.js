@@ -13,6 +13,10 @@ const {
   isEnotfoundError,
   isEaiAgainError
 } = require('./api-errors-testers')
+const {
+  isSubAccountApiKeys,
+  getAuthFromSubAccountAuth
+} = require('./sub-account-auth')
 
 module.exports = {
   checkParams,
@@ -23,5 +27,7 @@ module.exports = {
   refreshObj,
   mapObjBySchema,
   isEnotfoundError,
-  isEaiAgainError
+  isEaiAgainError,
+  isSubAccountApiKeys,
+  getAuthFromSubAccountAuth
 }
