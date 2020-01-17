@@ -24,7 +24,8 @@ const DAO = require('./dao')
 const {
   checkParamsAuth,
   refreshObj,
-  mapObjBySchema
+  mapObjBySchema,
+  isSubAccountApiKeys
 } = require('../../helpers')
 const {
   mixUserIdToArrData,
@@ -602,11 +603,23 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async insertOrUpdateUser (data) {
+  async insertOrUpdateUser (data, params = {}) {
     const user = await this._getUserByAuth(data)
+    const {
+      active = true
+    } = { ...params }
 
     if (isEmpty(user)) {
-      if (!data.email) {
+      const {
+        apiKey,
+        apiSecret,
+        email
+      } = { ...data }
+
+      if (
+        !email ||
+        isSubAccountApiKeys({ apiKey, apiSecret })
+      ) {
         throw new AuthError()
       }
 
@@ -625,7 +638,7 @@ class SqliteDAO extends DAO {
               'id'
             ]
           ),
-          active: 1,
+          active: serializeVal(active),
           isDataFromDb: 1
         }]
       )
@@ -633,7 +646,7 @@ class SqliteDAO extends DAO {
       return this._getUserByAuth(data)
     }
 
-    const newData = { active: 1 }
+    const newData = { active: serializeVal(active) }
 
     refreshObj(
       user,

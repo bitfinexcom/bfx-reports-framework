@@ -26,7 +26,8 @@ const {
   isEnotfoundError,
   isEaiAgainError,
   emptyRes,
-  collObjToArr
+  collObjToArr,
+  getAuthFromSubAccountAuth
 } = require('./helpers')
 
 class FrameworkReportService extends ReportService {
@@ -79,12 +80,15 @@ class FrameworkReportService extends ReportService {
   async _checkAuthInApi (args) {
     checkParamsAuth(args)
 
+    const { auth: _auth } = { ...args }
+    const auth = getAuthFromSubAccountAuth(_auth)
+
     const {
       email,
       timezone,
       username,
       id
-    } = await super._getUserInfo(args)
+    } = await super._getUserInfo({ ...args, auth })
 
     if (!email) {
       throw new AuthError()
@@ -103,6 +107,7 @@ class FrameworkReportService extends ReportService {
    */
   login (space, args, cb, isInnerCall) {
     return this._responder(async () => {
+      const { auth } = { ...args }
       let userInfo = {
         email: null,
         timezone: null,
@@ -121,7 +126,7 @@ class FrameworkReportService extends ReportService {
       }
 
       const data = {
-        ...args.auth,
+        ...auth,
         ...userInfo
       }
 
@@ -140,6 +145,17 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'logout', cb)
+  }
+
+  createSubAccount (space, args, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForCreateSubAccount')
+
+      await this._subAccount
+        .createSubAccount(args)
+
+      return true
+    }, 'createSubAccount', cb)
   }
 
   checkAuthInDb (space, args, cb) {
@@ -386,7 +402,10 @@ class FrameworkReportService extends ReportService {
   getEmail (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getEmail(space, args)
+        const { auth: _auth } = { ...args }
+        const auth = getAuthFromSubAccountAuth(_auth)
+
+        return super.getEmail(space, { ...args, auth })
       }
 
       const { email } = await this._dao.checkAuthInDb(args)
