@@ -158,6 +158,15 @@ class FrameworkReportService extends ReportService {
     }, 'createSubAccount', cb)
   }
 
+  removeSubAccount (space, args, cb) {
+    return this._responder(async () => {
+      await this._subAccount
+        .removeSubAccount(args)
+
+      return true
+    }, 'removeSubAccount', cb)
+  }
+
   checkAuthInDb (space, args, cb) {
     return this._responder(async () => {
       const { email } = await this._dao.checkAuthInDb(args)
