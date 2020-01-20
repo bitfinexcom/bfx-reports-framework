@@ -23,15 +23,14 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       email: 'VARCHAR(255)',
-      apiKey: 'VARCHAR(255)',
-      apiSecret: 'VARCHAR(255)',
+      apiKey: 'VARCHAR(255) NOT NULL',
+      apiSecret: 'VARCHAR(255) NOT NULL',
       active: 'INT',
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
       username: 'VARCHAR(255)'
     }
   ],
-  // TODO:
   [
     TABLES_NAMES.SUB_ACCOUNTS,
     {
@@ -43,8 +42,8 @@ const _models = new Map([
         REFERENCES users(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-        CONSTRAINT sub_accounts_fk_#{masterUserId}
-        FOREIGN KEY (#{masterUserId})
+        CONSTRAINT sub_accounts_fk_masterUserId
+        FOREIGN KEY (masterUserId)
         REFERENCES users(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
