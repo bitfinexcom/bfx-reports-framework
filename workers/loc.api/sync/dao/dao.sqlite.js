@@ -15,7 +15,8 @@ const {
   checkFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
-  AuthError
+  AuthError,
+  SubAccountCreatingError
 } = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../../di/types')
@@ -25,7 +26,8 @@ const {
   checkParamsAuth,
   refreshObj,
   mapObjBySchema,
-  isSubAccountApiKeys
+  isSubAccountApiKeys,
+  getSubAccountAuthFromAuth
 } = require('../../helpers')
 const {
   mixUserIdToArrData,
@@ -42,7 +44,9 @@ const {
   getGroupQuery,
   getSubQuery,
   filterModelNameMap,
-  getTableCreationQuery
+  getTableCreationQuery,
+  pickUserData,
+  checkUserId
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -180,6 +184,13 @@ class SqliteDAO extends DAO {
     )
 
     await this._run(publicСollsСonfSql)
+
+    const userSql = getUniqueIndexQuery(
+      this.TABLES_NAMES.USERS,
+      ['apiKey', 'apiSecret']
+    )
+
+    await this._run(userSql)
   }
 
   async _getUserByAuth (auth) {
@@ -327,6 +338,31 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  async insertElemToDb (
+    name,
+    obj = {},
+    {
+      isReplacedIfExists
+    } = {}
+  ) {
+    const keys = Object.keys(obj)
+    const projection = getProjectionQuery(keys)
+    const {
+      placeholders,
+      placeholderVal
+    } = getPlaceholdersQuery(obj, keys)
+    const replace = isReplacedIfExists
+      ? ' OR REPLACE'
+      : ''
+
+    const sql = `INSERT${replace} INTO ${name}(${projection}) VALUES (${placeholders})`
+
+    await this._run(sql, placeholderVal)
+  }
+
+  /**
+   * @override
+   */
   async getLastElemFromDb (name, auth, sort = []) {
     const _sort = getOrderQuery(sort)
     const uTableName = this.TABLES_NAMES.USERS
@@ -364,18 +400,11 @@ class SqliteDAO extends DAO {
           continue
         }
 
-        const projection = getProjectionQuery(keys)
-        const {
-          placeholders,
-          placeholderVal
-        } = getPlaceholdersQuery(obj, keys)
-        const replace = isReplacedIfExists
-          ? ' OR REPLACE'
-          : ''
-
-        const sql = `INSERT${replace} INTO ${name}(${projection}) VALUES (${placeholders})`
-
-        await this._run(sql, placeholderVal)
+        await this.insertElemToDb(
+          name,
+          obj,
+          { isReplacedIfExists }
+        )
       }
     })
   }
@@ -603,6 +632,113 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  async createSubAccount (
+    masterUser = {},
+    subUsers = []
+  ) {
+    if (
+      isSubAccountApiKeys(masterUser) ||
+      !Array.isArray(subUsers) ||
+      subUsers.length === 0 ||
+      subUsers.some(isSubAccountApiKeys)
+    ) {
+      throw new SubAccountCreatingError()
+    }
+
+    const subAccount = {
+      ...pickUserData(masterUser),
+      ...getSubAccountAuthFromAuth(masterUser),
+      active: 1,
+      isDataFromDb: 1
+    }
+    const _subUsers = subUsers.filter((subUser) => {
+      const {
+        apiKey,
+        apiSecret
+      } = { ...subUser }
+      const {
+        apiKey: masterApiKey,
+        apiSecret: masterApiSecret
+      } = { ...masterUser }
+
+      return (
+        apiKey !== masterApiKey &&
+        apiSecret !== masterApiSecret
+      )
+    })
+    _subUsers.push(masterUser)
+
+    await this._beginTrans(async () => {
+      await this.insertElemToDb(
+        this.TABLES_NAMES.USERS,
+        subAccount
+      )
+
+      const subAccountFromDb = await this._getUserByAuth(subAccount)
+      checkUserId(subAccountFromDb)
+
+      for (const subUser of _subUsers) {
+        const userFromDb = await this._getUserByAuth(subUser)
+        const isEmptyUserFromDb = isEmpty(userFromDb)
+        const userFlags = isEmptyUserFromDb
+          ? {
+            active: 0,
+            isDataFromDb: 1
+          }
+          : {}
+
+        const user = {
+          ...userFromDb,
+          ...pickUserData(subUser),
+          ...userFlags
+        }
+
+        if (isEmptyUserFromDb) {
+          await this.insertElemToDb(
+            this.TABLES_NAMES.USERS,
+            user
+          )
+
+          const _userFromDb = await this._getUserByAuth(user)
+          checkUserId(_userFromDb)
+
+          await this.insertElemToDb(
+            this.TABLES_NAMES.SUB_ACCOUNTS,
+            {
+              masterUserId: subAccountFromDb._id,
+              subUserId: _userFromDb._id
+            }
+          )
+
+          continue
+        }
+
+        checkUserId(user)
+
+        const res = await this.updateCollBy(
+          this.TABLES_NAMES.USERS,
+          { _id: user._id },
+          user
+        )
+
+        if (res && res.changes < 1) {
+          throw new SubAccountCreatingError()
+        }
+
+        await this.insertElemToDb(
+          this.TABLES_NAMES.SUB_ACCOUNTS,
+          {
+            masterUserId: subAccountFromDb._id,
+            subUserId: user._id
+          }
+        )
+      }
+    })
+  }
+
+  /**
+   * @override
+   */
   async insertOrUpdateUser (data, params = {}) {
     const user = await this._getUserByAuth(data)
     const {
@@ -627,17 +763,7 @@ class SqliteDAO extends DAO {
         this.TABLES_NAMES.USERS,
         null,
         [{
-          ...pick(
-            data,
-            [
-              'apiKey',
-              'apiSecret',
-              'email',
-              'timezone',
-              'username',
-              'id'
-            ]
-          ),
+          ...pickUserData(data),
           active: serializeVal(active),
           isDataFromDb: 1
         }]

@@ -1,5 +1,10 @@
 'use strict'
 
+const { pick } = require('lodash')
+
+const {
+  SubAccountCreatingError
+} = require('../../../errors')
 const { deserializeVal } = require('./serialization')
 
 const mixUserIdToArrData = async (dao, auth, data = []) => {
@@ -34,7 +39,33 @@ const convertDataType = (
   return arr
 }
 
+const pickUserData = (user) => {
+  return {
+    ...pick(
+      user,
+      [
+        'apiKey',
+        'apiSecret',
+        'email',
+        'timezone',
+        'username',
+        'id'
+      ]
+    )
+  }
+}
+
+const checkUserId = (user = {}) => {
+  const { _id } = { ...user }
+
+  if (!Number.isInteger(_id)) {
+    throw new SubAccountCreatingError()
+  }
+}
+
 module.exports = {
   mixUserIdToArrData,
-  convertDataType
+  convertDataType,
+  pickUserData,
+  checkUserId
 }

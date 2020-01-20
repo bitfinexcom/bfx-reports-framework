@@ -78,6 +78,11 @@ class DAO {
   /**
    * @abstract
    */
+  async insertElemToDb () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async insertElemsToDb () { throw new ImplementationError() }
 
   /**
@@ -104,6 +109,11 @@ class DAO {
    * @abstract
    */
   async updateCollBy () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async createSubAccount () { throw new ImplementationError() }
 
   /**
    * @abstract
