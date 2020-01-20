@@ -1,6 +1,10 @@
 'use strict'
 
 const {
+  SubAccountCreatingError
+} = require('../../errors')
+
+const {
   decorate,
   injectable,
   inject
@@ -19,7 +23,6 @@ class SubAccount {
     this.rService = rService
   }
 
-  // TODO:
   async createSubAccount (args) {
     const { params } = { ...args }
     const { subAccountApiKeys } = { ...params }
@@ -30,26 +33,31 @@ class SubAccount {
       !Array.isArray(subAccountApiKeys) ||
       subAccountApiKeys.length === 0
     ) {
-      throw new Error('ERR_') // TODO:
+      throw new SubAccountCreatingError()
     }
 
     const apiUsersPromises = subAccountApiKeys.map((auth) => {
       return this.rService._checkAuthInApi({ auth })
     })
 
-    const apiUsers = await Promise.all(apiUsersPromises)
+    const _apiUsers = await Promise.all(apiUsersPromises)
+    const apiUsers = _apiUsers.map((apiUser, i) => {
+      const {
+        apiKey,
+        apiSecret
+      } = { ...subAccountApiKeys[i] }
 
-    const usersPromises = apiUsers.map((apiUser, i) => {
-      const auth = { ...subAccountApiKeys[i] }
-      const data = {
-        ...auth,
-        ...apiUser
+      return {
+        ...apiUser,
+        apiKey,
+        apiSecret
       }
-
-      return this.dao.insertOrUpdateUser(data, { active: false })
     })
 
-    const users = await Promise.all(usersPromises) // TODO:
+    await this.dao.createSubAccount(
+      masterUser,
+      apiUsers
+    )
   }
 
   // TODO:
@@ -60,6 +68,6 @@ class SubAccount {
 decorate(injectable(), SubAccount)
 decorate(inject(TYPES.DAO), SubAccount, 0)
 decorate(inject(TYPES.TABLES_NAMES), SubAccount, 1)
-decorate(inject(TYPES.RService), SubAccount, 1)
+decorate(inject(TYPES.RService), SubAccount, 2)
 
 module.exports = SubAccount
