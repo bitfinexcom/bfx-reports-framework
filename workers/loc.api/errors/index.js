@@ -1,7 +1,8 @@
 'use strict'
 
 const {
-  BaseError
+  BaseError,
+  AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
 class CollSyncPermissionError extends BaseError {
@@ -106,6 +107,12 @@ class MigrationLaunchingError extends BaseError {
   }
 }
 
+class SubAccountCreatingError extends AuthError {
+  constructor (message = 'ERR_SUB_ACCOUNT_CREATION_HAS_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -124,5 +131,6 @@ module.exports = {
   SqlCorrectnessError,
   DbMigrationVerCorrectnessError,
   DbVersionTypeError,
-  MigrationLaunchingError
+  MigrationLaunchingError,
+  SubAccountCreatingError
 }
