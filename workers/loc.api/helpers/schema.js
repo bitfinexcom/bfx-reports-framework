@@ -16,11 +16,16 @@ const paramsSchemaForCreateSubAccount = {
       minItems: 1,
       maxItems: 10,
       items: {
-        type: 'string',
-        enum: [
-          'apiKey',
-          'apiSecret'
-        ]
+        type: 'object',
+        required: ['apiKey', 'apiSecret'],
+        properties: {
+          apiKey: {
+            type: 'string'
+          },
+          apiSecret: {
+            type: 'string'
+          }
+        }
       }
     }
   }
