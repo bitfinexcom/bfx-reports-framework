@@ -15,7 +15,8 @@ const {
 } = require('./api-errors-testers')
 const {
   isSubAccountApiKeys,
-  getAuthFromSubAccountAuth
+  getAuthFromSubAccountAuth,
+  getSubAccountAuthFromAuth
 } = require('./sub-account-auth')
 
 module.exports = {
@@ -29,5 +30,6 @@ module.exports = {
   isEnotfoundError,
   isEaiAgainError,
   isSubAccountApiKeys,
-  getAuthFromSubAccountAuth
+  getAuthFromSubAccountAuth,
+  getSubAccountAuthFromAuth
 }

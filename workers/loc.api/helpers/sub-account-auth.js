@@ -1,17 +1,20 @@
 'use strict'
 
+const SUB_ACCOUNT_API_KEYS_ENDING = '-sub-account'
+
+const _subAccountRegExp = new RegExp(`${SUB_ACCOUNT_API_KEYS_ENDING}$`)
+
 const isSubAccountApiKeys = (auth = {}) => {
   const {
     apiKey,
     apiSecret
   } = { ...auth }
-  const regExp = /-sub-account$/
 
   return (
     typeof apiKey === 'string' &&
     typeof apiSecret === 'string' &&
-    regExp.test(apiKey) &&
-    regExp.test(apiSecret)
+    _subAccountRegExp.test(apiKey) &&
+    _subAccountRegExp.test(apiSecret)
   )
 }
 
@@ -28,15 +31,34 @@ const getAuthFromSubAccountAuth = (auth = {}) => {
     return auth
   }
 
-  const regExp = /-sub-account$/
+  return {
+    apiKey: _apiKey.replace(_subAccountRegExp, ''),
+    apiSecret: _apiSecret.replace(_subAccountRegExp, '')
+  }
+}
+
+const getSubAccountAuthFromAuth = (auth = {}) => {
+  const {
+    apiKey: _apiKey,
+    apiSecret: _apiSecret
+  } = { ...auth }
+
+  if (
+    typeof _apiKey !== 'string' ||
+    typeof _apiSecret !== 'string' ||
+    isSubAccountApiKeys(auth)
+  ) {
+    return auth
+  }
 
   return {
-    apiKey: _apiKey.replace(regExp, ''),
-    apiSecret: _apiSecret.replace(regExp, '')
+    apiKey: `${_apiKey}${SUB_ACCOUNT_API_KEYS_ENDING}`,
+    apiSecret: `${_apiSecret}${SUB_ACCOUNT_API_KEYS_ENDING}`
   }
 }
 
 module.exports = {
   isSubAccountApiKeys,
-  getAuthFromSubAccountAuth
+  getAuthFromSubAccountAuth,
+  getSubAccountAuthFromAuth
 }
