@@ -37,14 +37,14 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       masterUserId: 'INT NOT NULL',
       subUserId: `INT NOT NULL,
-        CONSTRAINT sub_accounts_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
         CONSTRAINT sub_accounts_fk_masterUserId
         FOREIGN KEY (masterUserId)
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+        CONSTRAINT sub_accounts_fk_#{field}
+        FOREIGN KEY (#{field})
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -66,9 +66,9 @@ const _models = new Map([
       _isAffiliateRebate: 'INT',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT ledgers_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.LEDGERS}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -90,9 +90,9 @@ const _models = new Map([
       feeCurrency: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT trades_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.TRADES}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -111,9 +111,9 @@ const _models = new Map([
       maker: 'INT',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT fundingTrades_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.FUNDING_TRADES}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -157,9 +157,9 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT orders_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.ORDERS}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -181,9 +181,9 @@ const _models = new Map([
       transactionId: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT movements_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.MOVEMENTS}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -210,9 +210,9 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT fundingOfferHistory_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.FUNDING_OFFER_HISTORY}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -240,9 +240,9 @@ const _models = new Map([
       noClose: 'INT',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT fundingLoanHistory_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.FUNDING_LOAN_HISTORY}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -271,9 +271,9 @@ const _models = new Map([
       positionPair: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT fundingCreditHistory_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.FUNDING_CREDIT_HISTORY}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -299,9 +299,9 @@ const _models = new Map([
       mtsUpdate: 'BIGINT',
       subUserId: 'INT',
       user_id: `INT NOT NULL,
-        CONSTRAINT positionsHistory_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.POSITIONS_HISTORY}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -355,9 +355,9 @@ const _models = new Map([
       symbol: 'VARCHAR(255)',
       start: 'BIGINT',
       user_id: `INT NOT NULL,
-        CONSTRAINT publicСollsСonf_fk_#{field}
+        CONSTRAINT ${TABLES_NAMES.PUBLIC_COLLS_CONF}_fk_#{field}
         FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
