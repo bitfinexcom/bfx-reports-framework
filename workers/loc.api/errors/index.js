@@ -113,6 +113,12 @@ class SubAccountCreatingError extends AuthError {
   }
 }
 
+class SubAccountRemovingError extends AuthError {
+  constructor (message = 'ERR_SUB_ACCOUNT_REMOVE_HAS_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -132,5 +138,6 @@ module.exports = {
   DbMigrationVerCorrectnessError,
   DbVersionTypeError,
   MigrationLaunchingError,
-  SubAccountCreatingError
+  SubAccountCreatingError,
+  SubAccountRemovingError
 }

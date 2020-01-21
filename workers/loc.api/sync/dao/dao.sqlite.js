@@ -16,7 +16,8 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   AuthError,
-  SubAccountCreatingError
+  SubAccountCreatingError,
+  SubAccountRemovingError
 } = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../../di/types')
@@ -743,6 +744,35 @@ class SqliteDAO extends DAO {
             subUserId: user._id
           }
         )
+      }
+    })
+  }
+
+  /**
+   * @override
+   */
+  async removeSubAccount (masterUser = {}) {
+    const { apiKey, apiSecret } = { ...masterUser }
+
+    const _subUsers = await this.getSubUsersByMasterUserApiKeys(
+      masterUser
+    )
+    const auth = getAuthFromSubAccountAuth(masterUser)
+    const subUsers = filterSubUsers(_subUsers, auth)
+
+    await this._beginTrans(async () => {
+      const res = await this.removeElemsFromDb(
+        this.TABLES_NAMES.USERS,
+        null,
+        { $eq: { apiKey, apiSecret } }
+      )
+
+      if (res && res.changes < 1) {
+        throw new SubAccountRemovingError()
+      }
+
+      for (const subUser of subUsers) {
+        await this.deactivateUser(subUser)
       }
     })
   }

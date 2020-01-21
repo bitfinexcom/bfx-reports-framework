@@ -123,6 +123,11 @@ class DAO {
   /**
    * @abstract
    */
+  async removeSubAccount () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async insertOrUpdateUser () { throw new ImplementationError() }
 
   /**
