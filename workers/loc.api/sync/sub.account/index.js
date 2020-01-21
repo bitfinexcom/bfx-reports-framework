@@ -1,7 +1,12 @@
 'use strict'
 
 const {
-  SubAccountCreatingError
+  isSubAccountApiKeys,
+  getSubAccountAuthFromAuth
+} = require('../../helpers')
+const {
+  SubAccountCreatingError,
+  SubAccountRemovingError
 } = require('../../errors')
 
 const {
@@ -40,8 +45,8 @@ class SubAccount {
       return this.rService._checkAuthInApi({ auth })
     })
 
-    const _apiUsers = await Promise.all(apiUsersPromises)
-    const apiUsers = _apiUsers.map((apiUser, i) => {
+    const apiUsers = await Promise.all(apiUsersPromises)
+    const subUsers = apiUsers.map((apiUser, i) => {
       const {
         apiKey,
         apiSecret
@@ -56,12 +61,25 @@ class SubAccount {
 
     await this.dao.createSubAccount(
       masterUser,
-      apiUsers
+      subUsers
     )
   }
 
-  // TODO:
-  removeSubAccount (args) {
+  async removeSubAccount (args) {
+    const { auth } = { ...args }
+
+    if (isSubAccountApiKeys(auth)) {
+      throw new SubAccountRemovingError()
+    }
+
+    const user = await this.dao.checkAuthInDb(args)
+    const masterUserAuth = getSubAccountAuthFromAuth(user)
+    const masterUser = await this.dao.checkAuthInDb(
+      { auth: masterUserAuth },
+      false
+    )
+
+    await this.dao.removeSubAccount(masterUser)
   }
 }
 
