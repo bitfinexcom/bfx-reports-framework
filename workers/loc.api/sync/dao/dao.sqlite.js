@@ -27,7 +27,9 @@ const {
   refreshObj,
   mapObjBySchema,
   isSubAccountApiKeys,
-  getSubAccountAuthFromAuth
+  getSubAccountAuthFromAuth,
+  getAuthFromSubAccountAuth,
+  filterSubUsers
 } = require('../../helpers')
 const {
   mixUserIdToArrData,
@@ -668,37 +670,23 @@ class SqliteDAO extends DAO {
       throw new SubAccountCreatingError()
     }
 
-    const subAccount = {
+    const _masterUser = {
       ...pickUserData(masterUser),
       ...getSubAccountAuthFromAuth(masterUser),
       active: 1,
       isDataFromDb: 1
     }
-    const _subUsers = subUsers.filter((subUser) => {
-      const {
-        apiKey,
-        apiSecret
-      } = { ...subUser }
-      const {
-        apiKey: masterApiKey,
-        apiSecret: masterApiSecret
-      } = { ...masterUser }
-
-      return (
-        apiKey !== masterApiKey &&
-        apiSecret !== masterApiSecret
-      )
-    })
+    const _subUsers = filterSubUsers(subUsers, masterUser)
     _subUsers.push(masterUser)
 
     await this._beginTrans(async () => {
       await this.insertElemToDb(
         this.TABLES_NAMES.USERS,
-        subAccount
+        _masterUser
       )
 
-      const subAccountFromDb = await this._getUserByAuth(subAccount)
-      checkUserId(subAccountFromDb)
+      const masterUserFromDb = await this._getUserByAuth(_masterUser)
+      checkUserId(masterUserFromDb)
 
       for (const subUser of _subUsers) {
         const userFromDb = await this._getUserByAuth(subUser)
@@ -728,7 +716,7 @@ class SqliteDAO extends DAO {
           await this.insertElemToDb(
             this.TABLES_NAMES.SUB_ACCOUNTS,
             {
-              masterUserId: subAccountFromDb._id,
+              masterUserId: masterUserFromDb._id,
               subUserId: _userFromDb._id
             }
           )
@@ -751,7 +739,7 @@ class SqliteDAO extends DAO {
         await this.insertElemToDb(
           this.TABLES_NAMES.SUB_ACCOUNTS,
           {
-            masterUserId: subAccountFromDb._id,
+            masterUserId: masterUserFromDb._id,
             subUserId: user._id
           }
         )
