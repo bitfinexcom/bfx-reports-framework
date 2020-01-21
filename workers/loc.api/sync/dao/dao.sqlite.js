@@ -632,6 +632,29 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  async getSubUsersByMasterUserApiKeys (
+    masterUser,
+    sort = ['_id']
+  ) {
+    const {
+      apiKey: $apiKey,
+      apiSecret: $apiSecret
+    } = { ...masterUser }
+    const _sort = getOrderQuery(sort)
+
+    const sql = `SELECT su.* FROM ${this.TABLES_NAMES.USERS} AS su
+      INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa ON su._id = sa.subUserId
+      INNER JOIN ${this.TABLES_NAMES.USERS} AS mu ON mu._id = sa.masterUserId
+      WHERE mu.apiKey = $apiKey
+      AND mu.apiSecret = $apiSecret
+      ${_sort}`
+
+    return this._all(sql, { $apiKey, $apiSecret })
+  }
+
+  /**
+   * @override
+   */
   async createSubAccount (
     masterUser = {},
     subUsers = []
