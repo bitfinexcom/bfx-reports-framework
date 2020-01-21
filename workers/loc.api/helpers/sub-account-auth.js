@@ -25,8 +25,8 @@ const getAuthFromSubAccountAuth = (auth = {}) => {
   } = { ...auth }
 
   if (
-    typeof apiKey !== 'string' ||
-    typeof apiSecret !== 'string'
+    typeof _apiKey !== 'string' ||
+    typeof _apiSecret !== 'string'
   ) {
     return auth
   }
