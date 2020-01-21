@@ -57,8 +57,37 @@ const getSubAccountAuthFromAuth = (auth = {}) => {
   }
 }
 
+const filterSubUsers = (
+  subUsers = [],
+  user = {}
+) => {
+  if (
+    !Array.isArray(subUsers) ||
+    subUsers.length === 0
+  ) {
+    return []
+  }
+
+  return subUsers.filter((subUser) => {
+    const {
+      apiKey,
+      apiSecret
+    } = { ...subUser }
+    const {
+      apiKey: userApiKey,
+      apiSecret: userApiSecret
+    } = { ...user }
+
+    return (
+      apiKey !== userApiKey &&
+      apiSecret !== userApiSecret
+    )
+  })
+}
+
 module.exports = {
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
-  getSubAccountAuthFromAuth
+  getSubAccountAuthFromAuth,
+  filterSubUsers
 }
