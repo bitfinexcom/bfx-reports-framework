@@ -9,12 +9,36 @@
  */
 const SUPPORTED_DB_VERSION = 3
 
-const { cloneDeep } = require('lodash')
+const { cloneDeep, omit } = require('lodash')
 
 const TABLES_NAMES = require('./dao/tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
 
 const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
+
+const _cloneSchema = (map, omittedFields = []) => {
+  const arr = [...map].map(([key, schema]) => {
+    const normalizedSchema = omit(schema, omittedFields)
+    const clonedSchema = cloneDeep(normalizedSchema)
+
+    return [key, clonedSchema]
+  })
+
+  return new Map(arr)
+}
+
+const getMethodCollMap = (methodCollMap = _methodCollMap) => {
+  return _cloneSchema(methodCollMap)
+}
+
+const getModelsMap = (params = {}) => {
+  const {
+    models = _models,
+    omittedFields = ['__constraints__']
+  } = { ...params }
+
+  return _cloneSchema(models, omittedFields)
+}
 
 const _models = new Map([
   [
@@ -36,17 +60,19 @@ const _models = new Map([
     {
       _id: ID_PRIMARY_KEY,
       masterUserId: 'INT NOT NULL',
-      subUserId: `INT NOT NULL,
-        CONSTRAINT sub_accounts_fk_masterUserId
+      subUserId: 'INT NOT NULL',
+      __constraints__: [
+        `CONSTRAINT #{tableName}_fk_masterUserId
         FOREIGN KEY (masterUserId)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
-        CONSTRAINT sub_accounts_fk_#{field}
-        FOREIGN KEY (#{field})
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -65,9 +91,9 @@ const _models = new Map([
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.LEDGERS}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -89,9 +115,9 @@ const _models = new Map([
       fee: 'DECIMAL(22,12)',
       feeCurrency: 'VARCHAR(255)',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.TRADES}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -110,9 +136,9 @@ const _models = new Map([
       period: 'BIGINT',
       maker: 'INT',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.FUNDING_TRADES}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -156,9 +182,9 @@ const _models = new Map([
       _lastAmount: 'DECIMAL(22,12)',
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.ORDERS}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -180,9 +206,9 @@ const _models = new Map([
       destinationAddress: 'VARCHAR(255)',
       transactionId: 'VARCHAR(255)',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.MOVEMENTS}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -209,9 +235,9 @@ const _models = new Map([
       rateReal: 'INT',
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.FUNDING_OFFER_HISTORY}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -239,9 +265,9 @@ const _models = new Map([
       rateReal: 'INT',
       noClose: 'INT',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.FUNDING_LOAN_HISTORY}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -270,9 +296,9 @@ const _models = new Map([
       noClose: 'INT',
       positionPair: 'VARCHAR(255)',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.FUNDING_CREDIT_HISTORY}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -298,9 +324,9 @@ const _models = new Map([
       mtsCreate: 'BIGINT',
       mtsUpdate: 'BIGINT',
       subUserId: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.POSITIONS_HISTORY}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -354,9 +380,9 @@ const _models = new Map([
       confName: 'VARCHAR(255)',
       symbol: 'VARCHAR(255)',
       start: 'BIGINT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ${TABLES_NAMES.PUBLIC_COLLS_CONF}_fk_#{field}
-        FOREIGN KEY (#{field})
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
@@ -443,7 +469,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mts', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.LEDGERS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) }
     }
   ],
   [
@@ -458,7 +484,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.TRADES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.TRADES) }
     }
   ],
   [
@@ -473,7 +499,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_TRADES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_TRADES) }
     }
   ],
   [
@@ -489,7 +515,7 @@ const _methodCollMap = new Map([
       confName: 'publicTradesConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
-      model: { ..._models.get(TABLES_NAMES.PUBLIC_TRADES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.PUBLIC_TRADES) }
     }
   ],
   [
@@ -513,7 +539,7 @@ const _methodCollMap = new Map([
       confName: 'statusMessagesConf',
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
-      model: { ..._models.get(TABLES_NAMES.STATUS_MESSAGES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.STATUS_MESSAGES) }
     }
   ],
   [
@@ -528,7 +554,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.ORDERS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.ORDERS) }
     }
   ],
   [
@@ -543,7 +569,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdated', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.MOVEMENTS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.MOVEMENTS) }
     }
   ],
   [
@@ -558,7 +584,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
     }
   ],
   [
@@ -573,7 +599,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
     }
   ],
   [
@@ -588,7 +614,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
     }
   ],
   [
@@ -603,7 +629,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.POSITIONS_HISTORY) }
+      model: { ...getModelsMap().get(TABLES_NAMES.POSITIONS_HISTORY) }
     }
   ],
   [
@@ -634,7 +660,7 @@ const _methodCollMap = new Map([
       confName: 'tickersHistoryConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
-      model: { ..._models.get(TABLES_NAMES.TICKERS_HISTORY) }
+      model: { ...getModelsMap().get(TABLES_NAMES.TICKERS_HISTORY) }
     }
   ],
   [
@@ -649,7 +675,7 @@ const _methodCollMap = new Map([
         sort: [['mts', -1], ['id', -1]]
       },
       type: 'hidden:insertable:array:objects',
-      model: { ..._models.get(TABLES_NAMES.LEDGERS) },
+      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) },
       dataStructureConverter: (accum, {
         wallet: type,
         currency,
@@ -679,7 +705,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ..._models.get(TABLES_NAMES.SYMBOLS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.SYMBOLS) }
     }
   ],
   [
@@ -691,7 +717,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ..._models.get(TABLES_NAMES.FUTURES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.FUTURES) }
     }
   ],
   [
@@ -704,7 +730,7 @@ const _methodCollMap = new Map([
       hasNewData: true,
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['id', 'name', 'pool', 'explorer'],
-      model: { ..._models.get(TABLES_NAMES.CURRENCIES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.CURRENCIES) }
     }
   ],
   [
@@ -720,22 +746,10 @@ const _methodCollMap = new Map([
       confName: 'candlesConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
-      model: { ..._models.get(TABLES_NAMES.CANDLES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.CANDLES) }
     }
   ]
 ])
-
-const _cloneSchema = (map) => {
-  return new Map(Array.from(map).map(item => cloneDeep(item)))
-}
-
-const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return _cloneSchema(methodCollMap)
-}
-
-const getModelsMap = (models = _models) => {
-  return _cloneSchema(models)
-}
 
 module.exports = {
   SUPPORTED_DB_VERSION,

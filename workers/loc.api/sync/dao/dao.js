@@ -25,12 +25,12 @@ class DAO {
     this.dbMigratorFactory = dbMigratorFactory
   }
 
-  _getModelsMap () {
-    return this.syncSchema.getModelsMap()
+  _getModelsMap (params) {
+    return this.syncSchema.getModelsMap(params)
   }
 
-  _getMethodCollMap () {
-    return this.syncSchema.getMethodCollMap()
+  _getMethodCollMap (params) {
+    return this.syncSchema.getMethodCollMap(params)
   }
 
   setDB (db) {

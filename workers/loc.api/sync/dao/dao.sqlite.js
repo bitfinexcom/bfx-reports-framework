@@ -135,7 +135,7 @@ class SqliteDAO extends DAO {
   }
 
   async _createTablesIfNotExists () {
-    const models = this._getModelsMap()
+    const models = this._getModelsMap({ omittedFields: null })
     const sqlArr = getTableCreationQuery(models, true)
 
     for (const sql of sqlArr) {
