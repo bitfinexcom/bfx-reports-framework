@@ -263,6 +263,7 @@ class SqliteDAO extends DAO {
       await this._createTablesIfNotExists()
       await this._createIndexisIfNotExists()
       await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
+      await this.enableForeignKeys()
     })
   }
 
