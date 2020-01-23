@@ -368,18 +368,35 @@ class SqliteDAO extends DAO {
    * @override
    */
   async getLastElemFromDb (name, auth, sort = []) {
+    const { apiKey, apiSecret, subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
+    const {
+      subUserId: subUserIdType
+    } = { ...this._getModelsMap().get(name) }
+    const hasSubUserField = (
+      subUserIdType &&
+      typeof subUserIdType === 'string'
+    )
     const _sort = getOrderQuery(sort)
     const uTableName = this.TABLES_NAMES.USERS
+    const subUserIdQuery = (
+      hasSubUserField &&
+      Number.isInteger(subUserId)
+    )
+      ? 'AND c.subUserId = $subUserId'
+      : ''
 
-    const sql = `SELECT ${name}.* FROM ${name}
-      INNER JOIN ${uTableName} ON ${uTableName}._id = ${name}.user_id
-      WHERE ${uTableName}.apiKey = $apiKey
-      AND ${uTableName}.apiSecret = $apiSecret
+    const sql = `SELECT c.* FROM ${name} AS c
+      INNER JOIN ${uTableName} AS u ON u._id = c.user_id
+      WHERE u.apiKey = $apiKey
+      AND u.apiSecret = $apiSecret
+      ${subUserIdQuery}
       ${_sort}`
 
     return this._get(sql, {
-      $apiKey: auth.apiKey,
-      $apiSecret: auth.apiSecret
+      $apiKey: apiKey,
+      $apiSecret: apiSecret,
+      $subUserId: subUserId
     })
   }
 
@@ -394,10 +411,10 @@ class SqliteDAO extends DAO {
       isReplacedIfExists
     } = {}
   ) {
-    await mixUserIdToArrData(this, auth, data)
+    const _data = await mixUserIdToArrData(this, auth, data)
 
     await this._beginTrans(async () => {
-      for (const obj of data) {
+      for (const obj of _data) {
         const keys = Object.keys(obj)
 
         if (keys.length === 0) {
@@ -417,10 +434,10 @@ class SqliteDAO extends DAO {
    * @override
    */
   async insertElemsToDbIfNotExists (name, auth, data = []) {
-    await mixUserIdToArrData(this, auth, data)
+    const _data = await mixUserIdToArrData(this, auth, data)
 
     await this._beginTrans(async () => {
-      for (const obj of data) {
+      for (const obj of _data) {
         const keys = Object.keys(obj)
 
         if (keys.length === 0) {

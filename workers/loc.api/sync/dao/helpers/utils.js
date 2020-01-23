@@ -9,12 +9,23 @@ const { deserializeVal } = require('./serialization')
 
 const mixUserIdToArrData = async (dao, auth, data = []) => {
   if (auth) {
-    const user = await dao.checkAuthInDb({ auth })
+    const { subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
+    const { _id } = await dao.checkAuthInDb({ auth })
+    const params = Number.isInteger(subUserId)
+      ? { subUserId }
+      : {}
 
-    data.forEach(item => {
-      item.user_id = user._id
+    return data.map((item) => {
+      return {
+        ...item,
+        ...params,
+        user_id: _id
+      }
     })
   }
+
+  return data
 }
 
 const convertDataType = (
