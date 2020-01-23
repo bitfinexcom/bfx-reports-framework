@@ -5,6 +5,10 @@ const {
   isEmpty
 } = require('lodash')
 
+const {
+  isSubAccountApiKeys
+} = require('../../../helpers')
+
 const invertSort = (sortArr) => {
   return sortArr.map(item => {
     const _arr = [...item]
@@ -79,15 +83,30 @@ const getAuthFromDb = async (dao) => {
       return auth
     }
 
-    users.forEach(user => {
-      auth.set(
-        user.apiKey,
-        {
-          apiKey: user.apiKey,
-          apiSecret: user.apiSecret
+    for (const user of users) {
+      const { apiKey, apiSecret } = { ...user }
+
+      if (isSubAccountApiKeys(user)) {
+        const subUsers = await dao.getSubUsersByMasterUserApiKeys(user)
+
+        if (isEmpty(subUsers)) {
+          continue
         }
-      )
-    })
+
+        subUsers.forEach((subUser) => {
+          const { apiKey: subUserApiKey } = { ...subUser }
+
+          auth.set(
+            `${apiKey}-${subUserApiKey}`,
+            { apiKey, apiSecret, subUser }
+          )
+        })
+
+        continue
+      }
+
+      auth.set(apiKey, { apiKey, apiSecret, subUser: null })
+    }
 
     return auth
   } catch (err) {

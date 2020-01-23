@@ -210,7 +210,11 @@ class DataInserter extends EventEmitter {
     for (const [method, item] of methodCollMap) {
       const args = this._getMethodArgMap(method, auth, 10000000, item.start)
 
-      await this._insertApiDataArrObjTypeToDb(args, method, item)
+      await this._insertApiDataArrObjTypeToDb(
+        { ...args, authToInsertData: auth },
+        method,
+        item
+      )
 
       count += 1
       progress = Math.round((count / size) * 100 * userProgress)
@@ -654,6 +658,16 @@ class DataInserter extends EventEmitter {
     _args.params.notThrowError = true
     const currIterationArgs = cloneDeep(_args)
 
+    const { subUserId } = { ...model }
+    const hasNotSubUserField = (
+      !subUserId ||
+      typeof subUserId !== 'string'
+    )
+    const { authToInsertData } = { ..._args }
+    const auth = isPublic || hasNotSubUserField
+      ? null
+      : { ...authToInsertData }
+
     let count = 0
     let serialRequestsCount = 0
 
@@ -710,7 +724,7 @@ class DataInserter extends EventEmitter {
 
       await this.dao.insertElemsToDb(
         collName,
-        isPublic ? null : { ..._args.auth },
+        auth,
         normalizeApiData(res, model),
         { isReplacedIfExists: true }
       )
@@ -909,28 +923,35 @@ class DataInserter extends EventEmitter {
 
   _getMethodArgMap (
     method,
-    auth,
-    limit,
+    reqAuth,
+    reqLimit,
     start = 0,
     end = Date.now(),
     params
   ) {
-    const _limit = limit !== null
-      ? limit
+    const limit = reqLimit !== null
+      ? reqLimit
       : this._methodCollMap.get(method).maxLimit
 
+    const { apiKey = '', apiSecret = '', subUser } = { ...reqAuth }
+    const {
+      apiKey: subUserApiKey,
+      apiSecret: subUserApiSecret
+    } = { ...subUser }
+    const auth = (
+      subUserApiKey &&
+      typeof subUserApiKey === 'string' &&
+      subUserApiSecret &&
+      typeof subUserApiSecret === 'string'
+    )
+      ? { apiKey: subUserApiKey, apiSecret: subUserApiSecret }
+      : { apiKey, apiSecret }
+
     return {
-      auth: {
-        ...(auth && typeof auth === 'object'
-          ? auth
-          : {
-            apiKey: '',
-            apiSecret: ''
-          })
-      },
+      auth,
       params: {
         ...params,
-        limit: _limit,
+        limit,
         end,
         start
       }
