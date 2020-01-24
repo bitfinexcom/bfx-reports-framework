@@ -211,7 +211,7 @@ class DataInserter extends EventEmitter {
       const args = this._getMethodArgMap(method, auth, 10000000, item.start)
 
       await this._insertApiDataArrObjTypeToDb(
-        { ...args, authToInsertData: auth },
+        { ...args, subAccountAuth: auth },
         method,
         item
       )
@@ -663,10 +663,10 @@ class DataInserter extends EventEmitter {
       !subUserId ||
       typeof subUserId !== 'string'
     )
-    const { authToInsertData } = { ..._args }
+    const { subAccountAuth } = { ..._args }
     const auth = isPublic || hasNotSubUserField
       ? null
-      : { ...authToInsertData }
+      : { ...subAccountAuth }
 
     let count = 0
     let serialRequestsCount = 0

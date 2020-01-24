@@ -19,7 +19,11 @@ class ApiMiddlewareHandlerAfter {
     this.searchClosePriceAndSumAmount = searchClosePriceAndSumAmount
   }
 
-  async _getPositionsHistory ({ auth }, apiRes, isCheckCall) {
+  async _getPositionsHistory (
+    args,
+    apiRes,
+    isCheckCall
+  ) {
     if (isCheckCall) {
       return apiRes
     }
@@ -54,7 +58,7 @@ class ApiMiddlewareHandlerAfter {
         closePrice,
         sumAmount
       } = await this.searchClosePriceAndSumAmount({
-        auth,
+        args,
         symbol,
         end,
         id

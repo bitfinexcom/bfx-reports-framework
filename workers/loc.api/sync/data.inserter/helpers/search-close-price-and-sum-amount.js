@@ -12,15 +12,18 @@ module.exports = (
   rService,
   dao
 ) => async ({
-  auth,
+  args,
   symbol,
   end,
   id
 }) => {
+  const { auth, subAccountAuth } = { ...args }
+
+  // TODO: need to switch to getElemsInCollBy method
   const trades = await dao.findInCollBy(
     '_getTrades',
     {
-      auth,
+      auth: subAccountAuth,
       params: {
         symbol,
         end,
@@ -75,10 +78,11 @@ module.exports = (
     }
   }
 
+  // TODO: need to switch to getElemsInCollBy method
   const _ledgers = await dao.findInCollBy(
     '_getLedgers',
     {
-      auth,
+      auth: subAccountAuth,
       params: { end }
     }
   )
