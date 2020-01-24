@@ -7,11 +7,19 @@ const {
 } = require('../../../errors')
 const { deserializeVal } = require('./serialization')
 
-const mixUserIdToArrData = async (dao, auth, data = []) => {
+const mixUserIdToArrData = async (
+  dao,
+  auth,
+  data = [],
+  isUsedActiveAndInactiveUsers
+) => {
   if (auth) {
     const { subUser } = { ...auth }
     const { _id: subUserId } = { ...subUser }
-    const { _id } = await dao.checkAuthInDb({ auth })
+    const { _id } = await dao.checkAuthInDb(
+      { auth },
+      !isUsedActiveAndInactiveUsers
+    )
     const params = Number.isInteger(subUserId)
       ? { subUserId }
       : {}

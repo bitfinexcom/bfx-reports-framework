@@ -408,10 +408,16 @@ class SqliteDAO extends DAO {
     auth,
     data = [],
     {
-      isReplacedIfExists
+      isReplacedIfExists,
+      isUsedActiveAndInactiveUsers
     } = {}
   ) {
-    const _data = await mixUserIdToArrData(this, auth, data)
+    const _data = await mixUserIdToArrData(
+      this,
+      auth,
+      data,
+      isUsedActiveAndInactiveUsers
+    )
 
     await this._beginTrans(async () => {
       for (const obj of _data) {
@@ -433,8 +439,18 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async insertElemsToDbIfNotExists (name, auth, data = []) {
-    const _data = await mixUserIdToArrData(this, auth, data)
+  async insertElemsToDbIfNotExists (
+    name,
+    auth,
+    data = [],
+    { isUsedActiveAndInactiveUsers } = {}
+  ) {
+    const _data = await mixUserIdToArrData(
+      this,
+      auth,
+      data,
+      isUsedActiveAndInactiveUsers
+    )
 
     await this._beginTrans(async () => {
       for (const obj of _data) {
