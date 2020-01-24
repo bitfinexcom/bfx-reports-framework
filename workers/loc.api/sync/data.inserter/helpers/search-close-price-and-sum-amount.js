@@ -90,12 +90,16 @@ module.exports = (
     }
   }
 
-  // TODO: need to switch to getElemsInCollBy method
-  const _ledgers = await dao.findInCollBy(
-    '_getLedgers',
+  const _ledgers = await dao.getElemsInCollBy(
+    ALLOWED_COLLS.LEDGERS,
     {
-      auth: subAccountAuth,
-      params: { end }
+      filter: {
+        user_id: user._id,
+        subUserId,
+        $lte: { mts: end }
+      },
+      limit: 2500,
+      sort: [['mts', -1]]
     }
   )
   const ledgers = Array.isArray(_ledgers) ? _ledgers : []
