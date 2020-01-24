@@ -164,7 +164,8 @@ module.exports = ({
           searchClosePriceAndSumAmount,
           [
             TYPES.RService,
-            TYPES.DAO
+            TYPES.DAO,
+            TYPES.ALLOWED_COLLS
           ]
         )
       )

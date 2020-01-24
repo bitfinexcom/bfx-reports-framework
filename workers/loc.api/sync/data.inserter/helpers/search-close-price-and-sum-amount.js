@@ -10,7 +10,8 @@ const _isContainedPosStatus = (positions, status) => {
 
 module.exports = (
   rService,
-  dao
+  dao,
+  ALLOWED_COLLS
 ) => async ({
   args,
   symbol,
@@ -18,19 +19,30 @@ module.exports = (
   id
 }) => {
   const { auth, subAccountAuth } = { ...args }
+  const { apiKey, apiSecret, subUser } = { ...subAccountAuth }
+  const { subUserId } = { ...subUser }
+  const user = await dao.checkAuthInDb({ auth: { apiKey, apiSecret } })
+  const symbArr = Array.isArray(symbol)
+    ? symbol
+    : [symbol]
+  const symbFilter = symbArr.length !== 0
+    ? { $in: { symbol: symbArr } }
+    : {}
 
-  // TODO: need to switch to getElemsInCollBy method
-  const trades = await dao.findInCollBy(
-    '_getTrades',
+  const trades = await dao.getElemsInCollBy(
+    ALLOWED_COLLS.TRADES,
     {
-      auth: subAccountAuth,
-      params: {
-        symbol,
-        end,
-        limit: 2
-      }
+      filter: {
+        user_id: user._id,
+        subUserId,
+        $lte: { mtsCreate: end },
+        ...symbFilter
+      },
+      limit: 2,
+      sort: [['mtsCreate', -1]]
     }
   )
+
   const {
     res: positionsAudit
   } = await rService.getPositionsAudit(
