@@ -104,22 +104,27 @@ class ApiMiddlewareHandlerAfter {
   }
 
   _getLedgers (args, apiRes) {
-    const res = apiRes.res.map(item => ({
-      ...item,
-      ...getFlagsFromLedgerDescription(
-        item,
-        [
-          {
-            fieldName: '_isMarginFundingPayment',
-            pattern: 'Margin Funding Payment'
-          },
-          {
-            fieldName: '_isAffiliateRebate',
-            pattern: 'Affiliate Rebate'
-          }
-        ]
-      )
-    }))
+    const res = apiRes.res.map(item => {
+      const { balance } = { ...item }
+
+      return {
+        ...item,
+        ...getFlagsFromLedgerDescription(
+          item,
+          [
+            {
+              fieldName: '_isMarginFundingPayment',
+              pattern: 'Margin Funding Payment'
+            },
+            {
+              fieldName: '_isAffiliateRebate',
+              pattern: 'Affiliate Rebate'
+            }
+          ]
+        ),
+        _nativeBalance: balance
+      }
+    })
 
     return {
       ...apiRes,
