@@ -160,14 +160,18 @@ class DataInserter extends EventEmitter {
   }
 
   addAfterAllInsertsHooks (hook) {
-    if (typeof hook !== 'function') {
+    const hookArr = Array.isArray(hook)
+      ? hook
+      : [hook]
+
+    if (hookArr.some((h) => typeof h !== 'function')) {
       throw new AfterAllInsertsHookIsNotFnError()
     }
     if (!Array.isArray(this._afterAllInsertsHooks)) {
       this._afterAllInsertsHooks = []
     }
 
-    this._afterAllInsertsHooks.push(hook)
+    this._afterAllInsertsHooks.push(...hookArr)
   }
 
   async insertNewPublicDataToDb (prevProgress) {
