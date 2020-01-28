@@ -9,7 +9,10 @@ const _getConvSchema = (ALLOWED_COLLS) => {
         dateFieldName: 'mts',
         convFields: [
           { inputField: 'amount', outputField: 'amountUsd' },
-          { inputField: 'balance', outputField: 'balanceUsd' }
+          {
+            inputField: '_nativeBalance',
+            outputField: ['balanceUsd', '_nativeBalanceUsd']
+          }
         ]
       }
     ],
@@ -46,6 +49,18 @@ module.exports = (
     let count = 0
     let _id = 0
 
+    const { convFields } = { ...schema }
+    const updatedFieldNames = convFields
+      .reduce((accum, { outputField }) => {
+        const _outputField = Array.isArray(outputField)
+          ? outputField
+          : [outputField]
+
+        accum.push(..._outputField)
+
+        return accum
+      }, [])
+
     while (true) {
       count += 1
 
@@ -56,7 +71,7 @@ module.exports = (
         {
           filter: {
             $gt: { _id },
-            $isNull: schema.convFields.map(obj => obj.outputField)
+            $isNull: updatedFieldNames
           },
           sort: [['_id', 1]],
           limit: 10000
@@ -80,7 +95,7 @@ module.exports = (
         collName,
         convElems,
         ['_id'],
-        schema.convFields.map(({ outputField }) => outputField)
+        updatedFieldNames
       )
 
       _id = elems[elems.length - 1]._id
