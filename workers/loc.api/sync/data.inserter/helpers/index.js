@@ -18,6 +18,7 @@ const {
 } = require('./utils')
 const convertCurrency = require('./convert-currency')
 const getFlagsFromLedgerDescription = require('./get-flags-from-ledger-description')
+const recalcSubAccountLedgersBalances = require('./recalc-sub-account-ledgers-balances')
 
 module.exports = {
   searchClosePriceAndSumAmount,
@@ -31,5 +32,6 @@ module.exports = {
   getAllowedCollsNames,
   convertCurrency,
   addPropsToResIfExist,
-  getFlagsFromLedgerDescription
+  getFlagsFromLedgerDescription,
+  recalcSubAccountLedgersBalances
 }

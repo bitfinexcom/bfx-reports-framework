@@ -28,7 +28,8 @@ const {
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  convertCurrency
+  convertCurrency,
+  recalcSubAccountLedgersBalances
 } = require('./helpers')
 const {
   checkCollPermission
@@ -88,13 +89,19 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
-    this.addAfterAllInsertsHooks(convertCurrency(
-      this.dao,
-      this.currencyConverter,
-      this.ALLOWED_COLLS,
-      this.convertTo,
-      this.syncColls
-    ))
+    this.addAfterAllInsertsHooks([
+      convertCurrency(
+        this.dao,
+        this.currencyConverter,
+        this.ALLOWED_COLLS,
+        this.convertTo,
+        this.syncColls
+      ),
+      recalcSubAccountLedgersBalances(
+        this.dao,
+        this.TABLES_NAMES
+      )
+    ])
   }
 
   setAsyncProgressHandler (cb) {
