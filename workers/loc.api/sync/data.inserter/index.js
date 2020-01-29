@@ -161,9 +161,9 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const promiseArr = this._afterAllInsertsHooks.map(hook => hook(this))
-
-    return Promise.all(promiseArr)
+    for (const hook of this._afterAllInsertsHooks) {
+      await hook(this)
+    }
   }
 
   addAfterAllInsertsHooks (hook) {
