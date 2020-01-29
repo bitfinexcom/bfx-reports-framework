@@ -119,6 +119,12 @@ class SubAccountRemovingError extends AuthError {
   }
 }
 
+class SubAccountLedgersBalancesRecalcError extends BaseError {
+  constructor (message = 'ERR_SUB_ACCOUNT_LEDGERS_BALANCES_RECALC_HAS_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -139,5 +145,6 @@ module.exports = {
   DbVersionTypeError,
   MigrationLaunchingError,
   SubAccountCreatingError,
-  SubAccountRemovingError
+  SubAccountRemovingError,
+  SubAccountLedgersBalancesRecalcError
 }

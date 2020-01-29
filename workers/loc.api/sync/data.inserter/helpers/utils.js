@@ -84,7 +84,11 @@ const getAuthFromDb = async (dao) => {
     }
 
     for (const user of users) {
-      const { apiKey, apiSecret } = { ...user }
+      const {
+        _id: masterUserId,
+        apiKey,
+        apiSecret
+      } = { ...user }
 
       if (isSubAccountApiKeys(user)) {
         const subUsers = await dao.getSubUsersByMasterUserApiKeys(user)
@@ -98,7 +102,7 @@ const getAuthFromDb = async (dao) => {
 
           auth.set(
             `${apiKey}-${subUserApiKey}`,
-            { apiKey, apiSecret, subUser }
+            { masterUserId, apiKey, apiSecret, subUser }
           )
         })
 

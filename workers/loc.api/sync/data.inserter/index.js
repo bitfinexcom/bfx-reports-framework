@@ -120,6 +120,10 @@ class DataInserter extends EventEmitter {
     this.emit('progress', progress)
   }
 
+  getAuth () {
+    return this._auth
+  }
+
   async insertNewDataToDbMultiUser () {
     this._auth = await getAuthFromDb(this.dao)
 
