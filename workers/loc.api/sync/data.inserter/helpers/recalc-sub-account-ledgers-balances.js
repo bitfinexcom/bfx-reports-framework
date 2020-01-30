@@ -36,7 +36,8 @@ const _getRecalcBalance = async (
     wallet,
     currency,
     user_id: id,
-    _nativeBalance
+    _nativeBalance,
+    _nativeBalanceUsd
   } = { ...item }
   const subUsersIds = _getSubUsersIdsByMasterUserId(auth, id)
 
@@ -44,7 +45,10 @@ const _getRecalcBalance = async (
     !Array.isArray(subUsersIds) ||
     subUsersIds.length === 0
   ) {
-    return _nativeBalance
+    return {
+      balance: _nativeBalance,
+      balanceUsd: _nativeBalanceUsd
+    }
   }
 
   const _elems = elems
@@ -63,14 +67,22 @@ const _getRecalcBalance = async (
     ))
     .reverse()
   const subUsersBalances = []
+  const subUsersBalancesUsd = []
 
   for (const subUserId of subUsersIds) {
     const _item = _elems
       .find(({ subUserId: sId }) => subUserId === sId)
-    const { _nativeBalance: balance } = { ..._item }
+    const {
+      _nativeBalance: balance,
+      _nativeBalanceUsd: balanceUsd
+    } = { ..._item }
 
-    if (Number.isFinite(balance)) {
+    if (
+      Number.isFinite(balance) &&
+      Number.isFinite(balanceUsd)
+    ) {
       subUsersBalances.push(balance)
+      subUsersBalancesUsd.push(balanceUsd)
 
       continue
     }
@@ -88,22 +100,41 @@ const _getRecalcBalance = async (
       },
       [['mts', -1], ['_id', 1]]
     )
-    const { _nativeBalance: balanceFromDb } = { ...itemFromDb }
+    const {
+      _nativeBalance: balanceFromDb,
+      _nativeBalanceUsd: balanceUsdFromDb
+    } = { ...itemFromDb }
 
     if (Number.isFinite(balanceFromDb)) {
       subUsersBalances.push(balanceFromDb)
     }
+    if (Number.isFinite(balanceUsdFromDb)) {
+      subUsersBalancesUsd.push(balanceUsdFromDb)
+    }
   }
 
-  if (subUsersBalances.length === 0) {
-    return _nativeBalance
-  }
-
-  return subUsersBalances.reduce((accum, balance) => {
+  const _balance = subUsersBalances.reduce((accum, balance) => {
     return Number.isFinite(balance)
       ? accum + balance
       : accum
   }, 0)
+  const _balanceUsd = subUsersBalancesUsd.reduce((accum, balance) => {
+    return Number.isFinite(balance)
+      ? accum + balance
+      : accum
+  }, 0)
+
+  const balance = subUsersBalances.length === 0
+    ? _nativeBalance
+    : _balance
+  const balanceUsd = subUsersBalancesUsd.length === 0
+    ? _nativeBalanceUsd
+    : _balanceUsd
+
+  return {
+    balance,
+    balanceUsd
+  }
 }
 
 const _addFreshSelection = (
@@ -185,7 +216,10 @@ module.exports = (
     const recalcElems = []
 
     for (const elem of elems) {
-      const balance = await _getRecalcBalance(
+      const {
+        balance,
+        balanceUsd
+      } = await _getRecalcBalance(
         dao,
         TABLES_NAMES,
         auth,
@@ -196,6 +230,7 @@ module.exports = (
       recalcElems.push({
         ...elem,
         balance,
+        balanceUsd,
         _isBalanceRecalced: 1
       })
     }
@@ -204,7 +239,7 @@ module.exports = (
       TABLES_NAMES.LEDGERS,
       recalcElems,
       ['_id'],
-      ['balance', '_isBalanceRecalced']
+      ['balance', 'balanceUsd', '_isBalanceRecalced']
     )
 
     const lastElem = elems[elems.length - 1]
