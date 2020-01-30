@@ -24,7 +24,6 @@ const _getSubUsersIdsByMasterUserId = (auth, id) => {
     }, [])
 }
 
-// TODO:
 const _getRecalcBalance = async (
   dao,
   TABLES_NAMES,
@@ -48,7 +47,7 @@ const _getRecalcBalance = async (
     return _nativeBalance
   }
 
-  const _elems = [...elems[0], ...elems[1]]
+  const _elems = elems
     .filter(({
       mts: _mts,
       wallet: _wallet,
@@ -66,12 +65,12 @@ const _getRecalcBalance = async (
   const subUsersBalances = []
 
   for (const subUserId of subUsersIds) {
-    const item = _elems
+    const _item = _elems
       .find(({ subUserId: sId }) => subUserId === sId)
-    const { _nativeBalance } = { ...item }
+    const { _nativeBalance: balance } = { ..._item }
 
-    if (Number.isInteger(_nativeBalance)) {
-      subUsersBalances.push(_nativeBalance)
+    if (Number.isFinite(balance)) {
+      subUsersBalances.push(balance)
 
       continue
     }
@@ -91,7 +90,7 @@ const _getRecalcBalance = async (
     )
     const { _nativeBalance: balanceFromDb } = { ...itemFromDb }
 
-    if (Number.isInteger(balanceFromDb)) {
+    if (Number.isFinite(balanceFromDb)) {
       subUsersBalances.push(balanceFromDb)
     }
   }
@@ -113,6 +112,11 @@ const _addFreshSelection = (
 ) => {
   lastTwoSelectionElems.splice(0, 1)
   lastTwoSelectionElems.push(elems)
+
+  return [
+    ...lastTwoSelectionElems[0],
+    ...lastTwoSelectionElems[1]
+  ]
 }
 
 module.exports = (
@@ -130,9 +134,24 @@ module.exports = (
     throw new SubAccountLedgersBalancesRecalcError()
   }
 
+  const firstNotRecalcedElem = await dao.getElemInCollBy(
+    TABLES_NAMES.LEDGERS,
+    {
+      $isNotNull: 'subUserId',
+      $isNull: '_isBalanceRecalced'
+    },
+    [['mts', 1], ['_id', -1]]
+  )
+
+  let { mts } = { ...firstNotRecalcedElem }
   let count = 0
-  let mts = 0
   let skipedIds = []
+
+  if (!mts) {
+    return
+  }
+
+  console.log('[mts]:'.bgGreen, mts)
 
   while (true) {
     count += 1
@@ -159,7 +178,10 @@ module.exports = (
       break
     }
 
-    _addFreshSelection(lastTwoSelectionElems, elems)
+    const _lastTwoSelectionElems = _addFreshSelection(
+      lastTwoSelectionElems,
+      elems
+    )
     const recalcElems = []
 
     for (const elem of elems) {
@@ -167,13 +189,14 @@ module.exports = (
         dao,
         TABLES_NAMES,
         auth,
-        lastTwoSelectionElems,
+        _lastTwoSelectionElems,
         elem
       )
 
       recalcElems.push({
         ...elem,
-        balance
+        balance,
+        _isBalanceRecalced: 1
       })
     }
 
@@ -181,7 +204,7 @@ module.exports = (
       TABLES_NAMES.LEDGERS,
       recalcElems,
       ['_id'],
-      ['balance']
+      ['balance', '_isBalanceRecalced']
     )
 
     const lastElem = elems[elems.length - 1]

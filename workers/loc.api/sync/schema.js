@@ -92,6 +92,7 @@ const _models = new Map([
       wallet: 'VARCHAR(255)',
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
+      _isBalanceRecalced: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
       __constraints__: `CONSTRAINT #{tableName}_fk_user_id
