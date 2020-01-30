@@ -64,7 +64,10 @@ const _getKeysAndValuesForWhereQuery = (
 ) => {
   if (!isArr) {
     const key = `$${origFieldName}`
-    const subValues = { [key]: serializeVal(filter[origFieldName]) }
+    const val = serializeVal(filter[origFieldName])
+    const subValues = val === null
+      ? {}
+      : { [key]: val }
 
     return { key, subValues }
   }
