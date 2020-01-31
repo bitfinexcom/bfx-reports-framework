@@ -24,13 +24,7 @@ const _getSubUsersIdsByMasterUserId = (auth, id) => {
     }, [])
 }
 
-const _getRecalcBalance = async (
-  dao,
-  TABLES_NAMES,
-  auth,
-  elems,
-  item
-) => {
+const _getRecalcBalance = (auth, elems, item) => {
   const {
     mts,
     wallet,
@@ -77,52 +71,26 @@ const _getRecalcBalance = async (
       _nativeBalanceUsd: balanceUsd
     } = { ..._item }
 
-    if (
-      Number.isFinite(balance) &&
-      Number.isFinite(balanceUsd)
-    ) {
+    if (Number.isFinite(balance)) {
       subUsersBalances.push(balance)
+    }
+    if (Number.isFinite(balanceUsd)) {
       subUsersBalancesUsd.push(balanceUsd)
-
-      continue
-    }
-
-    const itemFromDb = await dao.getElemInCollBy(
-      TABLES_NAMES.LEDGERS,
-      {
-        $eq: {
-          wallet,
-          currency,
-          user_id: id,
-          subUserId
-        },
-        $lte: { mts }
-      },
-      [['mts', -1], ['_id', 1]]
-    )
-    const {
-      _nativeBalance: balanceFromDb,
-      _nativeBalanceUsd: balanceUsdFromDb
-    } = { ...itemFromDb }
-
-    if (Number.isFinite(balanceFromDb)) {
-      subUsersBalances.push(balanceFromDb)
-    }
-    if (Number.isFinite(balanceUsdFromDb)) {
-      subUsersBalancesUsd.push(balanceUsdFromDb)
     }
   }
 
-  const _balance = subUsersBalances.reduce((accum, balance) => {
-    return Number.isFinite(balance)
-      ? accum + balance
-      : accum
-  }, 0)
-  const _balanceUsd = subUsersBalancesUsd.reduce((accum, balance) => {
-    return Number.isFinite(balance)
-      ? accum + balance
-      : accum
-  }, 0)
+  const _balance = subUsersBalances
+    .reduce((accum, balance) => {
+      return Number.isFinite(balance)
+        ? accum + balance
+        : accum
+    }, 0)
+  const _balanceUsd = subUsersBalancesUsd
+    .reduce((accum, balance) => {
+      return Number.isFinite(balance)
+        ? accum + balance
+        : accum
+    }, 0)
 
   const balance = subUsersBalances.length === 0
     ? _nativeBalance
@@ -137,17 +105,118 @@ const _getRecalcBalance = async (
   }
 }
 
-const _addFreshSelection = (
-  lastTwoSelectionElems,
-  elems = []
+const _getRecalcBalanceAsync = (
+  auth,
+  recordsToGetBalances,
+  elem
 ) => {
-  lastTwoSelectionElems.splice(0, 1)
-  lastTwoSelectionElems.push(elems)
+  return new Promise((resolve, reject) => {
+    setImmediate(() => {
+      try {
+        const res = _getRecalcBalance(
+          auth,
+          recordsToGetBalances,
+          elem
+        )
 
-  return [
-    ...lastTwoSelectionElems[0],
-    ...lastTwoSelectionElems[1]
-  ]
+        resolve(res)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  })
+}
+
+const _getFirstGroupedRecords = (elems = []) => {
+  return elems.reduce((accum, curr) => {
+    const {
+      wallet,
+      currency,
+      user_id: userId,
+      subUserId
+    } = { ...curr }
+    const hasNotGroup = accum.every(({
+      wallet: _wallet,
+      currency: _currency,
+      user_id: _userId,
+      subUserId: _subUserId
+    }) => (
+      wallet !== _wallet ||
+      currency !== _currency ||
+      userId !== _userId ||
+      subUserId !== _subUserId
+    ))
+
+    if (hasNotGroup) {
+      accum.push({ ...curr })
+    }
+
+    return accum
+  }, [])
+}
+
+const _getInitialElems = async (
+  dao,
+  TABLES_NAMES,
+  auth,
+  firstGroupedRecords = []
+) => {
+  const res = []
+
+  for (const elem of firstGroupedRecords) {
+    const {
+      mts,
+      wallet,
+      currency,
+      user_id: id,
+      subUserId: _subUserId
+    } = { ...elem }
+    const subUsersIds = _getSubUsersIdsByMasterUserId(auth, id)
+
+    if (
+      !Array.isArray(subUsersIds) ||
+      subUsersIds.length === 0
+    ) {
+      continue
+    }
+
+    const emptyRes = {
+      mts,
+      wallet,
+      currency,
+      user_id: id,
+      _nativeBalance: null,
+      _nativeBalanceUsd: null
+    }
+
+    for (const subUserId of subUsersIds) {
+      if (subUserId === _subUserId) {
+        continue
+      }
+
+      const itemFromDb = await dao.getElemInCollBy(
+        TABLES_NAMES.LEDGERS,
+        {
+          $eq: {
+            wallet,
+            currency,
+            user_id: id,
+            subUserId
+          },
+          $lte: { mts }
+        },
+        [['mts', -1], ['_id', 1]]
+      )
+
+      res.push({
+        ...emptyRes,
+        ...itemFromDb,
+        subUserId
+      })
+    }
+  }
+
+  return res
 }
 
 module.exports = (
@@ -155,7 +224,6 @@ module.exports = (
   TABLES_NAMES
 ) => async (dataInserter) => {
   const auth = dataInserter.getAuth()
-  const lastTwoSelectionElems = [[], []]
 
   if (
     !auth ||
@@ -182,8 +250,6 @@ module.exports = (
     return
   }
 
-  console.log('[mts]:'.bgGreen, mts)
-
   while (true) {
     count += 1
 
@@ -209,21 +275,26 @@ module.exports = (
       break
     }
 
-    const _lastTwoSelectionElems = _addFreshSelection(
-      lastTwoSelectionElems,
-      elems
+    const firstGroupedRecords = _getFirstGroupedRecords(elems)
+    const initialElems = await _getInitialElems(
+      dao,
+      TABLES_NAMES,
+      auth,
+      firstGroupedRecords
     )
+    const recordsToGetBalances = [
+      ...initialElems,
+      ...elems
+    ]
     const recalcElems = []
 
     for (const elem of elems) {
       const {
         balance,
         balanceUsd
-      } = await _getRecalcBalance(
-        dao,
-        TABLES_NAMES,
+      } = await _getRecalcBalanceAsync(
         auth,
-        _lastTwoSelectionElems,
+        recordsToGetBalances,
         elem
       )
 
