@@ -145,9 +145,10 @@ class DataInserter extends EventEmitter {
         continue
       }
 
-      count += 1
-      const userProgress = count / this._auth.size
+      const userProgress = (count / this._auth.size) * 100
+
       progress = await this.insertNewDataToDb(authItem[1], userProgress)
+      count += 1
     }
 
     await this.insertNewPublicDataToDb(progress)
@@ -206,7 +207,7 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  async insertNewDataToDb (auth, userProgress = 1) {
+  async insertNewDataToDb (auth, userProgress = 0) {
     if (
       typeof auth.apiKey !== 'string' ||
       typeof auth.apiSecret !== 'string'
@@ -232,7 +233,9 @@ class DataInserter extends EventEmitter {
       )
 
       count += 1
-      progress = Math.round((count / size) * 100 * userProgress)
+      progress = Math.round(
+        (((count / size) * 100) / this._auth.size) + userProgress
+      )
 
       if (progress < 100) {
         await this.setProgress(progress)

@@ -24,7 +24,11 @@ const filterMethodCollMap = (
   isPublic
 ) => {
   return new Map([...methodCollMap].filter(([key, schema]) => {
-    const _isPub = /^public:.*/i.test(schema.type)
+    const _isHidden = /^hidden:/i.test(schema.type)
+
+    if (_isHidden) return false
+
+    const _isPub = /^public:/i.test(schema.type)
 
     return schema.hasNewData && (isPublic ? _isPub : !_isPub)
   }))
