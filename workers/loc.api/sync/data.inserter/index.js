@@ -27,16 +27,15 @@ const {
   compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
-  getAllowedCollsNames,
-  convertCurrency,
-  recalcSubAccountLedgersBalances
+  getAllowedCollsNames
 } = require('./helpers')
+const DataInserterHook = require('./hooks/data.inserter.hook')
 const {
   checkCollPermission
 } = require('../helpers')
 const {
   AsyncProgressHandlerIsNotFnError,
-  AfterAllInsertsHookIsNotFnError
+  AfterAllInsertsHookIsNotHookError
 } = require('../../errors')
 
 const MESS_ERR_UNAUTH = 'ERR_AUTH_UNAUTHORIZED'
@@ -50,7 +49,9 @@ class DataInserter extends EventEmitter {
     TABLES_NAMES,
     ALLOWED_COLLS,
     currencyConverter,
-    FOREX_SYMBS
+    FOREX_SYMBS,
+    convertCurrencyHook,
+    recalcSubAccountLedgersBalancesHook
   ) {
     super()
 
@@ -62,6 +63,8 @@ class DataInserter extends EventEmitter {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.currencyConverter = currencyConverter
     this.FOREX_SYMBS = FOREX_SYMBS
+    this.convertCurrencyHook = convertCurrencyHook
+    this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
 
     this._asyncProgressHandler = null
     this._auth = null
@@ -89,18 +92,13 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
+    this.convertCurrencyHook.init({
+      convertTo: this.convertTo,
+      syncColls: this.syncColls
+    })
     this.addAfterAllInsertsHooks([
-      convertCurrency(
-        this.dao,
-        this.currencyConverter,
-        this.ALLOWED_COLLS,
-        this.convertTo,
-        this.syncColls
-      ),
-      recalcSubAccountLedgersBalances(
-        this.dao,
-        this.TABLES_NAMES
-      )
+      this.convertCurrencyHook,
+      this.recalcSubAccountLedgersBalancesHook
     ])
   }
 
@@ -161,13 +159,13 @@ class DataInserter extends EventEmitter {
     if (
       !Array.isArray(this._afterAllInsertsHooks) ||
       this._afterAllInsertsHooks.length === 0 ||
-      this._afterAllInsertsHooks.some(hook => typeof hook !== 'function')
+      this._afterAllInsertsHooks.some(h => !(h instanceof DataInserterHook))
     ) {
       return
     }
 
     for (const hook of this._afterAllInsertsHooks) {
-      await hook(this)
+      await hook.execute()
     }
   }
 
@@ -176,12 +174,17 @@ class DataInserter extends EventEmitter {
       ? hook
       : [hook]
 
-    if (hookArr.some((h) => typeof h !== 'function')) {
-      throw new AfterAllInsertsHookIsNotFnError()
+    if (hookArr.some((h) => !(h instanceof DataInserterHook))) {
+      throw new AfterAllInsertsHookIsNotHookError()
     }
     if (!Array.isArray(this._afterAllInsertsHooks)) {
       this._afterAllInsertsHooks = []
     }
+
+    hookArr.forEach((hook) => {
+      hook.setDataInserter(this)
+      hook.init()
+    })
 
     this._afterAllInsertsHooks.push(...hookArr)
   }
@@ -1183,5 +1186,7 @@ decorate(inject(TYPES.TABLES_NAMES), DataInserter, 4)
 decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 5)
 decorate(inject(TYPES.CurrencyConverter), DataInserter, 6)
 decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
+decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 8)
+decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 
 module.exports = DataInserter

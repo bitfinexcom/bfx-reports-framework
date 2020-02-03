@@ -23,8 +23,8 @@ class AsyncProgressHandlerIsNotFnError extends BaseError {
   }
 }
 
-class AfterAllInsertsHookIsNotFnError extends BaseError {
-  constructor (message = 'ERR_AFTER_ALL_INSERTS_HOOK_IS_NOT_FUNCTION') {
+class AfterAllInsertsHookIsNotHookError extends BaseError {
+  constructor (message = 'ERR_AFTER_ALL_INSERTS_HOOK_IS_NOT_HOOK') {
     super(message)
   }
 }
@@ -130,7 +130,7 @@ module.exports = {
   CollSyncPermissionError,
   UpdateSyncQueueJobError,
   AsyncProgressHandlerIsNotFnError,
-  AfterAllInsertsHookIsNotFnError,
+  AfterAllInsertsHookIsNotHookError,
   RemoveListElemsError,
   UpdateStateCollError,
   UpdateSyncProgressError,

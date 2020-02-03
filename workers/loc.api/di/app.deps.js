@@ -37,6 +37,12 @@ const ApiMiddleware = require(
   '../sync/data.inserter/api.middleware'
 )
 const DataInserter = require('../sync/data.inserter')
+const ConvertCurrencyHook = require(
+  '../sync/data.inserter/hooks/convert.currency.hook'
+)
+const RecalcSubAccountLedgersBalancesHook = require(
+  '../sync/data.inserter/hooks/recalc.sub.account.ledgers.balances.hook'
+)
 const SqliteDAO = require('../sync/dao/dao.sqlite')
 const {
   PublicСollsСonfAccessors
@@ -189,6 +195,10 @@ module.exports = ({
       .to(DataInserter)
     bind(TYPES.DataInserterFactory)
       .toFactory(dataInserterFactory)
+    bind(TYPES.ConvertCurrencyHook)
+      .to(ConvertCurrencyHook)
+    bind(TYPES.RecalcSubAccountLedgersBalancesHook)
+      .to(RecalcSubAccountLedgersBalancesHook)
     bind(TYPES.SyncQueue)
       .to(SyncQueue)
       .inSingletonScope()
