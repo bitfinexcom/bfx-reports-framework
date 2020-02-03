@@ -1,8 +1,11 @@
 'use strict'
 
+const { isEmpty } = require('lodash')
+
 const {
   isSubAccountApiKeys,
-  getSubAccountAuthFromAuth
+  getSubAccountAuthFromAuth,
+  getAuthFromSubAccountAuth
 } = require('../../helpers')
 const {
   SubAccountCreatingError,
@@ -80,6 +83,31 @@ class SubAccount {
     )
 
     await this.dao.removeSubAccount(masterUser)
+  }
+
+  async hasSubAccount (args) {
+    const { auth } = { ...args }
+    const _auth = getAuthFromSubAccountAuth(auth)
+
+    try {
+      const user = await this.dao.checkAuthInDb(
+        { auth: _auth },
+        false
+      )
+      const masterUserAuth = getSubAccountAuthFromAuth(user)
+      const subUsers = await this.dao.getSubUsersByMasterUserApiKeys(
+        masterUserAuth
+      )
+      const hasSubUsersMoreThanOne = (
+        Array.isArray(subUsers) &&
+        subUsers.length > 0 &&
+        subUsers.every((sUser) => !isEmpty(sUser))
+      )
+
+      return hasSubUsersMoreThanOne
+    } catch (err) {
+      return false
+    }
   }
 }
 
