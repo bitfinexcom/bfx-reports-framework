@@ -110,22 +110,45 @@ class SqliteDAO extends DAO {
     return this._run('ROLLBACK')
   }
 
-  _beginTrans (asyncExecQuery) {
+  _beginTrans (
+    asyncExecQuery,
+    {
+      beforeTransFn,
+      afterTransFn
+    } = {}
+  ) {
     return new Promise((resolve, reject) => {
       this.db.serialize(async () => {
         let isTransBegun = false
 
         try {
+          if (typeof beforeTransFn === 'function') {
+            await beforeTransFn()
+          }
+
           await this._run('BEGIN TRANSACTION')
           isTransBegun = true
 
           await asyncExecQuery()
           await this._commit()
 
+          if (typeof afterTransFn === 'function') {
+            await afterTransFn()
+          }
+
           resolve()
         } catch (err) {
-          if (isTransBegun) {
-            await this._rollback()
+          try {
+            if (isTransBegun) {
+              await this._rollback()
+            }
+            if (typeof afterTransFn === 'function') {
+              await afterTransFn()
+            }
+          } catch (err) {
+            reject(err)
+
+            return
           }
 
           reject(err)
@@ -303,7 +326,13 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async executeQueriesInTrans (sql) {
+  async executeQueriesInTrans (
+    sql,
+    {
+      beforeTransFn,
+      afterTransFn
+    } = {}
+  ) {
     const sqlArr = Array.isArray(sql)
       ? sql
       : [sql]
@@ -311,7 +340,6 @@ class SqliteDAO extends DAO {
     if (sqlArr.length === 0) {
       return
     }
-
     await this._beginTrans(async () => {
       for (const sqlData of sqlArr) {
         const _sqlObj = typeof sqlData === 'string'
@@ -336,7 +364,7 @@ class SqliteDAO extends DAO {
           await execQueryFn()
         }
       }
-    })
+    }, { beforeTransFn, afterTransFn })
   }
 
   /**
