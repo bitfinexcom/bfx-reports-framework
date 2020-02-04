@@ -41,10 +41,16 @@ class SqliteDbMigrator extends DbMigrator {
       true
     )
 
-    await this.dao.executeQueriesInTrans([
-      ...fnArrToRemoveAllTables,
-      () => this.dao.setCurrDbVer(0)
-    ])
+    await this.dao.executeQueriesInTrans(
+      [
+        ...fnArrToRemoveAllTables,
+        () => this.dao.setCurrDbVer(0)
+      ],
+      {
+        beforeTransFn: () => this.dao.disableForeignKeys(),
+        afterTransFn: () => this.dao.enableForeignKeys()
+      }
+    )
   }
 }
 

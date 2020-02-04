@@ -6,9 +6,5 @@ module.exports = async (dao, isDroppedIfExists) => {
     return () => dao.dropTable(name, isDroppedIfExists)
   })
 
-  return [
-    () => dao.disableForeignKeys(),
-    ...sqlArr,
-    () => dao.enableForeignKeys()
-  ]
+  return sqlArr
 }
