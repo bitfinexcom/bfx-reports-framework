@@ -257,13 +257,13 @@ class SqliteDAO extends DAO {
    * @override
    */
   async databaseInitialize (db) {
+    await this.enableForeignKeys()
     await super.databaseInitialize(db)
 
     await this._beginTrans(async () => {
       await this._createTablesIfNotExists()
       await this._createIndexisIfNotExists()
       await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
-      await this.enableForeignKeys()
     })
   }
 
