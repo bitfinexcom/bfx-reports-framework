@@ -27,7 +27,8 @@ const {
   isEaiAgainError,
   emptyRes,
   collObjToArr,
-  getAuthFromSubAccountAuth
+  getAuthFromSubAccountAuth,
+  isSubAccountApiKeys
 } = require('./helpers')
 
 class FrameworkReportService extends ReportService {
@@ -551,6 +552,24 @@ class FrameworkReportService extends ReportService {
         }
       )
     }, 'getPositionsHistory', cb)
+  }
+
+  /**
+   * @override
+   */
+  getPositionsAudit (space, args, cb) {
+    return this._responder(async () => {
+      const { auth } = { ...args }
+
+      if (!isSubAccountApiKeys(auth)) {
+        return super.getPositionsAudit(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForPositionsAudit')
+
+      return this._positionsAudit
+        .getPositionsAuditForSubAccount(args)
+    }, 'getPositionsAudit', cb)
   }
 
   /**
