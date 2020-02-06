@@ -13,6 +13,10 @@ class ReportService extends BaseReportService {
     return super.getPositionsHistory(null, args)
   }
 
+  _getPositionsAudit (args) {
+    return super.getPositionsAudit(null, args)
+  }
+
   _getLedgers (args) {
     return super.getLedgers(null, args)
   }

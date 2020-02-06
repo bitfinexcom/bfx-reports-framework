@@ -43,5 +43,6 @@ module.exports = {
   PerformingLoan: Symbol.for('PerformingLoan'),
   SubAccount: Symbol.for('SubAccount'),
   ConvertCurrencyHook: Symbol.for('ConvertCurrencyHook'),
-  RecalcSubAccountLedgersBalancesHook: Symbol.for('RecalcSubAccountLedgersBalancesHook')
+  RecalcSubAccountLedgersBalancesHook: Symbol.for('RecalcSubAccountLedgersBalancesHook'),
+  PositionsAudit: Symbol.for('PositionsAudit')
 }
