@@ -437,7 +437,10 @@ class FrameworkReportService extends ReportService {
   getUsersTimeConf (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getUsersTimeConf(space, args)
+        const { auth: _auth } = { ...args }
+        const auth = getAuthFromSubAccountAuth(_auth)
+
+        return super.getUsersTimeConf(space, { ...args, auth })
       }
 
       const { timezone } = await this._dao.checkAuthInDb(args)
