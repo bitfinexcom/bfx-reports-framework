@@ -5,13 +5,7 @@ const {
   injectable,
   inject
 } = require('inversify')
-const {
-  orderBy,
-  isEmpty
-} = require('lodash')
-const {
-  prepareResponse
-} = require('bfx-report/workers/loc.api/helpers')
+const { isEmpty } = require('lodash')
 
 const {
   AuthError
@@ -23,11 +17,13 @@ class PositionsAudit {
   constructor (
     dao,
     TABLES_NAMES,
-    rService
+    rService,
+    subAccountApiData
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.rService = rService
+    this.subAccountApiData = subAccountApiData
   }
 
   _getUsersArgs (
@@ -98,59 +94,6 @@ class PositionsAudit {
     return argsArr
   }
 
-  async _fetchPositionsAuditFormApi (
-    argsArr = [],
-    params = {}
-  ) {
-    const {
-      limit = 1000,
-      symbol,
-      notThrowError,
-      notCheckNextPage
-    } = { ...params }
-    const symbols = (
-      symbol &&
-      Array.isArray(symbol) &&
-      symbol.length > 1
-    )
-      ? symbol
-      : []
-
-    const promises = argsArr.map((args) => {
-      return this.rService._getPositionsAudit(args)
-    })
-    const resArr = await Promise.all(promises)
-
-    const mergedRes = resArr.reduce((accum, curr) => {
-      const { res } = { ...curr }
-
-      if (
-        Array.isArray(res) &&
-        res.length !== 0
-      ) {
-        accum.push(...res)
-      }
-
-      return accum
-    }, [])
-
-    const orderedRes = orderBy(mergedRes, ['mtsUpdate'], ['desc'])
-    const limitedRes = Number.isInteger(limit)
-      ? orderedRes.slice(0, limit)
-      : orderedRes
-
-    return prepareResponse(
-      limitedRes,
-      'mtsUpdate',
-      limit,
-      notThrowError,
-      notCheckNextPage,
-      symbols,
-      'symbol',
-      'positionsAudit'
-    )
-  }
-
   async getPositionsAuditForSubAccount (args) {
     const { auth } = { ...args }
 
@@ -198,10 +141,13 @@ class PositionsAudit {
       positionsHistory
     )
 
-    return this._fetchPositionsAuditFormApi(
-      argsArr,
-      params
-    )
+    return this.subAccountApiData
+      .fetchPositionsAuditFormApi(
+        (_args) => this.rService._getPositionsAudit(_args),
+        argsArr,
+        params,
+        { datePropName: 'mtsUpdate' }
+      )
   }
 }
 
@@ -209,5 +155,6 @@ decorate(injectable(), PositionsAudit)
 decorate(inject(TYPES.DAO), PositionsAudit, 0)
 decorate(inject(TYPES.TABLES_NAMES), PositionsAudit, 1)
 decorate(inject(TYPES.RService), PositionsAudit, 2)
+decorate(inject(TYPES.SubAccountApiData), PositionsAudit, 3)
 
 module.exports = PositionsAudit
