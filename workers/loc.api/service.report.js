@@ -62,6 +62,10 @@ class ReportService extends BaseReportService {
     return super.getFundingCreditHistory(null, args)
   }
 
+  _getLogins (args) {
+    return super.getLogins(null, args)
+  }
+
   async _getCandles (args) {
     return this._responder(async () => {
       checkParams(

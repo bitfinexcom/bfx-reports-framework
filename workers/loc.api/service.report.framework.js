@@ -794,6 +794,27 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getLogins (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getLogins(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForApi')
+
+      return this._dao.findInCollBy(
+        '_getLogins',
+        args,
+        {
+          isPrepareResponse: true
+        }
+      )
+    }, 'getLogins', cb)
+  }
+
+  /**
+   * @override
+   */
   getWallets (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
