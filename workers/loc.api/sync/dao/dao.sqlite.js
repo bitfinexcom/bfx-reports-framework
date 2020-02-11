@@ -140,11 +140,27 @@ class SqliteDAO extends DAO {
       const item = currItem[1]
 
       if (item.type === 'insertable:array:objects') {
-        const sql = `CREATE INDEX IF NOT EXISTS
-          ${item.name}_${item.dateFieldName}_${item.symbolFieldName}
-          ON ${item.name}(${item.dateFieldName}, ${item.symbolFieldName})`
+        const fieldsArr = []
 
-        await this._run(sql)
+        if (
+          item.dateFieldName &&
+          typeof item.dateFieldName === 'string'
+        ) {
+          fieldsArr.push(item.dateFieldName)
+        }
+        if (
+          item.symbolFieldName &&
+          typeof item.symbolFieldName === 'string'
+        ) {
+          fieldsArr.push(item.symbolFieldName)
+        }
+        if (fieldsArr.length > 0) {
+          const sql = `CREATE INDEX IF NOT EXISTS
+          ${item.name}_${fieldsArr.join('_')}
+          ON ${item.name}(${fieldsArr.join(', ')})`
+
+          await this._run(sql)
+        }
       }
 
       if (
