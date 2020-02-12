@@ -254,6 +254,7 @@ class DataInserter extends EventEmitter {
       }
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
         await this._checkNewCandlesData(method, schema)
+        await this._checkNewConfigurablePublicData(method, schema)
 
         continue
       }
@@ -263,13 +264,17 @@ class DataInserter extends EventEmitter {
   }
 
   async _checkNewConfigurablePublicData (method, schema) {
-    schema.hasNewData = false
-
-    const symbFieldName = schema.symbolFieldName
+    const {
+      confName,
+      symbFieldName,
+      dateFieldName,
+      name,
+      sort
+    } = { ...schema }
     const publicСollsСonf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
-        filter: { confName: schema.confName },
+        filter: { confName },
         minPropName: 'start',
         groupPropName: 'symbol'
       }
@@ -286,9 +291,9 @@ class DataInserter extends EventEmitter {
       args.params.symbol = symbol
       const filter = { [symbFieldName]: symbol }
       const lastElemFromDb = await this.dao.getElemInCollBy(
-        schema.name,
+        name,
         filter,
-        schema.sort
+        sort
       )
       const { res: lastElemFromApi } = await this._getDataFromApi(
         method,
@@ -309,13 +314,17 @@ class DataInserter extends EventEmitter {
       }
       if (isEmpty(lastElemFromDb)) {
         schema.hasNewData = true
-        schema.start.push([symbol, { currStart: start }])
+        this._pushConfigurablePublicDataStartConf(
+          schema,
+          symbol,
+          { currStart: start }
+        )
 
         continue
       }
 
       const lastDateInDb = compareElemsDbAndApi(
-        schema.dateFieldName,
+        dateFieldName,
         lastElemFromDb,
         lastElemFromApi
       )
@@ -332,26 +341,94 @@ class DataInserter extends EventEmitter {
       }
 
       const firstElemFromDb = await this.dao.getElemInCollBy(
-        schema.name,
+        name,
         filter,
-        invertSort(schema.sort)
+        invertSort(sort)
       )
 
       if (!isEmpty(firstElemFromDb)) {
         const isChangedBaseStart = compareElemsDbAndApi(
-          schema.dateFieldName,
-          { [schema.dateFieldName]: start },
+          dateFieldName,
+          { [dateFieldName]: start },
           firstElemFromDb
         )
 
         if (isChangedBaseStart) {
           schema.hasNewData = true
           startConf.baseStartFrom = start
-          startConf.baseStartTo = firstElemFromDb[schema.dateFieldName] - 1
+          startConf.baseStartTo = firstElemFromDb[dateFieldName] - 1
         }
       }
 
-      schema.start.push([symbol, startConf])
+      this._pushConfigurablePublicDataStartConf(
+        schema,
+        symbol,
+        startConf
+      )
+    }
+  }
+
+  _pushConfigurablePublicDataStartConf (
+    schema,
+    symbol,
+    startConf = {}
+  ) {
+    const {
+      baseStartFrom,
+      baseStartTo,
+      currStart
+    } = { ...startConf }
+
+    const currStartConfArr = schema.start
+      .find(([symb, conf]) => symb === symbol)
+
+    if (!Array.isArray(currStartConfArr)) {
+      schema.start.push([
+        symbol,
+        {
+          baseStartFrom,
+          baseStartTo,
+          currStart
+        }
+      ])
+
+      return
+    }
+
+    const currStartConf = { ...currStartConfArr[1] }
+    const _startConf = {
+      baseStartFrom: (
+        Number.isInteger(currStartConf.baseStartFrom) &&
+        (
+          !Number.isInteger(baseStartFrom) ||
+          currStartConf.baseStartFrom < baseStartFrom
+        )
+      )
+        ? currStartConf.baseStartFrom
+        : baseStartFrom,
+      baseStartTo: (
+        Number.isInteger(currStartConf.baseStartTo) &&
+        (
+          !Number.isInteger(baseStartTo) ||
+          currStartConf.baseStartTo > baseStartTo
+        )
+      )
+        ? currStartConf.baseStartTo
+        : baseStartTo,
+      currStart: (
+        Number.isInteger(currStartConf.currStart) &&
+        (
+          !Number.isInteger(currStart) ||
+          currStartConf.currStart < currStart
+        )
+      )
+        ? currStartConf.currStart
+        : currStart
+    }
+
+    currStartConfArr[1] = {
+      ...currStartConf,
+      ..._startConf
     }
   }
 
@@ -458,24 +535,30 @@ class DataInserter extends EventEmitter {
     if (!this._isInsertableArrObjTypeOfColl(schema, true)) {
       return
     }
+
+    const { name, start } = { ...schema }
+
     if (
-      schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-      schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
+      name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
+      name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
+      name === this.ALLOWED_COLLS.CANDLES
     ) {
-      for (const [symbol, dates] of schema.start) {
+      const addApiParams = name === this.ALLOWED_COLLS.CANDLES
+        ? {
+          timeframe: this._candlesTimeframe,
+          section: this._candlesSection
+        }
+        : {}
+
+      for (const [symbol, dates] of start) {
         await this._insertConfigurablePublicApiData(
           methodApi,
           schema,
           symbol,
-          dates
+          dates,
+          addApiParams
         )
       }
-    }
-    if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-      await this._insertNewCandlesData(
-        methodApi,
-        schema
-      )
     }
   }
 
@@ -1019,24 +1102,6 @@ class DataInserter extends EventEmitter {
       }
 
       schema.start.push([symbol, startConf])
-    }
-  }
-
-  async _insertNewCandlesData (
-    method,
-    schema
-  ) {
-    for (const [symbol, dates] of schema.start) {
-      await this._insertConfigurablePublicApiData(
-        method,
-        schema,
-        symbol,
-        dates,
-        {
-          timeframe: this._candlesTimeframe,
-          section: this._candlesSection
-        }
-      )
     }
   }
 }
