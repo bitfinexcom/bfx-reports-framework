@@ -682,6 +682,45 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getCandles (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getCandles(space, args)
+      }
+
+      checkParams(
+        args,
+        'paramsSchemaForCandlesApi',
+        ['symbol']
+      )
+
+      const confs = await this._publicСollsСonfAccessors
+        .getPublicСollsСonf(
+          'candlesConf',
+          args
+        )
+
+      if (isEmpty(confs)) {
+        return emptyRes()
+      }
+
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
+
+      return this._dao.findInCollBy(
+        '_getCandles',
+        _args,
+        {
+          isPrepareResponse: true,
+          isPublic: true
+        }
+      )
+    }, 'getCandles', cb)
+  }
+
+  /**
+   * @override
+   */
   getOrderTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
