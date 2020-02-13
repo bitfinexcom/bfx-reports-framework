@@ -22,5 +22,6 @@ module.exports = {
   SCHEDULER: 'scheduler',
   SYNC_MODE: 'syncMode',
   PROGRESS: 'progress',
-  SYNC_QUEUE: 'syncQueue'
+  SYNC_QUEUE: 'syncQueue',
+  LOGINS: 'logins'
 }

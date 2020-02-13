@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 1
+const SUPPORTED_DB_VERSION = 2
 
 const { cloneDeep } = require('lodash')
 
@@ -271,6 +271,22 @@ const _models = new Map([
       mtsUpdate: 'BIGINT',
       user_id: `INT NOT NULL,
         CONSTRAINT positionsHistory_fk_#{field}
+        FOREIGN KEY (#{field})
+        REFERENCES users(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+    }
+  ],
+  [
+    TABLES_NAMES.LOGINS,
+    {
+      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      id: 'BIGINT',
+      time: 'BIGINT',
+      ip: 'VARCHAR(255)',
+      extraData: 'TEXT',
+      user_id: `INT NOT NULL,
+        CONSTRAINT logins_fk_#{field}
         FOREIGN KEY (#{field})
         REFERENCES users(_id)
         ON UPDATE CASCADE
@@ -559,6 +575,21 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
       model: { ..._models.get(TABLES_NAMES.POSITIONS_HISTORY) }
+    }
+  ],
+  [
+    '_getLogins',
+    {
+      name: ALLOWED_COLLS.LOGINS,
+      maxLimit: 10000,
+      dateFieldName: 'time',
+      symbolFieldName: null,
+      sort: [['time', -1]],
+      hasNewData: false,
+      start: 0,
+      type: 'insertable:array:objects',
+      fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
+      model: { ..._models.get(TABLES_NAMES.LOGINS) }
     }
   ],
   [
