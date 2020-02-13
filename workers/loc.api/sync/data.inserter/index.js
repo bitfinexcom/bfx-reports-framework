@@ -248,11 +248,15 @@ class DataInserter extends EventEmitter {
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
         schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
       ) {
+        schema.hasNewData = false
+
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
       }
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+        schema.hasNewData = false
+
         await this._checkNewCandlesData(method, schema)
         await this._checkNewConfigurablePublicData(method, schema)
 
@@ -266,7 +270,7 @@ class DataInserter extends EventEmitter {
   async _checkNewConfigurablePublicData (method, schema) {
     const {
       confName,
-      symbFieldName,
+      symbolFieldName,
       dateFieldName,
       name,
       sort
@@ -284,12 +288,31 @@ class DataInserter extends EventEmitter {
       return
     }
 
+    const params = name === this.ALLOWED_COLLS.CANDLES
+      ? {
+        timeframe: this._candlesTimeframe,
+        section: this._candlesSection,
+        notThrowError: true,
+        notCheckNextPage: true
+      }
+      : {
+        notThrowError: true,
+        notCheckNextPage: true
+      }
+
     for (const { symbol, start } of publicСollsСonf) {
-      const args = this._getMethodArgMap(method, {}, 1)
-      args.params.notThrowError = true
-      args.params.notCheckNextPage = true
-      args.params.symbol = symbol
-      const filter = { [symbFieldName]: symbol }
+      const args = this._getMethodArgMap(
+        method,
+        {},
+        1,
+        0,
+        Date.now(),
+        {
+          ...params,
+          symbol
+        }
+      )
+      const filter = { [symbolFieldName]: symbol }
       const lastElemFromDb = await this.dao.getElemInCollBy(
         name,
         filter,
@@ -305,9 +328,9 @@ class DataInserter extends EventEmitter {
         isEmpty(lastElemFromApi) ||
         (
           Array.isArray(lastElemFromApi) &&
-          lastElemFromApi[0][symbFieldName] &&
-          typeof lastElemFromApi[0][symbFieldName] === 'string' &&
-          lastElemFromApi[0][symbFieldName] !== symbol
+          lastElemFromApi[0][symbolFieldName] &&
+          typeof lastElemFromApi[0][symbolFieldName] === 'string' &&
+          lastElemFromApi[0][symbolFieldName] !== symbol
         )
       ) {
         continue
@@ -922,8 +945,6 @@ class DataInserter extends EventEmitter {
     method,
     schema
   ) {
-    schema.hasNewData = false
-
     const symbFieldName = schema.symbolFieldName
     const lastElemLedgers = await this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
@@ -1059,7 +1080,11 @@ class DataInserter extends EventEmitter {
 
       if (isEmpty(lastElemFromDb)) {
         schema.hasNewData = true
-        schema.start.push([symbol, { currStart: start }])
+        this._pushConfigurablePublicDataStartConf(
+          schema,
+          symbol,
+          { currStart: start }
+        )
 
         continue
       }
@@ -1101,7 +1126,11 @@ class DataInserter extends EventEmitter {
         }
       }
 
-      schema.start.push([symbol, startConf])
+      this._pushConfigurablePublicDataStartConf(
+        schema,
+        symbol,
+        startConf
+      )
     }
   }
 }

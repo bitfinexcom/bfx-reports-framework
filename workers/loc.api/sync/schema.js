@@ -688,6 +688,7 @@ const _methodCollMap = new Map([
       sort: [['mts', -1]],
       hasNewData: false,
       start: [],
+      confName: 'candlesConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
       model: { ..._models.get(TABLES_NAMES.CANDLES) }
