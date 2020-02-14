@@ -1,17 +1,8 @@
 'use strict'
 
-const { pick } = require('lodash')
 const BaseReportService = require(
   'bfx-report/workers/loc.api/service.report'
 )
-const {
-  getDateNotMoreNow
-} = require('bfx-report/workers/loc.api/helpers')
-
-const {
-  checkParams,
-  getMethodLimit
-} = require('./helpers')
 
 class ReportService extends BaseReportService {
   _getTickersHistory (args) {
@@ -66,46 +57,8 @@ class ReportService extends BaseReportService {
     return super.getLogins(null, args)
   }
 
-  async _getCandles (args) {
-    return this._responder(async () => {
-      checkParams(
-        args,
-        'paramsSchemaForCandlesApi',
-        ['timeframe', 'symbol', 'section']
-      )
-
-      const params = (
-        args.params &&
-        typeof args.params === 'object'
-      )
-        ? args.params
-        : {}
-      params.end = getDateNotMoreNow(params.end)
-      params.limit = getMethodLimit(
-        params.limit,
-        'candles'
-      )
-      const query = pick(params, [
-        'limit',
-        'start',
-        'end',
-        'sort'
-      ])
-      const rest = this._getREST({}, this.ctx.grc_bfx.caller)
-
-      const data = await rest.candles({ ...params, query })
-
-      return this._prepareResponse(
-        data,
-        'mts',
-        params.limit,
-        params.notThrowError,
-        params.notCheckNextPage,
-        null,
-        null,
-        'candles'
-      )
-    }, '_getCandles')
+  _getCandles (args) {
+    return super.getCandles(null, args)
   }
 }
 

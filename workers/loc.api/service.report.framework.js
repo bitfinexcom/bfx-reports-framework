@@ -688,11 +688,7 @@ class FrameworkReportService extends ReportService {
         return super.getCandles(space, args)
       }
 
-      checkParams(
-        args,
-        'paramsSchemaForCandlesApi',
-        ['symbol']
-      )
+      checkParams(args, 'paramsSchemaForCandlesApi')
 
       const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
@@ -1063,6 +1059,18 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getPerformingLoanCsv', cb)
+  }
+
+  getCandlesCsv (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getCandlesCsv(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForCandlesCsv')
+
+      return super.getCandlesCsv(space, args)
+    }, 'getCandlesCsv', cb)
   }
 }
 
