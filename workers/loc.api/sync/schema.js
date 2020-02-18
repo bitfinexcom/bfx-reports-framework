@@ -338,15 +338,16 @@ const _models = new Map([
   [
     TABLES_NAMES.LOGINS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       time: 'BIGINT',
       ip: 'VARCHAR(255)',
       extraData: 'TEXT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT logins_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -647,7 +648,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.LOGINS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.LOGINS) }
     }
   ],
   [
