@@ -3,32 +3,46 @@
 const { cloneDeep } = require('lodash')
 
 const {
-  paramsSchemaForCsv
+  paramsSchemaForCsv,
+  paramsSchemaForCandlesApi: baseParamsSchemaForCandlesApi
 } = require('bfx-report/workers/loc.api/helpers/schema')
 
 const paramsSchemaForCandlesApi = {
-  type: 'object',
+  ...cloneDeep(baseParamsSchemaForCandlesApi),
   properties: {
+    ...cloneDeep(baseParamsSchemaForCandlesApi.properties),
     timeframe: {
-      type: 'string'
-    },
-    symbol: {
-      type: 'string'
+      type: 'string',
+      enum: ['1D']
     },
     section: {
-      type: 'string'
-    },
-    limit: {
-      type: 'integer'
-    },
-    start: {
-      type: 'integer'
-    },
-    end: {
-      type: 'integer'
-    },
-    sort: {
-      type: 'integer'
+      type: 'string',
+      enum: ['hist']
+    }
+  }
+}
+
+const paramsSchemaForEditPublicСollsСonf = {
+  type: ['array', 'object'],
+  if: {
+    type: 'array'
+  },
+  then: {
+    minItems: 1,
+    items: {
+      type: 'object',
+      required: ['symbol', 'start'],
+      properties: {
+        symbol: { type: 'string' },
+        start: { type: 'integer' }
+      }
+    }
+  },
+  else: {
+    required: ['symbol', 'start'],
+    properties: {
+      symbol: { type: 'string' },
+      start: { type: 'integer' }
     }
   }
 }
@@ -304,8 +318,17 @@ const paramsSchemaForPerformingLoanCsv = {
   }
 }
 
+const paramsSchemaForCandlesCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForCandlesApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 module.exports = {
-  paramsSchemaForCandlesApi,
+  paramsSchemaForEditPublicСollsСonf,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
@@ -315,6 +338,7 @@ module.exports = {
   paramsSchemaForTradedVolumeApi,
   paramsSchemaForFeesReportApi,
   paramsSchemaForPerformingLoanApi,
+  paramsSchemaForCandlesApi,
   paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
@@ -323,5 +347,6 @@ module.exports = {
   paramsSchemaForFullTaxReportCsv,
   paramsSchemaForTradedVolumeCsv,
   paramsSchemaForFeesReportCsv,
-  paramsSchemaForPerformingLoanCsv
+  paramsSchemaForPerformingLoanCsv,
+  paramsSchemaForCandlesCsv
 }

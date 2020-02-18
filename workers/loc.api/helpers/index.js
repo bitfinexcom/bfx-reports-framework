@@ -1,7 +1,6 @@
 'use strict'
 
 const checkParams = require('./check-params')
-const { getMethodLimit } = require('./limit-param.helpers')
 const {
   checkParamsAuth,
   emptyRes,
@@ -16,7 +15,6 @@ const {
 } = require('./api-errors-testers')
 
 module.exports = {
-  getMethodLimit,
   checkParams,
   checkParamsAuth,
   emptyRes,

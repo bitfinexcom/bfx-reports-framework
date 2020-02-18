@@ -325,6 +325,13 @@ class FrameworkReportService extends ReportService {
     }, 'getStatusMessagesConf', cb)
   }
 
+  getCandlesConf (space, args = {}, cb) {
+    return this._responder(() => {
+      return this._publicСollsСonfAccessors
+        .getPublicСollsСonf('candlesConf', args)
+    }, 'getCandlesConf', cb)
+  }
+
   editPublicTradesConf (space, args = {}, cb) {
     return this._responder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
@@ -359,6 +366,18 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'editStatusMessagesConf', cb)
+  }
+
+  editCandlesConf (space, args = {}, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+
+      await this._publicСollsСonfAccessors
+        .editPublicСollsСonf('candlesConf', args)
+      await this._sync.start(true, this._ALLOWED_COLLS.CANDLES)
+
+      return true
+    }, 'editCandlesConf', cb)
   }
 
   /**
@@ -658,6 +677,41 @@ class FrameworkReportService extends ReportService {
         }
       )
     }, 'getStatusMessages', cb)
+  }
+
+  /**
+   * @override
+   */
+  getCandles (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getCandles(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForCandlesApi')
+
+      const confs = await this._publicСollsСonfAccessors
+        .getPublicСollsСonf(
+          'candlesConf',
+          args
+        )
+
+      if (isEmpty(confs)) {
+        return emptyRes()
+      }
+
+      const _args = this._publicСollsСonfAccessors
+        .getArgs(confs, args)
+
+      return this._dao.findInCollBy(
+        '_getCandles',
+        _args,
+        {
+          isPrepareResponse: true,
+          isPublic: true
+        }
+      )
+    }, 'getCandles', cb)
   }
 
   /**
@@ -1005,6 +1059,18 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getPerformingLoanCsv', cb)
+  }
+
+  getCandlesCsv (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getCandlesCsv(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForCandlesCsv')
+
+      return super.getCandlesCsv(space, args)
+    }, 'getCandlesCsv', cb)
   }
 }
 
