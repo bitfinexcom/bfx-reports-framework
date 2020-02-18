@@ -42,6 +42,7 @@ class MigrationV3 extends AbstractMigration {
       'ALTER TABLE fundingLoanHistory ADD COLUMN subUserId INT',
       'ALTER TABLE fundingCreditHistory ADD COLUMN subUserId INT',
       'ALTER TABLE positionsHistory ADD COLUMN subUserId INT',
+      'ALTER TABLE logins ADD COLUMN subUserId INT',
 
       `CREATE UNIQUE INDEX ledgers_id_mts_user_id
         ON ledgers (id, mts, user_id)`,
@@ -340,6 +341,22 @@ class MigrationV3 extends AbstractMigration {
           placeholder: 'TEXT',
           mtsCreate: 'BIGINT',
           mtsUpdate: 'BIGINT',
+          user_id: 'INT NOT NULL',
+          __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+            FOREIGN KEY (user_id)
+            REFERENCES users(_id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE`
+        }
+      ),
+      ...getSqlArrToRemoveColumns(
+        'logins',
+        {
+          _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+          id: 'BIGINT',
+          time: 'BIGINT',
+          ip: 'VARCHAR(255)',
+          extraData: 'TEXT',
           user_id: 'INT NOT NULL',
           __constraints__: `CONSTRAINT #{tableName}_fk_user_id
             FOREIGN KEY (user_id)
