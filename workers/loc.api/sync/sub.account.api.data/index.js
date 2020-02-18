@@ -61,8 +61,7 @@ class SubAccountApiData {
     }, [])
   }
 
-  // TODO:
-  async fetchPositionsAuditFormApi (
+  async fetchDataFormApi (
     method,
     argsArr,
     params = {},
@@ -74,11 +73,37 @@ class SubAccountApiData {
       notCheckNextPage
     } = { ...params }
     const {
-      datePropName
+      datePropName,
+      isThrownErrIfAllFail
     } = { ...opts }
 
-    const promises = argsArr.map((args) => method(args))
-    const resArr = await Promise.all(promises) // TODO:
+    const errors = []
+    const promises = argsArr.map(async (args) => {
+      try {
+        const res = await method(args)
+
+        return res
+      } catch (err) {
+        if (isThrownErrIfAllFail) {
+          errors.push(err)
+
+          return
+        }
+
+        throw err
+      }
+    })
+    const resArr = await Promise.all(promises)
+
+    if (
+      errors.length > 0 &&
+      errors.length >= resArr.length
+    ) {
+      const err = errors[0]
+      err.errors = errors
+
+      throw err
+    }
 
     const mergedRes = resArr.reduce((accum, curr) => {
       const { res } = { ...curr }
@@ -147,7 +172,7 @@ class SubAccountApiData {
       subUsers
     )
 
-    return this.fetchPositionsAuditFormApi(
+    return this.fetchDataFormApi(
       method,
       argsArr,
       params,

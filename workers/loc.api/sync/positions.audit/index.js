@@ -142,7 +142,7 @@ class PositionsAudit {
     )
 
     return this.subAccountApiData
-      .fetchPositionsAuditFormApi(
+      .fetchDataFormApi(
         (_args) => this.rService._getPositionsAudit(_args),
         argsArr,
         params,
