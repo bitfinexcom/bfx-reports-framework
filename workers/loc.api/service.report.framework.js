@@ -561,17 +561,12 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    return this._responder(async () => {
-      const { auth } = { ...args }
-
-      if (!isSubAccountApiKeys(auth)) {
-        return super.getPositionsAudit(space, args)
-      }
-
-      checkParams(args, 'paramsSchemaForPositionsAudit')
-
+    return this._responder(() => {
       return this._positionsAudit
-        .getPositionsAuditForSubAccount(args)
+        .getPositionsAuditForSubAccount(
+          args,
+          () => checkParams(args, 'paramsSchemaForPositionsAudit')
+        )
     }, 'getPositionsAudit', cb)
   }
 
