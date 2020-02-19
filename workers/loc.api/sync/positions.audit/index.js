@@ -8,6 +8,9 @@ const {
 const { isEmpty } = require('lodash')
 
 const {
+  isSubAccountApiKeys
+} = require('../../helpers')
+const {
   AuthError
 } = require('../../errors')
 
@@ -94,8 +97,18 @@ class PositionsAudit {
     return argsArr
   }
 
-  async getPositionsAuditForSubAccount (args) {
+  async getPositionsAuditForSubAccount (
+    args,
+    checkParamsFn
+  ) {
     const { auth } = { ...args }
+
+    if (!isSubAccountApiKeys(auth)) {
+      return this.rService._getPositionsAudit(args)
+    }
+    if (typeof checkParamsFn === 'function') {
+      checkParamsFn(args)
+    }
 
     const subUsers = await this.dao
       .getSubUsersByMasterUserApiKeys(auth)
