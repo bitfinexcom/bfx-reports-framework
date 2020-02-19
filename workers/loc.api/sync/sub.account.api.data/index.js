@@ -17,6 +17,9 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
+  isSubAccountApiKeys
+} = require('../../helpers')
+const {
   AuthError
 } = require('../../errors')
 
@@ -155,6 +158,10 @@ class SubAccountApiData {
 
     const { auth } = { ...args }
     const { params } = { ...args }
+
+    if (!isSubAccountApiKeys(auth)) {
+      return method(args)
+    }
 
     const subUsers = await this.dao
       .getSubUsersByMasterUserApiKeys(auth)
