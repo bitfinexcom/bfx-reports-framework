@@ -563,6 +563,7 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
+          (args) => super.getPositionsAudit(space, args),
           args,
           () => checkParams(args, 'paramsSchemaForPositionsAudit')
         )
@@ -793,7 +794,7 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
-            (_args) => super.getOrders(space, _args),
+            (args) => super.getOrders(space, args),
             args,
             { datePropName: 'mtsUpdate' }
           )

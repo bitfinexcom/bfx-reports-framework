@@ -6,6 +6,9 @@ const {
   inject
 } = require('inversify')
 const { isEmpty } = require('lodash')
+const {
+  FindMethodError
+} = require('bfx-report/workers/loc.api/errors')
 
 const {
   isSubAccountApiKeys
@@ -20,12 +23,10 @@ class PositionsAudit {
   constructor (
     dao,
     TABLES_NAMES,
-    rService,
     subAccountApiData
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
-    this.rService = rService
     this.subAccountApiData = subAccountApiData
   }
 
@@ -98,13 +99,18 @@ class PositionsAudit {
   }
 
   async getPositionsAuditForSubAccount (
+    method,
     args,
     checkParamsFn
   ) {
+    if (typeof method !== 'function') {
+      throw new FindMethodError()
+    }
+
     const { auth } = { ...args }
 
     if (!isSubAccountApiKeys(auth)) {
-      return this.rService._getPositionsAudit(args)
+      return method(args)
     }
     if (typeof checkParamsFn === 'function') {
       checkParamsFn(args)
@@ -156,7 +162,7 @@ class PositionsAudit {
 
     return this.subAccountApiData
       .fetchDataFormApi(
-        (_args) => this.rService._getPositionsAudit(_args),
+        method,
         argsArr,
         params,
         { datePropName: 'mtsUpdate' }
@@ -167,7 +173,6 @@ class PositionsAudit {
 decorate(injectable(), PositionsAudit)
 decorate(inject(TYPES.DAO), PositionsAudit, 0)
 decorate(inject(TYPES.TABLES_NAMES), PositionsAudit, 1)
-decorate(inject(TYPES.RService), PositionsAudit, 2)
-decorate(inject(TYPES.SubAccountApiData), PositionsAudit, 3)
+decorate(inject(TYPES.SubAccountApiData), PositionsAudit, 2)
 
 module.exports = PositionsAudit
