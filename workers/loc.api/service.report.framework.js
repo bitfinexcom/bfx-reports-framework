@@ -559,6 +559,20 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getActivePositions (space, args, cb) {
+    return this._responder(() => {
+      return this._subAccountApiData
+        .getDataForSubAccount(
+          (args) => super.getActivePositions(space, args),
+          args,
+          { datePropName: 'mtsUpdate' }
+        )
+    }, 'getActivePositions', cb)
+  }
+
+  /**
+   * @override
+   */
   getPositionsAudit (space, args, cb) {
     return this._responder(() => {
       return this._positionsAudit

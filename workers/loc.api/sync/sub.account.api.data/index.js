@@ -109,7 +109,9 @@ class SubAccountApiData {
     }
 
     const mergedRes = resArr.reduce((accum, curr) => {
-      const { res } = { ...curr }
+      const { res } = Array.isArray(curr)
+        ? { res: curr }
+        : { ...curr }
 
       if (
         Array.isArray(res) &&
