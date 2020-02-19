@@ -468,7 +468,7 @@ const _methodCollMap = new Map([
       maxLimit: 2500,
       dateFieldName: 'mts',
       symbolFieldName: 'currency',
-      sort: [['mts', -1]],
+      sort: [['mts', -1], ['id', -1]],
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
