@@ -565,7 +565,10 @@ class FrameworkReportService extends ReportService {
         .getDataForSubAccount(
           (args) => super.getActivePositions(space, args),
           args,
-          { datePropName: 'mtsUpdate' }
+          {
+            datePropName: 'mtsUpdate',
+            isNotPreparedResponse: true
+          }
         )
     }, 'getActivePositions', cb)
   }
@@ -822,6 +825,23 @@ class FrameworkReportService extends ReportService {
         { isPrepareResponse: true }
       )
     }, 'getOrders', cb)
+  }
+
+  /**
+   * @override
+   */
+  getActiveOrders (space, args, cb) {
+    return this._responder(() => {
+      return this._subAccountApiData
+        .getDataForSubAccount(
+          (args) => super.getActiveOrders(space, args),
+          args,
+          {
+            datePropName: 'mtsUpdate',
+            isNotPreparedResponse: true
+          }
+        )
+    }, 'getActiveOrders', cb)
   }
 
   /**

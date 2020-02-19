@@ -77,7 +77,8 @@ class SubAccountApiData {
     } = { ...params }
     const {
       datePropName,
-      isThrownErrIfAllFail
+      isThrownErrIfAllFail,
+      isNotPreparedResponse
     } = { ...opts }
 
     const errors = []
@@ -124,6 +125,11 @@ class SubAccountApiData {
     }, [])
 
     const orderedRes = orderBy(mergedRes, [datePropName], ['desc'])
+
+    if (isNotPreparedResponse) {
+      return orderedRes
+    }
+
     const limitedRes = Number.isInteger(limit)
       ? orderedRes.slice(0, limit)
       : orderedRes
