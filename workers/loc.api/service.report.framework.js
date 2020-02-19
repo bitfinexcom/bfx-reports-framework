@@ -27,8 +27,7 @@ const {
   isEaiAgainError,
   emptyRes,
   collObjToArr,
-  getAuthFromSubAccountAuth,
-  isSubAccountApiKeys
+  getAuthFromSubAccountAuth
 } = require('./helpers')
 
 class FrameworkReportService extends ReportService {
@@ -792,7 +791,12 @@ class FrameworkReportService extends ReportService {
   getOrders (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getOrders(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (_args) => super.getOrders(space, _args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -800,9 +804,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getOrders',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getOrders', cb)
   }
