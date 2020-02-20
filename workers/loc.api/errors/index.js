@@ -125,6 +125,12 @@ class SubAccountLedgersBalancesRecalcError extends BaseError {
   }
 }
 
+class DatePropNameError extends BaseError {
+  constructor (message = 'ERR_DATE_PROP_NAME_IS_EMPTY_OR_NOT_STRING') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -146,5 +152,6 @@ module.exports = {
   MigrationLaunchingError,
   SubAccountCreatingError,
   SubAccountRemovingError,
-  SubAccountLedgersBalancesRecalcError
+  SubAccountLedgersBalancesRecalcError,
+  DatePropNameError
 }

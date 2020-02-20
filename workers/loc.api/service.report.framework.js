@@ -582,7 +582,11 @@ class FrameworkReportService extends ReportService {
         .getPositionsAuditForSubAccount(
           (args) => super.getPositionsAudit(space, args),
           args,
-          () => checkParams(args, 'paramsSchemaForPositionsAudit')
+          {
+            checkParamsFn: (args) => checkParams(
+              args, 'paramsSchemaForPositionsAudit'
+            )
+          }
         )
     }, 'getPositionsAudit', cb)
   }

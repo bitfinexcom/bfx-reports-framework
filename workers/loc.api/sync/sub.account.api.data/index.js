@@ -13,6 +13,7 @@ const {
   prepareResponse
 } = require('bfx-report/workers/loc.api/helpers')
 const {
+  AuthError,
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
@@ -20,7 +21,7 @@ const {
   isSubAccountApiKeys
 } = require('../../helpers')
 const {
-  AuthError
+  DatePropNameError
 } = require('../../errors')
 
 const TYPES = require('../../di/types')
@@ -32,35 +33,136 @@ class SubAccountApiData {
     this.dao = dao
   }
 
-  _getUsersArgs (
-    args = {},
-    subUsers = []
+  _hasId (id) {
+    return (
+      Number.isInteger(id) ||
+      (
+        Array.isArray(id) &&
+        id.length > 0
+      )
+    )
+  }
+
+  pushArgs (
+    accum,
+    args,
+    auth,
+    itemId
   ) {
     const { params } = { ...args }
+    const { apiKey, apiSecret } = { ...auth }
 
-    return subUsers.reduce((accum, subUser) => {
-      const { apiKey, apiSecret } = { ...subUser }
+    if (
+      !apiKey ||
+      typeof apiKey !== 'string' ||
+      !apiSecret ||
+      typeof apiSecret !== 'string'
+    ) {
+      return accum
+    }
 
-      if (
-        !apiKey ||
-        typeof apiKey !== 'string' ||
-        !apiSecret ||
-        typeof apiSecret !== 'string'
-      ) {
+    const { id } = this._hasId(itemId)
+      ? { id: itemId }
+      : { ...params }
+    const idParam = this._hasId(id)
+      ? { id }
+      : {}
+
+    accum.push({
+      ...args,
+      auth: { apiKey, apiSecret },
+      params: {
+        ...params,
+        notThrowError: true,
+        notCheckNextPage: true,
+        ...idParam
+      }
+    })
+
+    return accum
+  }
+
+  getUsersArgs (
+    args = {},
+    subUsers = [],
+    dataToFindSubUserId = [],
+    idFieldName
+  ) {
+    const { params } = { ...args }
+    const { id } = { ...params }
+
+    if (
+      !Array.isArray(dataToFindSubUserId) ||
+      dataToFindSubUserId.length === 0 ||
+      !this._hasId(id) ||
+      !idFieldName ||
+      typeof idFieldName !== 'string'
+    ) {
+      return subUsers.reduce((accum, subUser) => {
+        return this.pushArgs(
+          accum,
+          args,
+          subUser
+        )
+      }, [])
+    }
+
+    const ids = Array.isArray(id)
+      ? id
+      : [id]
+
+    return ids.reduce((accum, currId) => {
+      const item = dataToFindSubUserId.find((item) => {
+        const id = ({ ...item })[idFieldName]
+
+        return currId === id
+      })
+      const { subUserId } = { ...item }
+
+      if (!Number.isInteger(subUserId)) {
         return accum
       }
 
-      accum.push({
-        ...args,
-        auth: { apiKey, apiSecret },
-        params: {
-          ...params,
-          notThrowError: true,
-          notCheckNextPage: true
-        }
+      const subUser = subUsers.find((user) => {
+        const { _id } = { ...user }
+
+        return subUserId === _id
+      })
+      const { apiKey, apiSecret } = { ...subUser }
+
+      if (!Array.isArray(id)) {
+        return this.pushArgs(
+          accum,
+          args,
+          subUser,
+          currId
+        )
+      }
+
+      const argsWithCurrApiKeys = accum.find((item) => {
+        const { auth } = { ...item }
+
+        return (
+          apiKey === auth.apiKey &&
+          apiSecret === auth.apiSecret
+        )
       })
 
-      return accum
+      const { params: _params } = { ...argsWithCurrApiKeys }
+      const { id: _id } = { ..._params }
+
+      if (Array.isArray(_id)) {
+        _id.push(currId)
+
+        return accum
+      }
+
+      return this.pushArgs(
+        accum,
+        args,
+        subUser,
+        [currId]
+      )
     }, [])
   }
 
@@ -166,9 +268,25 @@ class SubAccountApiData {
 
     const { auth } = { ...args }
     const { params } = { ...args }
+    const {
+      checkParamsFn,
+      dataToFindSubUserId = [],
+      getDataFnToFindSubUserId,
+      idFieldNameForFinding,
+      datePropName
+    } = { ...opts }
 
+    if (
+      !datePropName ||
+      typeof datePropName !== 'string'
+    ) {
+      throw new DatePropNameError()
+    }
     if (!isSubAccountApiKeys(auth)) {
       return method(args)
+    }
+    if (typeof checkParamsFn === 'function') {
+      checkParamsFn(args)
     }
 
     const subUsers = await this.dao
@@ -182,9 +300,28 @@ class SubAccountApiData {
       throw new AuthError()
     }
 
-    const argsArr = this._getUsersArgs(
+    const _dataToFindSubUserId = Array.isArray(dataToFindSubUserId)
+      ? dataToFindSubUserId
+      : []
+    const data = (
+      typeof getDataFnToFindSubUserId === 'function'
+    )
+      ? await getDataFnToFindSubUserId()
+      : []
+    const _data = Array.isArray(data)
+      ? data
+      : []
+    const orderedData = orderBy(
+      [..._dataToFindSubUserId, ..._data],
+      [datePropName],
+      ['desc']
+    )
+
+    const argsArr = this.getUsersArgs(
       args,
-      subUsers
+      subUsers,
+      orderedData,
+      idFieldNameForFinding
     )
 
     return this.fetchDataFormApi(
