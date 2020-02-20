@@ -56,8 +56,9 @@ const Trades = require('../sync/trades')
 const TradedVolume = require('../sync/traded.volume')
 const FeesReport = require('../sync/fees.report')
 const PerformingLoan = require('../sync/performing.loan')
-const PositionsAudit = require('../sync/positions.audit')
 const SubAccountApiData = require('../sync/sub.account.api.data')
+const PositionsAudit = require('../sync/positions.audit')
+const OrderTrades = require('../sync/order.trades')
 const CurrencyConverter = require('../sync/currency.converter')
 const CsvJobData = require('../generate-csv/csv.job.data')
 const {
@@ -104,7 +105,8 @@ module.exports = ({
           ['_feesReport', TYPES.FeesReport],
           ['_performingLoan', TYPES.PerformingLoan],
           ['_subAccountApiData', TYPES.SubAccountApiData],
-          ['_positionsAudit', TYPES.PositionsAudit]
+          ['_positionsAudit', TYPES.PositionsAudit],
+          ['_orderTrades', TYPES.OrderTrades]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -231,6 +233,8 @@ module.exports = ({
       .to(SubAccountApiData)
     bind(TYPES.PositionsAudit)
       .to(PositionsAudit)
+    bind(TYPES.OrderTrades)
+      .to(OrderTrades)
     bind(TYPES.FullSnapshotReportCsvWriter)
       .toConstantValue(
         bindDepsToFn(

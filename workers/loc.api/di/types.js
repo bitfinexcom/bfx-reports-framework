@@ -44,6 +44,7 @@ module.exports = {
   SubAccount: Symbol.for('SubAccount'),
   ConvertCurrencyHook: Symbol.for('ConvertCurrencyHook'),
   RecalcSubAccountLedgersBalancesHook: Symbol.for('RecalcSubAccountLedgersBalancesHook'),
+  SubAccountApiData: Symbol.for('SubAccountApiData'),
   PositionsAudit: Symbol.for('PositionsAudit'),
-  SubAccountApiData: Symbol.for('SubAccountApiData')
+  OrderTrades: Symbol.for('OrderTrades')
 }
