@@ -785,23 +785,14 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getOrderTrades (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getOrderTrades(space, args)
-      }
-
-      checkParams(args, 'paramsSchemaForOrderTradesApi')
-
-      const { id: orderID } = { ...args.params }
-
-      return this._dao.findInCollBy(
-        '_getTrades',
+    return this._responder(() => {
+      return this._orderTrades.getOrderTrades(
+        (args) => super.getOrderTrades(space, args),
         args,
         {
-          isPrepareResponse: true,
-          schema: {
-            additionalFilteringProps: { orderID }
-          }
+          checkParamsFn: (args) => checkParams(
+            args, 'paramsSchemaForOrderTradesApi'
+          )
         }
       )
     }, 'getOrderTrades', cb)
