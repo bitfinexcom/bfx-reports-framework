@@ -595,13 +595,17 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getLedgers (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getLedgers(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getLedgers(space, args),
+            args,
+            { datePropName: 'mts' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -609,9 +613,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getLedgers',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getLedgers', cb)
   }
