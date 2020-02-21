@@ -900,13 +900,17 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getFundingLoanHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getFundingLoanHistory(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getFundingLoanHistory(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -914,9 +918,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getFundingLoanHistory',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getFundingLoanHistory', cb)
   }
