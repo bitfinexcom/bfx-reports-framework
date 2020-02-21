@@ -619,13 +619,17 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getTrades(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getTrades(space, args),
+            args,
+            { datePropName: 'mtsCreate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -633,9 +637,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getTrades',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getTrades', cb)
   }
