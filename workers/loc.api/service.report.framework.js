@@ -948,13 +948,17 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getLogins (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getLogins(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getLogins(space, args),
+            args,
+            { datePropName: 'time' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -962,9 +966,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getLogins',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getLogins', cb)
   }
