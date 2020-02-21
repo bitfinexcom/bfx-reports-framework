@@ -20,7 +20,10 @@ module.exports = (
 }) => {
   const { auth, subAccountAuth } = { ...args }
   const { apiKey, apiSecret, subUser } = { ...subAccountAuth }
-  const { subUserId } = { ...subUser }
+  const { _id: subUserId } = { ...subUser }
+  const subUserIdFilter = Number.isInteger(subUserId)
+    ? { subUserId }
+    : {}
   const user = await dao.checkAuthInDb({ auth: { apiKey, apiSecret } })
   const symbArr = Array.isArray(symbol)
     ? symbol
@@ -34,7 +37,7 @@ module.exports = (
     {
       filter: {
         user_id: user._id,
-        subUserId,
+        ...subUserIdFilter,
         $lte: { mtsCreate: end },
         ...symbFilter
       },
@@ -95,7 +98,7 @@ module.exports = (
     {
       filter: {
         user_id: user._id,
-        subUserId,
+        ...subUserIdFilter,
         $lte: { mts: end }
       },
       limit: 2500,
