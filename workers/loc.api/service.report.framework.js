@@ -541,7 +541,12 @@ class FrameworkReportService extends ReportService {
   getPositionsHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getPositionsHistory(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getPositionsHistory(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -549,9 +554,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getPositionsHistory',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getPositionsHistory', cb)
   }
@@ -592,6 +595,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getLedgers (space, args, cb) {
@@ -613,6 +617,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getTrades (space, args, cb) {
@@ -634,6 +639,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getFundingTrades (space, args, cb) {
@@ -840,6 +846,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getMovements (space, args, cb) {
@@ -861,6 +868,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getFundingOfferHistory (space, args, cb) {
@@ -882,6 +890,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getFundingLoanHistory (space, args, cb) {
@@ -903,6 +912,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getFundingCreditHistory (space, args, cb) {
@@ -924,6 +934,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getLogins (space, args, cb) {
