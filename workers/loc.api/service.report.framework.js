@@ -852,13 +852,17 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getMovements (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getMovements(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getMovements(space, args),
+            args,
+            { datePropName: 'mtsUpdated' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -866,9 +870,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getMovements',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getMovements', cb)
   }
