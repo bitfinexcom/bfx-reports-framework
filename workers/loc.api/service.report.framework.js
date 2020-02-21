@@ -12,7 +12,8 @@ const {
 const {
   isAuthError,
   isNonceSmallError,
-  getTimezoneConf
+  getTimezoneConf,
+  getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
@@ -566,7 +567,10 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._subAccountApiData
         .getDataForSubAccount(
-          (args) => super.getActivePositions(space, args),
+          (args) => getDataFromApi(
+            (space, args) => super.getActivePositions(space, args),
+            args
+          ),
           args,
           {
             datePropName: 'mtsUpdate',
@@ -583,7 +587,10 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
-          (args) => super.getPositionsAudit(space, args),
+          (args) => getDataFromApi(
+            (space, args) => super.getPositionsAudit(space, args),
+            args
+          ),
           args,
           {
             checkParamsFn: (args) => checkParams(
