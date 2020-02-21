@@ -974,6 +974,27 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getAccountSummary (space, args, cb) {
+    return this._responder(async () => {
+      return this._subAccountApiData
+        .getDataForSubAccount(
+          async (args) => {
+            const res = await super.getAccountSummary(space, args)
+
+            return Array.isArray(res) ? res : [res]
+          },
+          args,
+          {
+            datePropName: 'time',
+            isNotPreparedResponse: true
+          }
+        )
+    }, 'getAccountSummary', cb)
+  }
+
+  /**
+   * @override
+   */
   getWallets (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
