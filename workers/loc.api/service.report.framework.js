@@ -524,12 +524,6 @@ class FrameworkReportService extends ReportService {
   getLedgers (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        const { isMarginFundingPayment } = { ...args.params }
-
-        if (isMarginFundingPayment) {
-          throw new DuringSyncMethodAccessError()
-        }
-
         return super.getLedgers(space, args)
       }
 
