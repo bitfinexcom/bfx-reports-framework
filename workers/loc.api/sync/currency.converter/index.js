@@ -686,7 +686,7 @@ class CurrencyConverter {
 
         if (
           this._isEmptyStr(inputField) ||
-          this._isEmptyOutputField(outputField) ||
+          this._isEmptyOutputField(_outputField) ||
           !Number.isFinite(item[inputField])
         ) {
           return
