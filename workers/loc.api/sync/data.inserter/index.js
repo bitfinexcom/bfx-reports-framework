@@ -66,7 +66,7 @@ class DataInserter extends EventEmitter {
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
 
-    this._asyncProgressHandler = null
+    this._asyncProgressHandlers = []
     this._auth = null
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
@@ -102,17 +102,17 @@ class DataInserter extends EventEmitter {
     ])
   }
 
-  setAsyncProgressHandler (cb) {
-    if (typeof cb !== 'function') {
+  addAsyncProgressHandler (handler) {
+    if (typeof handler !== 'function') {
       throw new AsyncProgressHandlerIsNotFnError()
     }
 
-    this._asyncProgressHandler = cb
+    this._asyncProgressHandlers.push(handler)
   }
 
   async setProgress (progress) {
-    if (this._asyncProgressHandler) {
-      await this._asyncProgressHandler(progress)
+    for (const handler of this._asyncProgressHandlers) {
+      await handler(progress)
     }
 
     this.emit('progress', progress)

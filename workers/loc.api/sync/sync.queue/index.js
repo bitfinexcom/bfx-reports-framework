@@ -111,7 +111,7 @@ class SyncQueue extends EventEmitter {
       const dataInserter = this.dataInserterFactory(
         nextSync.collName
       )
-      dataInserter.setAsyncProgressHandler(progress => {
+      dataInserter.addAsyncProgressHandler(progress => {
         return this._asyncProgressHandler(count, progress)
       })
 
