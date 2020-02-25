@@ -934,10 +934,11 @@ class DataInserter extends EventEmitter {
         collName,
         lists
       )
-      await this.dao.insertElemsToDbIfNotExists(
+      await this.dao.insertElemsToDb(
         collName,
         null,
-        normalizeApiData(elemsFromApi, model)
+        normalizeApiData(elemsFromApi, model),
+        { isReplacedIfExists: true }
       )
     }
   }

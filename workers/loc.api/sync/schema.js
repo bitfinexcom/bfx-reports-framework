@@ -729,11 +729,11 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.CURRENCIES,
       maxLimit: 10000,
-      fields: ['id', 'name', 'pool', 'explorer'],
+      fields: ['id'],
       sort: [['name', 1]],
       hasNewData: true,
       type: 'public:updatable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'name', 'pool', 'explorer'],
+      fieldsOfUniqueIndex: ['id'],
       model: { ...getModelsMap().get(TABLES_NAMES.CURRENCIES) }
     }
   ],
