@@ -179,11 +179,6 @@ class DAO {
    * @abstract
    */
   async removeElemsFromDbIfNotInLists () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
-  async getCountBy () { throw new ImplementationError() }
 }
 
 decorate(injectable(), DAO)
