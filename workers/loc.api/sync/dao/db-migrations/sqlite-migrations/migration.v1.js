@@ -9,7 +9,7 @@ class MigrationV1 extends AbstractMigration {
   /**
    * @override
    */
-  beforeUp () { this.dao.disableForeignKeys() }
+  beforeUp () { return this.dao.disableForeignKeys() }
 
   /**
    * @override
@@ -26,7 +26,7 @@ class MigrationV1 extends AbstractMigration {
   /**
    * @override
    */
-  afterUp () { this.dao.enableForeignKeys() }
+  afterUp () { return this.dao.enableForeignKeys() }
 
   /**
    * @override
