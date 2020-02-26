@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "2.2.4",
+  "version": "2.3.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
