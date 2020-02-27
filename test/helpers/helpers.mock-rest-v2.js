@@ -9,7 +9,7 @@ const {
 
 const _mockData = require('./mock-data')
 
-const getMockData = (methodName) => {
+const getMockData = (methodName, mockData = _mockData) => {
   return _getMockData(methodName, _mockData)
 }
 
