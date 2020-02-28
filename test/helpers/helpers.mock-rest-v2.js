@@ -10,7 +10,7 @@ const {
 const _mockData = require('./mock-data')
 
 const getMockData = (methodName, mockData = _mockData) => {
-  return _getMockData(methodName, _mockData)
+  return _getMockData(methodName, mockData)
 }
 
 const setDataTo = (
