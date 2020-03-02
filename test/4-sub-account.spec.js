@@ -22,7 +22,8 @@ const {
 const {
   connToSQLite,
   closeSQLite,
-  delay
+  delay,
+  getRServiceProxy
 } = require('./helpers/helpers.core')
 const {
   createMockRESTv2SrvWithDate,
@@ -106,31 +107,25 @@ describe('Sub-account', () => {
     // aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
 
     const rService = wrkReportServiceApi.grc_bfx.api
-    const rServiceProxy = new Proxy(rService, {
-      get (target, propKey) {
-        if (propKey === '_checkAuthInApi') {
-          return (args) => {
-            const { auth } = { ...args }
-            const { apiKey, apiSecret } = { ...auth }
+    const rServiceProxy = getRServiceProxy(rService, {
+      _checkAuthInApi (targetMethod, context, argsList) {
+        const args = argsList[0]
+        const { auth } = { ...args }
+        const { apiKey, apiSecret } = { ...auth }
 
-            if (
-              apiKey === subUserAuth.apiKey &&
-              apiSecret === subUserAuth.apiSecret
-            ) {
-              return {
-                email: subUserEmail,
-                timezone: 'Kyiv',
-                username: 'subUserName',
-                id: 222
-              }
-            }
-
-            // eslint-disable-next-line no-useless-call
-            return target[propKey].call(target, args)
+        if (
+          apiKey === subUserAuth.apiKey &&
+          apiSecret === subUserAuth.apiSecret
+        ) {
+          return {
+            email: subUserEmail,
+            timezone: 'Kyiv',
+            username: 'subUserName',
+            id: 222
           }
         }
 
-        return Reflect.get(target, propKey)
+        return Reflect.apply(...arguments)
       }
     })
 
