@@ -10,11 +10,7 @@ const {
 const {
   rmDB,
   rmAllFiles
-  // queueToPromise
 } = require('bfx-report/test/helpers/helpers.core')
-// const {
-//   testMethodOfGettingCsv
-// } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
   startEnvironment
@@ -22,7 +18,6 @@ const {
 const {
   connToSQLite,
   closeSQLite,
-  delay,
   getRServiceProxy
 } = require('./helpers/helpers.core')
 const {
@@ -35,9 +30,9 @@ process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
+const { apiSyncModeSqliteTestCases } = require('./test-cases')
+
 let wrkReportServiceApi = null
-// let processorQueue = null
-// let aggregatorQueue = null
 let mockRESTv2Srv = null
 let db = null
 
@@ -103,8 +98,6 @@ describe('Sub-account', () => {
     })
 
     wrkReportServiceApi = env.wrksReportServiceApi[0]
-    // processorQueue = wrkReportServiceApi.lokue_processor.q
-    // aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
 
     const rService = wrkReportServiceApi.grc_bfx.api
     const rServiceProxy = getRServiceProxy(rService, {
@@ -294,59 +287,24 @@ describe('Sub-account', () => {
     })
   })
 
-  // TODO: need to add coverage
   describe('Sync mode with sub-account', () => {
-    it('it should be successfully performed by the syncNow method', async function () {
-      this.timeout(60000)
+    const params = {
+      processorQueue: null,
+      aggregatorQueue: null,
+      basePath,
+      auth: subAccountAuth,
+      email: masterUserEmail,
+      date,
+      end,
+      start
+    }
 
-      const res = await agent
-        .post(`${basePath}/get-data`)
-        .type('json')
-        .send({
-          auth: subAccountAuth,
-          method: 'syncNow',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isOk(
-        typeof res.body.result === 'number' ||
-        res.body.result === 'SYNCHRONIZATION_IS_STARTED'
-      )
+    before(() => {
+      params.processorQueue = wrkReportServiceApi.lokue_processor.q
+      params.aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
     })
 
-    it('it should be successfully performed by the getSyncProgress method', async function () {
-      this.timeout(60000)
-
-      while (true) {
-        const res = await agent
-          .post(`${basePath}/get-data`)
-          .type('json')
-          .send({
-            auth: subAccountAuth,
-            method: 'getSyncProgress',
-            id: 5
-          })
-          .expect('Content-Type', /json/)
-          .expect(200)
-
-        assert.isObject(res.body)
-        assert.propertyVal(res.body, 'id', 5)
-        assert.isNumber(res.body.result)
-
-        if (
-          typeof res.body.result !== 'number' ||
-          res.body.result === 100
-        ) {
-          break
-        }
-
-        await delay()
-      }
-    })
+    apiSyncModeSqliteTestCases(agent, params)
   })
 
   describe('Remove sub-account', () => {
