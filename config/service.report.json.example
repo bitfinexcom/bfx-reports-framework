@@ -2,7 +2,7 @@
   "grcServices": [
     "rest:report:api"
   ],
-  "restUrl": "https://api.bitfinex.com",
+  "restUrl": "https://api-pub.bitfinex.com",
   "company": "bitfinex",
   "emailConf": {
     "from": "Bitfinex <no-reply@bitfinex.com>",
