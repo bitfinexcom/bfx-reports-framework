@@ -279,8 +279,14 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  beforeMigrationHook () {
+    return this.enableForeignKeys()
+  }
+
+  /**
+   * @override
+   */
   async databaseInitialize (db) {
-    await this.enableForeignKeys()
     await super.databaseInitialize(db)
 
     await this._beginTrans(async () => {

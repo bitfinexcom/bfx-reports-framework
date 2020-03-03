@@ -40,11 +40,18 @@ class DAO {
   /**
    * @abstract
    */
+  async beforeMigrationHook () {}
+
+  /**
+   * @abstract
+   */
   async databaseInitialize (db) {
     if (db) this.setDB(db)
     if (!this.db) {
       throw new DAOInitializationError()
     }
+
+    await this.beforeMigrationHook()
 
     const dbMigrator = this.dbMigratorFactory()
     await dbMigrator.migrateFromCurrToSupportedVer()
