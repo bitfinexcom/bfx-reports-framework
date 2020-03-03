@@ -30,7 +30,10 @@ process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
-const { apiSyncModeSqliteTestCases } = require('./test-cases')
+const {
+  apiSyncModeSqliteTestCases,
+  additionalApiSyncModeSqliteTestCases
+} = require('./test-cases')
 
 let wrkReportServiceApi = null
 let mockRESTv2Srv = null
@@ -287,7 +290,7 @@ describe('Sub-account', () => {
     })
   })
 
-  describe('Sync mode with sub-account', () => {
+  describe('API with SQLite', () => {
     const params = {
       processorQueue: null,
       aggregatorQueue: null,
@@ -304,7 +307,39 @@ describe('Sub-account', () => {
       params.aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
     })
 
-    apiSyncModeSqliteTestCases(agent, params)
+    const beforeFn = async function () {
+      this.timeout(20000)
+
+      await closeSQLite(db)
+      db = await connToSQLite()
+
+      await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth: masterUserAuth,
+          method: 'login'
+        })
+      await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth: masterUserAuth,
+          method: 'createSubAccount',
+          params: { subAccountApiKeys: [subUserAuth] }
+        })
+    }
+
+    describe('Sync mode API', () => {
+      before(beforeFn)
+
+      apiSyncModeSqliteTestCases(agent, params)
+    })
+    describe('Additional sync mode API', () => {
+      before(beforeFn)
+
+      additionalApiSyncModeSqliteTestCases(agent, params)
+    })
   })
 
   describe('Remove sub-account', () => {
