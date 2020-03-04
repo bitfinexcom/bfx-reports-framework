@@ -2,7 +2,9 @@
 
 const {
   mixUserIdToArrData,
-  convertDataType
+  convertDataType,
+  pickUserData,
+  checkUserId
 } = require('./utils')
 const {
   serializeVal,
@@ -41,5 +43,7 @@ module.exports = {
   SQL_OPERATORS,
   getSymbolFilter,
   getStatusMessagesFilter,
-  getTableCreationQuery
+  getTableCreationQuery,
+  pickUserData,
+  checkUserId
 }

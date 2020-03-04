@@ -25,12 +25,12 @@ class DAO {
     this.dbMigratorFactory = dbMigratorFactory
   }
 
-  _getModelsMap () {
-    return this.syncSchema.getModelsMap()
+  _getModelsMap (params) {
+    return this.syncSchema.getModelsMap(params)
   }
 
-  _getMethodCollMap () {
-    return this.syncSchema.getMethodCollMap()
+  _getMethodCollMap (params) {
+    return this.syncSchema.getMethodCollMap(params)
   }
 
   setDB (db) {
@@ -78,6 +78,11 @@ class DAO {
   /**
    * @abstract
    */
+  async insertElemToDb () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async insertElemsToDb () { throw new ImplementationError() }
 
   /**
@@ -104,6 +109,21 @@ class DAO {
    * @abstract
    */
   async updateCollBy () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async getSubUsersByMasterUserApiKeys () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async createSubAccount () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async removeSubAccount () { throw new ImplementationError() }
 
   /**
    * @abstract
@@ -159,11 +179,6 @@ class DAO {
    * @abstract
    */
   async removeElemsFromDbIfNotInLists () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
-  async getCountBy () { throw new ImplementationError() }
 }
 
 decorate(injectable(), DAO)

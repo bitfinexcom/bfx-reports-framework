@@ -10,24 +10,42 @@ const _isContainedPosStatus = (positions, status) => {
 
 module.exports = (
   rService,
-  dao
+  dao,
+  ALLOWED_COLLS
 ) => async ({
-  auth,
+  args,
   symbol,
   end,
   id
 }) => {
-  const trades = await dao.findInCollBy(
-    '_getTrades',
+  const { auth, subAccountAuth } = { ...args }
+  const { apiKey, apiSecret, subUser } = { ...subAccountAuth }
+  const { _id: subUserId } = { ...subUser }
+  const subUserIdFilter = Number.isInteger(subUserId)
+    ? { subUserId }
+    : {}
+  const user = await dao.checkAuthInDb({ auth: { apiKey, apiSecret } })
+  const symbArr = Array.isArray(symbol)
+    ? symbol
+    : [symbol]
+  const symbFilter = symbArr.length !== 0
+    ? { $in: { symbol: symbArr } }
+    : {}
+
+  const trades = await dao.getElemsInCollBy(
+    ALLOWED_COLLS.TRADES,
     {
-      auth,
-      params: {
-        symbol,
-        end,
-        limit: 2
-      }
+      filter: {
+        user_id: user._id,
+        ...subUserIdFilter,
+        $lte: { mtsCreate: end },
+        ...symbFilter
+      },
+      limit: 2,
+      sort: [['mtsCreate', -1]]
     }
   )
+
   const {
     res: positionsAudit
   } = await rService.getPositionsAudit(
@@ -75,11 +93,16 @@ module.exports = (
     }
   }
 
-  const _ledgers = await dao.findInCollBy(
-    '_getLedgers',
+  const _ledgers = await dao.getElemsInCollBy(
+    ALLOWED_COLLS.LEDGERS,
     {
-      auth,
-      params: { end }
+      filter: {
+        user_id: user._id,
+        ...subUserIdFilter,
+        $lte: { mts: end }
+      },
+      limit: 2500,
+      sort: [['mts', -1]]
     }
   )
   const ledgers = Array.isArray(_ledgers) ? _ledgers : []

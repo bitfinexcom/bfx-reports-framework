@@ -23,5 +23,6 @@ module.exports = {
   SYNC_MODE: 'syncMode',
   PROGRESS: 'progress',
   SYNC_QUEUE: 'syncQueue',
-  LOGINS: 'logins'
+  LOGINS: 'logins',
+  SUB_ACCOUNTS: 'subAccounts'
 }

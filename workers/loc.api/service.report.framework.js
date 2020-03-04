@@ -12,7 +12,8 @@ const {
 const {
   isAuthError,
   isNonceSmallError,
-  getTimezoneConf
+  getTimezoneConf,
+  getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
@@ -26,7 +27,8 @@ const {
   isEnotfoundError,
   isEaiAgainError,
   emptyRes,
-  collObjToArr
+  collObjToArr,
+  getAuthFromSubAccountAuth
 } = require('./helpers')
 
 class FrameworkReportService extends ReportService {
@@ -79,12 +81,15 @@ class FrameworkReportService extends ReportService {
   async _checkAuthInApi (args) {
     checkParamsAuth(args)
 
+    const { auth: _auth } = { ...args }
+    const auth = getAuthFromSubAccountAuth(_auth)
+
     const {
       email,
       timezone,
       username,
       id
-    } = await super._getUserInfo(args)
+    } = await super._getUserInfo({ ...args, auth })
 
     if (!email) {
       throw new AuthError()
@@ -103,6 +108,7 @@ class FrameworkReportService extends ReportService {
    */
   login (space, args, cb, isInnerCall) {
     return this._responder(async () => {
+      const { auth } = { ...args }
       let userInfo = {
         email: null,
         timezone: null,
@@ -121,7 +127,7 @@ class FrameworkReportService extends ReportService {
       }
 
       const data = {
-        ...args.auth,
+        ...auth,
         ...userInfo
       }
 
@@ -140,6 +146,33 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'logout', cb)
+  }
+
+  createSubAccount (space, args, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForCreateSubAccount')
+
+      await this._subAccount
+        .createSubAccount(args)
+
+      return true
+    }, 'createSubAccount', cb)
+  }
+
+  removeSubAccount (space, args, cb) {
+    return this._responder(async () => {
+      await this._subAccount
+        .removeSubAccount(args)
+
+      return true
+    }, 'removeSubAccount', cb)
+  }
+
+  hasSubAccount (space, args, cb) {
+    return this._responder(async () => {
+      return this._subAccount
+        .hasSubAccount(args)
+    }, 'hasSubAccount', cb)
   }
 
   checkAuthInDb (space, args, cb) {
@@ -386,7 +419,10 @@ class FrameworkReportService extends ReportService {
   getEmail (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getEmail(space, args)
+        const { auth: _auth } = { ...args }
+        const auth = getAuthFromSubAccountAuth(_auth)
+
+        return super.getEmail(space, { ...args, auth })
       }
 
       const { email } = await this._dao.checkAuthInDb(args)
@@ -401,7 +437,10 @@ class FrameworkReportService extends ReportService {
   getUsersTimeConf (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getUsersTimeConf(space, args)
+        const { auth: _auth } = { ...args }
+        const auth = getAuthFromSubAccountAuth(_auth)
+
+        return super.getUsersTimeConf(space, { ...args, auth })
       }
 
       const { timezone } = await this._dao.checkAuthInDb(args)
@@ -503,7 +542,12 @@ class FrameworkReportService extends ReportService {
   getPositionsHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getPositionsHistory(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getPositionsHistory(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -511,11 +555,50 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getPositionsHistory',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getPositionsHistory', cb)
+  }
+
+  /**
+   * @override
+   */
+  getActivePositions (space, args, cb) {
+    return this._responder(() => {
+      return this._subAccountApiData
+        .getDataForSubAccount(
+          (args) => getDataFromApi(
+            (space, args) => super.getActivePositions(space, args),
+            args
+          ),
+          args,
+          {
+            datePropName: 'mtsUpdate',
+            isNotPreparedResponse: true
+          }
+        )
+    }, 'getActivePositions', cb)
+  }
+
+  /**
+   * @override
+   */
+  getPositionsAudit (space, args, cb) {
+    return this._responder(() => {
+      return this._positionsAudit
+        .getPositionsAuditForSubAccount(
+          (args) => getDataFromApi(
+            (space, args) => super.getPositionsAudit(space, args),
+            args
+          ),
+          args,
+          {
+            checkParamsFn: (args) => checkParams(
+              args, 'paramsSchemaForPositionsAudit'
+            )
+          }
+        )
+    }, 'getPositionsAudit', cb)
   }
 
   /**
@@ -524,7 +607,12 @@ class FrameworkReportService extends ReportService {
   getLedgers (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getLedgers(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getLedgers(space, args),
+            args,
+            { datePropName: 'mts' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -532,9 +620,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getLedgers',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getLedgers', cb)
   }
@@ -545,7 +631,12 @@ class FrameworkReportService extends ReportService {
   getTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getTrades(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getTrades(space, args),
+            args,
+            { datePropName: 'mtsCreate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -553,9 +644,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getTrades',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getTrades', cb)
   }
@@ -566,7 +655,12 @@ class FrameworkReportService extends ReportService {
   getFundingTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getFundingTrades(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getFundingTrades(space, args),
+            args,
+            { datePropName: 'mtsCreate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -574,9 +668,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getFundingTrades',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getFundingTrades', cb)
   }
@@ -712,23 +804,14 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getOrderTrades (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getOrderTrades(space, args)
-      }
-
-      checkParams(args, 'paramsSchemaForOrderTradesApi')
-
-      const { id: orderID } = { ...args.params }
-
-      return this._dao.findInCollBy(
-        '_getTrades',
+    return this._responder(() => {
+      return this._orderTrades.getOrderTrades(
+        (args) => super.getOrderTrades(space, args),
         args,
         {
-          isPrepareResponse: true,
-          schema: {
-            additionalFilteringProps: { orderID }
-          }
+          checkParamsFn: (args) => checkParams(
+            args, 'paramsSchemaForOrderTradesApi'
+          )
         }
       )
     }, 'getOrderTrades', cb)
@@ -740,7 +823,12 @@ class FrameworkReportService extends ReportService {
   getOrders (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getOrders(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getOrders(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -748,11 +836,26 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getOrders',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getOrders', cb)
+  }
+
+  /**
+   * @override
+   */
+  getActiveOrders (space, args, cb) {
+    return this._responder(() => {
+      return this._subAccountApiData
+        .getDataForSubAccount(
+          (args) => super.getActiveOrders(space, args),
+          args,
+          {
+            datePropName: 'mtsUpdate',
+            isNotPreparedResponse: true
+          }
+        )
+    }, 'getActiveOrders', cb)
   }
 
   /**
@@ -761,7 +864,12 @@ class FrameworkReportService extends ReportService {
   getMovements (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getMovements(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getMovements(space, args),
+            args,
+            { datePropName: 'mtsUpdated' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -769,9 +877,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getMovements',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getMovements', cb)
   }
@@ -782,7 +888,12 @@ class FrameworkReportService extends ReportService {
   getFundingOfferHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getFundingOfferHistory(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getFundingOfferHistory(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -790,9 +901,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getFundingOfferHistory',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getFundingOfferHistory', cb)
   }
@@ -803,7 +912,12 @@ class FrameworkReportService extends ReportService {
   getFundingLoanHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getFundingLoanHistory(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getFundingLoanHistory(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -811,9 +925,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getFundingLoanHistory',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getFundingLoanHistory', cb)
   }
@@ -824,7 +936,12 @@ class FrameworkReportService extends ReportService {
   getFundingCreditHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getFundingCreditHistory(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getFundingCreditHistory(space, args),
+            args,
+            { datePropName: 'mtsUpdate' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -832,9 +949,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getFundingCreditHistory',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getFundingCreditHistory', cb)
   }
@@ -845,7 +960,12 @@ class FrameworkReportService extends ReportService {
   getLogins (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getLogins(space, args)
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getLogins(space, args),
+            args,
+            { datePropName: 'time' }
+          )
       }
 
       checkParams(args, 'paramsSchemaForApi')
@@ -853,11 +973,30 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         '_getLogins',
         args,
-        {
-          isPrepareResponse: true
-        }
+        { isPrepareResponse: true }
       )
     }, 'getLogins', cb)
+  }
+
+  /**
+   * @override
+   */
+  getAccountSummary (space, args, cb) {
+    return this._responder(async () => {
+      return this._subAccountApiData
+        .getDataForSubAccount(
+          async (args) => {
+            const res = await super.getAccountSummary(space, args)
+
+            return Array.isArray(res) ? res : [res]
+          },
+          args,
+          {
+            datePropName: 'time',
+            isNotPreparedResponse: true
+          }
+        )
+    }, 'getAccountSummary', cb)
   }
 
   /**

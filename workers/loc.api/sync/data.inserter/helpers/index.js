@@ -16,8 +16,9 @@ const {
   getAllowedCollsNames,
   addPropsToResIfExist
 } = require('./utils')
-const convertCurrency = require('./convert-currency')
-const getFlagsFromLedgerDescription = require('./get-flags-from-ledger-description')
+const getFlagsFromLedgerDescription = require(
+  './get-flags-from-ledger-description'
+)
 
 module.exports = {
   searchClosePriceAndSumAmount,
@@ -29,7 +30,6 @@ module.exports = {
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  convertCurrency,
   addPropsToResIfExist,
   getFlagsFromLedgerDescription
 }

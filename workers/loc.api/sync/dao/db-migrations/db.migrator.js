@@ -90,6 +90,8 @@ class DbMigrator {
         await migration.launch(isDown)
       } catch (err) {
         this.logger.debug(`[ERR_DB_MIGRATION_V${ver}_HAS_FAILED]`)
+        this.logger.error(err)
+
         process.send({ state: 'error:migrations' })
 
         throw new MigrationLaunchingError()

@@ -7,22 +7,48 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 2
+const SUPPORTED_DB_VERSION = 3
 
-const { cloneDeep } = require('lodash')
+const { cloneDeep, omit } = require('lodash')
 
 const TABLES_NAMES = require('./dao/tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
+
+const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
+
+const _cloneSchema = (map, omittedFields = []) => {
+  const arr = [...map].map(([key, schema]) => {
+    const normalizedSchema = omit(schema, omittedFields)
+    const clonedSchema = cloneDeep(normalizedSchema)
+
+    return [key, clonedSchema]
+  })
+
+  return new Map(arr)
+}
+
+const getMethodCollMap = (methodCollMap = _methodCollMap) => {
+  return _cloneSchema(methodCollMap)
+}
+
+const getModelsMap = (params = {}) => {
+  const {
+    models = _models,
+    omittedFields = ['__constraints__']
+  } = { ...params }
+
+  return _cloneSchema(models, omittedFields)
+}
 
 const _models = new Map([
   [
     TABLES_NAMES.USERS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       email: 'VARCHAR(255)',
-      apiKey: 'VARCHAR(255)',
-      apiSecret: 'VARCHAR(255)',
+      apiKey: 'VARCHAR(255) NOT NULL',
+      apiSecret: 'VARCHAR(255) NOT NULL',
       active: 'INT',
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
@@ -30,24 +56,48 @@ const _models = new Map([
     }
   ],
   [
+    TABLES_NAMES.SUB_ACCOUNTS,
+    {
+      _id: ID_PRIMARY_KEY,
+      masterUserId: 'INT NOT NULL',
+      subUserId: 'INT NOT NULL',
+      __constraints__: [
+        `CONSTRAINT #{tableName}_fk_masterUserId
+        FOREIGN KEY (masterUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+      ]
+    }
+  ],
+  [
     TABLES_NAMES.LEDGERS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       currency: 'VARCHAR(255)',
       mts: 'BIGINT',
       amount: 'DECIMAL(22,12)',
       amountUsd: 'DECIMAL(22,12)',
       balance: 'DECIMAL(22,12)',
+      _nativeBalance: 'DECIMAL(22,12)',
       balanceUsd: 'DECIMAL(22,12)',
+      _nativeBalanceUsd: 'DECIMAL(22,12)',
       description: 'TEXT',
       wallet: 'VARCHAR(255)',
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT ledgers_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      _isBalanceRecalced: 'INT',
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -55,7 +105,7 @@ const _models = new Map([
   [
     TABLES_NAMES.TRADES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       mtsCreate: 'BIGINT',
@@ -67,10 +117,11 @@ const _models = new Map([
       maker: 'INT',
       fee: 'DECIMAL(22,12)',
       feeCurrency: 'VARCHAR(255)',
-      user_id: `INT NOT NULL,
-        CONSTRAINT trades_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -78,7 +129,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_TRADES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       mtsCreate: 'BIGINT',
@@ -87,10 +138,11 @@ const _models = new Map([
       rate: 'DECIMAL(22,12)',
       period: 'BIGINT',
       maker: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT fundingTrades_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -98,7 +150,7 @@ const _models = new Map([
   [
     TABLES_NAMES.PUBLIC_TRADES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       mts: 'BIGINT',
       rate: 'DECIMAL(22,12)',
@@ -111,7 +163,7 @@ const _models = new Map([
   [
     TABLES_NAMES.ORDERS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       gid: 'BIGINT',
       cid: 'BIGINT',
@@ -132,10 +184,11 @@ const _models = new Map([
       placedId: 'BIGINT',
       _lastAmount: 'DECIMAL(22,12)',
       amountExecuted: 'DECIMAL(22,12)',
-      user_id: `INT NOT NULL,
-        CONSTRAINT orders_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -143,7 +196,7 @@ const _models = new Map([
   [
     TABLES_NAMES.MOVEMENTS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       currency: 'VARCHAR(255)',
       currencyName: 'VARCHAR(255)',
@@ -155,10 +208,11 @@ const _models = new Map([
       fees: 'DECIMAL(22,12)',
       destinationAddress: 'VARCHAR(255)',
       transactionId: 'VARCHAR(255)',
-      user_id: `INT NOT NULL,
-        CONSTRAINT movements_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -166,7 +220,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_OFFER_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       mtsCreate: 'BIGINT',
@@ -183,10 +237,11 @@ const _models = new Map([
       renew: 'INT',
       rateReal: 'INT',
       amountExecuted: 'DECIMAL(22,12)',
-      user_id: `INT NOT NULL,
-        CONSTRAINT fundingOfferHistory_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -194,7 +249,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_LOAN_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       side: 'INT',
@@ -212,10 +267,11 @@ const _models = new Map([
       renew: 'INT',
       rateReal: 'INT',
       noClose: 'INT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT fundingLoanHistory_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -223,7 +279,7 @@ const _models = new Map([
   [
     TABLES_NAMES.FUNDING_CREDIT_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       side: 'INT',
@@ -242,10 +298,11 @@ const _models = new Map([
       rateReal: 'INT',
       noClose: 'INT',
       positionPair: 'VARCHAR(255)',
-      user_id: `INT NOT NULL,
-        CONSTRAINT fundingCreditHistory_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -253,7 +310,7 @@ const _models = new Map([
   [
     TABLES_NAMES.POSITIONS_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       symbol: 'VARCHAR(255)',
       status: 'VARCHAR(255)',
@@ -269,10 +326,11 @@ const _models = new Map([
       placeholder: 'TEXT',
       mtsCreate: 'BIGINT',
       mtsUpdate: 'BIGINT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT positionsHistory_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -280,15 +338,16 @@ const _models = new Map([
   [
     TABLES_NAMES.LOGINS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       time: 'BIGINT',
       ip: 'VARCHAR(255)',
       extraData: 'TEXT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT logins_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -296,7 +355,7 @@ const _models = new Map([
   [
     TABLES_NAMES.TICKERS_HISTORY,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       symbol: 'VARCHAR(255)',
       bid: 'DECIMAL(22,12)',
       bidPeriod: 'INT',
@@ -307,7 +366,7 @@ const _models = new Map([
   [
     TABLES_NAMES.STATUS_MESSAGES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       key: 'VARCHAR(255)',
       timestamp: 'BIGINT',
       price: 'DECIMAL(22,12)',
@@ -321,14 +380,14 @@ const _models = new Map([
   [
     TABLES_NAMES.PUBLIC_COLLS_CONF,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       confName: 'VARCHAR(255)',
       symbol: 'VARCHAR(255)',
       start: 'BIGINT',
-      user_id: `INT NOT NULL,
-        CONSTRAINT publicСollsСonf_fk_#{field}
-        FOREIGN KEY (#{field})
-        REFERENCES users(_id)
+      user_id: 'INT NOT NULL',
+      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
     }
@@ -336,21 +395,21 @@ const _models = new Map([
   [
     TABLES_NAMES.SYMBOLS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       pairs: 'VARCHAR(255)'
     }
   ],
   [
     TABLES_NAMES.FUTURES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       pairs: 'VARCHAR(255)'
     }
   ],
   [
     TABLES_NAMES.CURRENCIES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       id: 'VARCHAR(255)',
       name: 'VARCHAR(255)',
       pool: 'VARCHAR(255)',
@@ -360,7 +419,7 @@ const _models = new Map([
   [
     TABLES_NAMES.CANDLES,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       mts: 'BIGINT',
       open: 'DECIMAL(22,12)',
       close: 'DECIMAL(22,12)',
@@ -373,28 +432,28 @@ const _models = new Map([
   [
     TABLES_NAMES.SCHEDULER,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       isEnable: 'INT'
     }
   ],
   [
     TABLES_NAMES.SYNC_MODE,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       isEnable: 'INT'
     }
   ],
   [
     TABLES_NAMES.PROGRESS,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       value: 'VARCHAR(255)'
     }
   ],
   [
     TABLES_NAMES.SYNC_QUEUE,
     {
-      _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+      _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
       state: 'VARCHAR(255)'
     }
@@ -409,12 +468,12 @@ const _methodCollMap = new Map([
       maxLimit: 2500,
       dateFieldName: 'mts',
       symbolFieldName: 'currency',
-      sort: [['mts', -1]],
+      sort: [['mts', -1], ['id', -1]],
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mts'],
-      model: { ..._models.get(TABLES_NAMES.LEDGERS) }
+      fieldsOfUniqueIndex: ['id', 'mts', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) }
     }
   ],
   [
@@ -428,8 +487,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee'],
-      model: { ..._models.get(TABLES_NAMES.TRADES) }
+      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.TRADES) }
     }
   ],
   [
@@ -443,8 +502,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_TRADES) }
+      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_TRADES) }
     }
   ],
   [
@@ -460,7 +519,7 @@ const _methodCollMap = new Map([
       confName: 'publicTradesConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
-      model: { ..._models.get(TABLES_NAMES.PUBLIC_TRADES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.PUBLIC_TRADES) }
     }
   ],
   [
@@ -484,7 +543,7 @@ const _methodCollMap = new Map([
       confName: 'statusMessagesConf',
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
-      model: { ..._models.get(TABLES_NAMES.STATUS_MESSAGES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.STATUS_MESSAGES) }
     }
   ],
   [
@@ -498,8 +557,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(TABLES_NAMES.ORDERS) }
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.ORDERS) }
     }
   ],
   [
@@ -513,8 +572,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdated'],
-      model: { ..._models.get(TABLES_NAMES.MOVEMENTS) }
+      fieldsOfUniqueIndex: ['id', 'mtsUpdated', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.MOVEMENTS) }
     }
   ],
   [
@@ -528,8 +587,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
     }
   ],
   [
@@ -543,8 +602,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
     }
   ],
   [
@@ -558,8 +617,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
     }
   ],
   [
@@ -573,8 +632,8 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: 0,
       type: 'insertable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate'],
-      model: { ..._models.get(TABLES_NAMES.POSITIONS_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.POSITIONS_HISTORY) }
     }
   ],
   [
@@ -589,7 +648,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
-      model: { ..._models.get(TABLES_NAMES.LOGINS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.LOGINS) }
     }
   ],
   [
@@ -605,7 +664,7 @@ const _methodCollMap = new Map([
       confName: 'tickersHistoryConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
-      model: { ..._models.get(TABLES_NAMES.TICKERS_HISTORY) }
+      model: { ...getModelsMap().get(TABLES_NAMES.TICKERS_HISTORY) }
     }
   ],
   [
@@ -620,7 +679,7 @@ const _methodCollMap = new Map([
         sort: [['mts', -1], ['id', -1]]
       },
       type: 'hidden:insertable:array:objects',
-      model: { ..._models.get(TABLES_NAMES.LEDGERS) },
+      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) },
       dataStructureConverter: (accum, {
         wallet: type,
         currency,
@@ -650,7 +709,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ..._models.get(TABLES_NAMES.SYMBOLS) }
+      model: { ...getModelsMap().get(TABLES_NAMES.SYMBOLS) }
     }
   ],
   [
@@ -662,7 +721,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ..._models.get(TABLES_NAMES.FUTURES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.FUTURES) }
     }
   ],
   [
@@ -670,12 +729,12 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.CURRENCIES,
       maxLimit: 10000,
-      fields: ['id', 'name', 'pool', 'explorer'],
+      fields: ['id'],
       sort: [['name', 1]],
       hasNewData: true,
       type: 'public:updatable:array:objects',
-      fieldsOfUniqueIndex: ['id', 'name', 'pool', 'explorer'],
-      model: { ..._models.get(TABLES_NAMES.CURRENCIES) }
+      fieldsOfUniqueIndex: ['id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.CURRENCIES) }
     }
   ],
   [
@@ -691,22 +750,10 @@ const _methodCollMap = new Map([
       confName: 'candlesConf',
       type: 'public:insertable:array:objects',
       fieldsOfUniqueIndex: ['_symbol', 'mts'],
-      model: { ..._models.get(TABLES_NAMES.CANDLES) }
+      model: { ...getModelsMap().get(TABLES_NAMES.CANDLES) }
     }
   ]
 ])
-
-const _cloneSchema = (map) => {
-  return new Map(Array.from(map).map(item => cloneDeep(item)))
-}
-
-const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return _cloneSchema(methodCollMap)
-}
-
-const getModelsMap = (models = _models) => {
-  return _cloneSchema(models)
-}
 
 module.exports = {
   SUPPORTED_DB_VERSION,

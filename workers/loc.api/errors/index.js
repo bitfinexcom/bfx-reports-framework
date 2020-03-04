@@ -1,7 +1,8 @@
 'use strict'
 
 const {
-  BaseError
+  BaseError,
+  AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
 class CollSyncPermissionError extends BaseError {
@@ -22,8 +23,8 @@ class AsyncProgressHandlerIsNotFnError extends BaseError {
   }
 }
 
-class AfterAllInsertsHookIsNotFnError extends BaseError {
-  constructor (message = 'ERR_AFTER_ALL_INSERTS_HOOK_IS_NOT_FUNCTION') {
+class AfterAllInsertsHookIsNotHookError extends BaseError {
+  constructor (message = 'ERR_AFTER_ALL_INSERTS_HOOK_IS_NOT_HOOK') {
     super(message)
   }
 }
@@ -106,12 +107,36 @@ class MigrationLaunchingError extends BaseError {
   }
 }
 
+class SubAccountCreatingError extends AuthError {
+  constructor (message = 'ERR_SUB_ACCOUNT_CREATION_HAS_FAILED') {
+    super(message)
+  }
+}
+
+class SubAccountRemovingError extends AuthError {
+  constructor (message = 'ERR_SUB_ACCOUNT_REMOVE_HAS_FAILED') {
+    super(message)
+  }
+}
+
+class SubAccountLedgersBalancesRecalcError extends BaseError {
+  constructor (message = 'ERR_SUB_ACCOUNT_LEDGERS_BALANCES_RECALC_HAS_FAILED') {
+    super(message)
+  }
+}
+
+class DatePropNameError extends BaseError {
+  constructor (message = 'ERR_DATE_PROP_NAME_IS_EMPTY_OR_NOT_STRING') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
   UpdateSyncQueueJobError,
   AsyncProgressHandlerIsNotFnError,
-  AfterAllInsertsHookIsNotFnError,
+  AfterAllInsertsHookIsNotHookError,
   RemoveListElemsError,
   UpdateStateCollError,
   UpdateSyncProgressError,
@@ -124,5 +149,9 @@ module.exports = {
   SqlCorrectnessError,
   DbMigrationVerCorrectnessError,
   DbVersionTypeError,
-  MigrationLaunchingError
+  MigrationLaunchingError,
+  SubAccountCreatingError,
+  SubAccountRemovingError,
+  SubAccountLedgersBalancesRecalcError,
+  DatePropNameError
 }

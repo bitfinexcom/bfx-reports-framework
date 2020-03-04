@@ -15,7 +15,9 @@ const {
   checkFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
-  AuthError
+  AuthError,
+  SubAccountCreatingError,
+  SubAccountRemovingError
 } = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../../di/types')
@@ -24,7 +26,11 @@ const DAO = require('./dao')
 const {
   checkParamsAuth,
   refreshObj,
-  mapObjBySchema
+  mapObjBySchema,
+  isSubAccountApiKeys,
+  getSubAccountAuthFromAuth,
+  getAuthFromSubAccountAuth,
+  filterSubUsers
 } = require('../../helpers')
 const {
   mixUserIdToArrData,
@@ -41,7 +47,9 @@ const {
   getGroupQuery,
   getSubQuery,
   filterModelNameMap,
-  getTableCreationQuery
+  getTableCreationQuery,
+  pickUserData,
+  checkUserId
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -102,22 +110,45 @@ class SqliteDAO extends DAO {
     return this._run('ROLLBACK')
   }
 
-  _beginTrans (asyncExecQuery) {
+  _beginTrans (
+    asyncExecQuery,
+    {
+      beforeTransFn,
+      afterTransFn
+    } = {}
+  ) {
     return new Promise((resolve, reject) => {
       this.db.serialize(async () => {
         let isTransBegun = false
 
         try {
+          if (typeof beforeTransFn === 'function') {
+            await beforeTransFn()
+          }
+
           await this._run('BEGIN TRANSACTION')
           isTransBegun = true
 
           await asyncExecQuery()
           await this._commit()
 
+          if (typeof afterTransFn === 'function') {
+            await afterTransFn()
+          }
+
           resolve()
         } catch (err) {
-          if (isTransBegun) {
-            await this._rollback()
+          try {
+            if (isTransBegun) {
+              await this._rollback()
+            }
+            if (typeof afterTransFn === 'function') {
+              await afterTransFn()
+            }
+          } catch (err) {
+            reject(err)
+
+            return
           }
 
           reject(err)
@@ -127,7 +158,7 @@ class SqliteDAO extends DAO {
   }
 
   async _createTablesIfNotExists () {
-    const models = this._getModelsMap()
+    const models = this._getModelsMap({ omittedFields: null })
     const sqlArr = getTableCreationQuery(models, true)
 
     for (const sql of sqlArr) {
@@ -179,6 +210,13 @@ class SqliteDAO extends DAO {
     )
 
     await this._run(publicСollsСonfSql)
+
+    const userSql = getUniqueIndexQuery(
+      this.TABLES_NAMES.USERS,
+      ['apiKey', 'apiSecret']
+    )
+
+    await this._run(userSql)
   }
 
   async _getUserByAuth (auth) {
@@ -242,6 +280,7 @@ class SqliteDAO extends DAO {
    * @override
    */
   async databaseInitialize (db) {
+    await this.enableForeignKeys()
     await super.databaseInitialize(db)
 
     await this._beginTrans(async () => {
@@ -287,7 +326,13 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async executeQueriesInTrans (sql) {
+  async executeQueriesInTrans (
+    sql,
+    {
+      beforeTransFn,
+      afterTransFn
+    } = {}
+  ) {
     const sqlArr = Array.isArray(sql)
       ? sql
       : [sql]
@@ -295,7 +340,6 @@ class SqliteDAO extends DAO {
     if (sqlArr.length === 0) {
       return
     }
-
     await this._beginTrans(async () => {
       for (const sqlData of sqlArr) {
         const _sqlObj = typeof sqlData === 'string'
@@ -320,25 +364,67 @@ class SqliteDAO extends DAO {
           await execQueryFn()
         }
       }
-    })
+    }, { beforeTransFn, afterTransFn })
+  }
+
+  /**
+   * @override
+   */
+  async insertElemToDb (
+    name,
+    obj = {},
+    {
+      isReplacedIfExists
+    } = {}
+  ) {
+    const keys = Object.keys(obj)
+    const projection = getProjectionQuery(keys)
+    const {
+      placeholders,
+      placeholderVal
+    } = getPlaceholdersQuery(obj, keys)
+    const replace = isReplacedIfExists
+      ? ' OR REPLACE'
+      : ''
+
+    const sql = `INSERT${replace} INTO ${name}(${projection}) VALUES (${placeholders})`
+
+    await this._run(sql, placeholderVal)
   }
 
   /**
    * @override
    */
   async getLastElemFromDb (name, auth, sort = []) {
+    const { apiKey, apiSecret, subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
+    const {
+      subUserId: subUserIdType
+    } = { ...this._getModelsMap().get(name) }
+    const hasSubUserField = (
+      subUserIdType &&
+      typeof subUserIdType === 'string'
+    )
     const _sort = getOrderQuery(sort)
     const uTableName = this.TABLES_NAMES.USERS
+    const subUserIdQuery = (
+      hasSubUserField &&
+      Number.isInteger(subUserId)
+    )
+      ? 'AND c.subUserId = $subUserId'
+      : ''
 
-    const sql = `SELECT ${name}.* FROM ${name}
-      INNER JOIN ${uTableName} ON ${uTableName}._id = ${name}.user_id
-      WHERE ${uTableName}.apiKey = $apiKey
-      AND ${uTableName}.apiSecret = $apiSecret
+    const sql = `SELECT c.* FROM ${name} AS c
+      INNER JOIN ${uTableName} AS u ON u._id = c.user_id
+      WHERE u.apiKey = $apiKey
+      AND u.apiSecret = $apiSecret
+      ${subUserIdQuery}
       ${_sort}`
 
     return this._get(sql, {
-      $apiKey: auth.apiKey,
-      $apiSecret: auth.apiSecret
+      $apiKey: apiKey,
+      $apiSecret: apiSecret,
+      $subUserId: subUserId
     })
   }
 
@@ -350,31 +436,30 @@ class SqliteDAO extends DAO {
     auth,
     data = [],
     {
-      isReplacedIfExists
+      isReplacedIfExists,
+      isUsedActiveAndInactiveUsers
     } = {}
   ) {
-    await mixUserIdToArrData(this, auth, data)
+    const _data = await mixUserIdToArrData(
+      this,
+      auth,
+      data,
+      isUsedActiveAndInactiveUsers
+    )
 
     await this._beginTrans(async () => {
-      for (const obj of data) {
+      for (const obj of _data) {
         const keys = Object.keys(obj)
 
         if (keys.length === 0) {
           continue
         }
 
-        const projection = getProjectionQuery(keys)
-        const {
-          placeholders,
-          placeholderVal
-        } = getPlaceholdersQuery(obj, keys)
-        const replace = isReplacedIfExists
-          ? ' OR REPLACE'
-          : ''
-
-        const sql = `INSERT${replace} INTO ${name}(${projection}) VALUES (${placeholders})`
-
-        await this._run(sql, placeholderVal)
+        await this.insertElemToDb(
+          name,
+          obj,
+          { isReplacedIfExists }
+        )
       }
     })
   }
@@ -382,11 +467,21 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async insertElemsToDbIfNotExists (name, auth, data = []) {
-    await mixUserIdToArrData(this, auth, data)
+  async insertElemsToDbIfNotExists (
+    name,
+    auth,
+    data = [],
+    { isUsedActiveAndInactiveUsers } = {}
+  ) {
+    const _data = await mixUserIdToArrData(
+      this,
+      auth,
+      data,
+      isUsedActiveAndInactiveUsers
+    )
 
     await this._beginTrans(async () => {
-      for (const obj of data) {
+      for (const obj of _data) {
         const keys = Object.keys(obj)
 
         if (keys.length === 0) {
@@ -602,11 +697,168 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async insertOrUpdateUser (data) {
+  async getSubUsersByMasterUserApiKeys (
+    masterUser,
+    sort = ['_id']
+  ) {
+    const {
+      apiKey: $apiKey,
+      apiSecret: $apiSecret
+    } = { ...masterUser }
+    const _sort = getOrderQuery(sort)
+
+    const sql = `SELECT su.* FROM ${this.TABLES_NAMES.USERS} AS su
+      INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa ON su._id = sa.subUserId
+      INNER JOIN ${this.TABLES_NAMES.USERS} AS mu ON mu._id = sa.masterUserId
+      WHERE mu.apiKey = $apiKey
+      AND mu.apiSecret = $apiSecret
+      ${_sort}`
+
+    return this._all(sql, { $apiKey, $apiSecret })
+  }
+
+  /**
+   * @override
+   */
+  async createSubAccount (
+    masterUser = {},
+    subUsers = []
+  ) {
+    if (
+      isSubAccountApiKeys(masterUser) ||
+      !Array.isArray(subUsers) ||
+      subUsers.length === 0 ||
+      subUsers.some(isSubAccountApiKeys)
+    ) {
+      throw new SubAccountCreatingError()
+    }
+
+    const _masterUser = {
+      ...pickUserData(masterUser),
+      ...getSubAccountAuthFromAuth(masterUser),
+      active: 1,
+      isDataFromDb: 1
+    }
+    const _subUsers = filterSubUsers(subUsers, masterUser)
+    _subUsers.push(masterUser)
+
+    await this._beginTrans(async () => {
+      await this.insertElemToDb(
+        this.TABLES_NAMES.USERS,
+        _masterUser
+      )
+
+      const masterUserFromDb = await this._getUserByAuth(_masterUser)
+      checkUserId(masterUserFromDb)
+
+      for (const subUser of _subUsers) {
+        const userFromDb = await this._getUserByAuth(subUser)
+        const isEmptyUserFromDb = isEmpty(userFromDb)
+        const userFlags = isEmptyUserFromDb
+          ? {
+            active: 0,
+            isDataFromDb: 1
+          }
+          : {}
+
+        const user = {
+          ...userFromDb,
+          ...pickUserData(subUser),
+          ...userFlags
+        }
+
+        if (isEmptyUserFromDb) {
+          await this.insertElemToDb(
+            this.TABLES_NAMES.USERS,
+            user
+          )
+
+          const _userFromDb = await this._getUserByAuth(user)
+          checkUserId(_userFromDb)
+
+          await this.insertElemToDb(
+            this.TABLES_NAMES.SUB_ACCOUNTS,
+            {
+              masterUserId: masterUserFromDb._id,
+              subUserId: _userFromDb._id
+            }
+          )
+
+          continue
+        }
+
+        checkUserId(user)
+
+        const res = await this.updateCollBy(
+          this.TABLES_NAMES.USERS,
+          { _id: user._id },
+          user
+        )
+
+        if (res && res.changes < 1) {
+          throw new SubAccountCreatingError()
+        }
+
+        await this.insertElemToDb(
+          this.TABLES_NAMES.SUB_ACCOUNTS,
+          {
+            masterUserId: masterUserFromDb._id,
+            subUserId: user._id
+          }
+        )
+      }
+    })
+  }
+
+  /**
+   * @override
+   */
+  async removeSubAccount (masterUser = {}) {
+    const { apiKey, apiSecret } = { ...masterUser }
+
+    const _subUsers = await this.getSubUsersByMasterUserApiKeys(
+      masterUser
+    )
+    const auth = getAuthFromSubAccountAuth(masterUser)
+    const subUsers = filterSubUsers(_subUsers, auth)
+
+    await this._beginTrans(async () => {
+      const res = await this.removeElemsFromDb(
+        this.TABLES_NAMES.USERS,
+        null,
+        { $eq: { apiKey, apiSecret } }
+      )
+
+      if (res && res.changes < 1) {
+        throw new SubAccountRemovingError()
+      }
+
+      for (const subUser of subUsers) {
+        await this.deactivateUser(subUser)
+      }
+    })
+  }
+
+  /**
+   * @override
+   */
+  async insertOrUpdateUser (data, params = {}) {
     const user = await this._getUserByAuth(data)
+    const {
+      active = true
+    } = { ...params }
 
     if (isEmpty(user)) {
-      if (!data.email) {
+      const {
+        apiKey,
+        apiSecret,
+        email
+      } = { ...data }
+
+      if (
+        !email ||
+        isSubAccountApiKeys({ apiKey, apiSecret })
+      ) {
         throw new AuthError()
       }
 
@@ -614,18 +866,8 @@ class SqliteDAO extends DAO {
         this.TABLES_NAMES.USERS,
         null,
         [{
-          ...pick(
-            data,
-            [
-              'apiKey',
-              'apiSecret',
-              'email',
-              'timezone',
-              'username',
-              'id'
-            ]
-          ),
-          active: 1,
+          ...pickUserData(data),
+          active: serializeVal(active),
           isDataFromDb: 1
         }]
       )
@@ -633,7 +875,7 @@ class SqliteDAO extends DAO {
       return this._getUserByAuth(data)
     }
 
-    const newData = { active: 1 }
+    const newData = { active: serializeVal(active) }
 
     refreshObj(
       user,
@@ -888,21 +1130,6 @@ class SqliteDAO extends DAO {
     if (res && res.changes < 1) {
       throw new UpdateSyncProgressError()
     }
-
-    return res
-  }
-
-  /**
-   * @override
-   */
-  async getCountBy (name, filter = {}) {
-    const {
-      where,
-      values
-    } = getWhereQuery(filter)
-
-    const sql = `SELECT count(*) AS res FROM ${name} ${where}`
-    const { res } = await this._get(sql, values)
 
     return res
   }

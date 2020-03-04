@@ -1,15 +1,39 @@
 'use strict'
 
+const { pick } = require('lodash')
+
+const {
+  SubAccountCreatingError
+} = require('../../../errors')
 const { deserializeVal } = require('./serialization')
 
-const mixUserIdToArrData = async (dao, auth, data = []) => {
+const mixUserIdToArrData = async (
+  dao,
+  auth,
+  data = [],
+  isUsedActiveAndInactiveUsers
+) => {
   if (auth) {
-    const user = await dao.checkAuthInDb({ auth })
+    const { subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
+    const { _id } = await dao.checkAuthInDb(
+      { auth },
+      !isUsedActiveAndInactiveUsers
+    )
+    const params = Number.isInteger(subUserId)
+      ? { subUserId }
+      : {}
 
-    data.forEach(item => {
-      item.user_id = user._id
+    return data.map((item) => {
+      return {
+        ...item,
+        ...params,
+        user_id: _id
+      }
     })
   }
+
+  return data
 }
 
 const convertDataType = (
@@ -34,7 +58,33 @@ const convertDataType = (
   return arr
 }
 
+const pickUserData = (user) => {
+  return {
+    ...pick(
+      user,
+      [
+        'apiKey',
+        'apiSecret',
+        'email',
+        'timezone',
+        'username',
+        'id'
+      ]
+    )
+  }
+}
+
+const checkUserId = (user = {}) => {
+  const { _id } = { ...user }
+
+  if (!Number.isInteger(_id)) {
+    throw new SubAccountCreatingError()
+  }
+}
+
 module.exports = {
   mixUserIdToArrData,
-  convertDataType
+  convertDataType,
+  pickUserData,
+  checkUserId
 }

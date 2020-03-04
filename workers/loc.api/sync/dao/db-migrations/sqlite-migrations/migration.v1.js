@@ -9,6 +9,11 @@ class MigrationV1 extends AbstractMigration {
   /**
    * @override
    */
+  beforeUp () { return this.dao.disableForeignKeys() }
+
+  /**
+   * @override
+   */
   async up () {
     const fnArrToRemoveAllTables = await getFnArrToRemoveAllTables(
       this.dao,
@@ -17,6 +22,11 @@ class MigrationV1 extends AbstractMigration {
 
     this.addSql(fnArrToRemoveAllTables)
   }
+
+  /**
+   * @override
+   */
+  afterUp () { return this.dao.enableForeignKeys() }
 
   /**
    * @override

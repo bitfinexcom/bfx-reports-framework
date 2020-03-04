@@ -40,5 +40,11 @@ module.exports = {
   Trades: Symbol.for('Trades'),
   TradedVolume: Symbol.for('TradedVolume'),
   FeesReport: Symbol.for('FeesReport'),
-  PerformingLoan: Symbol.for('PerformingLoan')
+  PerformingLoan: Symbol.for('PerformingLoan'),
+  SubAccount: Symbol.for('SubAccount'),
+  ConvertCurrencyHook: Symbol.for('ConvertCurrencyHook'),
+  RecalcSubAccountLedgersBalancesHook: Symbol.for('RecalcSubAccountLedgersBalancesHook'),
+  SubAccountApiData: Symbol.for('SubAccountApiData'),
+  PositionsAudit: Symbol.for('PositionsAudit'),
+  OrderTrades: Symbol.for('OrderTrades')
 }

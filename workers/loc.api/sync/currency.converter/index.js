@@ -264,6 +264,14 @@ class CurrencyConverter {
       : null
   }
 
+  _isEmptyOutputField (outputField) {
+    return (
+      !Array.isArray(outputField) ||
+      outputField.length === 0 ||
+      outputField.some((field) => this._isEmptyStr(field))
+    )
+  }
+
   async _convertBy (
     collName,
     data,
@@ -319,15 +327,21 @@ class CurrencyConverter {
       }
 
       convFields.forEach(({ inputField, outputField }) => {
+        const _outputField = Array.isArray(outputField)
+          ? outputField
+          : [outputField]
+
         if (
           this._isEmptyStr(inputField) ||
-          this._isEmptyStr(outputField) ||
+          this._isEmptyOutputField(_outputField) ||
           !Number.isFinite(item[inputField])
         ) {
           return
         }
 
-        item[outputField] = item[inputField] * price
+        for (const fieldName of _outputField) {
+          item[fieldName] = item[inputField] * price
+        }
       })
     }
 
@@ -666,15 +680,21 @@ class CurrencyConverter {
       }
 
       convFields.forEach(({ inputField, outputField }) => {
+        const _outputField = Array.isArray(outputField)
+          ? outputField
+          : [outputField]
+
         if (
           this._isEmptyStr(inputField) ||
-          this._isEmptyStr(outputField) ||
+          this._isEmptyOutputField(_outputField) ||
           !Number.isFinite(item[inputField])
         ) {
           return
         }
 
-        item[outputField] = item[inputField] * price
+        for (const fieldName of _outputField) {
+          item[fieldName] = item[inputField] * price
+        }
       })
     }
 

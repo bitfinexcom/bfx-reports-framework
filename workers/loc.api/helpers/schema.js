@@ -7,6 +7,30 @@ const {
   paramsSchemaForCandlesApi: baseParamsSchemaForCandlesApi
 } = require('bfx-report/workers/loc.api/helpers/schema')
 
+const paramsSchemaForCreateSubAccount = {
+  type: 'object',
+  required: ['subAccountApiKeys'],
+  properties: {
+    subAccountApiKeys: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 10,
+      items: {
+        type: 'object',
+        required: ['apiKey', 'apiSecret'],
+        properties: {
+          apiKey: {
+            type: 'string'
+          },
+          apiSecret: {
+            type: 'string'
+          }
+        }
+      }
+    }
+  }
+}
+
 const paramsSchemaForCandlesApi = {
   ...cloneDeep(baseParamsSchemaForCandlesApi),
   properties: {
@@ -329,6 +353,7 @@ const paramsSchemaForCandlesCsv = {
 
 module.exports = {
   paramsSchemaForEditPublicСollsСonf,
+  paramsSchemaForCreateSubAccount,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,

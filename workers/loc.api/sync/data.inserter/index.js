@@ -27,15 +27,15 @@ const {
   compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
-  getAllowedCollsNames,
-  convertCurrency
+  getAllowedCollsNames
 } = require('./helpers')
+const DataInserterHook = require('./hooks/data.inserter.hook')
 const {
   checkCollPermission
 } = require('../helpers')
 const {
   AsyncProgressHandlerIsNotFnError,
-  AfterAllInsertsHookIsNotFnError
+  AfterAllInsertsHookIsNotHookError
 } = require('../../errors')
 
 const MESS_ERR_UNAUTH = 'ERR_AUTH_UNAUTHORIZED'
@@ -49,7 +49,9 @@ class DataInserter extends EventEmitter {
     TABLES_NAMES,
     ALLOWED_COLLS,
     currencyConverter,
-    FOREX_SYMBS
+    FOREX_SYMBS,
+    convertCurrencyHook,
+    recalcSubAccountLedgersBalancesHook
   ) {
     super()
 
@@ -61,8 +63,10 @@ class DataInserter extends EventEmitter {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.currencyConverter = currencyConverter
     this.FOREX_SYMBS = FOREX_SYMBS
+    this.convertCurrencyHook = convertCurrencyHook
+    this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
 
-    this._asyncProgressHandler = null
+    this._asyncProgressHandlers = []
     this._auth = null
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
@@ -88,29 +92,34 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
-    this.addAfterAllInsertsHooks(convertCurrency(
-      this.dao,
-      this.currencyConverter,
-      this.ALLOWED_COLLS,
-      this.convertTo,
-      this.syncColls
-    ))
+    this.convertCurrencyHook.init({
+      convertTo: this.convertTo,
+      syncColls: this.syncColls
+    })
+    this.addAfterAllInsertsHooks([
+      this.convertCurrencyHook,
+      this.recalcSubAccountLedgersBalancesHook
+    ])
   }
 
-  setAsyncProgressHandler (cb) {
-    if (typeof cb !== 'function') {
+  addAsyncProgressHandler (handler) {
+    if (typeof handler !== 'function') {
       throw new AsyncProgressHandlerIsNotFnError()
     }
 
-    this._asyncProgressHandler = cb
+    this._asyncProgressHandlers.push(handler)
   }
 
   async setProgress (progress) {
-    if (this._asyncProgressHandler) {
-      await this._asyncProgressHandler(progress)
+    for (const handler of this._asyncProgressHandlers) {
+      await handler(progress)
     }
 
     this.emit('progress', progress)
+  }
+
+  getAuth () {
+    return this._auth
   }
 
   async insertNewDataToDbMultiUser () {
@@ -134,9 +143,10 @@ class DataInserter extends EventEmitter {
         continue
       }
 
-      count += 1
-      const userProgress = count / this._auth.size
+      const userProgress = (count / this._auth.size) * 100
+
       progress = await this.insertNewDataToDb(authItem[1], userProgress)
+      count += 1
     }
 
     await this.insertNewPublicDataToDb(progress)
@@ -149,25 +159,34 @@ class DataInserter extends EventEmitter {
     if (
       !Array.isArray(this._afterAllInsertsHooks) ||
       this._afterAllInsertsHooks.length === 0 ||
-      this._afterAllInsertsHooks.some(hook => typeof hook !== 'function')
+      this._afterAllInsertsHooks.some(h => !(h instanceof DataInserterHook))
     ) {
       return
     }
 
-    const promiseArr = this._afterAllInsertsHooks.map(hook => hook(this))
-
-    return Promise.all(promiseArr)
+    for (const hook of this._afterAllInsertsHooks) {
+      await hook.execute()
+    }
   }
 
   addAfterAllInsertsHooks (hook) {
-    if (typeof hook !== 'function') {
-      throw new AfterAllInsertsHookIsNotFnError()
+    const hookArr = Array.isArray(hook)
+      ? hook
+      : [hook]
+
+    if (hookArr.some((h) => !(h instanceof DataInserterHook))) {
+      throw new AfterAllInsertsHookIsNotHookError()
     }
     if (!Array.isArray(this._afterAllInsertsHooks)) {
       this._afterAllInsertsHooks = []
     }
 
-    this._afterAllInsertsHooks.push(hook)
+    hookArr.forEach((hook) => {
+      hook.setDataInserter(this)
+      hook.init()
+    })
+
+    this._afterAllInsertsHooks.push(...hookArr)
   }
 
   async insertNewPublicDataToDb (prevProgress) {
@@ -191,7 +210,7 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  async insertNewDataToDb (auth, userProgress = 1) {
+  async insertNewDataToDb (auth, userProgress = 0) {
     if (
       typeof auth.apiKey !== 'string' ||
       typeof auth.apiSecret !== 'string'
@@ -210,10 +229,16 @@ class DataInserter extends EventEmitter {
     for (const [method, item] of methodCollMap) {
       const args = this._getMethodArgMap(method, auth, 10000000, item.start)
 
-      await this._insertApiDataArrObjTypeToDb(args, method, item)
+      await this._insertApiDataArrObjTypeToDb(
+        { ...args, subAccountAuth: auth },
+        method,
+        item
+      )
 
       count += 1
-      progress = Math.round((count / size) * 100 * userProgress)
+      progress = Math.round(
+        (((count / size) * 100) / this._auth.size) + userProgress
+      )
 
       if (progress < 100) {
         await this.setProgress(progress)
@@ -654,6 +679,16 @@ class DataInserter extends EventEmitter {
     _args.params.notThrowError = true
     const currIterationArgs = cloneDeep(_args)
 
+    const { subUserId } = { ...model }
+    const hasNotSubUserField = (
+      !subUserId ||
+      typeof subUserId !== 'string'
+    )
+    const { subAccountAuth } = { ..._args }
+    const auth = isPublic || hasNotSubUserField
+      ? null
+      : { ...subAccountAuth }
+
     let count = 0
     let serialRequestsCount = 0
 
@@ -710,7 +745,7 @@ class DataInserter extends EventEmitter {
 
       await this.dao.insertElemsToDb(
         collName,
-        isPublic ? null : { ..._args.auth },
+        auth,
         normalizeApiData(res, model),
         { isReplacedIfExists: true }
       )
@@ -899,38 +934,46 @@ class DataInserter extends EventEmitter {
         collName,
         lists
       )
-      await this.dao.insertElemsToDbIfNotExists(
+      await this.dao.insertElemsToDb(
         collName,
         null,
-        normalizeApiData(elemsFromApi, model)
+        normalizeApiData(elemsFromApi, model),
+        { isReplacedIfExists: true }
       )
     }
   }
 
   _getMethodArgMap (
     method,
-    auth,
-    limit,
+    reqAuth,
+    reqLimit,
     start = 0,
     end = Date.now(),
     params
   ) {
-    const _limit = limit !== null
-      ? limit
+    const limit = reqLimit !== null
+      ? reqLimit
       : this._methodCollMap.get(method).maxLimit
 
+    const { apiKey = '', apiSecret = '', subUser } = { ...reqAuth }
+    const {
+      apiKey: subUserApiKey,
+      apiSecret: subUserApiSecret
+    } = { ...subUser }
+    const auth = (
+      subUserApiKey &&
+      typeof subUserApiKey === 'string' &&
+      subUserApiSecret &&
+      typeof subUserApiSecret === 'string'
+    )
+      ? { apiKey: subUserApiKey, apiSecret: subUserApiSecret }
+      : { apiKey, apiSecret }
+
     return {
-      auth: {
-        ...(auth && typeof auth === 'object'
-          ? auth
-          : {
-            apiKey: '',
-            apiSecret: ''
-          })
-      },
+      auth,
       params: {
         ...params,
-        limit: _limit,
+        limit,
         end,
         start
       }
@@ -1144,5 +1187,7 @@ decorate(inject(TYPES.TABLES_NAMES), DataInserter, 4)
 decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 5)
 decorate(inject(TYPES.CurrencyConverter), DataInserter, 6)
 decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
+decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 8)
+decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 
 module.exports = DataInserter

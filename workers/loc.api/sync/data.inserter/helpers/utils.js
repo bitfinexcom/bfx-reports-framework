@@ -5,6 +5,10 @@ const {
   isEmpty
 } = require('lodash')
 
+const {
+  isSubAccountApiKeys
+} = require('../../../helpers')
+
 const invertSort = (sortArr) => {
   return sortArr.map(item => {
     const _arr = [...item]
@@ -20,7 +24,11 @@ const filterMethodCollMap = (
   isPublic
 ) => {
   return new Map([...methodCollMap].filter(([key, schema]) => {
-    const _isPub = /^public:.*/i.test(schema.type)
+    const _isHidden = /^hidden:/i.test(schema.type)
+
+    if (_isHidden) return false
+
+    const _isPub = /^public:/i.test(schema.type)
 
     return schema.hasNewData && (isPublic ? _isPub : !_isPub)
   }))
@@ -79,15 +87,34 @@ const getAuthFromDb = async (dao) => {
       return auth
     }
 
-    users.forEach(user => {
-      auth.set(
-        user.apiKey,
-        {
-          apiKey: user.apiKey,
-          apiSecret: user.apiSecret
+    for (const user of users) {
+      const {
+        _id: masterUserId,
+        apiKey,
+        apiSecret
+      } = { ...user }
+
+      if (isSubAccountApiKeys(user)) {
+        const subUsers = await dao.getSubUsersByMasterUserApiKeys(user)
+
+        if (isEmpty(subUsers)) {
+          continue
         }
-      )
-    })
+
+        subUsers.forEach((subUser) => {
+          const { apiKey: subUserApiKey } = { ...subUser }
+
+          auth.set(
+            `${apiKey}-${subUserApiKey}`,
+            { masterUserId, apiKey, apiSecret, subUser }
+          )
+        })
+
+        continue
+      }
+
+      auth.set(apiKey, { apiKey, apiSecret, subUser: null })
+    }
 
     return auth
   } catch (err) {
