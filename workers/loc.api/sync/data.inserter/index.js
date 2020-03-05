@@ -305,7 +305,7 @@ class DataInserter extends EventEmitter {
       {
         filter: { confName },
         minPropName: 'start',
-        groupPropName: 'symbol'
+        groupPropName: ['symbol', 'timeframe']
       }
     )
 
@@ -315,7 +315,7 @@ class DataInserter extends EventEmitter {
 
     const params = name === this.ALLOWED_COLLS.CANDLES
       ? {
-        timeframe: this._candlesTimeframe,
+        // timeframe: this._candlesTimeframe,
         section: this._candlesSection,
         notThrowError: true,
         notCheckNextPage: true
@@ -325,7 +325,18 @@ class DataInserter extends EventEmitter {
         notCheckNextPage: true
       }
 
-    for (const { symbol, start } of publicСollsСonf) {
+    for (const confs of publicСollsСonf) {
+      const {
+        symbol,
+        start,
+        timeframe
+      } = confs
+      const timeframeParam = (
+        timeframe &&
+        typeof timeframe === 'string'
+      )
+        ? { timeframe }
+        : {}
       const args = this._getMethodArgMap(
         method,
         {},
@@ -334,10 +345,20 @@ class DataInserter extends EventEmitter {
         Date.now(),
         {
           ...params,
+          ...timeframeParam,
           symbol
         }
       )
-      const filter = { [symbolFieldName]: symbol }
+      const timeframeFilter = (
+        timeframe &&
+        typeof timeframe === 'string'
+      )
+        ? { _timeframe: timeframe }
+        : {}
+      const filter = {
+        ...timeframeFilter,
+        [symbolFieldName]: symbol
+      }
       const lastElemFromDb = await this.dao.getElemInCollBy(
         name,
         filter,
@@ -365,7 +386,8 @@ class DataInserter extends EventEmitter {
         this._pushConfigurablePublicDataStartConf(
           schema,
           symbol,
-          { currStart: start }
+          { currStart: start },
+          timeframe
         )
 
         continue
@@ -411,7 +433,8 @@ class DataInserter extends EventEmitter {
       this._pushConfigurablePublicDataStartConf(
         schema,
         symbol,
-        startConf
+        startConf,
+        timeframe
       )
     }
   }
@@ -419,7 +442,8 @@ class DataInserter extends EventEmitter {
   _pushConfigurablePublicDataStartConf (
     schema,
     symbol,
-    startConf = {}
+    startConf = {},
+    timeframe
   ) {
     const {
       baseStartFrom,
@@ -428,7 +452,13 @@ class DataInserter extends EventEmitter {
     } = { ...startConf }
 
     const currStartConfArr = schema.start
-      .find(([symb, conf]) => symb === symbol)
+      .find(([symb, conf, tFrame]) => (
+        symb === symbol &&
+        (
+          !timeframe ||
+          tFrame === timeframe
+        )
+      ))
 
     if (!Array.isArray(currStartConfArr)) {
       schema.start.push([
@@ -437,7 +467,8 @@ class DataInserter extends EventEmitter {
           baseStartFrom,
           baseStartTo,
           currStart
-        }
+        },
+        timeframe
       ])
 
       return
@@ -591,14 +622,14 @@ class DataInserter extends EventEmitter {
       name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
       name === this.ALLOWED_COLLS.CANDLES
     ) {
-      const addApiParams = name === this.ALLOWED_COLLS.CANDLES
-        ? {
-          timeframe: this._candlesTimeframe,
-          section: this._candlesSection
-        }
-        : {}
+      for (const [symbol, dates, timeframe] of start) {
+        const addApiParams = name === this.ALLOWED_COLLS.CANDLES
+          ? {
+            timeframe,
+            section: this._candlesSection
+          }
+          : {}
 
-      for (const [symbol, dates] of start) {
         await this._insertConfigurablePublicApiData(
           methodApi,
           schema,
@@ -1085,7 +1116,10 @@ class DataInserter extends EventEmitter {
         }
       }
 
-      const filter = { [symbFieldName]: symbol }
+      const filter = {
+        [symbFieldName]: symbol,
+        _timeframe: this._candlesTimeframe
+      }
       const lastElemFromDb = await this.dao.getElemInCollBy(
         schema.name,
         filter,
@@ -1126,7 +1160,8 @@ class DataInserter extends EventEmitter {
         this._pushConfigurablePublicDataStartConf(
           schema,
           symbol,
-          { currStart: start }
+          { currStart: start },
+          this._candlesTimeframe
         )
 
         continue
@@ -1172,7 +1207,8 @@ class DataInserter extends EventEmitter {
       this._pushConfigurablePublicDataStartConf(
         schema,
         symbol,
-        startConf
+        startConf,
+        this._candlesTimeframe
       )
     }
   }

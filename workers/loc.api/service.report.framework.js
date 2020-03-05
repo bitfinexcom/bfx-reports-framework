@@ -776,10 +776,24 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForCandlesApi')
 
+      const { params } = { ...args }
+      const {
+        section = 'hist',
+        timeframe = '1D'
+      } = { ...params }
+      const argsWithParamsByDefault = {
+        ...args,
+        params: {
+          ...params,
+          section,
+          timeframe
+        }
+      }
+
       const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
           'candlesConf',
-          args
+          argsWithParamsByDefault
         )
 
       if (isEmpty(confs)) {
@@ -787,7 +801,7 @@ class FrameworkReportService extends ReportService {
       }
 
       const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
+        .getArgs(confs, argsWithParamsByDefault)
 
       return this._dao.findInCollBy(
         '_getCandles',

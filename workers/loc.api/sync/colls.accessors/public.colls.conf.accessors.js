@@ -1,6 +1,6 @@
 'use strict'
 
-const { pick, isEmpty } = require('lodash')
+const { pick } = require('lodash')
 const {
   decorate,
   injectable,
@@ -16,6 +16,30 @@ class PublicСollsСonfAccessors {
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
+  }
+
+  isCandlesConfs (confName) {
+    return confName === 'candlesConf'
+  }
+
+  isUniqueConf (confName, confs, currConf) {
+    return confs.every((conf) => (
+      conf.symbol !== currConf.symbol ||
+      (
+        this.isCandlesConfs(confName) &&
+        conf.timeframe !== currConf.timeframe
+      )
+    ))
+  }
+
+  hasConf (confName, confs, currConf) {
+    return confs.some((conf) => (
+      conf.symbol === currConf.symbol &&
+      (
+        this.isCandlesConfs(confName) ||
+        conf.timeframe === currConf.timeframe
+      )
+    ))
   }
 
   async editPublicСollsСonf (confName, args) {
@@ -35,16 +59,20 @@ class PublicСollsСonfAccessors {
           confName,
           user_id: _id
         },
-        sort: [['symbol', 1]]
+        sort: [['symbol', 1], ['timeframe', 1]]
       }
     )
     const newData = data.reduce((accum, curr) => {
       if (
-        conf.every(item => item.symbol !== curr.symbol) &&
-        accum.every(item => item.symbol !== curr.symbol)
+        this.isUniqueConf(confName, conf, curr) &&
+        this.isUniqueConf(confName, accum, curr)
       ) {
+        const propNames = this.isCandlesConfs(confName)
+          ? ['symbol', 'start', 'timeframe']
+          : ['symbol', 'start']
+
         accum.push({
-          ...pick(curr, ['symbol', 'start']),
+          ...pick(curr, propNames),
           confName,
           user_id: _id
         })
@@ -52,20 +80,20 @@ class PublicСollsСonfAccessors {
 
       return accum
     }, [])
-    const removedSymbols = conf.reduce((accum, curr) => {
+    const removedIds = conf.reduce((accum, curr) => {
       if (
-        data.every(item => item.symbol !== curr.symbol) &&
-        accum.every(symbol => symbol !== curr.symbol)
+        this.isUniqueConf(confName, data, curr) &&
+        this.isUniqueConf(confName, accum, curr)
       ) {
-        accum.push(curr.symbol)
+        accum.push(curr._id)
       }
 
       return accum
     }, [])
     const updatedData = data.reduce((accum, curr) => {
       if (
-        conf.some(item => item.symbol === curr.symbol) &&
-        accum.every(item => item.symbol !== curr.symbol)
+        this.hasConf(confName, accum, curr) &&
+        this.isUniqueConf(confName, accum, curr)
       ) {
         accum.push({
           ...curr,
@@ -84,22 +112,26 @@ class PublicСollsСonfAccessors {
         newData
       )
     }
-    if (removedSymbols.length > 0) {
+    if (removedIds.length > 0) {
       await this.dao.removeElemsFromDb(
         this.TABLES_NAMES.PUBLIC_COLLS_CONF,
         args.auth,
         {
           confName,
           user_id: _id,
-          symbol: removedSymbols
+          _id: removedIds
         }
       )
     }
 
+    const filterPropNames = this.isCandlesConfs(confName)
+      ? ['symbol', 'timeframe']
+      : ['symbol']
+
     await this.dao.updateElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       updatedData,
-      ['confName', 'user_id', 'symbol'],
+      ['confName', 'user_id', ...filterPropNames],
       ['start']
     )
   }
@@ -107,23 +139,44 @@ class PublicСollsСonfAccessors {
   async getPublicСollsСonf (confName, args) {
     const { _id } = await this.dao.checkAuthInDb(args)
     const { params } = { ...args }
-    const { symbol } = { ...params }
+    const {
+      symbol,
+      timeframe
+    } = { ...params }
     const baseFilter = {
       confName,
       user_id: _id
     }
-    const filter = isEmpty(symbol)
-      ? baseFilter
-      : { ...baseFilter, symbol }
+
+    const symbolFilter = (
+      symbol &&
+      typeof symbol === 'string'
+    )
+      ? { symbol }
+      : {}
+    const timeframeFilter = (
+      timeframe &&
+      typeof timeframe === 'string'
+    )
+      ? { timeframe }
+      : {}
+    const filter = {
+      ...baseFilter,
+      ...symbolFilter,
+      ...timeframeFilter
+    }
 
     const conf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter,
-        sort: [['symbol', 1]]
+        sort: [['symbol', 1], ['timeframe', 1]]
       }
     )
-    const res = conf.map(item => pick(item, ['symbol', 'start']))
+    const res = conf.map(item => pick(
+      item,
+      ['symbol', 'start', 'timeframe']
+    ))
 
     return res
   }
@@ -158,6 +211,15 @@ class PublicСollsСonfAccessors {
     return confsSymbols
   }
 
+  getTimeframe (confs) {
+    const _confs = Array.isArray(confs)
+      ? confs
+      : [confs]
+    const confsTimeframe = _confs.map(({ timeframe }) => timeframe)
+
+    return confsTimeframe
+  }
+
   getArgs (confs, args) {
     const { params } = { ...args }
 
@@ -168,13 +230,24 @@ class PublicСollsСonfAccessors {
       confs,
       params.start
     )
+    const timeframe = this.getTimeframe(
+      confs
+    )
+
+    const timeframeParam = (
+      Array.isArray(timeframe) &&
+      timeframe.length > 0
+    )
+      ? { timeframe }
+      : {}
 
     return {
       ...args,
       params: {
         ...params,
         symbol,
-        start
+        start,
+        timeframeParam
       }
     }
   }
