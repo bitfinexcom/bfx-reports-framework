@@ -384,6 +384,7 @@ const _models = new Map([
       confName: 'VARCHAR(255)',
       symbol: 'VARCHAR(255)',
       start: 'BIGINT',
+      timeframe: 'VARCHAR(255)',
       user_id: 'INT NOT NULL',
       __constraints__: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -426,7 +427,8 @@ const _models = new Map([
       high: 'DECIMAL(22,12)',
       low: 'DECIMAL(22,12)',
       volume: 'DECIMAL(22,12)',
-      _symbol: 'VARCHAR(255)'
+      _symbol: 'VARCHAR(255)',
+      _timeframe: 'VARCHAR(255)'
     }
   ],
   [
