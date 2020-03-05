@@ -35,10 +35,6 @@ const paramsSchemaForCandlesApi = {
   ...cloneDeep(baseParamsSchemaForCandlesApi),
   properties: {
     ...cloneDeep(baseParamsSchemaForCandlesApi.properties),
-    timeframe: {
-      type: 'string',
-      enum: ['1D']
-    },
     section: {
       type: 'string',
       enum: ['hist']
@@ -46,6 +42,7 @@ const paramsSchemaForCandlesApi = {
   }
 }
 
+// TODO:
 const paramsSchemaForEditPublicСollsСonf = {
   type: ['array', 'object'],
   if: {
