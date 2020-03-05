@@ -953,14 +953,21 @@ class SqliteDAO extends DAO {
       limit = null
     } = {}
   ) {
+    const groupPropNames = Array.isArray(groupPropName)
+      ? groupPropName
+      : [groupPropName]
+    const filteredGroupPropNames = groupPropNames
+      .filter((propName) => (
+        propName &&
+        typeof propName === 'string'
+      ))
     const subQuery = (
       minPropName &&
       typeof minPropName === 'string' &&
-      groupPropName &&
-      typeof groupPropName === 'string'
+      filteredGroupPropNames.length > 0
     ) ? `${minPropName} = (SELECT MIN(${minPropName}) FROM ${collName} AS b
-        WHERE b.${groupPropName} = a.${groupPropName})
-        GROUP BY ${groupPropName}`
+        WHERE ${groupPropNames.map((name) => `b.${name} = a.${name}`).join(' AND ')})
+        GROUP BY ${groupPropNames.join(', ')}`
       : ''
 
     const _sort = getOrderQuery(sort)
