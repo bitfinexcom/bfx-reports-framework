@@ -55,9 +55,41 @@ const getParamsArrToTestTimeframeGrouping = (
     })
 }
 
+const getRServiceProxy = (
+  rService,
+  hooks = {}
+) => {
+  if (
+    !hooks ||
+    typeof hooks !== 'object' ||
+    Object.keys(hooks).length === 0
+  ) {
+    return rService
+  }
+
+  return new Proxy(rService, {
+    get (target, propKey) {
+      if (typeof hooks[propKey] === 'function') {
+        return new Proxy(target[propKey], {
+          apply (targetMethod, context, argsList) {
+            return Reflect.apply(hooks[propKey], context, ...arguments)
+          }
+        })
+      }
+
+      const val = Reflect.get(...arguments)
+
+      return typeof val === 'function'
+        ? val.bind(target)
+        : val
+    }
+  })
+}
+
 module.exports = {
   connToSQLite,
   closeSQLite,
   delay,
-  getParamsArrToTestTimeframeGrouping
+  getParamsArrToTestTimeframeGrouping,
+  getRServiceProxy
 }
