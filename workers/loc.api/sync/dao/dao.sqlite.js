@@ -206,7 +206,7 @@ class SqliteDAO extends DAO {
 
     const publicСollsСonfSql = getUniqueIndexQuery(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
-      ['symbol', 'user_id', 'confName']
+      ['symbol', 'user_id', 'confName', 'timeframe']
     )
 
     await this._run(publicСollsСonfSql)
