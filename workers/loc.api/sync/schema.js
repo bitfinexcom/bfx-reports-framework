@@ -751,7 +751,7 @@ const _methodCollMap = new Map([
       start: [],
       confName: 'candlesConf',
       type: 'public:insertable:array:objects',
-      fieldsOfUniqueIndex: ['_symbol', 'mts'],
+      fieldsOfUniqueIndex: ['_symbol', '_timeframe', 'mts'],
       model: { ...getModelsMap().get(TABLES_NAMES.CANDLES) }
     }
   ]
