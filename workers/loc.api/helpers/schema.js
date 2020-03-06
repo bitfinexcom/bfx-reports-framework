@@ -42,7 +42,6 @@ const paramsSchemaForCandlesApi = {
   }
 }
 
-// TODO:
 const paramsSchemaForEditPublicСollsСonf = {
   type: ['array', 'object'],
   if: {
@@ -64,6 +63,33 @@ const paramsSchemaForEditPublicСollsСonf = {
     properties: {
       symbol: { type: 'string' },
       start: { type: 'integer' }
+    }
+  }
+}
+
+const paramsSchemaForEditCandlesСonf = {
+  type: ['array', 'object'],
+  if: {
+    type: 'array'
+  },
+  then: {
+    minItems: 1,
+    items: {
+      type: 'object',
+      required: ['symbol', 'start', 'timeframe'],
+      properties: {
+        symbol: { type: 'string' },
+        start: { type: 'integer' },
+        timeframe: { type: 'string' }
+      }
+    }
+  },
+  else: {
+    required: ['symbol', 'start', 'timeframe'],
+    properties: {
+      symbol: { type: 'string' },
+      start: { type: 'integer' },
+      timeframe: { type: 'string' }
     }
   }
 }
@@ -350,6 +376,7 @@ const paramsSchemaForCandlesCsv = {
 
 module.exports = {
   paramsSchemaForEditPublicСollsСonf,
+  paramsSchemaForEditCandlesСonf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,

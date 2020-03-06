@@ -403,7 +403,7 @@ class FrameworkReportService extends ReportService {
 
   editCandlesConf (space, args = {}, cb) {
     return this._responder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+      checkParams(args, 'paramsSchemaForEditCandlesСonf')
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('candlesConf', args)
