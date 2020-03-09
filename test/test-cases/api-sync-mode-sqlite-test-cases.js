@@ -577,7 +577,8 @@ module.exports = (
         params: [
           {
             start,
-            symbol: 'tBTCUSD'
+            symbol: 'tBTCUSD',
+            timeframe: '12h'
           }
         ],
         id: 5
@@ -641,6 +642,7 @@ module.exports = (
 
     assert.isObject(res.body.result[0])
     assert.propertyVal(res.body.result[0], 'symbol', 'tBTCUSD')
+    assert.propertyVal(res.body.result[0], 'timeframe', '12h')
     assert.propertyVal(res.body.result[0], 'start', start)
   })
 
@@ -1624,7 +1626,8 @@ module.exports = (
         auth,
         method: 'getCandles',
         params: {
-          symbol: 'tBTCUSD'
+          symbol: 'tBTCUSD',
+          timeframe: '12h'
         },
         id: 5
       })
@@ -1648,6 +1651,32 @@ module.exports = (
       'low',
       'volume'
     ])
+  })
+
+  it('it should be returned empty array by the getCandles method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getCandles',
+        params: {
+          symbol: 'tBTCUSD',
+          timeframe: '1h'
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isBoolean(res.body.result.nextPage)
+    assert.lengthOf(res.body.result.res, 0)
   })
 
   it('it should be successfully performed by the getOrderTrades method', async function () {
@@ -2571,6 +2600,7 @@ module.exports = (
         method: 'getCandlesCsv',
         params: {
           symbol: 'tBTCUSD',
+          timeframe: '12h',
           end,
           start: (new Date()).setDate(date.getDate() - 27),
           limit: 1000,
