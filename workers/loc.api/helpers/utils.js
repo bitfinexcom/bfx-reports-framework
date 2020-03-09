@@ -20,7 +20,7 @@ const checkParamsAuth = (args) => {
 }
 
 const emptyRes = () => {
-  return { res: [], nexPage: false }
+  return { res: [], nextPage: false }
 }
 
 const tryParseJSON = (
