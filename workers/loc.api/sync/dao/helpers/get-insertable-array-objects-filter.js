@@ -1,6 +1,7 @@
 'use strict'
 
 const getSymbolFilter = require('./get-symbol-filter')
+const getTimeframeFilter = require('./get-timeframe-filter')
 
 const _isInsertableArrayObjects = (type = '') => {
   return /^((hidden:)|(public:)|())insertable:array:objects$/i
@@ -38,6 +39,7 @@ module.exports = (
     dateFieldName,
     model,
     symbolFieldName,
+    timeframeFieldName,
     additionalFilteringProps
   } = {},
   params = {}
@@ -50,9 +52,11 @@ module.exports = (
     start = 0,
     end = Date.now(),
     symbol,
+    timeframe,
     filter: reqFilter = {}
   } = { ...params }
   const symbFilter = getSymbolFilter(symbol, symbolFieldName)
+  const timeframeFilter = getTimeframeFilter(timeframe, timeframeFieldName)
   const fieldsFilters = getFieldsFilters(
     ['isMarginFundingPayment', 'isAffiliateRebate'],
     params,
@@ -65,6 +69,7 @@ module.exports = (
     end,
     ...additionalFilteringProps,
     ...symbFilter,
+    ...timeframeFilter,
     ...fieldsFilters
   }
 

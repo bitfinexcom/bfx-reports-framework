@@ -759,6 +759,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       dateFieldName: 'mts',
       symbolFieldName: '_symbol',
+      timeframeFieldName: '_timeframe',
       sort: [['mts', -1]],
       hasNewData: false,
       start: [],
