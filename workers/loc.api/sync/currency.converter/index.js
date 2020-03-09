@@ -41,6 +41,7 @@ class CurrencyConverter {
       PUBLIC_TRADES: 'publicTrades',
       CANDLES: 'candles'
     }
+    this.candlesTimeframe = '1D'
   }
 
   _isEmptyStr (str) {
@@ -499,7 +500,8 @@ class CurrencyConverter {
       : _start
     const {
       symbolFieldName,
-      dateFieldName
+      dateFieldName,
+      timeframeFieldName
     } = this.syncSchema.getMethodCollMap()
       .get('_getCandles')
     const candlesModel = this.syncSchema.getModelsMap()
@@ -515,6 +517,7 @@ class CurrencyConverter {
       this.ALLOWED_COLLS.CANDLES,
       {
         filter: {
+          $eq: { [timeframeFieldName]: this.candlesTimeframe },
           $lte: { [dateFieldName]: end },
           $gte: { [dateFieldName]: start },
           ...symbFilter
