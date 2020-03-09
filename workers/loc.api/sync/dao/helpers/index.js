@@ -24,6 +24,7 @@ const SQL_OPERATORS = require('./sql.operators')
 const getSymbolFilter = require('./get-symbol-filter')
 const getStatusMessagesFilter = require('./get-status-messages-filter')
 const getTableCreationQuery = require('./get-table-creation-query')
+const getTimeframeFilter = require('./get-timeframe-filter')
 
 module.exports = {
   mixUserIdToArrData,
@@ -45,5 +46,6 @@ module.exports = {
   getStatusMessagesFilter,
   getTableCreationQuery,
   pickUserData,
-  checkUserId
+  checkUserId,
+  getTimeframeFilter
 }
