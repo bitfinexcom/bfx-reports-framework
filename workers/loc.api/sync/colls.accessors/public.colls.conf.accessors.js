@@ -36,20 +36,16 @@ class PublicСollsСonfAccessors {
     return confs.some((conf) => (
       conf.symbol === currConf.symbol &&
       (
-        this.isCandlesConfs(confName) ||
+        !this.isCandlesConfs(confName) ||
         conf.timeframe === currConf.timeframe
       )
     ))
   }
 
   async editPublicСollsСonf (confName, args) {
-    const data = []
-
-    if (Array.isArray(args.params)) {
-      data.push(...args.params)
-    } else {
-      data.push(args.params)
-    }
+    const data = Array.isArray(args.params)
+      ? [...args.params]
+      : [args.params]
 
     const { _id } = await this.dao.checkAuthInDb(args)
     const conf = await this.dao.getElemsInCollBy(
@@ -92,7 +88,7 @@ class PublicСollsСonfAccessors {
     }, [])
     const updatedData = data.reduce((accum, curr) => {
       if (
-        this.hasConf(confName, accum, curr) &&
+        this.hasConf(confName, conf, curr) &&
         this.isUniqueConf(confName, accum, curr)
       ) {
         accum.push({
@@ -150,13 +146,19 @@ class PublicСollsСonfAccessors {
 
     const symbolFilter = (
       symbol &&
-      typeof symbol === 'string'
+      (
+        typeof symbol === 'string' ||
+        (Array.isArray(symbol) && symbol.length > 0)
+      )
     )
       ? { symbol }
       : {}
     const timeframeFilter = (
       timeframe &&
-      typeof timeframe === 'string'
+      (
+        typeof timeframe === 'string' ||
+        (Array.isArray(timeframe) && timeframe.length > 0)
+      )
     )
       ? { timeframe }
       : {}
@@ -173,10 +175,14 @@ class PublicСollsСonfAccessors {
         sort: [['symbol', 1], ['timeframe', 1]]
       }
     )
-    const res = conf.map(item => pick(
-      item,
-      ['symbol', 'start', 'timeframe']
-    ))
+    const res = conf.map((item) => {
+      const { confName } = { ...item }
+      const propNames = this.isCandlesConfs(confName)
+        ? ['symbol', 'start', 'timeframe']
+        : ['symbol', 'start']
+
+      return pick(item, propNames)
+    })
 
     return res
   }
