@@ -301,12 +301,18 @@ class DataInserter extends EventEmitter {
       name,
       sort
     } = { ...schema }
+    const groupResBy = (
+      timeframeFieldName &&
+      typeof timeframeFieldName === 'string'
+    )
+      ? ['symbol', 'timeframe']
+      : ['symbol']
     const publicСollsСonf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName },
-        minPropName: 'start',
-        groupPropName: ['symbol', 'timeframe']
+        subQuery: { sort: [['start', 1]] },
+        groupResBy
       }
     )
 
