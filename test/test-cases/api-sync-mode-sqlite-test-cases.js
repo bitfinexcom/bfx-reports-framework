@@ -646,6 +646,140 @@ module.exports = (
     assert.propertyVal(res.body.result[0], 'start', start)
   })
 
+  it('it should be successfully performed by the editAllPublicСollsСonfs method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'editAllPublicСollsСonfs',
+        params: {
+          publicTradesConf: [
+            {
+              start,
+              symbol: 'tBTCUSD'
+            },
+            {
+              start,
+              symbol: 'tETHUSD'
+            }
+          ],
+          tickersHistoryConf: [
+            {
+              start,
+              symbol: 'BTC'
+            },
+            {
+              start,
+              symbol: 'ETH'
+            }
+          ],
+          statusMessagesConf: [
+            {
+              start,
+              symbol: 'tBTCF0:USTF0'
+            }
+          ],
+          candlesConf: [
+            {
+              start,
+              symbol: 'tBTCUSD',
+              timeframe: '12h'
+            }
+          ]
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isOk(res.body.result)
+  })
+
+  it('it should be successfully performed by the getSyncProgress method', async function () {
+    this.timeout(60000)
+
+    while (true) {
+      const res = await agent
+        .post(`${basePath}/get-data`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getSyncProgress',
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isNumber(res.body.result)
+
+      if (
+        typeof res.body.result !== 'number' ||
+        res.body.result === 100
+      ) {
+        break
+      }
+
+      await delay()
+    }
+  })
+
+  it('it should be successfully performed by the getAllPublicСollsСonfs method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getAllPublicСollsСonfs',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+
+    assert.isArray(res.body.result.publicTradesConf)
+    assert.equal(res.body.result.publicTradesConf.length, 2)
+    assert.isObject(res.body.result.publicTradesConf[0])
+    assert.propertyVal(res.body.result.publicTradesConf[0], 'symbol', 'tBTCUSD')
+    assert.propertyVal(res.body.result.publicTradesConf[0], 'start', start)
+    assert.isObject(res.body.result.publicTradesConf[1])
+    assert.propertyVal(res.body.result.publicTradesConf[1], 'symbol', 'tETHUSD')
+    assert.propertyVal(res.body.result.publicTradesConf[1], 'start', start)
+
+    assert.isArray(res.body.result.tickersHistoryConf)
+    assert.equal(res.body.result.tickersHistoryConf.length, 2)
+    assert.isObject(res.body.result.tickersHistoryConf[0])
+    assert.propertyVal(res.body.result.tickersHistoryConf[0], 'symbol', 'BTC')
+    assert.propertyVal(res.body.result.tickersHistoryConf[0], 'start', start)
+    assert.isObject(res.body.result.tickersHistoryConf[1])
+    assert.propertyVal(res.body.result.tickersHistoryConf[1], 'symbol', 'ETH')
+    assert.propertyVal(res.body.result.tickersHistoryConf[1], 'start', start)
+
+    assert.isArray(res.body.result.statusMessagesConf)
+    assert.equal(res.body.result.statusMessagesConf.length, 1)
+    assert.isObject(res.body.result.statusMessagesConf[0])
+    assert.propertyVal(res.body.result.statusMessagesConf[0], 'symbol', 'tBTCF0:USTF0')
+    assert.propertyVal(res.body.result.statusMessagesConf[0], 'start', start)
+
+    assert.isArray(res.body.result.candlesConf)
+    assert.equal(res.body.result.candlesConf.length, 1)
+    assert.isObject(res.body.result.candlesConf[0])
+    assert.propertyVal(res.body.result.candlesConf[0], 'symbol', 'tBTCUSD')
+    assert.propertyVal(res.body.result.candlesConf[0], 'timeframe', '12h')
+    assert.propertyVal(res.body.result.candlesConf[0], 'start', start)
+  })
+
   it('it should be successfully performed by the syncNow method', async function () {
     this.timeout(60000)
 
