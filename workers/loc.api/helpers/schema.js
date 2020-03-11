@@ -42,6 +42,57 @@ const paramsSchemaForCandlesApi = {
   }
 }
 
+const paramsSchemaForEditAllPublicСollsСonfs = {
+  type: 'object',
+  properties: {
+    candlesConf: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['symbol', 'start', 'timeframe'],
+        properties: {
+          start: { type: 'integer' },
+          symbol: { type: 'string' },
+          timeframe: { type: 'string' }
+        }
+      }
+    },
+    statusMessagesConf: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['symbol', 'start'],
+        properties: {
+          start: { type: 'integer' },
+          symbol: { type: 'string' }
+        }
+      }
+    },
+    tickersHistoryConf: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['symbol', 'start'],
+        properties: {
+          start: { type: 'integer' },
+          symbol: { type: 'string' }
+        }
+      }
+    },
+    publicTradesConf: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['symbol', 'start'],
+        properties: {
+          start: { type: 'integer' },
+          symbol: { type: 'string' }
+        }
+      }
+    }
+  }
+}
+
 const paramsSchemaForEditPublicСollsСonf = {
   type: ['array', 'object'],
   if: {
@@ -375,6 +426,7 @@ const paramsSchemaForCandlesCsv = {
 }
 
 module.exports = {
+  paramsSchemaForEditAllPublicСollsСonfs,
   paramsSchemaForEditPublicСollsСonf,
   paramsSchemaForEditCandlesСonf,
   paramsSchemaForCreateSubAccount,
