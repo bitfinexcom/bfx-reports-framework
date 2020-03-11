@@ -413,6 +413,25 @@ class FrameworkReportService extends ReportService {
     }, 'editCandlesConf', cb)
   }
 
+  editAllPublicСollsСonfs (space, args = {}, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForEditAllPublicСollsСonfs')
+
+      const syncedColls = await this._publicСollsСonfAccessors
+        .editAllPublicСollsСonfs(args)
+      await this._sync.start(true, syncedColls)
+
+      return true
+    }, 'editCandlesConf', cb)
+  }
+
+  getAllPublicСollsСonfs (space, args = {}, cb) {
+    return this._responder(() => {
+      return this._publicСollsСonfAccessors
+        .getAllPublicСollsСonfs(args)
+    }, 'editCandlesConf', cb)
+  }
+
   /**
    * @override
    */

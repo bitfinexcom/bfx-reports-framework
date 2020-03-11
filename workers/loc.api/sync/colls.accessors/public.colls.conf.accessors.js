@@ -16,6 +16,13 @@ class PublicСollsСonfAccessors {
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
+
+    this.confNamesMap = new Map([
+      ['candlesConf', this.TABLES_NAMES.CANDLES],
+      ['statusMessagesConf', this.TABLES_NAMES.STATUS_MESSAGES],
+      ['tickersHistoryConf', this.TABLES_NAMES.TICKERS_HISTORY],
+      ['publicTradesConf', this.TABLES_NAMES.PUBLIC_TRADES]
+    ])
   }
 
   isCandlesConfs (confName) {
@@ -40,6 +47,33 @@ class PublicСollsСonfAccessors {
         conf.timeframe === currConf.timeframe
       )
     ))
+  }
+
+  async editAllPublicСollsСonfs (args) {
+    const { params } = { ...args }
+    const _params = pick(
+      params,
+      [...this.confNamesMap.keys()]
+    )
+    const paramsArr = Object.entries(_params)
+    const syncedColls = []
+
+    for (const [confName, params] of paramsArr) {
+      const _args = {
+        ...args,
+        params
+      }
+
+      await this.editPublicСollsСonf(confName, _args)
+
+      const syncedColl = this.confNamesMap.get(confName)
+
+      if (typeof syncedColl === 'string') {
+        syncedColls.push(syncedColl)
+      }
+    }
+
+    return syncedColls
   }
 
   async editPublicСollsСonf (confName, args) {
@@ -130,6 +164,19 @@ class PublicСollsСonfAccessors {
       ['confName', 'user_id', ...filterPropNames],
       ['start']
     )
+  }
+
+  async getAllPublicСollsСonfs (args) {
+    const { auth } = { ...args }
+    const _args = { auth }
+    const confNames = [...this.confNamesMap.keys()]
+    const res = {}
+
+    for (const confName of confNames) {
+      res[confName] = await this.getPublicСollsСonf(confName, _args)
+    }
+
+    return res
   }
 
   async getPublicСollsСonf (confName, args) {
