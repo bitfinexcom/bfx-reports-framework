@@ -296,16 +296,23 @@ class DataInserter extends EventEmitter {
     const {
       confName,
       symbolFieldName,
+      timeframeFieldName,
       dateFieldName,
       name,
       sort
     } = { ...schema }
+    const groupResBy = (
+      timeframeFieldName &&
+      typeof timeframeFieldName === 'string'
+    )
+      ? ['symbol', 'timeframe']
+      : ['symbol']
     const publicСollsСonf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName },
-        minPropName: 'start',
-        groupPropName: 'symbol'
+        subQuery: { sort: [['start', 1]] },
+        groupResBy
       }
     )
 
@@ -315,7 +322,6 @@ class DataInserter extends EventEmitter {
 
     const params = name === this.ALLOWED_COLLS.CANDLES
       ? {
-        timeframe: this._candlesTimeframe,
         section: this._candlesSection,
         notThrowError: true,
         notCheckNextPage: true
@@ -325,7 +331,18 @@ class DataInserter extends EventEmitter {
         notCheckNextPage: true
       }
 
-    for (const { symbol, start } of publicСollsСonf) {
+    for (const confs of publicСollsСonf) {
+      const {
+        symbol,
+        start,
+        timeframe
+      } = confs
+      const timeframeParam = (
+        timeframe &&
+        typeof timeframe === 'string'
+      )
+        ? { timeframe }
+        : {}
       const args = this._getMethodArgMap(
         method,
         {},
@@ -334,10 +351,22 @@ class DataInserter extends EventEmitter {
         Date.now(),
         {
           ...params,
+          ...timeframeParam,
           symbol
         }
       )
-      const filter = { [symbolFieldName]: symbol }
+      const timeframeFilter = (
+        timeframe &&
+        typeof timeframe === 'string' &&
+        timeframeFieldName &&
+        typeof timeframeFieldName === 'string'
+      )
+        ? { [timeframeFieldName]: timeframe }
+        : {}
+      const filter = {
+        ...timeframeFilter,
+        [symbolFieldName]: symbol
+      }
       const lastElemFromDb = await this.dao.getElemInCollBy(
         name,
         filter,
@@ -365,7 +394,8 @@ class DataInserter extends EventEmitter {
         this._pushConfigurablePublicDataStartConf(
           schema,
           symbol,
-          { currStart: start }
+          { currStart: start },
+          timeframe
         )
 
         continue
@@ -411,7 +441,8 @@ class DataInserter extends EventEmitter {
       this._pushConfigurablePublicDataStartConf(
         schema,
         symbol,
-        startConf
+        startConf,
+        timeframe
       )
     }
   }
@@ -419,7 +450,8 @@ class DataInserter extends EventEmitter {
   _pushConfigurablePublicDataStartConf (
     schema,
     symbol,
-    startConf = {}
+    startConf = {},
+    timeframe
   ) {
     const {
       baseStartFrom,
@@ -428,7 +460,13 @@ class DataInserter extends EventEmitter {
     } = { ...startConf }
 
     const currStartConfArr = schema.start
-      .find(([symb, conf]) => symb === symbol)
+      .find(([symb, conf, tFrame]) => (
+        symb === symbol &&
+        (
+          !timeframe ||
+          tFrame === timeframe
+        )
+      ))
 
     if (!Array.isArray(currStartConfArr)) {
       schema.start.push([
@@ -437,7 +475,8 @@ class DataInserter extends EventEmitter {
           baseStartFrom,
           baseStartTo,
           currStart
-        }
+        },
+        timeframe
       ])
 
       return
@@ -591,14 +630,14 @@ class DataInserter extends EventEmitter {
       name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
       name === this.ALLOWED_COLLS.CANDLES
     ) {
-      const addApiParams = name === this.ALLOWED_COLLS.CANDLES
-        ? {
-          timeframe: this._candlesTimeframe,
-          section: this._candlesSection
-        }
-        : {}
+      for (const [symbol, dates, timeframe] of start) {
+        const addApiParams = name === this.ALLOWED_COLLS.CANDLES
+          ? {
+            timeframe,
+            section: this._candlesSection
+          }
+          : {}
 
-      for (const [symbol, dates] of start) {
         await this._insertConfigurablePublicApiData(
           methodApi,
           schema,
@@ -988,7 +1027,14 @@ class DataInserter extends EventEmitter {
     method,
     schema
   ) {
-    const symbFieldName = schema.symbolFieldName
+    const {
+      symbolFieldName,
+      timeframeFieldName,
+      dateFieldName,
+      name,
+      sort
+    } = { ...schema }
+
     const lastElemLedgers = await this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       { $not: { currency: this.FOREX_SYMBS } },
@@ -1085,11 +1131,14 @@ class DataInserter extends EventEmitter {
         }
       }
 
-      const filter = { [symbFieldName]: symbol }
+      const filter = {
+        [symbolFieldName]: symbol,
+        [timeframeFieldName]: this._candlesTimeframe
+      }
       const lastElemFromDb = await this.dao.getElemInCollBy(
-        schema.name,
+        name,
         filter,
-        schema.sort
+        sort
       )
       const {
         res: lastElemFromApi
@@ -1102,9 +1151,9 @@ class DataInserter extends EventEmitter {
         isEmpty(lastElemFromApi) ||
         (
           Array.isArray(lastElemFromApi) &&
-          lastElemFromApi[0][symbFieldName] &&
-          typeof lastElemFromApi[0][symbFieldName] === 'string' &&
-          lastElemFromApi[0][symbFieldName] !== symbol
+          lastElemFromApi[0][symbolFieldName] &&
+          typeof lastElemFromApi[0][symbolFieldName] === 'string' &&
+          lastElemFromApi[0][symbolFieldName] !== symbol
         )
       ) {
         continue
@@ -1115,10 +1164,10 @@ class DataInserter extends EventEmitter {
         startElemFromApi[startElemFromApi.length - 1] &&
         typeof startElemFromApi[startElemFromApi.length - 1] === 'object' &&
         Number.isInteger(
-          startElemFromApi[startElemFromApi.length - 1][schema.dateFieldName]
+          startElemFromApi[startElemFromApi.length - 1][dateFieldName]
         )
       )
-        ? startElemFromApi[startElemFromApi.length - 1][schema.dateFieldName]
+        ? startElemFromApi[startElemFromApi.length - 1][dateFieldName]
         : _start
 
       if (isEmpty(lastElemFromDb)) {
@@ -1126,14 +1175,15 @@ class DataInserter extends EventEmitter {
         this._pushConfigurablePublicDataStartConf(
           schema,
           symbol,
-          { currStart: start }
+          { currStart: start },
+          this._candlesTimeframe
         )
 
         continue
       }
 
       const lastDateInDb = compareElemsDbAndApi(
-        schema.dateFieldName,
+        dateFieldName,
         lastElemFromDb,
         lastElemFromApi
       )
@@ -1150,29 +1200,30 @@ class DataInserter extends EventEmitter {
       }
 
       const firstElemFromDb = await this.dao.getElemInCollBy(
-        schema.name,
+        name,
         filter,
-        invertSort(schema.sort)
+        invertSort(sort)
       )
 
       if (!isEmpty(firstElemFromDb)) {
         const isChangedBaseStart = compareElemsDbAndApi(
-          schema.dateFieldName,
-          { [schema.dateFieldName]: start },
+          dateFieldName,
+          { [dateFieldName]: start },
           firstElemFromDb
         )
 
         if (isChangedBaseStart) {
           schema.hasNewData = true
           startConf.baseStartFrom = start
-          startConf.baseStartTo = firstElemFromDb[schema.dateFieldName] - 1
+          startConf.baseStartTo = firstElemFromDb[dateFieldName] - 1
         }
       }
 
       this._pushConfigurablePublicDataStartConf(
         schema,
         symbol,
-        startConf
+        startConf,
+        this._candlesTimeframe
       )
     }
   }

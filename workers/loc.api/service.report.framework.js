@@ -403,13 +403,32 @@ class FrameworkReportService extends ReportService {
 
   editCandlesConf (space, args = {}, cb) {
     return this._responder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+      checkParams(args, 'paramsSchemaForEditCandlesСonf')
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('candlesConf', args)
       await this._sync.start(true, this._ALLOWED_COLLS.CANDLES)
 
       return true
+    }, 'editCandlesConf', cb)
+  }
+
+  editAllPublicСollsСonfs (space, args = {}, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForEditAllPublicСollsСonfs')
+
+      const syncedColls = await this._publicСollsСonfAccessors
+        .editAllPublicСollsСonfs(args)
+      await this._sync.start(true, syncedColls)
+
+      return true
+    }, 'editCandlesConf', cb)
+  }
+
+  getAllPublicСollsСonfs (space, args = {}, cb) {
+    return this._responder(() => {
+      return this._publicСollsСonfAccessors
+        .getAllPublicСollsСonfs(args)
     }, 'editCandlesConf', cb)
   }
 
@@ -776,10 +795,24 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForCandlesApi')
 
+      const { params } = { ...args }
+      const {
+        section = 'hist',
+        timeframe = '1D'
+      } = { ...params }
+      const argsWithParamsByDefault = {
+        ...args,
+        params: {
+          ...params,
+          section,
+          timeframe
+        }
+      }
+
       const confs = await this._publicСollsСonfAccessors
         .getPublicСollsСonf(
           'candlesConf',
-          args
+          argsWithParamsByDefault
         )
 
       if (isEmpty(confs)) {
@@ -787,7 +820,7 @@ class FrameworkReportService extends ReportService {
       }
 
       const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
+        .getArgs(confs, argsWithParamsByDefault)
 
       return this._dao.findInCollBy(
         '_getCandles',

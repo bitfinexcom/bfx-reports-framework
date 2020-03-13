@@ -136,7 +136,10 @@ class ApiMiddlewareHandlerAfter {
     return addPropsToResIfExist(
       args,
       apiRes,
-      [{ from: 'symbol', to: '_symbol' }]
+      [
+        { from: 'symbol', to: '_symbol' },
+        { from: 'timeframe', to: '_timeframe' }
+      ]
     )
   }
 

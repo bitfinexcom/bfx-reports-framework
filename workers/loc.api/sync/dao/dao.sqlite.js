@@ -38,7 +38,7 @@ const {
   getWhereQuery,
   getLimitQuery,
   getOrderQuery,
-  getUniqueIndexQuery,
+  getIndexQuery,
   getInsertableArrayObjectsFilter,
   getStatusMessagesFilter,
   getProjectionQuery,
@@ -168,55 +168,38 @@ class SqliteDAO extends DAO {
 
   async _createIndexisIfNotExists () {
     for (const currItem of this._getMethodCollMap()) {
-      const item = currItem[1]
+      const syncSchema = currItem[1]
+      const {
+        name,
+        fieldsOfIndex,
+        fieldsOfUniqueIndex
+      } = syncSchema
 
-      if (item.type === 'insertable:array:objects') {
-        const fieldsArr = []
+      const indexSql = getIndexQuery(fieldsOfIndex, { name })
+      const uniqueIndexSql = getIndexQuery(
+        fieldsOfUniqueIndex,
+        { name, isUnique: true }
+      )
+      const sqlArr = [...indexSql, ...uniqueIndexSql]
 
-        if (
-          item.dateFieldName &&
-          typeof item.dateFieldName === 'string'
-        ) {
-          fieldsArr.push(item.dateFieldName)
-        }
-        if (
-          item.symbolFieldName &&
-          typeof item.symbolFieldName === 'string'
-        ) {
-          fieldsArr.push(item.symbolFieldName)
-        }
-        if (fieldsArr.length > 0) {
-          const sql = `CREATE INDEX IF NOT EXISTS
-          ${item.name}_${fieldsArr.join('_')}
-          ON ${item.name}(${fieldsArr.join(', ')})`
-
-          await this._run(sql)
-        }
-      }
-
-      if (
-        item.fieldsOfUniqueIndex &&
-        Array.isArray(item.fieldsOfUniqueIndex)
-      ) {
-        const sql = getUniqueIndexQuery(item.name, item.fieldsOfUniqueIndex)
-
+      for (const sql of sqlArr) {
         await this._run(sql)
       }
     }
 
-    const publicСollsСonfSql = getUniqueIndexQuery(
-      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
-      ['symbol', 'user_id', 'confName']
+    const publicСollsСonfSql = getIndexQuery(
+      ['symbol', 'user_id', 'confName', 'timeframe'],
+      { name: this.TABLES_NAMES.PUBLIC_COLLS_CONF, isUnique: true }
     )
-
-    await this._run(publicСollsСonfSql)
-
-    const userSql = getUniqueIndexQuery(
-      this.TABLES_NAMES.USERS,
-      ['apiKey', 'apiSecret']
+    const userSql = getIndexQuery(
+      ['apiKey', 'apiSecret'],
+      { name: this.TABLES_NAMES.USERS, isUnique: true }
     )
+    const sqlArr = [...publicСollsСonfSql, ...userSql]
 
-    await this._run(userSql)
+    for (const sql of sqlArr) {
+      await this._run(sql)
+    }
   }
 
   async _getUserByAuth (auth) {
@@ -944,8 +927,10 @@ class SqliteDAO extends DAO {
     {
       filter = {},
       sort = [],
-      minPropName = null,
-      groupPropName = null,
+      subQuery = {
+        sort: []
+      },
+      groupResBy = [],
       isDistinct = false,
       projection = [],
       exclude = [],
@@ -953,21 +938,13 @@ class SqliteDAO extends DAO {
       limit = null
     } = {}
   ) {
-    const subQuery = (
-      minPropName &&
-      typeof minPropName === 'string' &&
-      groupPropName &&
-      typeof groupPropName === 'string'
-    ) ? `${minPropName} = (SELECT MIN(${minPropName}) FROM ${collName} AS b
-        WHERE b.${groupPropName} = a.${groupPropName})
-        GROUP BY ${groupPropName}`
-      : ''
-
+    const group = getGroupQuery({ groupResBy })
+    const _subQuery = getSubQuery({ name: collName, subQuery })
     const _sort = getOrderQuery(sort)
     const {
       where,
       values
-    } = getWhereQuery(filter, true)
+    } = getWhereQuery(filter)
     const _projection = getProjectionQuery(
       projection,
       exclude,
@@ -979,8 +956,9 @@ class SqliteDAO extends DAO {
       limitVal
     } = getLimitQuery({ limit })
 
-    const sql = `SELECT ${distinct}${_projection} FROM ${collName} AS a
-      ${where || subQuery ? ' WHERE ' : ''}${where}${where && subQuery ? ' AND ' : ''}${subQuery}
+    const sql = `SELECT ${distinct}${_projection} FROM ${_subQuery}
+      ${where}
+      ${group}
       ${_sort}
       ${_limit}`
 

@@ -136,7 +136,7 @@ class BalanceHistory {
       : start
     return this.dao.findInCollBy(
       '_getCandles',
-      { params: { start: _start, end } },
+      { params: { start: _start, end, timeframe: '1D' } },
       {
         isPublic: true,
         schema: { maxLimit: null },
