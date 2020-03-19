@@ -26,7 +26,6 @@ const {
   checkParamsAuth,
   isEnotfoundError,
   isEaiAgainError,
-  emptyRes,
   collObjToArr,
   getAuthFromSubAccountAuth
 } = require('./helpers')
@@ -538,7 +537,7 @@ class FrameworkReportService extends ReportService {
         )
 
       if (isEmpty(confs)) {
-        return emptyRes()
+        return super.getTickersHistory(space, args)
       }
 
       const _args = this._publicСollsСonfAccessors
@@ -710,7 +709,7 @@ class FrameworkReportService extends ReportService {
         )
 
       if (isEmpty(confs)) {
-        return emptyRes()
+        return super.getPublicTrades(space, args)
       }
 
       const _args = this._publicСollsСonfAccessors
@@ -767,7 +766,7 @@ class FrameworkReportService extends ReportService {
         )
 
       if (isEmpty(confs)) {
-        return emptyRes()
+        return super.getStatusMessages(space, args)
       }
 
       const _args = this._publicСollsСonfAccessors
@@ -816,7 +815,7 @@ class FrameworkReportService extends ReportService {
         )
 
       if (isEmpty(confs)) {
-        return emptyRes()
+        return super.getCandles(space, args)
       }
 
       const _args = this._publicСollsСonfAccessors
