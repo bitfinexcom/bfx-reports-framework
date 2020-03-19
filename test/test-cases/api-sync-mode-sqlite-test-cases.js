@@ -1649,6 +1649,43 @@ module.exports = (
     ])
   })
 
+  it('it should be successfully performed by the getPublicTrades method, with not synced symbol', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/get-data`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getPublicTrades',
+        params: {
+          symbol: 'tEOSEUR',
+          start: 0,
+          end,
+          limit: 2
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isBoolean(res.body.result.nextPage)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'id',
+      'mts',
+      'amount',
+      'price'
+    ])
+  })
+
   it('it should be successfully performed by the getPublicTrades method, where the symbol is an array with length equal to one', async function () {
     this.timeout(5000)
 
@@ -1787,7 +1824,7 @@ module.exports = (
     ])
   })
 
-  it('it should be returned empty array by the getCandles method', async function () {
+  it('it should be returned from api_v2 by the getCandles method, with not synced symbol', async function () {
     this.timeout(5000)
 
     const res = await agent
@@ -1797,7 +1834,7 @@ module.exports = (
         auth,
         method: 'getCandles',
         params: {
-          symbol: 'tBTCUSD',
+          symbol: 'tEOSEUR',
           timeframe: '1h'
         },
         id: 5
@@ -1810,7 +1847,18 @@ module.exports = (
     assert.isObject(res.body.result)
     assert.isArray(res.body.result.res)
     assert.isBoolean(res.body.result.nextPage)
-    assert.lengthOf(res.body.result.res, 0)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'mts',
+      'open',
+      'close',
+      'high',
+      'low',
+      'volume'
+    ])
   })
 
   it('it should be successfully performed by the getOrderTrades method', async function () {
