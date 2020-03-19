@@ -19,10 +19,6 @@ const checkParamsAuth = (args) => {
   }
 }
 
-const emptyRes = () => {
-  return { res: [], nextPage: false }
-}
-
 const tryParseJSON = (
   jsonString,
   isNotObject
@@ -114,7 +110,6 @@ const mapObjBySchema = (obj, schema = {}) => {
 
 module.exports = {
   checkParamsAuth,
-  emptyRes,
   tryParseJSON,
   collObjToArr,
   refreshObj,
