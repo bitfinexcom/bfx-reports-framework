@@ -1,13 +1,27 @@
 'use strict'
 
-const { pick } = require('lodash')
+const {
+  pick,
+  omit,
+  isEmpty,
+  orderBy
+} = require('lodash')
 const {
   decorate,
   injectable,
   inject
 } = require('inversify')
+const {
+  prepareResponse
+} = require('bfx-report/workers/loc.api/helpers')
+const {
+  FindMethodError
+} = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../../di/types')
+const {
+  GetPublicDataError
+} = require('../../errors')
 
 class PublicСollsСonfAccessors {
   constructor (
@@ -303,6 +317,166 @@ class PublicСollsСonfAccessors {
         timeframeParam
       }
     }
+  }
+
+  _getArgsArrForNotSyncedParams (confs, args) {
+    const { params } = { ...args }
+    const {
+      symbol,
+      timeframe
+    } = { ...params }
+    const symbolArr = Array.isArray(symbol)
+      ? symbol
+      : [symbol]
+    const timeframeArr = Array.isArray(timeframe)
+      ? timeframe
+      : [timeframe]
+    const filteredSymbols = symbolArr.filter((symb) => {
+      return symb && typeof symb === 'string'
+    })
+    const filteredTimeframes = timeframeArr.filter((timeframe) => {
+      return timeframe && typeof timeframe === 'string'
+    })
+    const paramsArr = []
+
+    for (const symb of filteredSymbols) {
+      const conf = confs.find(({ symbol }) => {
+        return symbol === symb
+      })
+
+      if (
+        isEmpty(conf) &&
+        filteredTimeframes.length === 0
+      ) {
+        paramsArr.push({ symbol: symb })
+
+        continue
+      }
+
+      for (const tFrame of filteredTimeframes) {
+        const conf = confs.find(({ symbol, timeframe }) => {
+          return symbol === symb && timeframe === tFrame
+        })
+
+        if (isEmpty(conf)) {
+          paramsArr.push({ symbol: symb, timeframe: tFrame })
+        }
+      }
+    }
+
+    return paramsArr.map((_params) => {
+      return {
+        ...args,
+        params: {
+          ...omit(params, ['symbol', 'timeframe']),
+          ..._params
+        }
+      }
+    })
+  }
+
+  async getPublicData (
+    method,
+    args,
+    opts = {}
+  ) {
+    if (typeof method !== 'function') {
+      throw new FindMethodError()
+    }
+
+    const { params } = { ...args }
+    const {
+      limit = 10000,
+      notThrowError,
+      notCheckNextPage
+    } = { ...params }
+    const {
+      checkParamsFn,
+      datePropName,
+      confName,
+      collName
+    } = { ...opts }
+
+    if (
+      !datePropName ||
+      typeof datePropName !== 'string' ||
+      !confName ||
+      typeof confName !== 'string' ||
+      !collName ||
+      typeof collName !== 'string'
+    ) {
+      throw new GetPublicDataError()
+    }
+    if (typeof checkParamsFn === 'function') {
+      checkParamsFn(args)
+    }
+
+    const confs = await this.getPublicСollsСonf(
+      confName,
+      args
+    )
+
+    if (isEmpty(confs)) {
+      return method(args)
+    }
+
+    const _args = this.getArgs(confs, args)
+
+    const dbRes = await this.dao.findInCollBy(
+      collName,
+      _args,
+      {
+        isPrepareResponse: false,
+        isPublic: true
+      }
+    )
+    const _dbRes = Array.isArray(dbRes)
+      ? dbRes
+      : []
+
+    const argsArr = this._getArgsArrForNotSyncedParams(confs, args)
+    const promises = argsArr.map((args) => method(args))
+    const apiResArr = await Promise.all(promises)
+
+    const mergedRes = apiResArr.reduce((accum, curr) => {
+      const { res } = Array.isArray(curr)
+        ? { res: curr }
+        : { ...curr }
+
+      if (
+        Array.isArray(res) &&
+        res.length !== 0
+      ) {
+        accum.push(...res)
+      }
+
+      return accum
+    }, _dbRes)
+
+    const orderedRes = orderBy(mergedRes, [datePropName], ['desc'])
+    const limitedRes = Number.isInteger(limit)
+      ? orderedRes.slice(0, limit)
+      : orderedRes
+
+    const firstElem = { ...limitedRes[0] }
+    const mts = firstElem[datePropName]
+    const isNotContainedSameMts = limitedRes.some((item) => {
+      const _item = { ...item }
+      const _mts = _item[datePropName]
+
+      return _mts !== mts
+    })
+    const res = isNotContainedSameMts
+      ? limitedRes
+      : orderedRes
+
+    return prepareResponse(
+      res,
+      datePropName,
+      limit,
+      notThrowError,
+      notCheckNextPage
+    )
   }
 }
 
