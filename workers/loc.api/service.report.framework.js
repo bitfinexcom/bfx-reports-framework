@@ -691,27 +691,16 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
 
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'publicTradesConf',
-          args
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getPublicTrades(space, args),
+          args,
+          {
+            collName: '_getPublicTrades',
+            confName: 'publicTradesConf',
+            datePropName: 'mts'
+          }
         )
-
-      if (isEmpty(confs)) {
-        return super.getPublicTrades(space, args)
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
-
-      return this._dao.findInCollBy(
-        '_getPublicTrades',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
     }, 'getPublicTrades', cb)
   }
 
