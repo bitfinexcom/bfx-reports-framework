@@ -377,19 +377,13 @@ class PublicСollsСonfAccessors {
 
   async getPublicData (
     method,
-    args,
+    incomingArgs,
     opts = {}
   ) {
     if (typeof method !== 'function') {
       throw new FindMethodError()
     }
 
-    const { params } = { ...args }
-    const {
-      limit = 10000,
-      notThrowError,
-      notCheckNextPage
-    } = { ...params }
     const {
       checkParamsFn,
       datePropName,
@@ -408,8 +402,19 @@ class PublicСollsСonfAccessors {
       throw new GetPublicDataError()
     }
     if (typeof checkParamsFn === 'function') {
-      checkParamsFn(args)
+      checkParamsFn(incomingArgs)
     }
+
+    const { params: incomingParams } = { ...incomingArgs }
+    const params = this.isCandlesConfs(confName)
+      ? incomingParams
+      : omit(incomingParams, ['timeframe'])
+    const args = { ...incomingArgs, params }
+    const {
+      limit = 10000,
+      notThrowError,
+      notCheckNextPage
+    } = { ...params }
 
     const confs = await this.getPublicСollsСonf(
       confName,
