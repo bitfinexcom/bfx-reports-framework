@@ -522,41 +522,6 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
-  getTickersHistory (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getTickersHistory(space, args)
-      }
-
-      checkParams(args, 'paramsSchemaForApi', ['symbol'])
-
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'tickersHistoryConf',
-          args
-        )
-
-      if (isEmpty(confs)) {
-        return super.getTickersHistory(space, args)
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
-
-      return this._dao.findInCollBy(
-        '_getTickersHistory',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
-    }, 'getTickersHistory', cb)
-  }
-
-  /**
-   * @override
-   */
   getPositionsHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
@@ -689,6 +654,30 @@ class FrameworkReportService extends ReportService {
         { isPrepareResponse: true }
       )
     }, 'getFundingTrades', cb)
+  }
+
+  /**
+   * @override
+   */
+  getTickersHistory (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getTickersHistory(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForApi', ['symbol'])
+
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getTickersHistory(space, args),
+          args,
+          {
+            collName: '_getTickersHistory',
+            confName: 'tickersHistoryConf',
+            datePropName: 'mtsUpdate'
+          }
+        )
+    }, 'getTickersHistory', cb)
   }
 
   /**
