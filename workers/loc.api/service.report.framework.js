@@ -775,27 +775,16 @@ class FrameworkReportService extends ReportService {
         }
       }
 
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'candlesConf',
-          argsWithParamsByDefault
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getCandles(space, args),
+          argsWithParamsByDefault,
+          {
+            collName: '_getCandles',
+            confName: 'candlesConf',
+            datePropName: 'mts'
+          }
         )
-
-      if (isEmpty(confs)) {
-        return super.getCandles(space, args)
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, argsWithParamsByDefault)
-
-      return this._dao.findInCollBy(
-        '_getCandles',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
     }, 'getCandles', cb)
   }
 
