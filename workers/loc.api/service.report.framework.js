@@ -737,27 +737,16 @@ class FrameworkReportService extends ReportService {
         }
       }
 
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'statusMessagesConf',
-          preparedArgs
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getStatusMessages(space, args),
+          preparedArgs,
+          {
+            collName: '_getStatusMessages',
+            confName: 'statusMessagesConf',
+            datePropName: 'timestamp'
+          }
         )
-
-      if (isEmpty(confs)) {
-        return super.getStatusMessages(space, args)
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, preparedArgs)
-
-      return this._dao.findInCollBy(
-        '_getStatusMessages',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
     }, 'getStatusMessages', cb)
   }
 
