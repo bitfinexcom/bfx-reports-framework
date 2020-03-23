@@ -74,6 +74,7 @@ const {
   dbMigratorFactory,
   dataInserterFactory
 } = require('./factories')
+const Authenticator = require('../sync/authenticator')
 
 decorate(injectable(), EventEmitter)
 
@@ -106,7 +107,8 @@ module.exports = ({
           ['_performingLoan', TYPES.PerformingLoan],
           ['_subAccountApiData', TYPES.SubAccountApiData],
           ['_positionsAudit', TYPES.PositionsAudit],
-          ['_orderTrades', TYPES.OrderTrades]
+          ['_orderTrades', TYPES.OrderTrades],
+          ['_authenticator', TYPES.Authenticator]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -132,6 +134,9 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SubAccount)
       .to(SubAccount)
+    bind(TYPES.Authenticator)
+      .to(Authenticator)
+      .inSingletonScope()
     bind(TYPES.SyncSchema).toConstantValue(
       syncSchema
     )
