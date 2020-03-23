@@ -131,6 +131,12 @@ class DatePropNameError extends BaseError {
   }
 }
 
+class GetPublicDataError extends BaseError {
+  constructor (message = 'ERR_GETTING_PUBLIC_DATA_HAS_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -153,5 +159,6 @@ module.exports = {
   SubAccountCreatingError,
   SubAccountRemovingError,
   SubAccountLedgersBalancesRecalcError,
-  DatePropNameError
+  DatePropNameError,
+  GetPublicDataError
 }

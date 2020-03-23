@@ -26,7 +26,6 @@ const {
   checkParamsAuth,
   isEnotfoundError,
   isEaiAgainError,
-  emptyRes,
   collObjToArr,
   getAuthFromSubAccountAuth
 } = require('./helpers')
@@ -523,41 +522,6 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
-  getTickersHistory (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        return super.getTickersHistory(space, args)
-      }
-
-      checkParams(args, 'paramsSchemaForApi', ['symbol'])
-
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'tickersHistoryConf',
-          args
-        )
-
-      if (isEmpty(confs)) {
-        return emptyRes()
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
-
-      return this._dao.findInCollBy(
-        '_getTickersHistory',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
-    }, 'getTickersHistory', cb)
-  }
-
-  /**
-   * @override
-   */
   getPositionsHistory (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
@@ -695,6 +659,30 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getTickersHistory (space, args, cb) {
+    return this._responder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getTickersHistory(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForApi', ['symbol'])
+
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getTickersHistory(space, args),
+          args,
+          {
+            collName: '_getTickersHistory',
+            confName: 'tickersHistoryConf',
+            datePropName: 'mtsUpdate'
+          }
+        )
+    }, 'getTickersHistory', cb)
+  }
+
+  /**
+   * @override
+   */
   getPublicTrades (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
@@ -703,27 +691,16 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
 
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'publicTradesConf',
-          args
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getPublicTrades(space, args),
+          args,
+          {
+            collName: '_getPublicTrades',
+            confName: 'publicTradesConf',
+            datePropName: 'mts'
+          }
         )
-
-      if (isEmpty(confs)) {
-        return emptyRes()
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, args)
-
-      return this._dao.findInCollBy(
-        '_getPublicTrades',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
     }, 'getPublicTrades', cb)
   }
 
@@ -760,27 +737,16 @@ class FrameworkReportService extends ReportService {
         }
       }
 
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'statusMessagesConf',
-          preparedArgs
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getStatusMessages(space, args),
+          preparedArgs,
+          {
+            collName: '_getStatusMessages',
+            confName: 'statusMessagesConf',
+            datePropName: 'timestamp'
+          }
         )
-
-      if (isEmpty(confs)) {
-        return emptyRes()
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, preparedArgs)
-
-      return this._dao.findInCollBy(
-        '_getStatusMessages',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
     }, 'getStatusMessages', cb)
   }
 
@@ -809,27 +775,16 @@ class FrameworkReportService extends ReportService {
         }
       }
 
-      const confs = await this._publicСollsСonfAccessors
-        .getPublicСollsСonf(
-          'candlesConf',
-          argsWithParamsByDefault
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getCandles(space, args),
+          argsWithParamsByDefault,
+          {
+            collName: '_getCandles',
+            confName: 'candlesConf',
+            datePropName: 'mts'
+          }
         )
-
-      if (isEmpty(confs)) {
-        return emptyRes()
-      }
-
-      const _args = this._publicСollsСonfAccessors
-        .getArgs(confs, argsWithParamsByDefault)
-
-      return this._dao.findInCollBy(
-        '_getCandles',
-        _args,
-        {
-          isPrepareResponse: true,
-          isPublic: true
-        }
-      )
     }, 'getCandles', cb)
   }
 

@@ -3,7 +3,6 @@
 const checkParams = require('./check-params')
 const {
   checkParamsAuth,
-  emptyRes,
   tryParseJSON,
   collObjToArr,
   refreshObj,
@@ -23,7 +22,6 @@ const {
 module.exports = {
   checkParams,
   checkParamsAuth,
-  emptyRes,
   tryParseJSON,
   collObjToArr,
   refreshObj,
