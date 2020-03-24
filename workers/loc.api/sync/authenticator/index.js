@@ -129,8 +129,10 @@ class Authenticator {
   }
 
   async encrypt (decryptedStr, password) {
-    const key = await this.scrypt(password, this.secretKey)
-    const iv = await randomBytes(16)
+    const [key, iv] = await Promise.all([
+      this.scrypt(password, this.secretKey),
+      randomBytes(16)
+    ])
     const cipher = crypto.createCipheriv(this.algorithm, key, iv)
 
     const _encrypted = cipher.update(decryptedStr, 'utf8', 'hex')
