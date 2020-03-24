@@ -2,6 +2,7 @@
 
 const crypto = require('crypto')
 const { promisify } = require('util')
+const jwt = require('jsonwebtoken')
 const {
   decorate,
   injectable,
@@ -12,9 +13,11 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const TYPES = require('../di/types')
+const { serializeVal } = require('../dao/helpers')
 
 const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)
+const jwtSign = promisify(jwt.sign)
 
 class Authenticator {
   constructor (
@@ -38,6 +41,87 @@ class Authenticator {
      * It may only work for one grenache worker instance
      */
     this.usersMap = new Map()
+  }
+
+  /**
+   * TODO:
+   * It creates user entry
+   *
+   * @return { Promise<object> }
+   * Return an object { jsonWebToken, email }
+   * where jsonWebToken payload is
+   * an object { _id, email, encryptedPassword }
+   */
+  async signUp (args, params) {
+    const { auth } = { ...args }
+    const { apiKey, apiSecret, password } = { ...auth }
+    const {
+      active = true,
+      isDataFromDb = true
+    } = { ...params }
+
+    if (
+      !apiKey ||
+      typeof apiKey !== 'string' ||
+      !apiSecret ||
+      typeof apiSecret !== 'string' ||
+      !password ||
+      typeof password !== 'string'
+    ) {
+      throw new AuthError()
+    }
+
+    const {
+      email,
+      timezone,
+      username,
+      id
+    } = await this.rService._checkAuthInApi(args)
+
+    const [
+      encryptedApiKey,
+      encryptedApiSecret,
+      encryptedPassword
+    ] = await Promise.all([
+      this.encrypt(apiKey, password),
+      this.encrypt(apiSecret, password),
+      this.encrypt(password, this.secretKey)
+    ])
+
+    const { _id } = await this.createUser({
+      email,
+      timezone,
+      username,
+      id,
+      apiKey: encryptedApiKey,
+      apiSecret: encryptedApiSecret,
+      active: serializeVal(active),
+      isDataFromDb: serializeVal(isDataFromDb)
+    })
+
+    const payload = { _id, email, encryptedPassword }
+    const jwt = await this.generateJWT(payload)
+
+    this.setUserIntoSession({ _id, email, jwt })
+
+    return { email, jwt }
+  }
+
+  // TODO:
+  async createUser (data) {}
+
+  setUserIntoSession (data) {
+    const { _id, email, jwt } = { ...data }
+
+    this.usersMap.set([_id, { email, jwt }])
+  }
+
+  getUserFromSessionById (id) {
+    return this.usersMap.get(id)
+  }
+
+  async generateJWT (payload) {
+    return jwtSign(payload, this.secretKey, { algorithm: 'HS256' })
   }
 
   scrypt (secret, salt) {
