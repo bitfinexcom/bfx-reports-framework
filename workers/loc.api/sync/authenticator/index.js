@@ -55,6 +55,37 @@ class Authenticator {
 
     return `${iv.toString('hex')}.${encrypted}.${tag.toString('hex')}`
   }
+
+  async decrypt (encryptedStr, password) {
+    const [str, strIV, strTag] = encryptedStr.split('.')
+
+    if (
+      !str ||
+      typeof str !== 'string' ||
+      !strIV ||
+      typeof strIV !== 'string' ||
+      !strTag ||
+      typeof strTag !== 'string'
+    ) {
+      throw new AuthError()
+    }
+
+    const key = await this.scrypt(password, this.secretKey)
+    const iv = Buffer.from(strIV, 'hex')
+    const tag = Buffer.from(strTag, 'hex')
+    const decipher = crypto
+      .createDecipheriv(this.algorithm, key, iv)
+      .setAuthTag(tag)
+    const _decrypted = decipher.update(str, 'hex', 'utf8')
+
+    try {
+      const decrypted = _decrypted + decipher.final('utf8')
+
+      return decrypted
+    } catch (err) {
+      throw new AuthError()
+    }
+  }
 }
 
 decorate(injectable(), Authenticator)
