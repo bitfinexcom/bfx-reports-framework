@@ -52,7 +52,8 @@ const _models = new Map([
       active: 'INT',
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
-      username: 'VARCHAR(255)'
+      username: 'VARCHAR(255)',
+      passwordHash: 'VARCHAR(255)' // TODO: need to add migration
     }
   ],
   [
