@@ -686,6 +686,33 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
+  async getUser (
+    data,
+    sort = ['_id']
+  ) {
+    const { isNotSubAccount } = { ...data }
+    const filter = omit(data, ['isNotSubAccount'])
+    const {
+      where,
+      values
+    } = getWhereQuery(filter, isNotSubAccount)
+    const andOp = where ? ' AND ' : ''
+    const _where = isNotSubAccount
+      ? `WHERE sa.subUserId IS NOT NULL${andOp}${where}`
+      : where
+    const _sort = getOrderQuery(sort)
+
+    const sql = `SELECT u.* FROM ${this.TABLES_NAMES.USERS} AS u
+      LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa ON u._id = sa.masterUserId
+      ${_where}
+      ${_sort}`
+
+    return this._get(sql, values)
+  }
+
+  /**
+   * @override
+   */
   async getSubUsersByMasterUserApiKeys (
     masterUser,
     sort = ['_id']
