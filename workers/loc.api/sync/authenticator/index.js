@@ -14,9 +14,11 @@ const {
 
 const TYPES = require('../di/types')
 const { serializeVal } = require('../dao/helpers')
+const { isSubAccountApiKeys } = require('../../helpers')
 
 const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)
+const pbkdf2 = promisify(crypto.pbkdf2)
 const jwtSign = promisify(jwt.sign)
 
 class Authenticator {
@@ -35,7 +37,9 @@ class Authenticator {
     this.secretKey = secretKey && typeof secretKey === 'string'
       ? secretKey
       : 'secretKey'
-    this.algorithm = 'aes-256-gcm'
+    this.cryptoAlgorithm = 'aes-256-gcm'
+    this.jwtAlgorithm = 'HS256'
+    this.passwordAlgorithm = 'sha512'
 
     /**
      * It may only work for one grenache worker instance
@@ -44,7 +48,6 @@ class Authenticator {
   }
 
   /**
-   * TODO:
    * It creates user entry
    *
    * @return { Promise<object> }
@@ -66,7 +69,8 @@ class Authenticator {
       !apiSecret ||
       typeof apiSecret !== 'string' ||
       !password ||
-      typeof password !== 'string'
+      typeof password !== 'string' ||
+      isSubAccountApiKeys({ apiKey, apiSecret })
     ) {
       throw new AuthError()
     }
@@ -77,15 +81,32 @@ class Authenticator {
       username,
       id
     } = await this.rService._checkAuthInApi(args)
+    const userFromDb = await this.getUser(
+      { email, isNotSubAccount: true }
+    )
+
+    if (
+      !email ||
+      typeof email !== 'string' ||
+      (
+        userFromDb &&
+        typeof userFromDb === 'object' &&
+        Number.isInteger(userFromDb._id)
+      )
+    ) {
+      throw new AuthError()
+    }
 
     const [
       encryptedApiKey,
       encryptedApiSecret,
-      encryptedPassword
+      encryptedPassword,
+      passwordHash
     ] = await Promise.all([
       this.encrypt(apiKey, password),
       this.encrypt(apiSecret, password),
-      this.encrypt(password, this.secretKey)
+      this.encrypt(password, this.secretKey),
+      this.hashPassword(password)
     ])
 
     const { _id } = await this.createUser({
@@ -96,7 +117,8 @@ class Authenticator {
       apiKey: encryptedApiKey,
       apiSecret: encryptedApiSecret,
       active: serializeVal(active),
-      isDataFromDb: serializeVal(isDataFromDb)
+      isDataFromDb: serializeVal(isDataFromDb),
+      passwordHash
     })
 
     const payload = { _id, email, encryptedPassword }
@@ -107,8 +129,73 @@ class Authenticator {
     return { email, jwt }
   }
 
+  async getUser (data) {
+    const {
+      password,
+      email,
+      isNotSubAccount
+    } = { ...data }
+    const user = await this.dao.getUser({
+      email,
+      isNotSubAccount
+    })
+
+    if (
+      password &&
+      typeof password === 'string' &&
+      user &&
+      typeof user === 'object'
+    ) {
+      return this.decryptApiKeys(password, user)
+    }
+
+    return user
+  }
+
+  async decryptApiKeys (password, user) {
+    const { apiKey, apiSecret } = { ...user }
+
+    const [
+      decryptedApiKey,
+      decryptedApiSecret
+    ] = await Promise.all([
+      this.decrypt(apiKey, password),
+      this.decrypt(apiSecret, password)
+    ])
+
+    return {
+      ...user,
+      apiKey: decryptedApiKey,
+      apiSecret: decryptedApiSecret
+    }
+  }
+
+  async createUser (data) {
+    const { email } = { ...data }
+
+    await this.dao.insertElemsToDb(
+      this.TABLES_NAMES.USERS,
+      null,
+      [data]
+    )
+    const user = await this.getUser({
+      email,
+      isNotSubAccount: true
+    })
+
+    if (
+      !user ||
+      typeof user !== 'object' ||
+      !Number.isInteger(user._id)
+    ) {
+      throw new AuthError()
+    }
+
+    return user
+  }
+
   // TODO:
-  async createUser (data) {}
+  async hashPassword (password, salt) {}
 
   setUserIntoSession (data) {
     const { _id, email, jwt } = { ...data }
@@ -121,7 +208,11 @@ class Authenticator {
   }
 
   async generateJWT (payload) {
-    return jwtSign(payload, this.secretKey, { algorithm: 'HS256' })
+    return jwtSign(
+      payload,
+      this.secretKey,
+      { algorithm: this.jwtAlgorithm }
+    )
   }
 
   scrypt (secret, salt) {
@@ -133,13 +224,20 @@ class Authenticator {
       this.scrypt(password, this.secretKey),
       randomBytes(16)
     ])
-    const cipher = crypto.createCipheriv(this.algorithm, key, iv)
+    const cipher = crypto
+      .createCipheriv(this.cryptoAlgorithm, key, iv)
 
     const _encrypted = cipher.update(decryptedStr, 'utf8', 'hex')
     const encrypted = _encrypted + cipher.final('hex')
     const tag = cipher.getAuthTag()
 
-    return `${iv.toString('hex')}.${encrypted}.${tag.toString('hex')}`
+    const combined = [
+      iv.toString('hex'),
+      encrypted,
+      tag.toString('hex')
+    ].join('.')
+
+    return combined
   }
 
   async decrypt (encryptedStr, password) {
@@ -160,7 +258,7 @@ class Authenticator {
     const iv = Buffer.from(strIV, 'hex')
     const tag = Buffer.from(strTag, 'hex')
     const decipher = crypto
-      .createDecipheriv(this.algorithm, key, iv)
+      .createDecipheriv(this.cryptoAlgorithm, key, iv)
       .setAuthTag(tag)
     const _decrypted = decipher.update(str, 'hex', 'utf8')
 
