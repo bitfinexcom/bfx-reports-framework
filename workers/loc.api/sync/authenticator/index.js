@@ -217,6 +217,26 @@ class Authenticator {
     return combinedHash
   }
 
+  async verifyPassword (password, conbinedHash) {
+    const [strSalt, strHash] = conbinedHash.split('.')
+
+    if (
+      !strSalt ||
+      typeof strSalt !== 'string' ||
+      !strHash ||
+      typeof strHash !== 'string'
+    ) {
+      throw new AuthError()
+    }
+
+    const salt = Buffer.from(strSalt, 'hex')
+    const generatedHash = await this.hashPassword(password, salt)
+
+    if (generatedHash !== conbinedHash) {
+      throw new AuthError()
+    }
+  }
+
   setUserIntoSession (data) {
     const { _id, email, jwt } = { ...data }
 
