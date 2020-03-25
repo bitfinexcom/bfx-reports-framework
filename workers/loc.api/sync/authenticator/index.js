@@ -194,8 +194,28 @@ class Authenticator {
     return user
   }
 
-  // TODO:
-  async hashPassword (password, salt) {}
+  async hashPassword (password, salt) {
+    const iterations = 10000
+    const hashBytes = 32
+
+    const generatedSalt = salt && typeof salt === 'string'
+      ? salt
+      : await randomBytes(128)
+    const hash = await pbkdf2(
+      password,
+      generatedSalt,
+      iterations,
+      hashBytes,
+      this.passwordAlgorithm
+    )
+
+    const combinedHash = [
+      salt.toString('hex'),
+      hash.toString('hex')
+    ].join('.')
+
+    return combinedHash
+  }
 
   setUserIntoSession (data) {
     const { _id, email, jwt } = { ...data }
