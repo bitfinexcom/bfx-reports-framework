@@ -690,20 +690,37 @@ class SqliteDAO extends DAO {
     data,
     sort = ['_id']
   ) {
-    const { isNotSubAccount } = { ...data }
-    const filter = omit(data, ['isNotSubAccount'])
+    const userTableAlias = 'u'
+    const {
+      isNotSubAccount,
+      isSubAccount
+    } = { ...data }
+    const filter = omit(data, [
+      'isNotSubAccount',
+      'isSubAccount'
+    ])
     const {
       where,
       values
-    } = getWhereQuery(filter, isNotSubAccount)
-    const andOp = where ? ' AND ' : ''
-    const _where = isNotSubAccount
-      ? `WHERE sa.subUserId IS NOT NULL${andOp}${where}`
-      : where
+    } = getWhereQuery(filter, true, userTableAlias)
+    const isSubAccountQuery = isSubAccount
+      ? 'sa.subUserId IS NOT NULL'
+      : ''
+    const isNotSubAccountQuery = isNotSubAccount
+      ? 'sa.subUserId IS NULL'
+      : ''
+    const whereQueries = [
+      where,
+      isSubAccountQuery,
+      isNotSubAccountQuery
+    ].join(' AND ')
+    const _where = `WHERE ${whereQueries}`
     const _sort = getOrderQuery(sort)
 
-    const sql = `SELECT u.* FROM ${this.TABLES_NAMES.USERS} AS u
-      LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa ON u._id = sa.masterUserId
+    const sql = `SELECT ${userTableAlias}.*, sa.subUserId as isSubAccount
+      FROM ${this.TABLES_NAMES.USERS} AS u
+      LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
+        ON ${userTableAlias}._id = sa.masterUserId
       ${_where}
       ${_sort}`
 

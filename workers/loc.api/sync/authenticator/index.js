@@ -2,6 +2,7 @@
 
 const crypto = require('crypto')
 const { promisify } = require('util')
+const { omit } = require('lodash')
 const jwt = require('jsonwebtoken')
 const {
   decorate,
@@ -129,16 +130,11 @@ class Authenticator {
     return { email, jwt }
   }
 
-  async getUser (data) {
-    const {
-      password,
-      email,
-      isNotSubAccount
-    } = { ...data }
-    const user = await this.dao.getUser({
-      email,
-      isNotSubAccount
-    })
+  async getUser (filter) {
+    const { password } = { ...filter }
+    const _filter = omit(filter, ['password'])
+
+    const user = await this.dao.getUser(_filter)
 
     if (
       password &&
@@ -150,6 +146,15 @@ class Authenticator {
     }
 
     return user
+  }
+
+  /**
+   * TODO:
+   */
+  getUsers (args) {
+    return [
+      { email: 'fake@email.com', isSubAccount: false }
+    ]
   }
 
   async decryptApiKeys (password, user) {
