@@ -129,14 +129,14 @@ class SqliteDAO extends DAO {
           await this._run('BEGIN TRANSACTION')
           isTransBegun = true
 
-          await asyncExecQuery()
+          const res = await asyncExecQuery()
           await this._commit()
 
           if (typeof afterTransFn === 'function') {
             await afterTransFn()
           }
 
-          resolve()
+          resolve(res)
         } catch (err) {
           try {
             if (isTransBegun) {
@@ -686,9 +686,31 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async getUser (
+  getUser (
+    filter,
+    {
+      isFilledSubUsers,
+      sort = ['_id']
+    } = {}
+  ) {
+    return this._getUsers(
+      filter,
+      {
+        isFoundOne: true,
+        isFilledSubUsers,
+        sort
+      }
+    )
+  }
+
+  async _getUsers (
     data,
-    sort = ['_id']
+    {
+      isFoundOne,
+      isFilledSubUsers,
+      sort = ['_id'],
+      limit
+    } = {}
   ) {
     const userTableAlias = 'u'
     const {
@@ -699,6 +721,10 @@ class SqliteDAO extends DAO {
       'isNotSubAccount',
       'isSubAccount'
     ])
+    const {
+      limit: _limit,
+      limitVal
+    } = getLimitQuery({ limit: isFoundOne ? null : limit })
     const {
       where,
       values
@@ -722,9 +748,68 @@ class SqliteDAO extends DAO {
       LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
         ON ${userTableAlias}._id = sa.masterUserId
       ${_where}
-      ${_sort}`
+      ${_sort}
+      ${_limit}`
 
-    return this._get(sql, values)
+    return this._beginTrans(async () => {
+      const _res = isFoundOne
+        ? await this._get(sql, { ...values, ...limitVal })
+        : await this._all(sql, { ...values, ...limitVal })
+
+      if (
+        !_res &&
+        typeof _res !== 'object'
+      ) {
+        return _res
+      }
+
+      const usersFilledSubUsers = isFilledSubUsers
+        ? await this._fillSubUsers(_res)
+        : _res
+
+      return usersFilledSubUsers
+    })
+  }
+
+  async _fillSubUsers (users) {
+    const isArray = Array.isArray(users)
+    const _users = isArray
+      ? users
+      : [users]
+    const usersIds = _users
+      .filter((user) => {
+        const { _id } = { ...user }
+
+        return Number.isInteger(_id)
+      })
+      .map(({ _id }) => _id)
+
+    if (usersIds.length === 0) {
+      return users
+    }
+
+    const _subUsers = await this.getSubUsersByMasterUser(
+      { $in: { _id: usersIds } }
+    )
+
+    const filledUsers = _users.map((user) => {
+      const { _id } = { ...user }
+      const subUsers = _subUsers.filter((subUser) => {
+        const { masterUserId } = { ...subUser }
+
+        return (
+          Number.isInteger(masterUserId) &&
+          masterUserId === _id
+        )
+      })
+
+      return {
+        ...user,
+        subUsers
+      }
+    })
+
+    return isArray ? filledUsers : filledUsers[0]
   }
 
   /**
@@ -741,7 +826,8 @@ class SqliteDAO extends DAO {
     } = getWhereQuery(masterUser, false, tableAlias)
     const _sort = getOrderQuery(sort)
 
-    const sql = `SELECT su.* FROM ${this.TABLES_NAMES.USERS} AS su
+    const sql = `SELECT su.*, ${tableAlias}._id AS masterUserId
+      FROM ${this.TABLES_NAMES.USERS} AS su
       INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
         ON su._id = sa.subUserId
       INNER JOIN ${this.TABLES_NAMES.USERS} AS ${tableAlias}

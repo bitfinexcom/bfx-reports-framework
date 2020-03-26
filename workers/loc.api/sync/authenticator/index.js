@@ -130,11 +130,12 @@ class Authenticator {
     return { email, jwt }
   }
 
-  async getUser (filter) {
+  // TODO: Need to decrypt apiKeys in filled sub-users
+  async getUser (filter, params) {
     const { password } = { ...filter }
     const _filter = omit(filter, ['password'])
 
-    const user = await this.dao.getUser(_filter)
+    const user = await this.dao.getUser(_filter, params)
 
     if (
       password &&
