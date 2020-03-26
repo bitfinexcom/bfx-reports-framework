@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 4
+const SUPPORTED_DB_VERSION = 5
 
 const { cloneDeep, omit } = require('lodash')
 
@@ -53,7 +53,7 @@ const _models = new Map([
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
       username: 'VARCHAR(255)',
-      passwordHash: 'VARCHAR(255)' // TODO: need to add migration
+      passwordHash: 'VARCHAR(255)'
     }
   ],
   [
