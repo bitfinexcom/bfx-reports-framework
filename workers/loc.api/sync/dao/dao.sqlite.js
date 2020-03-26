@@ -730,24 +730,26 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async getSubUsersByMasterUserApiKeys (
+  async getSubUsersByMasterUser (
     masterUser,
     sort = ['_id']
   ) {
+    const tableAlias = 'mu'
     const {
-      apiKey: $apiKey,
-      apiSecret: $apiSecret
-    } = { ...masterUser }
+      where,
+      values
+    } = getWhereQuery(masterUser, false, tableAlias)
     const _sort = getOrderQuery(sort)
 
     const sql = `SELECT su.* FROM ${this.TABLES_NAMES.USERS} AS su
-      INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa ON su._id = sa.subUserId
-      INNER JOIN ${this.TABLES_NAMES.USERS} AS mu ON mu._id = sa.masterUserId
-      WHERE mu.apiKey = $apiKey
-      AND mu.apiSecret = $apiSecret
+      INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
+        ON su._id = sa.subUserId
+      INNER JOIN ${this.TABLES_NAMES.USERS} AS ${tableAlias}
+        ON ${tableAlias}._id = sa.masterUserId
+      ${where}
       ${_sort}`
 
-    return this._all(sql, { $apiKey, $apiSecret })
+    return this._all(sql, values)
   }
 
   /**
@@ -849,8 +851,8 @@ class SqliteDAO extends DAO {
   async removeSubAccount (masterUser = {}) {
     const { apiKey, apiSecret } = { ...masterUser }
 
-    const _subUsers = await this.getSubUsersByMasterUserApiKeys(
-      masterUser
+    const _subUsers = await this.getSubUsersByMasterUser(
+      { apiKey, apiSecret }
     )
     const auth = getAuthFromSubAccountAuth(masterUser)
     const subUsers = filterSubUsers(_subUsers, auth)

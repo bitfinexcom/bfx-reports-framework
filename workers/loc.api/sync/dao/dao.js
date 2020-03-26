@@ -125,7 +125,7 @@ class DAO {
   /**
    * @abstract
    */
-  async getSubUsersByMasterUserApiKeys () { throw new ImplementationError() }
+  async getSubUsersByMasterUser () { throw new ImplementationError() }
 
   /**
    * @abstract

@@ -95,7 +95,9 @@ const getAuthFromDb = async (dao) => {
       } = { ...user }
 
       if (isSubAccountApiKeys(user)) {
-        const subUsers = await dao.getSubUsersByMasterUserApiKeys(user)
+        const subUsers = await dao.getSubUsersByMasterUser(
+          { apiKey, apiSecret }
+        )
 
         if (isEmpty(subUsers)) {
           continue

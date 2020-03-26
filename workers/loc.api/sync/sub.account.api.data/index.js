@@ -289,8 +289,9 @@ class SubAccountApiData {
       checkParamsFn(args)
     }
 
+    const { apiKey, apiSecret } = { ...auth }
     const subUsers = await this.dao
-      .getSubUsersByMasterUserApiKeys(auth)
+      .getSubUsersByMasterUser({ apiKey, apiSecret })
 
     if (
       !Array.isArray(subUsers) ||
