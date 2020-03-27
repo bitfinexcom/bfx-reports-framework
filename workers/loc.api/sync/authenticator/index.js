@@ -21,6 +21,7 @@ const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)
 const pbkdf2 = promisify(crypto.pbkdf2)
 const jwtSign = promisify(jwt.sign)
+const jwtVerify = promisify(jwt.verify)
 
 class Authenticator {
   constructor (
@@ -323,12 +324,16 @@ class Authenticator {
     return this.usersMap.get(id)
   }
 
-  async generateJWT (payload) {
+  generateJWT (payload) {
     return jwtSign(
       payload,
       this.secretKey,
       { algorithm: this.jwtAlgorithm }
     )
+  }
+
+  verifyJWT (token) {
+    return jwtVerify(token, this.secretKey)
   }
 
   scrypt (secret, salt) {
