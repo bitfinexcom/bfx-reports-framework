@@ -120,6 +120,11 @@ class DAO {
   /**
    * @abstract
    */
+  async getUsers () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async updateCollBy () { throw new ImplementationError() }
 
   /**

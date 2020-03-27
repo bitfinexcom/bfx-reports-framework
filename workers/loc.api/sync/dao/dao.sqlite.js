@@ -703,6 +703,27 @@ class SqliteDAO extends DAO {
     )
   }
 
+  /**
+   * @override
+   */
+  getUsers (
+    filter,
+    {
+      isFilledSubUsers,
+      sort = ['_id'],
+      limit
+    } = {}
+  ) {
+    return this._getUsers(
+      filter,
+      {
+        isFilledSubUsers,
+        sort,
+        limit
+      }
+    )
+  }
+
   async _getUsers (
     data,
     {
@@ -719,7 +740,10 @@ class SqliteDAO extends DAO {
     } = { ...data }
     const filter = omit(data, [
       'isNotSubAccount',
-      'isSubAccount'
+      'isSubAccount',
+      'passwordHash',
+      'apiKey',
+      'apiSecret'
     ])
     const {
       limit: _limit,
@@ -727,7 +751,7 @@ class SqliteDAO extends DAO {
     } = getLimitQuery({ limit: isFoundOne ? null : limit })
     const {
       where,
-      values
+      values: _values
     } = getWhereQuery(filter, true, userTableAlias)
     const isSubAccountQuery = isSubAccount
       ? 'sa.subUserId IS NOT NULL'
@@ -742,6 +766,7 @@ class SqliteDAO extends DAO {
     ].join(' AND ')
     const _where = `WHERE ${whereQueries}`
     const _sort = getOrderQuery(sort)
+    const values = { ..._values, ...limitVal }
 
     const sql = `SELECT ${userTableAlias}.*, sa.subUserId as isSubAccount
       FROM ${this.TABLES_NAMES.USERS} AS u
@@ -752,20 +777,20 @@ class SqliteDAO extends DAO {
       ${_limit}`
 
     return this._beginTrans(async () => {
-      const _res = isFoundOne
-        ? await this._get(sql, { ...values, ...limitVal })
-        : await this._all(sql, { ...values, ...limitVal })
+      const res = isFoundOne
+        ? await this._get(sql, values)
+        : await this._all(sql, values)
 
       if (
-        !_res &&
-        typeof _res !== 'object'
+        !res &&
+        typeof res !== 'object'
       ) {
-        return _res
+        return res
       }
 
       const usersFilledSubUsers = isFilledSubUsers
-        ? await this._fillSubUsers(_res)
-        : _res
+        ? await this._fillSubUsers(res)
+        : res
 
       return usersFilledSubUsers
     })
@@ -773,9 +798,7 @@ class SqliteDAO extends DAO {
 
   async _fillSubUsers (users) {
     const isArray = Array.isArray(users)
-    const _users = isArray
-      ? users
-      : [users]
+    const _users = isArray ? users : [users]
     const usersIds = _users
       .filter((user) => {
         const { _id } = { ...user }
