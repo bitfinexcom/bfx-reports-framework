@@ -130,23 +130,38 @@ class Authenticator {
     return { email, jwt }
   }
 
-  // TODO: Need to decrypt apiKeys in filled sub-users
   async getUser (filter, params) {
     const { password } = { ...filter }
+    const { isFilledSubUsers } = { ...params }
     const _filter = omit(filter, ['password'])
 
     const user = await this.dao.getUser(_filter, params)
 
     if (
-      password &&
-      typeof password === 'string' &&
-      user &&
-      typeof user === 'object'
+      !password ||
+      typeof password !== 'string' ||
+      !user ||
+      typeof user !== 'object'
     ) {
-      return this.decryptApiKeys(password, user)
+      return user
     }
 
-    return user
+    const decryptedUser = await this
+      .decryptApiKeys(password, user)
+
+    if (!isFilledSubUsers) {
+      return decryptedUser
+    }
+
+    const { subUsers } = { ...decryptedUser }
+
+    const decryptedSubUsers = await this
+      .decryptApiKeys(password, subUsers)
+
+    return {
+      ...decryptedUser,
+      subUsers: decryptedSubUsers
+    }
   }
 
   /**
@@ -158,22 +173,33 @@ class Authenticator {
     ]
   }
 
-  async decryptApiKeys (password, user) {
-    const { apiKey, apiSecret } = { ...user }
+  async decryptApiKeys (password, users) {
+    const isArray = Array.isArray(users)
+    const _users = isArray ? users : [users]
 
-    const [
-      decryptedApiKey,
-      decryptedApiSecret
-    ] = await Promise.all([
-      this.decrypt(apiKey, password),
-      this.decrypt(apiSecret, password)
-    ])
+    const promises = _users.reduce((accum, user) => {
+      const { apiKey, apiSecret } = { ...user }
 
-    return {
-      ...user,
-      apiKey: decryptedApiKey,
-      apiSecret: decryptedApiSecret
-    }
+      return [
+        ...accum,
+        this.decrypt(apiKey, password),
+        this.decrypt(apiSecret, password)
+      ]
+    }, [])
+    const decryptedApiKeys = await Promise.all(promises)
+
+    const res = _users.map((user, i) => {
+      const apiKey = decryptedApiKeys[i * 2]
+      const apiSecret = decryptedApiKeys[i * 2 + 1]
+
+      return {
+        ...user,
+        apiKey,
+        apiSecret
+      }
+    })
+
+    return isArray ? res : res[0]
   }
 
   async createUser (data) {
