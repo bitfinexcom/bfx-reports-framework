@@ -139,9 +139,7 @@ class Authenticator {
 
     if (
       !password ||
-      typeof password !== 'string' ||
-      !user ||
-      typeof user !== 'object'
+      typeof password !== 'string'
     ) {
       return user
     }
@@ -164,13 +162,59 @@ class Authenticator {
     }
   }
 
-  /**
-   * TODO:
-   */
-  getUsers (args) {
-    return [
-      { email: 'fake@email.com', isSubAccount: false }
-    ]
+  async getUsers (filter, params) {
+    const { password, emailPasswordsMap } = { ...filter }
+    const _emailPasswordsMap = Array.isArray(emailPasswordsMap)
+      ? emailPasswordsMap
+      : [emailPasswordsMap]
+    const filteredEmailPwdsMap = _emailPasswordsMap
+      .filter((emailPwd) => {
+        const { password, email } = { ...emailPwd }
+
+        return (
+          password &&
+          typeof password === 'string' &&
+          email &&
+          typeof email === 'string'
+        )
+      })
+    const { isFilledSubUsers } = { ...params }
+    const _filter = omit(filter, [
+      'password',
+      'emailPasswordsMap'
+    ])
+
+    const users = await this.dao.getUsers(_filter, params)
+
+    if (
+      !password ||
+      typeof password !== 'string'
+    ) {
+      return users
+    }
+
+    const decryptedUsers = await this
+      .decryptApiKeys(password, users)
+
+    if (!isFilledSubUsers) {
+      return decryptedUsers
+    }
+
+    const promises = decryptedUsers.map((user) => {
+      const { subUsers, email } = { ...user }
+      const { password } = filteredEmailPwdsMap
+        .find(({ email: pwdEmail }) => pwdEmail === email)
+
+      return this.decryptApiKeys(password, subUsers)
+    })
+    const decryptedSubUsers = await Promise.all(promises)
+
+    return decryptedUsers.map((user, i) => {
+      return {
+        ...user,
+        subUsers: decryptedSubUsers[i]
+      }
+    })
   }
 
   async decryptApiKeys (password, users) {
