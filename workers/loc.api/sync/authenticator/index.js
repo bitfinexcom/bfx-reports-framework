@@ -124,11 +124,57 @@ class Authenticator {
     })
 
     const payload = { _id, email, encryptedPassword }
-    const jwt = await this.generateJWT(payload)
+    const jwt = await this.generateAuthJWT(payload)
 
     this.setUserIntoSession({ _id, email, jwt })
 
     return { email, isSubAccount, jwt }
+  }
+
+  async generateAuthJWT (payload) {
+    const {
+      _id,
+      email,
+      encryptedPassword,
+      password,
+      jwt
+    } = { ...payload }
+
+    if (
+      email &&
+      typeof email === 'string'
+    ) {
+      if (
+        encryptedPassword &&
+        typeof encryptedPassword === 'string'
+      ) {
+        const payload = { _id, email, encryptedPassword }
+
+        return this.generateJWT(payload)
+      }
+      if (
+        password &&
+        typeof password === 'string'
+      ) {
+        const encryptedPassword = await this.encrypt(
+          password,
+          this.secretKey
+        )
+        const payload = { _id, email, encryptedPassword }
+
+        return this.generateJWT(payload)
+      }
+
+      throw new AuthError()
+    }
+    if (
+      jwt &&
+      typeof jwt === 'string'
+    ) {
+      return jwt
+    }
+
+    throw new AuthError()
   }
 
   async verifyUser (args, params) {
