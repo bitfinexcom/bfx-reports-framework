@@ -131,6 +131,86 @@ class Authenticator {
     return { email, isSubAccount, jwt }
   }
 
+  async signIn (args, params) {
+    const { auth } = { ...args }
+    const {
+      email,
+      password,
+      isSubAccount,
+      jwt
+    } = { ...auth }
+    const {
+      active = true,
+      isDataFromDb = true
+    } = { ...params }
+
+    const { user, decryptedPassword } = await this.verifyUser(
+      {
+        email,
+        password,
+        isSubAccount,
+        jwt
+      },
+      {
+        isDecryptedApiKeys: true,
+        isReturnedPassword: true
+      }
+    )
+    const {
+      _id,
+      email: emailFromDb,
+      isSubAccountFromDb,
+      apiKey,
+      apiSecret
+    } = { ...user }
+
+    const {
+      id,
+      timezone,
+      username,
+      email: emailFromApi
+    } = await this.rService._checkAuthInApi({
+      auth: { apiKey, apiSecret }
+    })
+
+    const res = await this.dao.updateCollBy(
+      this.TABLES_NAMES.USERS,
+      { _id, email: emailFromDb },
+      {
+        id,
+        timezone,
+        username,
+        email: emailFromApi,
+        active: serializeVal(active),
+        isDataFromDb: serializeVal(isDataFromDb)
+      }
+    )
+
+    if (res && res.changes < 1) {
+      throw new AuthError()
+    }
+
+    const freshEmail = (
+      (email && typeof email === 'string') ||
+      emailFromApi !== emailFromDb
+    )
+      ? emailFromApi
+      : null
+    const payload = {
+      _id,
+      email: freshEmail,
+      password: decryptedPassword,
+      jwt
+    }
+    const resJWT = await this.generateAuthJWT(payload)
+
+    return {
+      email: emailFromDb,
+      isSubAccount: isSubAccountFromDb,
+      jwt: resJWT
+    }
+  }
+
   async generateAuthJWT (payload) {
     const {
       _id,
@@ -139,7 +219,6 @@ class Authenticator {
       password,
       jwt
     } = { ...payload }
-
     if (
       email &&
       typeof email === 'string'
@@ -187,7 +266,8 @@ class Authenticator {
     } = { ...auth }
     const {
       isFilledSubUsers,
-      isDecryptedPassword
+      isDecryptedApiKeys,
+      isReturnedPassword
     } = { ...params }
 
     if (
@@ -196,7 +276,7 @@ class Authenticator {
       password &&
       typeof password === 'string'
     ) {
-      const pwdParam = isDecryptedPassword
+      const pwdParam = isDecryptedApiKeys
         ? { password }
         : {}
       const user = await this.getUser(
@@ -215,7 +295,12 @@ class Authenticator {
         passwordHash
       )
 
-      return user
+      return {
+        user,
+        decryptedPassword: isReturnedPassword
+          ? password
+          : null
+      }
     }
     if (
       jwt &&
@@ -230,7 +315,7 @@ class Authenticator {
         encryptedPassword,
         this.secretKey
       )
-      const pwdParam = isDecryptedPassword
+      const pwdParam = isDecryptedApiKeys
         ? { password: decryptedPassword }
         : {}
       const user = await this.getUser(
@@ -247,7 +332,12 @@ class Authenticator {
         passwordHash
       )
 
-      return user
+      return {
+        user,
+        decryptedPassword: isReturnedPassword
+          ? password
+          : null
+      }
     }
 
     throw new AuthError()
