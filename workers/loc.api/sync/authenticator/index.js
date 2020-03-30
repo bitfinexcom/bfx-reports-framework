@@ -2,7 +2,6 @@
 
 const crypto = require('crypto')
 const { promisify } = require('util')
-const { omit } = require('lodash')
 const jwt = require('jsonwebtoken')
 const {
   decorate,
@@ -84,7 +83,8 @@ class Authenticator {
       id
     } = await this.rService._checkAuthInApi(args)
     const userFromDb = await this.getUser(
-      { email, isNotSubAccount: true }
+      { email },
+      { isNotSubAccount: true }
     )
 
     if (
@@ -111,7 +111,7 @@ class Authenticator {
       this.hashPassword(password)
     ])
 
-    const { _id } = await this.createUser({
+    const { _id, isSubAccount } = await this.createUser({
       email,
       timezone,
       username,
@@ -128,15 +128,92 @@ class Authenticator {
 
     this.setUserIntoSession({ _id, email, jwt })
 
-    return { email, jwt }
+    return { email, isSubAccount, jwt }
+  }
+
+  async verifyUser (args, params) {
+    const { auth } = { ...args }
+    const {
+      email,
+      password,
+      isSubAccount,
+      jwt
+    } = { ...auth }
+    const {
+      isFilledSubUsers,
+      isDecryptedPassword
+    } = { ...params }
+
+    if (
+      email &&
+      typeof email === 'string' &&
+      password &&
+      typeof password === 'string'
+    ) {
+      const pwdParam = isDecryptedPassword
+        ? { password }
+        : {}
+      const user = await this.getUser(
+        { email },
+        {
+          isNotSubAccount: !isSubAccount,
+          isSubAccount,
+          isFilledSubUsers,
+          ...pwdParam
+        }
+      )
+      const { passwordHash } = { ...user }
+
+      await this.verifyPassword(
+        password,
+        passwordHash
+      )
+
+      return user
+    }
+    if (
+      jwt &&
+      typeof jwt === 'string'
+    ) {
+      const {
+        _id,
+        email: emailFromJWT,
+        encryptedPassword
+      } = await this.verifyJWT(jwt)
+      const decryptedPassword = await this.this.decrypt(
+        encryptedPassword,
+        this.secretKey
+      )
+      const pwdParam = isDecryptedPassword
+        ? { password: decryptedPassword }
+        : {}
+      const user = await this.getUser(
+        { _id, email: emailFromJWT },
+        {
+          isFilledSubUsers,
+          ...pwdParam
+        }
+      )
+      const { passwordHash } = { ...user }
+
+      await this.verifyPassword(
+        decryptedPassword,
+        passwordHash
+      )
+
+      return user
+    }
+
+    throw new AuthError()
   }
 
   async getUser (filter, params) {
-    const { password } = { ...filter }
-    const { isFilledSubUsers } = { ...params }
-    const _filter = omit(filter, ['password'])
+    const {
+      isFilledSubUsers,
+      password
+    } = { ...params }
 
-    const user = await this.dao.getUser(_filter, params)
+    const user = await this.dao.getUser(filter, params)
 
     if (
       !password ||
@@ -164,7 +241,11 @@ class Authenticator {
   }
 
   async getUsers (filter, params) {
-    const { password, emailPasswordsMap } = { ...filter }
+    const {
+      isFilledSubUsers,
+      password,
+      emailPasswordsMap
+    } = { ...params }
     const _emailPasswordsMap = Array.isArray(emailPasswordsMap)
       ? emailPasswordsMap
       : [emailPasswordsMap]
@@ -179,13 +260,8 @@ class Authenticator {
           typeof email === 'string'
         )
       })
-    const { isFilledSubUsers } = { ...params }
-    const _filter = omit(filter, [
-      'password',
-      'emailPasswordsMap'
-    ])
 
-    const users = await this.dao.getUsers(_filter, params)
+    const users = await this.dao.getUsers(filter, params)
 
     if (
       !password ||
@@ -255,10 +331,10 @@ class Authenticator {
       null,
       [data]
     )
-    const user = await this.getUser({
-      email,
-      isNotSubAccount: true
-    })
+    const user = await this.getUser(
+      { email },
+      { isNotSubAccount: true }
+    )
 
     if (
       !user ||
