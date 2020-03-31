@@ -102,7 +102,42 @@ class FrameworkReportService extends ReportService {
     }
   }
 
+  signUp (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.signUp(args)
+    }, 'signUp', cb)
+  }
+
+  signIn (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.signIn(args)
+    }, 'signIn', cb)
+  }
+
   /**
+   * TODO:
+   */
+  signOut () {}
+
+  /**
+   * TODO:
+   */
+  verifyUser () {}
+
+  /**
+   * TODO:
+   */
+  getUsers () {}
+
+  /**
+   * TODO:
+   */
+  removeUser () {}
+
+  /**
+   * TODO: The method is deprecated, will be removed in future
+   *
+   * @deprecated
    * @override
    */
   login (space, args, cb, isInnerCall) {
@@ -139,6 +174,11 @@ class FrameworkReportService extends ReportService {
     }, 'login', cb)
   }
 
+  /**
+   * TODO: The method is deprecated, will be removed in future
+   *
+   * @deprecated
+   */
   logout (space, args, cb) {
     return this._responder(async () => {
       await this._dao.deactivateUser(args.auth)
