@@ -12,7 +12,7 @@ const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
-const TYPES = require('../di/types')
+const TYPES = require('../../di/types')
 const { serializeVal } = require('../dao/helpers')
 const { isSubAccountApiKeys } = require('../../helpers')
 
@@ -41,6 +41,8 @@ class Authenticator {
     this.cryptoAlgorithm = 'aes-256-gcm'
     this.jwtAlgorithm = 'HS256'
     this.passwordAlgorithm = 'sha512'
+
+    this.passRegEx = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/
 
     /**
      * It may only work for one grenache worker instance
@@ -71,6 +73,7 @@ class Authenticator {
       typeof apiSecret !== 'string' ||
       !password ||
       typeof password !== 'string' ||
+      !this.isSecurePassword(password) ||
       isSubAccountApiKeys({ apiKey, apiSecret })
     ) {
       throw new AuthError()
@@ -131,6 +134,10 @@ class Authenticator {
     return { email, isSubAccount, jwt }
   }
 
+  isSecurePassword (password) {
+    return this.passRegEx.test(password)
+  }
+
   async signIn (args, params) {
     const { auth } = { ...args }
     const {
@@ -146,10 +153,12 @@ class Authenticator {
 
     const { user, decryptedPassword } = await this.verifyUser(
       {
-        email,
-        password,
-        isSubAccount,
-        jwt
+        auth: {
+          email,
+          password,
+          isSubAccount,
+          jwt
+        }
       },
       {
         isDecryptedApiKeys: true,
@@ -159,7 +168,7 @@ class Authenticator {
     const {
       _id,
       email: emailFromDb,
-      isSubAccountFromDb,
+      isSubAccount: isSubAccountFromDb,
       apiKey,
       apiSecret
     } = { ...user }
@@ -204,8 +213,12 @@ class Authenticator {
     }
     const resJWT = await this.generateAuthJWT(payload)
 
+    this.setUserIntoSession(
+      { _id, email: emailFromApi, jwt: resJWT }
+    )
+
     return {
-      email: emailFromDb,
+      email: emailFromApi,
       isSubAccount: isSubAccountFromDb,
       jwt: resJWT
     }
@@ -311,7 +324,7 @@ class Authenticator {
         email: emailFromJWT,
         encryptedPassword
       } = await this.verifyJWT(jwt)
-      const decryptedPassword = await this.this.decrypt(
+      const decryptedPassword = await this.decrypt(
         encryptedPassword,
         this.secretKey
       )
@@ -483,16 +496,16 @@ class Authenticator {
     return user
   }
 
-  async hashPassword (password, salt) {
+  async hashPassword (password, strSalt) {
     const iterations = 10000
     const hashBytes = 32
 
-    const generatedSalt = salt && typeof salt === 'string'
-      ? salt
+    const salt = strSalt && typeof strSalt === 'string'
+      ? Buffer.from(strSalt, 'hex')
       : await randomBytes(128)
     const hash = await pbkdf2(
       password,
-      generatedSalt,
+      salt,
       iterations,
       hashBytes,
       this.passwordAlgorithm
@@ -507,18 +520,17 @@ class Authenticator {
   }
 
   async verifyPassword (password, conbinedHash) {
-    const [strSalt, strHash] = conbinedHash.split('.')
+    const [salt, hash] = conbinedHash.split('.')
 
     if (
-      !strSalt ||
-      typeof strSalt !== 'string' ||
-      !strHash ||
-      typeof strHash !== 'string'
+      !salt ||
+      typeof salt !== 'string' ||
+      !hash ||
+      typeof hash !== 'string'
     ) {
       throw new AuthError()
     }
 
-    const salt = Buffer.from(strSalt, 'hex')
     const generatedHash = await this.hashPassword(password, salt)
 
     if (generatedHash !== conbinedHash) {
@@ -549,13 +561,13 @@ class Authenticator {
   }
 
   scrypt (secret, salt) {
-    return scrypt(secret, salt, 64)
+    return scrypt(secret, salt, 32)
   }
 
   async encrypt (decryptedStr, password) {
     const [key, iv] = await Promise.all([
       this.scrypt(password, this.secretKey),
-      randomBytes(16)
+      randomBytes(32)
     ])
     const cipher = crypto
       .createCipheriv(this.cryptoAlgorithm, key, iv)
@@ -574,7 +586,7 @@ class Authenticator {
   }
 
   async decrypt (encryptedStr, password) {
-    const [str, strIV, strTag] = encryptedStr.split('.')
+    const [strIV, str, strTag] = encryptedStr.split('.')
 
     if (
       !str ||

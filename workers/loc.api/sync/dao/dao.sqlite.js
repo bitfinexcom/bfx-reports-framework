@@ -767,7 +767,7 @@ class SqliteDAO extends DAO {
     const _sort = getOrderQuery(sort)
     const values = { ..._values, ...limitVal }
 
-    const sql = `SELECT ${userTableAlias}.*, sa.subUserId, sa.subUserId as isSubAccount
+    const sql = `SELECT ${userTableAlias}.*, sa.subUserId as isSubAccount
       FROM ${this.TABLES_NAMES.USERS} AS u
       LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
         ON ${userTableAlias}._id = sa.masterUserId
