@@ -114,10 +114,11 @@ class FrameworkReportService extends ReportService {
     }, 'signIn', cb)
   }
 
-  /**
-   * TODO:
-   */
-  signOut () {}
+  signOut (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.signOut(args)
+    }, 'signOut', cb)
+  }
 
   /**
    * TODO:

@@ -47,7 +47,7 @@ class Authenticator {
     /**
      * It may only work for one grenache worker instance
      */
-    this.usersMap = new Map()
+    this.userSessions = new Map()
   }
 
   /**
@@ -129,7 +129,7 @@ class Authenticator {
     const payload = { _id, email, encryptedPassword }
     const jwt = await this.generateAuthJWT(payload)
 
-    this.setUserIntoSession({ _id, email, jwt })
+    this.setUserSession({ _id, email, jwt })
 
     return { email, isSubAccount, jwt }
   }
@@ -213,7 +213,7 @@ class Authenticator {
     }
     const resJWT = await this.generateAuthJWT(payload)
 
-    this.setUserIntoSession(
+    this.setUserSession(
       { _id, email: emailFromApi, jwt: resJWT }
     )
 
@@ -222,6 +222,43 @@ class Authenticator {
       isSubAccount: isSubAccountFromDb,
       jwt: resJWT
     }
+  }
+
+  async signOut (args, params) {
+    const { auth } = { ...args }
+    const {
+      email,
+      password,
+      isSubAccount,
+      jwt
+    } = { ...auth }
+    const { active = false } = { ...params }
+
+    const { user } = await this.verifyUser(
+      {
+        auth: {
+          email,
+          password,
+          isSubAccount,
+          jwt
+        }
+      }
+    )
+    const { _id, email: emailFromDb } = { ...user }
+
+    const res = await this.dao.updateCollBy(
+      this.TABLES_NAMES.USERS,
+      { _id, email: emailFromDb },
+      { active: serializeVal(active) }
+    )
+
+    if (res && res.changes < 1) {
+      throw new AuthError()
+    }
+
+    this.removeUserSessionById(_id)
+
+    return true
   }
 
   async generateAuthJWT (payload) {
@@ -538,14 +575,35 @@ class Authenticator {
     }
   }
 
-  setUserIntoSession (data) {
+  setUserSession (data) {
     const { _id, email, jwt } = { ...data }
 
-    this.usersMap.set([_id, { email, jwt }])
+    this.userSessions.set(_id, { _id, email, jwt })
   }
 
-  getUserFromSessionById (id) {
-    return this.usersMap.get(id)
+  getUserSessionById (id) {
+    const userSession = this.userSessions.get(id)
+
+    return userSession && typeof userSession === 'object'
+      ? { ...userSession }
+      : userSession
+  }
+
+  getUserSessions () {
+    const userSessions = [...this.userSessions]
+      .map(([id, session]) => {
+        const userSession = session && typeof session === 'object'
+          ? { ...session }
+          : session
+
+        return [id, userSession]
+      })
+
+    return new Map(userSessions)
+  }
+
+  removeUserSessionById (id) {
+    return this.userSessions.delete(id)
   }
 
   generateJWT (payload) {
