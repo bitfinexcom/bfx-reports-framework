@@ -151,7 +151,7 @@ class Authenticator {
       isDataFromDb = true
     } = { ...params }
 
-    const { user, decryptedPassword } = await this.verifyUser(
+    const user = await this.verifyUser(
       {
         auth: {
           email,
@@ -170,7 +170,8 @@ class Authenticator {
       email: emailFromDb,
       isSubAccount: isSubAccountFromDb,
       apiKey,
-      apiSecret
+      apiSecret,
+      password: decryptedPassword
     } = { ...user }
 
     const {
@@ -234,7 +235,7 @@ class Authenticator {
     } = { ...auth }
     const { active = false } = { ...params }
 
-    const { user } = await this.verifyUser(
+    const user = await this.verifyUser(
       {
         auth: {
           email,
@@ -346,10 +347,8 @@ class Authenticator {
       )
 
       return {
-        user,
-        decryptedPassword: isReturnedPassword
-          ? password
-          : null
+        ...user,
+        password: isReturnedPassword ? password : null
       }
     }
     if (
@@ -383,10 +382,8 @@ class Authenticator {
       )
 
       return {
-        user,
-        decryptedPassword: isReturnedPassword
-          ? password
-          : null
+        ...user,
+        password: isReturnedPassword ? decryptedPassword : null
       }
     }
 
@@ -557,7 +554,9 @@ class Authenticator {
   }
 
   async verifyPassword (password, conbinedHash) {
-    const [salt, hash] = conbinedHash.split('.')
+    const [salt, hash] = typeof conbinedHash === 'string'
+      ? conbinedHash.split('.')
+      : []
 
     if (
       !salt ||
@@ -581,23 +580,48 @@ class Authenticator {
     this.userSessions.set(_id, { _id, email, jwt })
   }
 
-  getUserSessionById (id) {
+  async getUserSessionById (id, params) {
+    const { isFilledUsers } = { ...params }
     const userSession = this.userSessions.get(id)
+    const { jwt } = { ...userSession }
+
+    if (isFilledUsers && jwt) {
+      const user = await this.verifyUser(
+        { auth: { jwt } },
+        { isDecryptedApiKeys: true }
+      )
+
+      return { ...userSession, ...user, jwt }
+    }
 
     return userSession && typeof userSession === 'object'
       ? { ...userSession }
       : userSession
   }
 
-  getUserSessions () {
-    const userSessions = [...this.userSessions]
-      .map(([id, session]) => {
+  async getUserSessions (params) {
+    const { isFilledUsers } = { ...params }
+
+    const userSessionsPromises = [...this.userSessions]
+      .map(async ([id, session]) => {
+        const { jwt } = { ...session }
+
+        if (isFilledUsers && jwt) {
+          const user = await this.verifyUser(
+            { auth: { jwt } },
+            { isDecryptedApiKeys: true }
+          )
+
+          return [id, { ...session, ...user, jwt }]
+        }
+
         const userSession = session && typeof session === 'object'
           ? { ...session }
           : session
 
         return [id, userSession]
       })
+    const userSessions = await Promise.all(userSessionsPromises)
 
     return new Map(userSessions)
   }
@@ -614,8 +638,12 @@ class Authenticator {
     )
   }
 
-  verifyJWT (token) {
-    return jwtVerify(token, this.secretKey)
+  async verifyJWT (token) {
+    try {
+      return await jwtVerify(token, this.secretKey)
+    } catch (err) {
+      throw new AuthError()
+    }
   }
 
   scrypt (secret, salt) {
@@ -644,7 +672,9 @@ class Authenticator {
   }
 
   async decrypt (encryptedStr, password) {
-    const [strIV, str, strTag] = encryptedStr.split('.')
+    const [strIV, str, strTag] = typeof encryptedStr === 'string'
+      ? encryptedStr.split('.')
+      : []
 
     if (
       !str ||

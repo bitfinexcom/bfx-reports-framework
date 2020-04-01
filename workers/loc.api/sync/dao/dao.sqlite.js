@@ -535,7 +535,7 @@ class SqliteDAO extends DAO {
 
     checkFilterParams(filterModelName, args)
 
-    const user = isPublic ? null : await this.checkAuthInDb(args)
+    const { auth: user } = { ...args }
     const methodColl = {
       ...this._getMethodCollMap().get(method),
       ...schema

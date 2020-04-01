@@ -120,10 +120,14 @@ class FrameworkReportService extends ReportService {
     }, 'signOut', cb)
   }
 
-  /**
-   * TODO:
-   */
-  verifyUser () {}
+  verifyUser (space, args, cb) {
+    return this._responder(async () => {
+      const user = await this._authenticator.verifyUser(args)
+      const { email, isSubAccount } = { ...user }
+
+      return { email, isSubAccount }
+    }, 'verifyUser', cb)
+  }
 
   /**
    * TODO:
@@ -293,20 +297,23 @@ class FrameworkReportService extends ReportService {
     }, 'disableSyncMode', cb)
   }
 
+  /**
+   * TODO: need to move auth verification to responder
+   */
   isSyncModeWithDbData (space, args, cb) {
     return this._responder(async () => {
-      const user = await this._dao.checkAuthInDb(args, false)
+      const { isDataFromDb } = await this._verifyAuth(args)
+
       const firstElem = await this._dao.getFirstElemInCollBy(
         this._TABLES_NAMES.SYNC_MODE
       )
 
       return (
         !isEmpty(firstElem) &&
-        !isEmpty(user) &&
         !!firstElem.isEnable &&
-        user.isDataFromDb
+        isDataFromDb
       )
-    }, 'isSyncModeWithDbData', cb)
+    }, 'isSyncModeWithDbData', args, cb)
   }
 
   enableScheduler (space, args, cb) {
@@ -626,10 +633,34 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO: need to move auth verification to responder
+   */
+  async _verifyAuth (args) {
+    const user = await this._authenticator.verifyUser(
+      args,
+      {
+        isFilledSubUsers: true,
+        isDecryptedApiKeys: true,
+        isReturnedPassword: true
+      }
+    )
+
+    if (args && typeof args === 'object') {
+      args.auth = user
+    }
+
+    return user
+  }
+
+  /**
+   * TODO: need to move auth verification to responder
+   *
    * @override
    */
   getLedgers (space, args, cb) {
     return this._responder(async () => {
+      await this._verifyAuth(args)
+
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
