@@ -298,11 +298,12 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO: need to move auth verification to responder
+   * TODO:
    */
   isSyncModeWithDbData (space, args, cb) {
-    return this._responder(async () => {
-      const { isDataFromDb } = await this._verifyAuth(args)
+    return this._privResponder(async () => {
+      const { auth } = { ...args }
+      const { isDataFromDb } = { ...auth }
 
       const firstElem = await this._dao.getFirstElemInCollBy(
         this._TABLES_NAMES.SYNC_MODE
@@ -633,34 +634,12 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO: need to move auth verification to responder
-   */
-  async _verifyAuth (args) {
-    const user = await this._authenticator.verifyUser(
-      args,
-      {
-        isFilledSubUsers: true,
-        isDecryptedApiKeys: true,
-        isReturnedPassword: true
-      }
-    )
-
-    if (args && typeof args === 'object') {
-      args.auth = user
-    }
-
-    return user
-  }
-
-  /**
-   * TODO: need to move auth verification to responder
+   * TODO:
    *
    * @override
    */
   getLedgers (space, args, cb) {
-    return this._responder(async () => {
-      await this._verifyAuth(args)
-
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -677,7 +656,7 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getLedgers', cb)
+    }, 'getLedgers', args, cb)
   }
 
   /**

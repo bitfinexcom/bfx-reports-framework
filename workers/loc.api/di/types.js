@@ -47,5 +47,6 @@ module.exports = {
   SubAccountApiData: Symbol.for('SubAccountApiData'),
   PositionsAudit: Symbol.for('PositionsAudit'),
   OrderTrades: Symbol.for('OrderTrades'),
-  Authenticator: Symbol.for('Authenticator')
+  Authenticator: Symbol.for('Authenticator'),
+  PrivResponder: Symbol.for('PrivResponder')
 }
