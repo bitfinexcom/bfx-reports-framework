@@ -1,8 +1,5 @@
 'use strict'
 
-const crypto = require('crypto')
-const { promisify } = require('util')
-const jwt = require('jsonwebtoken')
 const {
   decorate,
   injectable,
@@ -16,31 +13,19 @@ const TYPES = require('../../di/types')
 const { serializeVal } = require('../dao/helpers')
 const { isSubAccountApiKeys } = require('../../helpers')
 
-const scrypt = promisify(crypto.scrypt)
-const randomBytes = promisify(crypto.randomBytes)
-const pbkdf2 = promisify(crypto.pbkdf2)
-const jwtSign = promisify(jwt.sign)
-const jwtVerify = promisify(jwt.verify)
-
 class Authenticator {
   constructor (
     dao,
     TABLES_NAMES,
-    CONF,
-    rService
+    rService,
+    crypto
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
-    this.CONF = CONF
     this.rService = rService
+    this.crypto = crypto
 
-    const { secretKey } = { ...this.CONF }
-    this.secretKey = secretKey && typeof secretKey === 'string'
-      ? secretKey
-      : 'secretKey'
-    this.cryptoAlgorithm = 'aes-256-gcm'
-    this.jwtAlgorithm = 'HS256'
-    this.passwordAlgorithm = 'sha512'
+    this.secretKey = this.crypto.getSecretKey()
 
     this.passRegEx = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/
 
@@ -108,10 +93,10 @@ class Authenticator {
       encryptedPassword,
       passwordHash
     ] = await Promise.all([
-      this.encrypt(apiKey, password),
-      this.encrypt(apiSecret, password),
-      this.encrypt(password, this.secretKey),
-      this.hashPassword(password)
+      this.crypto.encrypt(apiKey, password),
+      this.crypto.encrypt(apiSecret, password),
+      this.crypto.encrypt(password, this.secretKey),
+      this.crypto.hashPassword(password)
     ])
 
     const { _id, isSubAccount } = await this.createUser({
@@ -132,10 +117,6 @@ class Authenticator {
     this.setUserSession({ _id, email, jwt })
 
     return { email, isSubAccount, jwt }
-  }
-
-  isSecurePassword (password) {
-    return this.passRegEx.test(password)
   }
 
   async signIn (args, params) {
@@ -262,51 +243,6 @@ class Authenticator {
     return true
   }
 
-  async generateAuthJWT (payload) {
-    const {
-      _id,
-      email,
-      encryptedPassword,
-      password,
-      jwt
-    } = { ...payload }
-    if (
-      email &&
-      typeof email === 'string'
-    ) {
-      if (
-        encryptedPassword &&
-        typeof encryptedPassword === 'string'
-      ) {
-        const payload = { _id, email, encryptedPassword }
-
-        return this.generateJWT(payload)
-      }
-      if (
-        password &&
-        typeof password === 'string'
-      ) {
-        const encryptedPassword = await this.encrypt(
-          password,
-          this.secretKey
-        )
-        const payload = { _id, email, encryptedPassword }
-
-        return this.generateJWT(payload)
-      }
-
-      throw new AuthError()
-    }
-    if (
-      jwt &&
-      typeof jwt === 'string'
-    ) {
-      return jwt
-    }
-
-    throw new AuthError()
-  }
-
   async verifyUser (args, params) {
     const { auth } = { ...args }
     const {
@@ -341,7 +277,7 @@ class Authenticator {
       )
       const { passwordHash } = { ...user }
 
-      await this.verifyPassword(
+      await this.crypto.verifyPassword(
         password,
         passwordHash
       )
@@ -359,8 +295,8 @@ class Authenticator {
         _id,
         email: emailFromJWT,
         encryptedPassword
-      } = await this.verifyJWT(jwt)
-      const decryptedPassword = await this.decrypt(
+      } = await this.crypto.verifyJWT(jwt)
+      const decryptedPassword = await this.crypto.decrypt(
         encryptedPassword,
         this.secretKey
       )
@@ -376,7 +312,7 @@ class Authenticator {
       )
       const { passwordHash } = { ...user }
 
-      await this.verifyPassword(
+      await this.crypto.verifyPassword(
         decryptedPassword,
         passwordHash
       )
@@ -477,35 +413,6 @@ class Authenticator {
     })
   }
 
-  async decryptApiKeys (password, users) {
-    const isArray = Array.isArray(users)
-    const _users = isArray ? users : [users]
-
-    const promises = _users.reduce((accum, user) => {
-      const { apiKey, apiSecret } = { ...user }
-
-      return [
-        ...accum,
-        this.decrypt(apiKey, password),
-        this.decrypt(apiSecret, password)
-      ]
-    }, [])
-    const decryptedApiKeys = await Promise.all(promises)
-
-    const res = _users.map((user, i) => {
-      const apiKey = decryptedApiKeys[i * 2]
-      const apiSecret = decryptedApiKeys[i * 2 + 1]
-
-      return {
-        ...user,
-        apiKey,
-        apiSecret
-      }
-    })
-
-    return isArray ? res : res[0]
-  }
-
   async createUser (data) {
     const { email } = { ...data }
 
@@ -528,50 +435,6 @@ class Authenticator {
     }
 
     return user
-  }
-
-  async hashPassword (password, strSalt) {
-    const iterations = 10000
-    const hashBytes = 32
-
-    const salt = strSalt && typeof strSalt === 'string'
-      ? Buffer.from(strSalt, 'hex')
-      : await randomBytes(128)
-    const hash = await pbkdf2(
-      password,
-      salt,
-      iterations,
-      hashBytes,
-      this.passwordAlgorithm
-    )
-
-    const combinedHash = [
-      salt.toString('hex'),
-      hash.toString('hex')
-    ].join('.')
-
-    return combinedHash
-  }
-
-  async verifyPassword (password, conbinedHash) {
-    const [salt, hash] = typeof conbinedHash === 'string'
-      ? conbinedHash.split('.')
-      : []
-
-    if (
-      !salt ||
-      typeof salt !== 'string' ||
-      !hash ||
-      typeof hash !== 'string'
-    ) {
-      throw new AuthError()
-    }
-
-    const generatedHash = await this.hashPassword(password, salt)
-
-    if (generatedHash !== conbinedHash) {
-      throw new AuthError()
-    }
   }
 
   setUserSession (data) {
@@ -630,85 +493,89 @@ class Authenticator {
     return this.userSessions.delete(id)
   }
 
-  generateJWT (payload) {
-    return jwtSign(
-      payload,
-      this.secretKey,
-      { algorithm: this.jwtAlgorithm }
-    )
-  }
-
-  async verifyJWT (token) {
-    try {
-      return await jwtVerify(token, this.secretKey)
-    } catch (err) {
-      throw new AuthError()
-    }
-  }
-
-  scrypt (secret, salt) {
-    return scrypt(secret, salt, 32)
-  }
-
-  async encrypt (decryptedStr, password) {
-    const [key, iv] = await Promise.all([
-      this.scrypt(password, this.secretKey),
-      randomBytes(32)
-    ])
-    const cipher = crypto
-      .createCipheriv(this.cryptoAlgorithm, key, iv)
-
-    const _encrypted = cipher.update(decryptedStr, 'utf8', 'hex')
-    const encrypted = _encrypted + cipher.final('hex')
-    const tag = cipher.getAuthTag()
-
-    const combined = [
-      iv.toString('hex'),
-      encrypted,
-      tag.toString('hex')
-    ].join('.')
-
-    return combined
-  }
-
-  async decrypt (encryptedStr, password) {
-    const [strIV, str, strTag] = typeof encryptedStr === 'string'
-      ? encryptedStr.split('.')
-      : []
-
+  async generateAuthJWT (payload) {
+    const {
+      _id,
+      email,
+      encryptedPassword,
+      password,
+      jwt
+    } = { ...payload }
     if (
-      !str ||
-      typeof str !== 'string' ||
-      !strIV ||
-      typeof strIV !== 'string' ||
-      !strTag ||
-      typeof strTag !== 'string'
+      email &&
+      typeof email === 'string'
     ) {
+      if (
+        encryptedPassword &&
+        typeof encryptedPassword === 'string'
+      ) {
+        const payload = { _id, email, encryptedPassword }
+
+        return this.crypto.generateJWT(payload)
+      }
+      if (
+        password &&
+        typeof password === 'string'
+      ) {
+        const encryptedPassword = await this.crypto.encrypt(
+          password,
+          this.secretKey
+        )
+        const payload = { _id, email, encryptedPassword }
+
+        return this.crypto.generateJWT(payload)
+      }
+
       throw new AuthError()
     }
-
-    const key = await this.scrypt(password, this.secretKey)
-    const iv = Buffer.from(strIV, 'hex')
-    const tag = Buffer.from(strTag, 'hex')
-    const decipher = crypto
-      .createDecipheriv(this.cryptoAlgorithm, key, iv)
-      .setAuthTag(tag)
-    const _decrypted = decipher.update(str, 'hex', 'utf8')
-
-    try {
-      const decrypted = _decrypted + decipher.final('utf8')
-
-      return decrypted
-    } catch (err) {
-      throw new AuthError()
+    if (
+      jwt &&
+      typeof jwt === 'string'
+    ) {
+      return jwt
     }
+
+    throw new AuthError()
+  }
+
+  async decryptApiKeys (password, users) {
+    const isArray = Array.isArray(users)
+    const _users = isArray ? users : [users]
+
+    const promises = _users.reduce((accum, user) => {
+      const { apiKey, apiSecret } = { ...user }
+
+      return [
+        ...accum,
+        this.crypto.decrypt(apiKey, password),
+        this.crypto.decrypt(apiSecret, password)
+      ]
+    }, [])
+    const decryptedApiKeys = await Promise.all(promises)
+
+    const res = _users.map((user, i) => {
+      const apiKey = decryptedApiKeys[i * 2]
+      const apiSecret = decryptedApiKeys[i * 2 + 1]
+
+      return {
+        ...user,
+        apiKey,
+        apiSecret
+      }
+    })
+
+    return isArray ? res : res[0]
+  }
+
+  isSecurePassword (password) {
+    return this.passRegEx.test(password)
   }
 }
 
 decorate(injectable(), Authenticator)
 decorate(inject(TYPES.DAO), Authenticator, 0)
 decorate(inject(TYPES.TABLES_NAMES), Authenticator, 1)
-decorate(inject(TYPES.CONF), Authenticator, 2)
-decorate(inject(TYPES.RService), Authenticator, 3)
+decorate(inject(TYPES.RService), Authenticator, 2)
+decorate(inject(TYPES.Crypto), Authenticator, 3)
 
 module.exports = Authenticator

@@ -74,6 +74,7 @@ const {
   dbMigratorFactory,
   dataInserterFactory
 } = require('./factories')
+const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
 const privResponder = require('../responder')
 
@@ -146,6 +147,9 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SubAccount)
       .to(SubAccount)
+    bind(TYPES.Crypto)
+      .to(Crypto)
+      .inSingletonScope()
     bind(TYPES.Authenticator)
       .to(Authenticator)
       .inSingletonScope()

@@ -26,7 +26,8 @@ const argv = require('yargs')
     type: 'string'
   })
   .option('secretKey', {
-    type: 'string'
+    type: 'string',
+    default: 'secretKey'
   })
   .help('help')
   .argv
