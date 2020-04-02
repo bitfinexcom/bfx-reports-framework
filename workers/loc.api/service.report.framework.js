@@ -122,17 +122,23 @@ class FrameworkReportService extends ReportService {
 
   verifyUser (space, args, cb) {
     return this._responder(async () => {
-      const user = await this._authenticator.verifyUser(args)
-      const { email, isSubAccount } = { ...user }
-
-      return { email, isSubAccount }
+      return this._authenticator.verifyUser(
+        args,
+        { projection: ['email', 'isSubAccount'] }
+      )
     }, 'verifyUser', cb)
   }
 
-  /**
-   * TODO:
-   */
-  getUsers () {}
+  getUsers (space, args, cb) {
+    return this._responder(async () => {
+      return this._authenticator.getUsers(
+        {},
+        {
+          projection: ['email', 'isSubAccount']
+        }
+      )
+    }, 'getUsers', cb)
+  }
 
   /**
    * TODO:

@@ -763,7 +763,7 @@ class SqliteDAO extends DAO {
       isSubAccountQuery,
       isNotSubAccountQuery
     ].filter((query) => query).join(' AND ')
-    const _where = `WHERE ${whereQueries}`
+    const _where = whereQueries ? `WHERE ${whereQueries}` : ''
     const _sort = getOrderQuery(sort)
     const values = { ..._values, ...limitVal }
 

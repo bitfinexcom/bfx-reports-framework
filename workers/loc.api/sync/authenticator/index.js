@@ -1,5 +1,6 @@
 'use strict'
 
+const { pick } = require('lodash')
 const {
   decorate,
   injectable,
@@ -252,6 +253,7 @@ class Authenticator {
       jwt
     } = { ...auth }
     const {
+      projection,
       isFilledSubUsers,
       isDecryptedApiKeys,
       isReturnedPassword
@@ -266,7 +268,7 @@ class Authenticator {
       const pwdParam = isDecryptedApiKeys
         ? { password }
         : {}
-      const user = await this.getUser(
+      const _user = await this.getUser(
         { email },
         {
           isNotSubAccount: !isSubAccount,
@@ -275,7 +277,8 @@ class Authenticator {
           ...pwdParam
         }
       )
-      const { passwordHash } = { ...user }
+      const { passwordHash } = { ..._user }
+      const user = this.excludeProps(_user, projection)
 
       await this.crypto.verifyPassword(
         password,
@@ -303,24 +306,25 @@ class Authenticator {
       const pwdParam = isDecryptedApiKeys
         ? { password: decryptedPassword }
         : {}
-      const user = await this.getUser(
+      const _user = await this.getUser(
         { _id, email: emailFromJWT },
         {
           isFilledSubUsers,
           ...pwdParam
         }
       )
-      const { passwordHash } = { ...user }
+      const { passwordHash } = { ..._user }
 
       await this.crypto.verifyPassword(
         decryptedPassword,
         passwordHash
       )
 
-      return {
-        ...user,
+      const user = {
+        ..._user,
         password: isReturnedPassword ? decryptedPassword : null
       }
+      return this.excludeProps(user, projection)
     }
 
     throw new AuthError()
@@ -329,10 +333,12 @@ class Authenticator {
   async getUser (filter, params) {
     const {
       isFilledSubUsers,
+      projection,
       password
     } = { ...params }
 
-    const user = await this.dao.getUser(filter, params)
+    const _user = await this.dao.getUser(filter, params)
+    const user = this.excludeProps(_user, projection)
 
     if (
       !password ||
@@ -363,7 +369,8 @@ class Authenticator {
     const {
       isFilledSubUsers,
       password,
-      emailPasswordsMap
+      emailPasswordsMap,
+      projection
     } = { ...params }
     const _emailPasswordsMap = Array.isArray(emailPasswordsMap)
       ? emailPasswordsMap
@@ -380,7 +387,8 @@ class Authenticator {
         )
       })
 
-    const users = await this.dao.getUsers(filter, params)
+    const _users = await this.dao.getUsers(filter, params)
+    const users = this.excludeProps(_users, projection)
 
     if (
       !password ||
@@ -411,6 +419,28 @@ class Authenticator {
         subUsers: decryptedSubUsers[i]
       }
     })
+  }
+
+  excludeProps (data, props) {
+    if (
+      !Array.isArray(props) ||
+      props.length === 0
+    ) {
+      return data
+    }
+
+    const isArray = Array.isArray(data)
+    const dataArr = isArray ? data : [data]
+
+    const res = dataArr.map((item) => {
+      if (!item || typeof item !== 'object') {
+        return item
+      }
+
+      return pick(item, props)
+    })
+
+    return isArray ? res : res[0]
   }
 
   async createUser (data) {
