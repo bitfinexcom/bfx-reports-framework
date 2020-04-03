@@ -374,7 +374,7 @@ class BalanceHistory {
     )
     const walletsGroupedByTimeframe = await groupByTimeframe(
       wallets,
-      timeframe,
+      { timeframe, start, end },
       this.FOREX_SYMBS,
       'mtsUpdate',
       'currency',
@@ -383,7 +383,8 @@ class BalanceHistory {
     const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
       start,
       end,
-      timeframe
+      timeframe,
+      true
     )
 
     const res = await calcGroupedData(

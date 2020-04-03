@@ -2,12 +2,18 @@
 
 const moment = require('moment')
 
-const getStartMtsByTimeframe = require('./get-start-mts-by-timeframe')
+const getStartMtsByTimeframe = require(
+  './get-start-mts-by-timeframe'
+)
+const setMtsToStartingAndEndingFrames = require(
+  './set-mts-to-starting-and-ending-frames'
+)
 
 module.exports = (
   start,
   end,
-  timeframe = 'year'
+  timeframe = 'year',
+  isSetMtsToStartingAndEndingFrames
 ) => {
   const _start = getStartMtsByTimeframe(start, timeframe)
   const _end = getStartMtsByTimeframe(end, timeframe)
@@ -45,5 +51,7 @@ module.exports = (
     currMoment.add(1, 'years')
   }
 
-  return res
+  return isSetMtsToStartingAndEndingFrames
+    ? setMtsToStartingAndEndingFrames(res, start, end)
+    : res
 }

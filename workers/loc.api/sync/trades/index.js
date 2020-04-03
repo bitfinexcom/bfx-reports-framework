@@ -265,18 +265,22 @@ class Trades {
       }
     })
 
+    const _start = Number.isInteger(start) && start > 0
+      ? start
+      : this._getStartMtsFromTrades(trades)
     const tradesGroupedByTimeframe = await groupByTimeframe(
       trades,
-      timeframe,
+      { timeframe, start: _start, end },
       this.FOREX_SYMBS,
       'mtsCreate',
       tradesSymbolFieldName,
       this._calcTrades(fieldName)
     )
     const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
-      this._getStartMtsFromTrades(trades),
+      _start,
       end,
-      timeframe
+      timeframe,
+      true
     )
 
     const groupedData = await calcGroupedData(
