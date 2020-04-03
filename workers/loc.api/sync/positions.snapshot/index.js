@@ -180,7 +180,7 @@ class PositionsSnapshot {
       }
 
       const pl = (actualPrice - basePrice) * amount
-      const plPerc = ((actualPrice / basePrice) - 1) * 100
+      const plPerc = ((actualPrice / basePrice) - 1) * 100 * Math.sign(amount)
       const {
         plUsd,
         currency
