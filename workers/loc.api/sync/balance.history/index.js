@@ -334,6 +334,32 @@ class BalanceHistory {
     }]
   }
 
+  async _getStartingMts (
+    args,
+    groupedWallets
+  ) {
+    if (
+      Array.isArray(groupedWallets) &&
+      groupedWallets.length > 0 &&
+      groupedWallets[groupedWallets.length - 1] &&
+      typeof groupedWallets[groupedWallets.length - 1] === 'object' &&
+      Number.isInteger(groupedWallets[groupedWallets.length - 1].mts)
+    ) {
+      return groupedWallets[groupedWallets.length - 1].mts
+    }
+
+    const firstWalletsMts = await this.wallets.getFirstWalletsMts(args)
+
+    if (Number.isInteger(firstWalletsMts)) {
+      return firstWalletsMts
+    }
+
+    const { params } = { ...args }
+    const { start = 0 } = { ...params }
+
+    return start
+  }
+
   async getBalanceHistory (
     {
       auth = {},
@@ -380,9 +406,12 @@ class BalanceHistory {
       'currency',
       this._calcWalletsInTimeframe(firstWallets)
     )
-    const firstWalletsMts = await this.wallets.getFirstWalletsMts(args)
+    const startingMts = await this._getStartingMts(
+      args,
+      walletsGroupedByTimeframe
+    )
     const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
-      firstWalletsMts,
+      startingMts,
       end,
       timeframe,
       true

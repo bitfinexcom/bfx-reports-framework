@@ -240,7 +240,7 @@ class PerformingLoan {
 
     const ledgersGroupedByTimeframe = await groupByTimeframe(
       ledgers,
-      timeframe,
+      { timeframe, start, end },
       this.FOREX_SYMBS,
       ledgersDateFieldName,
       ledgersSymbolFieldName,

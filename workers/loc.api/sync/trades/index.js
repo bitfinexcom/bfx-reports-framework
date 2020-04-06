@@ -226,17 +226,24 @@ class Trades {
     return convertedTrades
   }
 
-  _getStartMtsFromTrades (trades) {
+  async _getStartingMts (
+    args,
+    groupedTrades
+  ) {
     if (
-      !Array.isArray(trades) ||
-      trades.length === 0
+      Array.isArray(groupedTrades) &&
+      groupedTrades.length > 0 &&
+      groupedTrades[groupedTrades.length - 1] &&
+      typeof groupedTrades[groupedTrades.length - 1] === 'object' &&
+      Number.isInteger(groupedTrades[groupedTrades.length - 1].mts)
     ) {
-      return 0
+      return groupedTrades[groupedTrades.length - 1].mts
     }
 
-    const { mtsCreate } = { ...trades[trades.length - 1] }
+    const { params } = { ...args }
+    const { start = 0 } = { ...params }
 
-    return mtsCreate
+    return start
   }
 
   async getGroupedDataIn (
@@ -254,8 +261,7 @@ class Trades {
     const {
       symbolFieldName: tradesSymbolFieldName
     } = this.tradesMethodColl
-
-    const trades = await this.getTrades({
+    const args = {
       auth,
       params: {
         ...params,
@@ -263,21 +269,24 @@ class Trades {
         end,
         timeframe
       }
-    })
+    }
 
-    const _start = Number.isInteger(start) && start > 0
-      ? start
-      : this._getStartMtsFromTrades(trades)
+    const trades = await this.getTrades(args)
+
     const tradesGroupedByTimeframe = await groupByTimeframe(
       trades,
-      { timeframe, start: _start, end },
+      { timeframe, start, end },
       this.FOREX_SYMBS,
       'mtsCreate',
       tradesSymbolFieldName,
       this._calcTrades(fieldName)
     )
+    const startingMts = await this._getStartingMts(
+      args,
+      tradesGroupedByTimeframe
+    )
     const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
-      _start,
+      startingMts,
       end,
       timeframe,
       true

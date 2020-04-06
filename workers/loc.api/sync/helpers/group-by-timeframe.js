@@ -234,5 +234,5 @@ module.exports = async (
     }
   }
 
-  return setMtsToStartingAndEndingFrames(res, start, end)
+  return setMtsToStartingAndEndingFrames(res, start, end, timeframe)
 }

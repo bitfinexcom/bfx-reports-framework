@@ -1,6 +1,21 @@
 'use strict'
 
-module.exports = (data, start, end) => {
+const getStartMtsByTimeframe = require(
+  './get-start-mts-by-timeframe'
+)
+
+const _getMtsIfInTimeframe = (nativeMts, mts, timeframe) => {
+  if (
+    typeof timeframe !== 'string' ||
+    getStartMtsByTimeframe(mts, timeframe) === getStartMtsByTimeframe(nativeMts, timeframe)
+  ) {
+    return mts
+  }
+
+  return nativeMts
+}
+
+module.exports = (data, start, end, timeframe) => {
   if (
     !Array.isArray(data) ||
     data.length === 0
@@ -17,7 +32,11 @@ module.exports = (data, start, end) => {
     typeof endingFrame === 'object' &&
     Number.isInteger(endingFrame.mts)
   ) {
-    endingFrame.mts = end
+    endingFrame.mts = _getMtsIfInTimeframe(
+      endingFrame.mts,
+      end,
+      timeframe
+    )
   }
   if (
     Number.isInteger(start) &&
@@ -26,7 +45,11 @@ module.exports = (data, start, end) => {
     typeof startingFrame === 'object' &&
     Number.isInteger(startingFrame.mts)
   ) {
-    startingFrame.mts = start
+    startingFrame.mts = _getMtsIfInTimeframe(
+      startingFrame.mts,
+      start,
+      timeframe
+    )
   }
 
   return data
