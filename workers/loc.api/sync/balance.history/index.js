@@ -380,8 +380,9 @@ class BalanceHistory {
       'currency',
       this._calcWalletsInTimeframe(firstWallets)
     )
+    const firstWalletsMts = await this.wallets.getFirstWalletsMts(args)
     const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
-      start,
+      firstWalletsMts,
       end,
       timeframe,
       true
