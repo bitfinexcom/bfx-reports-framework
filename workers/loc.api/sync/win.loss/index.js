@@ -11,7 +11,8 @@ const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
-  isForexSymb
+  isForexSymb,
+  getStartMtsByTimeframe
 } = require('../helpers')
 
 class WinLoss {
@@ -226,11 +227,18 @@ class WinLoss {
     timeframe
   ) {
     return groupedData.map((item, i) => {
-      if ((groupedData.length - 1) === i) {
+      if (
+        i === (groupedData.length - 1) ||
+        i === 0
+      ) {
         return { ...item }
       }
 
-      const mtsMoment = moment.utc(item.mts)
+      const normalizedMtsByTimeframe = getStartMtsByTimeframe(
+        item.mts,
+        timeframe
+      )
+      const mtsMoment = moment.utc(normalizedMtsByTimeframe)
 
       if (timeframe === 'day') {
         mtsMoment.add(1, 'days')
@@ -308,7 +316,7 @@ class WinLoss {
     )
     const withdrawalsGroupedByTimeframe = await groupByTimeframe(
       withdrawals,
-      timeframe,
+      { timeframe, start, end },
       this.FOREX_SYMBS,
       'mtsStarted',
       movementsSymbolFieldName,
@@ -316,7 +324,7 @@ class WinLoss {
     )
     const depositsGroupedByTimeframe = await groupByTimeframe(
       deposits,
-      timeframe,
+      { timeframe, start, end },
       this.FOREX_SYMBS,
       'mtsUpdated',
       movementsSymbolFieldName,
@@ -361,14 +369,14 @@ class WinLoss {
       ),
       true
     )
+    groupedData.push({
+      mts: start,
+      USD: 0
+    })
     const res = this._shiftMtsToNextTimeframe(
       groupedData,
       timeframe
     )
-    res.push({
-      mts: start,
-      USD: 0
-    })
 
     return res
   }

@@ -11,10 +11,12 @@ const TYPES = require('../../di/types')
 class Wallets {
   constructor (
     dao,
-    currencyConverter
+    currencyConverter,
+    TABLES_NAMES
   ) {
     this.dao = dao
     this.currencyConverter = currencyConverter
+    this.TABLES_NAMES = TABLES_NAMES
   }
 
   _getConvSchema (args) {
@@ -72,6 +74,22 @@ class Wallets {
     })
   }
 
+  async getFirstWalletsMts (args) {
+    const user = await this.dao.checkAuthInDb(args)
+    const firstLedger = await this.dao.getElemInCollBy(
+      this.TABLES_NAMES.LEDGERS,
+      { user_id: user._id },
+      [['mts', 1], ['id', 1]]
+    )
+    const { mts } = { ...firstLedger }
+
+    if (!Number.isInteger(mts)) {
+      return 0
+    }
+
+    return mts
+  }
+
   async getWallets (args) {
     const wallets = await this._getWallets(args)
     const convSchema = this._getConvSchema(args)
@@ -96,5 +114,6 @@ class Wallets {
 decorate(injectable(), Wallets)
 decorate(inject(TYPES.DAO), Wallets, 0)
 decorate(inject(TYPES.CurrencyConverter), Wallets, 1)
+decorate(inject(TYPES.TABLES_NAMES), Wallets, 2)
 
 module.exports = Wallets

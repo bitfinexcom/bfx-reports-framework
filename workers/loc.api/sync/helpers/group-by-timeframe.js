@@ -1,6 +1,11 @@
 'use strict'
 
-const getStartMtsByTimeframe = require('./get-start-mts-by-timeframe')
+const getStartMtsByTimeframe = require(
+  './get-start-mts-by-timeframe'
+)
+const setMtsToStartingAndEndingFrames = require(
+  './set-mts-to-starting-and-ending-frames'
+)
 
 const _getMtsDate = (obj, dateFieldName) => {
   return (
@@ -121,7 +126,7 @@ const _addFragment = (res, subRes, groupItem) => {
 
 module.exports = async (
   data,
-  timeframe,
+  params,
   symbol,
   dateFieldName,
   symbolFieldName,
@@ -133,6 +138,14 @@ module.exports = async (
   ) {
     return data
   }
+  const _params = params && typeof params === 'object'
+    ? params
+    : { timeframe: params }
+  const {
+    timeframe,
+    start,
+    end
+  } = { ..._params }
 
   const res = []
   const subRes = []
@@ -221,5 +234,5 @@ module.exports = async (
     }
   }
 
-  return res
+  return setMtsToStartingAndEndingFrames(res, start, end, timeframe)
 }
