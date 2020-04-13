@@ -140,10 +140,11 @@ class FrameworkReportService extends ReportService {
     }, 'getUsers', cb)
   }
 
-  /**
-   * TODO:
-   */
-  removeUser () {}
+  removeUser (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.removeUser(args)
+    }, 'removeUser', cb)
+  }
 
   /**
    * TODO: The method is deprecated, will be removed in future

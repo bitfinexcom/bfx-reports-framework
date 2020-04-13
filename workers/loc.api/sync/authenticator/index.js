@@ -467,6 +467,60 @@ class Authenticator {
     return user
   }
 
+  async removeUser (args) {
+    const { auth } = { ...args }
+    const {
+      email,
+      password,
+      isSubAccount,
+      jwt
+    } = { ...auth }
+
+    if (isSubAccount) {
+      throw new AuthError()
+    }
+
+    const user = await this.verifyUser(
+      {
+        auth: {
+          email,
+          password,
+          isSubAccount,
+          jwt
+        }
+      },
+      { isDecryptedApiKeys: true }
+    )
+    const {
+      _id,
+      email: emailFromDb,
+      isSubAccount: isSubAccountFromDb,
+      apiKey,
+      apiSecret
+    } = { ...user }
+
+    if (
+      isSubAccountFromDb ||
+      isSubAccountApiKeys({ apiKey, apiSecret })
+    ) {
+      throw new AuthError()
+    }
+
+    const res = await this.dao.removeElemsFromDb(
+      this.TABLES_NAMES.USERS,
+      null,
+      { _id, email: emailFromDb }
+    )
+
+    if (res && res.changes < 1) {
+      throw new AuthError()
+    }
+
+    this.removeUserSessionById(_id)
+
+    return true
+  }
+
   setUserSession (data) {
     const { _id, email, jwt } = { ...data }
 
