@@ -49,7 +49,12 @@ class Authenticator {
     const { apiKey, apiSecret, password } = { ...auth }
     const {
       active = true,
-      isDataFromDb = true
+      isDataFromDb = true,
+      isSubAccount = false,
+      isSubUser = false,
+      isDisabledApiKeysVerification = false,
+      isReturnedId = false,
+      isNotSetSession = false
     } = { ...params }
 
     if (
@@ -60,7 +65,11 @@ class Authenticator {
       !password ||
       typeof password !== 'string' ||
       !this.isSecurePassword(password) ||
-      isSubAccountApiKeys({ apiKey, apiSecret })
+      (
+        !isDisabledApiKeysVerification &&
+        isSubAccountApiKeys({ apiKey, apiSecret })
+      ) ||
+      (isSubAccount && isSubUser)
     ) {
       throw new AuthError()
     }
@@ -68,13 +77,25 @@ class Authenticator {
     const {
       email,
       timezone,
-      username,
+      username: uName,
       id
-    } = await this.rService._checkAuthInApi(args)
-    const userFromDb = await this.getUser(
-      { email },
-      { isNotSubAccount: true }
-    )
+    } = isDisabledApiKeysVerification
+      ? auth
+      : await this.rService._checkAuthInApi(args)
+
+    const subAccountNameEnding = isSubAccount
+      ? '-sub-account'
+      : ''
+    const subUserNameEnding = isSubUser
+      ? `-sub-user-${id}`
+      : ''
+    const username = `${uName}${subAccountNameEnding}${subUserNameEnding}`
+
+    const userFromDb = isDisabledApiKeysVerification
+      ? null
+      : await this.getUser(
+        { email, username, isSubAccount, isSubUser }
+      )
 
     if (
       !email ||
@@ -100,7 +121,10 @@ class Authenticator {
       this.crypto.hashPassword(password)
     ])
 
-    const { _id, isSubAccount } = await this.createUser({
+    const {
+      _id,
+      isSubAccount: isSubAccountFromDb
+    } = await this.createUser({
       email,
       timezone,
       username,
@@ -109,15 +133,25 @@ class Authenticator {
       apiSecret: encryptedApiSecret,
       active: serializeVal(active),
       isDataFromDb: serializeVal(isDataFromDb),
+      isSubAccount: serializeVal(isSubAccount),
+      isSubUser: serializeVal(isSubUser),
       passwordHash
     })
 
+    const idParam = isReturnedId ? { _id } : {}
     const payload = { _id, email, encryptedPassword }
     const jwt = await this.generateAuthJWT(payload)
 
-    this.setUserSession({ _id, email, jwt })
+    if (!isNotSetSession) {
+      this.setUserSession({ _id, email, jwt })
+    }
 
-    return { email, isSubAccount, jwt }
+    return {
+      ...idParam,
+      email,
+      isSubAccount: isSubAccountFromDb,
+      jwt
+    }
   }
 
   async signIn (args, params) {
@@ -249,14 +283,15 @@ class Authenticator {
     const {
       email,
       password,
-      isSubAccount,
+      isSubAccount = false,
       jwt
     } = { ...auth }
     const {
       projection,
       isFilledSubUsers,
       isDecryptedApiKeys,
-      isReturnedPassword
+      isReturnedPassword,
+      isSubUser = false
     } = { ...params }
 
     if (
@@ -269,10 +304,8 @@ class Authenticator {
         ? { password }
         : {}
       const _user = await this.getUser(
-        { email },
+        { email, isSubAccount, isSubUser },
         {
-          isNotSubAccount: !isSubAccount,
-          isSubAccount,
           isFilledSubUsers,
           ...pwdParam
         }
@@ -444,16 +477,18 @@ class Authenticator {
   }
 
   async createUser (data) {
-    const { email } = { ...data }
+    const {
+      email,
+      isSubAccount = false,
+      isSubUser = false
+    } = { ...data }
 
-    await this.dao.insertElemsToDb(
+    await this.dao.insertElemToDb(
       this.TABLES_NAMES.USERS,
-      null,
-      [data]
+      data
     )
     const user = await this.getUser(
-      { email },
-      { isNotSubAccount: true }
+      { email, isSubAccount, isSubUser }
     )
 
     if (
@@ -476,6 +511,7 @@ class Authenticator {
       jwt
     } = { ...auth }
 
+    // TODO:
     if (isSubAccount) {
       throw new AuthError()
     }
@@ -499,6 +535,7 @@ class Authenticator {
       apiSecret
     } = { ...user }
 
+    // TODO:
     if (
       isSubAccountFromDb ||
       isSubAccountApiKeys({ apiKey, apiSecret })

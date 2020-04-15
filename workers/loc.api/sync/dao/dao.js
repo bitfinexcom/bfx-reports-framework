@@ -135,11 +135,6 @@ class DAO {
   /**
    * @abstract
    */
-  async createSubAccount () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
   async removeSubAccount () { throw new ImplementationError() }
 
   /**

@@ -16,7 +16,6 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   AuthError,
-  SubAccountCreatingError,
   SubAccountRemovingError
 } = require('bfx-report/workers/loc.api/errors')
 
@@ -28,7 +27,6 @@ const {
   refreshObj,
   mapObjBySchema,
   isSubAccountApiKeys,
-  getSubAccountAuthFromAuth,
   getAuthFromSubAccountAuth,
   filterSubUsers
 } = require('../../helpers')
@@ -48,8 +46,7 @@ const {
   getSubQuery,
   filterModelNameMap,
   getTableCreationQuery,
-  pickUserData,
-  checkUserId
+  pickUserData
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -192,7 +189,7 @@ class SqliteDAO extends DAO {
       { name: this.TABLES_NAMES.PUBLIC_COLLS_CONF, isUnique: true }
     )
     const userSql = getIndexQuery(
-      ['apiKey', 'apiSecret'],
+      ['email', 'username'], // TODO: add into migration
       { name: this.TABLES_NAMES.USERS, isUnique: true }
     )
     const sqlArr = [...publicСollsСonfSql, ...userSql]
@@ -329,7 +326,8 @@ class SqliteDAO extends DAO {
     if (sqlArr.length === 0) {
       return
     }
-    await this._beginTrans(async () => {
+
+    return this._beginTrans(async () => {
       for (const sqlData of sqlArr) {
         const _sqlObj = typeof sqlData === 'string'
           ? { sql: sqlData }
@@ -689,8 +687,8 @@ class SqliteDAO extends DAO {
   getUser (
     filter,
     {
-      isNotSubAccount,
-      isSubAccount,
+      haveNotSubUsers,
+      haveSubUsers,
       isFilledSubUsers,
       sort = ['_id']
     } = {}
@@ -699,8 +697,8 @@ class SqliteDAO extends DAO {
       filter,
       {
         isFoundOne: true,
-        isNotSubAccount,
-        isSubAccount,
+        haveNotSubUsers,
+        haveSubUsers,
         isFilledSubUsers,
         sort
       }
@@ -713,8 +711,8 @@ class SqliteDAO extends DAO {
   getUsers (
     filter,
     {
-      isNotSubAccount,
-      isSubAccount,
+      haveNotSubUsers,
+      haveSubUsers,
       isFilledSubUsers,
       sort = ['_id'],
       limit
@@ -723,8 +721,8 @@ class SqliteDAO extends DAO {
     return this._getUsers(
       filter,
       {
-        isNotSubAccount,
-        isSubAccount,
+        haveNotSubUsers,
+        haveSubUsers,
         isFilledSubUsers,
         sort,
         limit
@@ -736,8 +734,8 @@ class SqliteDAO extends DAO {
     filter,
     {
       isFoundOne,
-      isNotSubAccount,
-      isSubAccount,
+      haveNotSubUsers,
+      haveSubUsers,
       isFilledSubUsers,
       sort = ['_id'],
       limit
@@ -752,22 +750,22 @@ class SqliteDAO extends DAO {
       where,
       values: _values
     } = getWhereQuery(filter, true, null, userTableAlias)
-    const isSubAccountQuery = isSubAccount
+    const haveSubUsersQuery = haveSubUsers
       ? 'sa.subUserId IS NOT NULL'
       : ''
-    const isNotSubAccountQuery = isNotSubAccount
+    const haveNotSubUsersQuery = haveNotSubUsers
       ? 'sa.subUserId IS NULL'
       : ''
     const whereQueries = [
       where,
-      isSubAccountQuery,
-      isNotSubAccountQuery
+      haveSubUsersQuery,
+      haveNotSubUsersQuery
     ].filter((query) => query).join(' AND ')
     const _where = whereQueries ? `WHERE ${whereQueries}` : ''
     const _sort = getOrderQuery(sort)
     const values = { ..._values, ...limitVal }
 
-    const sql = `SELECT ${userTableAlias}.*, sa.subUserId as isSubAccount
+    const sql = `SELECT ${userTableAlias}.*, sa.subUserId as haveSubUsers
       FROM ${this.TABLES_NAMES.USERS} AS u
       LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
         ON ${userTableAlias}._id = sa.masterUserId
@@ -792,20 +790,26 @@ class SqliteDAO extends DAO {
           ..._res,
           active: !!_res.active,
           isDataFromDb: !!_res.isDataFromDb,
-          isSubAccount: !!_res.isSubAccount
+          isSubAccount: !!_res.isSubAccount,
+          isSubUser: !!_res.isSubUser,
+          haveSubUsers: !!_res.haveSubUsers
         }
         : _res.map((user) => {
           const {
             active,
             isDataFromDb,
-            isSubAccount
+            isSubAccount,
+            isSubUser,
+            haveSubUsers
           } = { ...user }
 
           return {
             ...user,
             active: !!active,
             isDataFromDb: !!isDataFromDb,
-            isSubAccount: !!isSubAccount
+            isSubAccount: !!isSubAccount,
+            isSubUser: !!isSubUser,
+            haveSubUsers: !!haveSubUsers
           }
         })
 
@@ -880,99 +884,6 @@ class SqliteDAO extends DAO {
       ${_sort}`
 
     return this._all(sql, values)
-  }
-
-  /**
-   * @override
-   */
-  async createSubAccount (
-    masterUser = {},
-    subUsers = []
-  ) {
-    if (
-      isSubAccountApiKeys(masterUser) ||
-      !Array.isArray(subUsers) ||
-      subUsers.length === 0 ||
-      subUsers.some(isSubAccountApiKeys)
-    ) {
-      throw new SubAccountCreatingError()
-    }
-
-    const _masterUser = {
-      ...pickUserData(masterUser),
-      ...getSubAccountAuthFromAuth(masterUser),
-      active: 1,
-      isDataFromDb: 1
-    }
-    const _subUsers = filterSubUsers(subUsers, masterUser)
-    _subUsers.push(masterUser)
-
-    await this._beginTrans(async () => {
-      await this.insertElemToDb(
-        this.TABLES_NAMES.USERS,
-        _masterUser
-      )
-
-      const masterUserFromDb = await this._getUserByAuth(_masterUser)
-      checkUserId(masterUserFromDb)
-
-      for (const subUser of _subUsers) {
-        const userFromDb = await this._getUserByAuth(subUser)
-        const isEmptyUserFromDb = isEmpty(userFromDb)
-        const userFlags = isEmptyUserFromDb
-          ? {
-            active: 0,
-            isDataFromDb: 1
-          }
-          : {}
-
-        const user = {
-          ...userFromDb,
-          ...pickUserData(subUser),
-          ...userFlags
-        }
-
-        if (isEmptyUserFromDb) {
-          await this.insertElemToDb(
-            this.TABLES_NAMES.USERS,
-            user
-          )
-
-          const _userFromDb = await this._getUserByAuth(user)
-          checkUserId(_userFromDb)
-
-          await this.insertElemToDb(
-            this.TABLES_NAMES.SUB_ACCOUNTS,
-            {
-              masterUserId: masterUserFromDb._id,
-              subUserId: _userFromDb._id
-            }
-          )
-
-          continue
-        }
-
-        checkUserId(user)
-
-        const res = await this.updateCollBy(
-          this.TABLES_NAMES.USERS,
-          { _id: user._id },
-          user
-        )
-
-        if (res && res.changes < 1) {
-          throw new SubAccountCreatingError()
-        }
-
-        await this.insertElemToDb(
-          this.TABLES_NAMES.SUB_ACCOUNTS,
-          {
-            masterUserId: masterUserFromDb._id,
-            subUserId: user._id
-          }
-        )
-      }
-    })
   }
 
   /**
