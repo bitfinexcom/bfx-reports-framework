@@ -54,8 +54,8 @@ const _models = new Map([
       timezone: 'VARCHAR(255)',
       username: 'VARCHAR(255)',
       passwordHash: 'VARCHAR(255)',
-      isSubAccount: 'INT', // TODO: add into migration
-      isSubUser: 'INT' // TODO: add into migration
+      isSubAccount: 'INT',
+      isSubUser: 'INT'
     }
   ],
   [

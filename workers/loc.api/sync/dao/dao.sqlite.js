@@ -189,7 +189,7 @@ class SqliteDAO extends DAO {
       { name: this.TABLES_NAMES.PUBLIC_COLLS_CONF, isUnique: true }
     )
     const userSql = getIndexQuery(
-      ['email', 'username'], // TODO: add into migration
+      ['email', 'username'],
       { name: this.TABLES_NAMES.USERS, isUnique: true }
     )
     const sqlArr = [...publicСollsСonfSql, ...userSql]

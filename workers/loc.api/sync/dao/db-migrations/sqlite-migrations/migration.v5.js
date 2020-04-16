@@ -14,7 +14,13 @@ class MigrationV5 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'ALTER TABLE users ADD COLUMN passwordHash VARCHAR(255)'
+      'ALTER TABLE users ADD COLUMN passwordHash VARCHAR(255)',
+      'ALTER TABLE users ADD COLUMN isSubAccount INT',
+      'ALTER TABLE users ADD COLUMN isSubUser INT',
+
+      `CREATE UNIQUE INDEX users_email_username
+        ON users(email, username)`,
+      'DROP INDEX users_apiKey_apiSecret'
     ]
 
     this.addSql(sqlArr)
@@ -46,10 +52,12 @@ class MigrationV5 extends AbstractMigration {
           active: 'INT',
           isDataFromDb: 'INT',
           timezone: 'VARCHAR(255)',
-          username: 'VARCHAR(255)',
-          passwordHash: 'VARCHAR(255)'
+          username: 'VARCHAR(255)'
         }
-      )
+      ),
+
+      `CREATE UNIQUE INDEX users_apiKey_apiSecret
+        ON users(apiKey, apiSecret)`
     ]
 
     this.addSql(sqlArr)
