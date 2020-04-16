@@ -144,6 +144,17 @@ class FrameworkReportService extends ReportService {
     }, 'removeUser', cb)
   }
 
+  createSubAccount (space, args, cb) {
+    return this._responder(async () => {
+      checkParams(args, 'paramsSchemaForCreateSubAccount')
+
+      await this._subAccount
+        .createSubAccount(args)
+
+      return true
+    }, 'createSubAccount', cb)
+  }
+
   /**
    * TODO: The method is deprecated, will be removed in future
    *
@@ -195,33 +206,6 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'logout', cb)
-  }
-
-  createSubAccount (space, args, cb) {
-    return this._responder(async () => {
-      checkParams(args, 'paramsSchemaForCreateSubAccount')
-
-      await this._subAccount
-        .createSubAccount(args)
-
-      return true
-    }, 'createSubAccount', cb)
-  }
-
-  removeSubAccount (space, args, cb) {
-    return this._responder(async () => {
-      await this._subAccount
-        .removeSubAccount(args)
-
-      return true
-    }, 'removeSubAccount', cb)
-  }
-
-  hasSubAccount (space, args, cb) {
-    return this._responder(async () => {
-      return this._subAccount
-        .hasSubAccount(args)
-    }, 'hasSubAccount', cb)
   }
 
   checkAuthInDb (space, args, cb) {

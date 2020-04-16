@@ -113,8 +113,8 @@ class SubAccountCreatingError extends AuthError {
   }
 }
 
-class SubAccountRemovingError extends AuthError {
-  constructor (message = 'ERR_SUB_ACCOUNT_REMOVE_HAS_FAILED') {
+class UserRemovingError extends AuthError {
+  constructor (message = 'ERR_USER_REMOVE_HAS_FAILED') {
     super(message)
   }
 }
@@ -157,7 +157,7 @@ module.exports = {
   DbVersionTypeError,
   MigrationLaunchingError,
   SubAccountCreatingError,
-  SubAccountRemovingError,
+  UserRemovingError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
   GetPublicDataError

@@ -13,6 +13,9 @@ const {
 const TYPES = require('../../di/types')
 const { serializeVal } = require('../dao/helpers')
 const { isSubAccountApiKeys } = require('../../helpers')
+const {
+  UserRemovingError
+} = require('../../errors')
 
 class Authenticator {
   constructor (
@@ -511,11 +514,6 @@ class Authenticator {
       jwt
     } = { ...auth }
 
-    // TODO:
-    if (isSubAccount) {
-      throw new AuthError()
-    }
-
     const user = await this.verifyUser(
       {
         auth: {
@@ -529,31 +527,22 @@ class Authenticator {
     )
     const {
       _id,
-      email: emailFromDb,
-      isSubAccount: isSubAccountFromDb,
-      apiKey,
-      apiSecret
+      email: emailFromDb
     } = { ...user }
 
-    // TODO:
-    if (
-      isSubAccountFromDb ||
-      isSubAccountApiKeys({ apiKey, apiSecret })
-    ) {
-      throw new AuthError()
-    }
+    await this.dao.executeQueriesInTrans(async () => {
+      const res = await this.dao.removeElemsFromDb(
+        this.TABLES_NAMES.USERS,
+        null,
+        { _id, email: emailFromDb }
+      )
 
-    const res = await this.dao.removeElemsFromDb(
-      this.TABLES_NAMES.USERS,
-      null,
-      { _id, email: emailFromDb }
-    )
+      if (res && res.changes < 1) {
+        throw new UserRemovingError()
+      }
 
-    if (res && res.changes < 1) {
-      throw new AuthError()
-    }
-
-    this.removeUserSessionById(_id)
+      this.removeUserSessionById(_id)
+    })
 
     return true
   }

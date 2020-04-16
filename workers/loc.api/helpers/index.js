@@ -15,8 +15,7 @@ const {
 const {
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
-  getSubAccountAuthFromAuth,
-  filterSubUsers
+  getSubAccountAuthFromAuth
 } = require('./sub-account-auth')
 
 module.exports = {
@@ -30,6 +29,5 @@ module.exports = {
   isEaiAgainError,
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
-  getSubAccountAuthFromAuth,
-  filterSubUsers
+  getSubAccountAuthFromAuth
 }

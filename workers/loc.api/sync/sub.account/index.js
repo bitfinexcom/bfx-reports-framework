@@ -1,15 +1,11 @@
 'use strict'
 
-const { isEmpty } = require('lodash')
-
 const {
   isSubAccountApiKeys,
-  getSubAccountAuthFromAuth,
-  getAuthFromSubAccountAuth
+  getSubAccountAuthFromAuth
 } = require('../../helpers')
 const {
-  SubAccountCreatingError,
-  SubAccountRemovingError
+  SubAccountCreatingError
 } = require('../../errors')
 
 const {
@@ -201,48 +197,6 @@ class SubAccount {
         jwt
       }
     })
-  }
-
-  async removeSubAccount (args) {
-    const { auth } = { ...args }
-
-    if (isSubAccountApiKeys(auth)) {
-      throw new SubAccountRemovingError()
-    }
-
-    const user = await this.dao.checkAuthInDb(args)
-    const masterUserAuth = getSubAccountAuthFromAuth(user)
-    const masterUser = await this.dao.checkAuthInDb(
-      { auth: masterUserAuth },
-      false
-    )
-
-    await this.dao.removeSubAccount(masterUser)
-  }
-
-  async hasSubAccount (args) {
-    const { auth } = { ...args }
-    const _auth = getAuthFromSubAccountAuth(auth)
-
-    try {
-      const user = await this.dao.checkAuthInDb(
-        { auth: _auth },
-        false
-      )
-      const masterUserAuth = getSubAccountAuthFromAuth(user)
-      const subUsers = await this.dao.getSubUsersByMasterUserApiKeys(
-        masterUserAuth
-      )
-      const hasSubUsersMoreThanOne = (
-        Array.isArray(subUsers) &&
-        subUsers.length > 0 &&
-        subUsers.every((sUser) => !isEmpty(sUser))
-      )
-
-      return hasSubUsersMoreThanOne
-    } catch (err) {
-      return false
-    }
   }
 }
 
