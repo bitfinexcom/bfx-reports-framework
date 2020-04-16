@@ -55,7 +55,12 @@ const _models = new Map([
       username: 'VARCHAR(255)',
       passwordHash: 'VARCHAR(255)',
       isSubAccount: 'INT',
-      isSubUser: 'INT'
+      isSubUser: 'INT',
+      __constraints__: `CONSTRAINT #{tableName}_fk__id
+        FOREIGN KEY (_id)
+        REFERENCES ${TABLES_NAMES.SUB_ACCOUNTS}(subUserId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
     }
   ],
   [

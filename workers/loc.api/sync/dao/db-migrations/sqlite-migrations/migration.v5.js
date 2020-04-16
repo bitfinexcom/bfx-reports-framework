@@ -1,7 +1,7 @@
 'use strict'
 
 const AbstractMigration = require('./abstract.migration')
-const { getSqlArrToRemoveColumns } = require('./helpers')
+const { getSqlArrToModifyColumns } = require('./helpers')
 
 class MigrationV5 extends AbstractMigration {
   /**
@@ -14,13 +14,33 @@ class MigrationV5 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'ALTER TABLE users ADD COLUMN passwordHash VARCHAR(255)',
-      'ALTER TABLE users ADD COLUMN isSubAccount INT',
-      'ALTER TABLE users ADD COLUMN isSubUser INT',
+      'DROP INDEX users_apiKey_apiSecret',
+
+      ...getSqlArrToModifyColumns(
+        'users',
+        {
+          _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
+          id: 'BIGINT',
+          email: 'VARCHAR(255)',
+          apiKey: 'VARCHAR(255) NOT NULL',
+          apiSecret: 'VARCHAR(255) NOT NULL',
+          active: 'INT',
+          isDataFromDb: 'INT',
+          timezone: 'VARCHAR(255)',
+          username: 'VARCHAR(255)',
+          passwordHash: 'VARCHAR(255)',
+          isSubAccount: 'INT',
+          isSubUser: 'INT',
+          __constraints__: `CONSTRAINT #{tableName}_fk__id
+            FOREIGN KEY (_id)
+            REFERENCES subAccounts(subUserId)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE`
+        }
+      ),
 
       `CREATE UNIQUE INDEX users_email_username
-        ON users(email, username)`,
-      'DROP INDEX users_apiKey_apiSecret'
+        ON users(email, username)`
     ]
 
     this.addSql(sqlArr)
@@ -41,7 +61,9 @@ class MigrationV5 extends AbstractMigration {
    */
   down () {
     const sqlArr = [
-      ...getSqlArrToRemoveColumns(
+      'DROP INDEX users_email_username',
+
+      ...getSqlArrToModifyColumns(
         'users',
         {
           _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
