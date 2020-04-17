@@ -24,6 +24,7 @@ const SQL_OPERATORS = require('./sql.operators')
 const getSymbolFilter = require('./get-symbol-filter')
 const getStatusMessagesFilter = require('./get-status-messages-filter')
 const getTableCreationQuery = require('./get-table-creation-query')
+const getTriggerCreationQuery = require('./get-trigger-creation-query')
 const getTimeframeFilter = require('./get-timeframe-filter')
 
 module.exports = {
@@ -45,6 +46,7 @@ module.exports = {
   getSymbolFilter,
   getStatusMessagesFilter,
   getTableCreationQuery,
+  getTriggerCreationQuery,
   pickUserData,
   checkUserId,
   getTimeframeFilter
