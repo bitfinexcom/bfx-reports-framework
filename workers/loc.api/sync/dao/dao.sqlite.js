@@ -684,6 +684,7 @@ class SqliteDAO extends DAO {
   getUser (
     filter,
     {
+      isNotInTrans,
       haveNotSubUsers,
       haveSubUsers,
       isFilledSubUsers,
@@ -693,6 +694,7 @@ class SqliteDAO extends DAO {
     return this._getUsers(
       filter,
       {
+        isNotInTrans,
         isFoundOne: true,
         haveNotSubUsers,
         haveSubUsers,
@@ -708,6 +710,7 @@ class SqliteDAO extends DAO {
   getUsers (
     filter,
     {
+      isNotInTrans,
       haveNotSubUsers,
       haveSubUsers,
       isFilledSubUsers,
@@ -718,6 +721,7 @@ class SqliteDAO extends DAO {
     return this._getUsers(
       filter,
       {
+        isNotInTrans,
         haveNotSubUsers,
         haveSubUsers,
         isFilledSubUsers,
@@ -730,6 +734,7 @@ class SqliteDAO extends DAO {
   async _getUsers (
     filter,
     {
+      isNotInTrans,
       isFoundOne,
       haveNotSubUsers,
       haveSubUsers,
@@ -760,17 +765,19 @@ class SqliteDAO extends DAO {
     ].filter((query) => query).join(' AND ')
     const _where = whereQueries ? `WHERE ${whereQueries}` : ''
     const _sort = getOrderQuery(sort)
+    const group = `GROUP BY ${userTableAlias}._id`
     const values = { ..._values, ...limitVal }
 
     const sql = `SELECT ${userTableAlias}.*, sa.subUserId as haveSubUsers
-      FROM ${this.TABLES_NAMES.USERS} AS u
+      FROM ${this.TABLES_NAMES.USERS} AS ${userTableAlias}
       LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
         ON ${userTableAlias}._id = sa.masterUserId
       ${_where}
+      ${group}
       ${_sort}
       ${_limit}`
 
-    return this._beginTrans(async () => {
+    const queryUsersFn = async () => {
       const _res = isFoundOne
         ? await this._get(sql, values)
         : await this._all(sql, values)
@@ -815,7 +822,13 @@ class SqliteDAO extends DAO {
         : res
 
       return usersFilledSubUsers
-    })
+    }
+
+    if (isNotInTrans) {
+      return queryUsersFn()
+    }
+
+    return this._beginTrans(queryUsersFn)
   }
 
   async _fillSubUsers (users) {
