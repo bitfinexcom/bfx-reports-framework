@@ -30,12 +30,14 @@ class SubAccount {
   }
 
   async createSubAccount (args) {
-    const { params } = { ...args }
+    const { auth, params } = { ...args }
     const {
       email,
       password,
+      jwt
+    } = { ...auth }
+    const {
       subAccountPassword,
-      jwt,
       subAccountApiKeys
     } = { ...params }
 
@@ -55,7 +57,8 @@ class SubAccount {
             'apiKey',
             'apiSecret',
             'timezone',
-            'username'
+            'username',
+            'password'
           ],
           isDecryptedApiKeys: true,
           isReturnedPassword: true
@@ -92,7 +95,8 @@ class SubAccount {
             isDisabledApiKeysVerification: true,
             isReturnedId: true,
             isNotSetSession: true,
-            isSubAccount: true
+            isSubAccount: true,
+            isNotInTrans: true
           }
         )
 
@@ -143,7 +147,8 @@ class SubAccount {
                 'timezone',
                 'username'
               ],
-              isDecryptedApiKeys: true
+              isDecryptedApiKeys: true,
+              isNotInTrans: true
             }
           )
           : { apiKey, apiSecret }
@@ -169,7 +174,8 @@ class SubAccount {
               isDisabledApiKeysVerification: isAuthCheckedInDb,
               isReturnedId: true,
               isNotSetSession: true,
-              isSubUser: true
+              isSubUser: true,
+              isNotInTrans: true
             }
           )
 
@@ -178,7 +184,7 @@ class SubAccount {
           apiSecret: auth.apiSecret
         })
 
-        await this.insertElemToDb(
+        await this.dao.insertElemToDb(
           this.TABLES_NAMES.SUB_ACCOUNTS,
           {
             masterUserId: _id,
@@ -187,7 +193,7 @@ class SubAccount {
         )
       }
 
-      this.setUserSession(
+      this.authenticator.setUserSession(
         { _id, email, jwt }
       )
 

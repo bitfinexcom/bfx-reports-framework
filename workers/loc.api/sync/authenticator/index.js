@@ -57,7 +57,8 @@ class Authenticator {
       isSubUser = false,
       isDisabledApiKeysVerification = false,
       isReturnedId = false,
-      isNotSetSession = false
+      isNotSetSession = false,
+      isNotInTrans = false
     } = { ...params }
 
     if (
@@ -83,21 +84,20 @@ class Authenticator {
       username: uName,
       id
     } = isDisabledApiKeysVerification
-      ? auth
+      ? { ...auth }
       : await this.rService._checkAuthInApi(args)
 
-    const subAccountNameEnding = isSubAccount
-      ? '-sub-account'
-      : ''
-    const subUserNameEnding = isSubUser
-      ? `-sub-user-${id}`
-      : ''
-    const username = `${uName}${subAccountNameEnding}${subUserNameEnding}`
+    const username = this.generateSubUserName(
+      { id, username: uName },
+      isSubAccount,
+      isSubUser
+    )
 
     const userFromDb = isDisabledApiKeysVerification
       ? null
       : await this.getUser(
-        { email, username, isSubAccount, isSubUser }
+        { email, username, isSubAccount, isSubUser },
+        { isNotInTrans }
       )
 
     if (
@@ -127,19 +127,22 @@ class Authenticator {
     const {
       _id,
       isSubAccount: isSubAccountFromDb
-    } = await this.createUser({
-      email,
-      timezone,
-      username,
-      id,
-      apiKey: encryptedApiKey,
-      apiSecret: encryptedApiSecret,
-      active: serializeVal(active),
-      isDataFromDb: serializeVal(isDataFromDb),
-      isSubAccount: serializeVal(isSubAccount),
-      isSubUser: serializeVal(isSubUser),
-      passwordHash
-    })
+    } = await this.createUser(
+      {
+        email,
+        timezone,
+        username,
+        id,
+        apiKey: encryptedApiKey,
+        apiSecret: encryptedApiSecret,
+        active: serializeVal(active),
+        isDataFromDb: serializeVal(isDataFromDb),
+        isSubAccount: serializeVal(isSubAccount),
+        isSubUser: serializeVal(isSubUser),
+        passwordHash
+      },
+      { isNotInTrans }
+    )
 
     const idParam = isReturnedId ? { _id } : {}
     const payload = { _id, email, encryptedPassword }
@@ -196,11 +199,15 @@ class Authenticator {
     const {
       id,
       timezone,
-      username,
+      username: uName,
       email: emailFromApi
     } = await this.rService._checkAuthInApi({
       auth: { apiKey, apiSecret }
     })
+    const username = this.generateSubUserName(
+      { id, username: uName },
+      isSubAccount
+    )
 
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
@@ -294,7 +301,8 @@ class Authenticator {
       isFilledSubUsers,
       isDecryptedApiKeys,
       isReturnedPassword,
-      isSubUser = false
+      isSubUser = false,
+      isNotInTrans
     } = { ...params }
 
     if (
@@ -309,6 +317,7 @@ class Authenticator {
       const _user = await this.getUser(
         { email, isSubAccount, isSubUser },
         {
+          isNotInTrans,
           isFilledSubUsers,
           ...pwdParam
         }
@@ -345,6 +354,7 @@ class Authenticator {
       const _user = await this.getUser(
         { _id, email: emailFromJWT },
         {
+          isNotInTrans,
           isFilledSubUsers,
           ...pwdParam
         }
@@ -479,19 +489,21 @@ class Authenticator {
     return isArray ? res : res[0]
   }
 
-  async createUser (data) {
+  async createUser (data, params) {
     const {
       email,
       isSubAccount = false,
       isSubUser = false
     } = { ...data }
+    const { isNotInTrans } = { ...params }
 
     await this.dao.insertElemToDb(
       this.TABLES_NAMES.USERS,
       data
     )
     const user = await this.getUser(
-      { email, isSubAccount, isSubUser }
+      { email, isSubAccount, isSubUser },
+      { isNotInTrans }
     )
 
     if (
@@ -679,6 +691,19 @@ class Authenticator {
 
   isSecurePassword (password) {
     return this.passRegEx.test(password)
+  }
+
+  generateSubUserName (user, isSubAccount, isSubUser) {
+    const { id, username: uName } = { ...user }
+    const subAccountNameEnding = isSubAccount
+      ? '-sub-account'
+      : ''
+    const subUserNameEnding = isSubUser
+      ? `-sub-user-${id}`
+      : ''
+    const username = `${uName}${subAccountNameEnding}${subUserNameEnding}`
+
+    return username
   }
 }
 
