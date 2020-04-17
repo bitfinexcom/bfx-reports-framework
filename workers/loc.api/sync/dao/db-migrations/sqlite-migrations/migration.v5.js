@@ -16,31 +16,20 @@ class MigrationV5 extends AbstractMigration {
     const sqlArr = [
       'DROP INDEX users_apiKey_apiSecret',
 
-      ...getSqlArrToModifyColumns(
-        'users',
-        {
-          _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
-          id: 'BIGINT',
-          email: 'VARCHAR(255)',
-          apiKey: 'VARCHAR(255) NOT NULL',
-          apiSecret: 'VARCHAR(255) NOT NULL',
-          active: 'INT',
-          isDataFromDb: 'INT',
-          timezone: 'VARCHAR(255)',
-          username: 'VARCHAR(255)',
-          passwordHash: 'VARCHAR(255)',
-          isSubAccount: 'INT',
-          isSubUser: 'INT',
-          __constraints__: `CONSTRAINT #{tableName}_fk__id
-            FOREIGN KEY (_id)
-            REFERENCES subAccounts(subUserId)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE`
-        }
-      ),
+      'ALTER TABLE users ADD COLUMN passwordHash VARCHAR(255)',
+      'ALTER TABLE users ADD COLUMN isSubAccount INT',
+      'ALTER TABLE users ADD COLUMN isSubUser INT',
 
       `CREATE UNIQUE INDEX users_email_username
-        ON users(email, username)`
+        ON users(email, username)`,
+
+      `CREATE TRIGGER delete_subAccounts_subUsers_from_users
+        AFTER DELETE ON subAccounts
+        FOR EACH ROW
+        BEGIN
+          DELETE FROM users
+            WHERE _id = OLD.subUserId;
+        END`
     ]
 
     this.addSql(sqlArr)
@@ -62,6 +51,8 @@ class MigrationV5 extends AbstractMigration {
   down () {
     const sqlArr = [
       'DROP INDEX users_email_username',
+
+      'DROP TRIGGER delete_subAccounts_subUsers_from_users',
 
       ...getSqlArrToModifyColumns(
         'users',
