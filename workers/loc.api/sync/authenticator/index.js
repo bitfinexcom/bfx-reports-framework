@@ -170,7 +170,8 @@ class Authenticator {
     } = { ...auth }
     const {
       active = true,
-      isDataFromDb = true
+      isDataFromDb = true,
+      isReturnedUser
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -209,17 +210,18 @@ class Authenticator {
       isSubAccount
     )
 
+    const freshUserData = {
+      id,
+      timezone,
+      username,
+      email: emailFromApi,
+      active: serializeVal(active),
+      isDataFromDb: serializeVal(isDataFromDb)
+    }
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
-      {
-        id,
-        timezone,
-        username,
-        email: emailFromApi,
-        active: serializeVal(active),
-        isDataFromDb: serializeVal(isDataFromDb)
-      }
+      freshUserData
     )
 
     if (res && res.changes < 1) {
@@ -239,12 +241,19 @@ class Authenticator {
       jwt
     }
     const resJWT = await this.generateAuthJWT(payload)
+    const returnedUser = isReturnedUser
+      ? {
+        ...user,
+        ...freshUserData
+      }
+      : {}
 
     this.setUserSession(
       { _id, email: emailFromApi, jwt: resJWT }
     )
 
     return {
+      ...returnedUser,
       email: emailFromApi,
       isSubAccount: isSubAccountFromDb,
       jwt: resJWT

@@ -264,17 +264,17 @@ class FrameworkReportService extends ReportService {
 
   disableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      checkParamsAuth(args)
+      const auth = await this._authenticator.signIn(
+        args,
+        {
+          isDataFromDb: false,
+          isReturnedUser: true
+        }
+      )
 
-      const { auth } = { ...args }
-
-      await this._dao.updateUserByAuth({
-        ...pick(auth, ['apiKey', 'apiSecret']),
-        isDataFromDb: 0
-      })
       await this._wsEventEmitter.emitRedirectingRequestsStatusToApi(
         (user) => {
-          if (this._wsEventEmitter.isInvalidAuth(args, user)) {
+          if (this._wsEventEmitter.isInvalidAuth(auth, user)) {
             return null
           }
 
