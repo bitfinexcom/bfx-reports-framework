@@ -226,9 +226,6 @@ class FrameworkReportService extends ReportService {
     }, 'disableSyncMode', cb)
   }
 
-  /**
-   * TODO:
-   */
   isSyncModeWithDbData (space, args, cb) {
     return this._privResponder(async () => {
       const { auth } = { ...args }
@@ -247,18 +244,22 @@ class FrameworkReportService extends ReportService {
   }
 
   enableScheduler (space, args, cb) {
-    return this._responder(async () => {
-      await this._dao.checkAuthInDb(args)
-      await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, true)
+    return this._privResponder(async () => {
+      await this._dao.updateStateOf(
+        this._TABLES_NAMES.SCHEDULER,
+        true
+      )
 
       return this.syncNow()
     }, 'enableScheduler', cb)
   }
 
   disableScheduler (space, args, cb) {
-    return this._responder(async () => {
-      await this._dao.checkAuthInDb(args)
-      await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, false)
+    return this._privResponder(async () => {
+      await this._dao.updateStateOf(
+        this._TABLES_NAMES.SCHEDULER,
+        false
+      )
 
       return true
     }, 'disableScheduler', cb)
@@ -280,13 +281,13 @@ class FrameworkReportService extends ReportService {
   }
 
   getSyncProgress (space, args, cb) {
-    return this._responder(async () => {
-      const user = await this._dao.checkAuthInDb(args, false)
+    return this._privResponder(async () => {
+      const { auth } = { ...args }
+      const { isDataFromDb } = { ...auth }
       const isSchedulerEnabled = await this.isSchedulerEnabled()
 
       return (
-        !isEmpty(user) &&
-        user.isDataFromDb &&
+        isDataFromDb &&
         isSchedulerEnabled
       )
         ? this._progress.getProgress()
@@ -295,20 +296,15 @@ class FrameworkReportService extends ReportService {
   }
 
   syncNow (space, args = {}, cb) {
-    return this._responder(async () => {
-      if (cb) {
-        await this._dao.checkAuthInDb(args)
-      }
+    const responder = cb
+      ? this._privResponder
+      : this._responder
 
-      const syncColls = (
-        args &&
-        typeof args === 'object' &&
-        args.params &&
-        typeof args.params === 'object' &&
-        args.params.syncColls
-      )
-        ? args.params.syncColls
-        : this._ALLOWED_COLLS.ALL
+    return responder(async () => {
+      const { params } = { ...args }
+      const {
+        syncColls = this._ALLOWED_COLLS.ALL
+      } = { ...params }
 
       return this._sync.start(true, syncColls)
     }, 'syncNow', cb)
@@ -407,24 +403,6 @@ class FrameworkReportService extends ReportService {
       return this._publicСollsСonfAccessors
         .getAllPublicСollsСonfs(args)
     }, 'editCandlesConf', cb)
-  }
-
-  /**
-   * @override
-   */
-  getEmail (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        const { auth: _auth } = { ...args }
-        const auth = getAuthFromSubAccountAuth(_auth)
-
-        return super.getEmail(space, { ...args, auth })
-      }
-
-      const { email } = await this._dao.checkAuthInDb(args)
-
-      return email
-    }, 'getEmail', cb)
   }
 
   /**
