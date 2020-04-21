@@ -9,8 +9,6 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  isAuthError,
-  isNonceSmallError,
   getTimezoneConf,
   getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
@@ -26,7 +24,8 @@ const {
   isEnotfoundError,
   isEaiAgainError,
   collObjToArr,
-  getAuthFromSubAccountAuth
+  getAuthFromSubAccountAuth,
+  isSubAccountApiKeys
 } = require('./helpers')
 
 class FrameworkReportService extends ReportService {
@@ -51,26 +50,19 @@ class FrameworkReportService extends ReportService {
    */
   async _getUserInfo (args) {
     try {
-      const {
-        username,
-        timezone,
-        email,
-        id
-      } = await this._dao.checkAuthInDb(args)
+      const user = await this._authenticator.verifyUser(
+        args,
+        {
+          projection: [
+            'username',
+            'timezone',
+            'email',
+            'id'
+          ]
+        }
+      )
 
-      if (
-        !username ||
-        typeof username !== 'string'
-      ) {
-        return false
-      }
-
-      return {
-        username,
-        timezone,
-        email,
-        id
-      }
+      return user
     } catch (err) {
       return false
     }
@@ -121,6 +113,14 @@ class FrameworkReportService extends ReportService {
 
   verifyUser (space, args, cb) {
     return this._responder(async () => {
+      if (!await this.isSyncModeConfig(space, args)) {
+        const { email } = await this._checkAuthInApi(args)
+        const { auth } = { ...args }
+        const isSubAccount = isSubAccountApiKeys(auth)
+
+        return { email, isSubAccount }
+      }
+
       return this._authenticator.verifyUser(
         args,
         { projection: ['email', 'isSubAccount'] }
@@ -152,72 +152,6 @@ class FrameworkReportService extends ReportService {
 
       return true
     }, 'createSubAccount', cb)
-  }
-
-  /**
-   * TODO: The method is deprecated, will be removed in future
-   *
-   * @deprecated
-   * @override
-   */
-  login (space, args, cb, isInnerCall) {
-    return this._responder(async () => {
-      const { auth } = { ...args }
-      let userInfo = {
-        email: null,
-        timezone: null,
-        id: null
-      }
-
-      try {
-        userInfo = await this._checkAuthInApi(args)
-      } catch (err) {
-        if (
-          isAuthError(err) ||
-          isNonceSmallError(err)
-        ) {
-          throw err
-        }
-      }
-
-      const data = {
-        ...auth,
-        ...userInfo
-      }
-
-      const user = await this._dao.insertOrUpdateUser(data)
-      const isSyncModeConfig = this.isSyncModeConfig()
-
-      return isInnerCall
-        ? { ...user, isSyncModeConfig }
-        : user.email
-    }, 'login', cb)
-  }
-
-  /**
-   * TODO: The method is deprecated, will be removed in future
-   *
-   * @deprecated
-   */
-  logout (space, args, cb) {
-    return this._responder(async () => {
-      await this._dao.deactivateUser(args.auth)
-
-      return true
-    }, 'logout', cb)
-  }
-
-  /**
-   * TODO: The method is deprecated, will be removed in future
-   *
-   * @deprecated
-   */
-  checkAuthInDb (space, args, cb) {
-    return this._responder(async () => {
-      const { email } = await this._dao.checkAuthInDb(args)
-
-      return email
-    }, 'checkAuthInDb', cb)
   }
 
   pingApi (space, args, cb) {
