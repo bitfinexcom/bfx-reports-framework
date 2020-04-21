@@ -215,8 +215,12 @@ class Authenticator {
       timezone,
       username,
       email: emailFromApi,
-      active: serializeVal(active),
-      isDataFromDb: serializeVal(isDataFromDb)
+      active: active === null
+        ? user.active
+        : serializeVal(active),
+      isDataFromDb: isDataFromDb === null
+        ? user.isDataFromDb
+        : serializeVal(isDataFromDb)
     }
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,

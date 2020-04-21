@@ -1,7 +1,6 @@
 'use strict'
 
 const {
-  pick,
   omit,
   isEmpty
 } = require('lodash')
@@ -208,6 +207,11 @@ class FrameworkReportService extends ReportService {
     }, 'logout', cb)
   }
 
+  /**
+   * TODO: The method is deprecated, will be removed in future
+   *
+   * @deprecated
+   */
   checkAuthInDb (space, args, cb) {
     return this._responder(async () => {
       const { email } = await this._dao.checkAuthInDb(args)
@@ -249,13 +253,14 @@ class FrameworkReportService extends ReportService {
 
   enableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      checkParamsAuth(args)
-
+      await this._authenticator.signIn(
+        args,
+        {
+          active: null,
+          isDataFromDb: true
+        }
+      )
       await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
-      await this._dao.updateUserByAuth({
-        ...pick(args.auth, ['apiKey', 'apiSecret']),
-        isDataFromDb: 1
-      })
       await this._sync.start(true)
 
       return true
@@ -267,6 +272,7 @@ class FrameworkReportService extends ReportService {
       const auth = await this._authenticator.signIn(
         args,
         {
+          active: null,
           isDataFromDb: false,
           isReturnedUser: true
         }

@@ -150,13 +150,6 @@ class WSTransport {
             return
           }
 
-          // TODO:
-          // const user = await this.rService.login(
-          //   null,
-          //   { auth: payload.auth },
-          //   null,
-          //   true
-          // )
           const user = await this.authenticator.signIn(
             { auth: payload.auth },
             { isReturnedUser: true }
