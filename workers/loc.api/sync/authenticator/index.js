@@ -336,7 +336,7 @@ class Authenticator {
         }
       )
       const { passwordHash } = { ..._user }
-      const user = this.excludeProps(_user, projection)
+      const user = this.pickProps(_user, projection)
 
       await this.crypto.verifyPassword(
         password,
@@ -383,7 +383,7 @@ class Authenticator {
         ..._user,
         password: isReturnedPassword ? decryptedPassword : null
       }
-      return this.excludeProps(user, projection)
+      return this.pickProps(user, projection)
     }
 
     throw new AuthError()
@@ -397,7 +397,7 @@ class Authenticator {
     } = { ...params }
 
     const _user = await this.dao.getUser(filter, params)
-    const user = this.excludeProps(_user, projection)
+    const user = this.pickProps(_user, projection)
 
     if (
       !password ||
@@ -447,7 +447,7 @@ class Authenticator {
       })
 
     const _users = await this.dao.getUsers(filter, params)
-    const users = this.excludeProps(_users, projection)
+    const users = this.pickProps(_users, projection)
 
     if (
       !password ||
@@ -478,28 +478,6 @@ class Authenticator {
         subUsers: decryptedSubUsers[i]
       }
     })
-  }
-
-  excludeProps (data, props) {
-    if (
-      !Array.isArray(props) ||
-      props.length === 0
-    ) {
-      return data
-    }
-
-    const isArray = Array.isArray(data)
-    const dataArr = isArray ? data : [data]
-
-    const res = dataArr.map((item) => {
-      if (!item || typeof item !== 'object') {
-        return item
-      }
-
-      return pick(item, props)
-    })
-
-    return isArray ? res : res[0]
   }
 
   async createUser (data, params) {
@@ -579,46 +557,38 @@ class Authenticator {
   }
 
   async getUserSessionById (id, params) {
-    const { isFilledUsers } = { ...params }
-    const userSession = this.userSessions.get(id)
-    const { jwt } = { ...userSession }
+    const {
+      isFilledUsers,
+      session = this.userSessions.get(id)
+    } = { ...params }
+    const { jwt } = { ...session }
 
     if (isFilledUsers && jwt) {
       const user = await this.verifyUser(
         { auth: { jwt } },
-        { isDecryptedApiKeys: true }
+        {
+          isDecryptedApiKeys: true,
+          isFilledSubUsers: true
+        }
       )
 
-      return { ...userSession, ...user, jwt }
+      return [
+        id,
+        this.pickSessionProps({ ...session, ...user, jwt })
+      ]
     }
 
-    return userSession && typeof userSession === 'object'
-      ? { ...userSession }
-      : userSession
+    return [id, this.pickSessionProps({ ...session })]
   }
 
   async getUserSessions (params) {
     const { isFilledUsers } = { ...params }
 
     const userSessionsPromises = [...this.userSessions]
-      .map(async ([id, session]) => {
-        const { jwt } = { ...session }
-
-        if (isFilledUsers && jwt) {
-          const user = await this.verifyUser(
-            { auth: { jwt } },
-            { isDecryptedApiKeys: true }
-          )
-
-          return [id, { ...session, ...user, jwt }]
-        }
-
-        const userSession = session && typeof session === 'object'
-          ? { ...session }
-          : session
-
-        return [id, userSession]
-      })
+      .map(([id, session]) => this.getUserSessionById(
+        id,
+        { isFilledUsers, session }
+      ))
     const userSessions = await Promise.all(userSessionsPromises)
 
     return new Map(userSessions)
@@ -717,6 +687,49 @@ class Authenticator {
     const username = `${uName}${subAccountNameEnding}${subUserNameEnding}`
 
     return username
+  }
+
+  pickProps (data, props) {
+    if (
+      !Array.isArray(props) ||
+      props.length === 0
+    ) {
+      return data
+    }
+
+    const isArray = Array.isArray(data)
+    const dataArr = isArray ? data : [data]
+
+    const res = dataArr.map((item) => {
+      if (!item || typeof item !== 'object') {
+        return item
+      }
+
+      return pick(item, props)
+    })
+
+    return isArray ? res : res[0]
+  }
+
+  pickSessionProps (data) {
+    return this.pickProps(
+      data,
+      [
+        '_id',
+        'id',
+        'email',
+        'apiKey',
+        'apiSecret',
+        'active',
+        'isDataFromDb',
+        'timezone',
+        'username',
+        'isSubAccount',
+        'isSubUser',
+        'subUsers',
+        'jwt'
+      ]
+    )
   }
 }
 

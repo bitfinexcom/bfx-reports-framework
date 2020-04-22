@@ -78,44 +78,58 @@ const normalizeApiData = (
   })
 }
 
-const getAuthFromDb = async (dao) => {
+const getAuthFromDb = async (authenticator) => {
   try {
-    const users = await dao.getActiveUsers()
     const auth = new Map()
+    const sessions = await authenticator.getUserSessions(
+      { isFilledUsers: true }
+    )
 
-    if (isEmpty(users)) {
+    if (sessions.size === 0) {
       return auth
     }
 
-    for (const user of users) {
+    for (const [, session] of sessions) {
       const {
-        _id: masterUserId,
+        _id,
+        email,
         apiKey,
-        apiSecret
-      } = { ...user }
+        apiSecret,
+        isSubAccount,
+        subUsers,
+        jwt
+      } = { ...session }
+      const authPayload = {
+        _id,
+        email,
+        apiKey,
+        apiSecret,
+        isSubAccount,
+        subUsers,
+        jwt,
+        subUser: null
+      }
 
-      if (isSubAccountApiKeys(user)) {
-        const subUsers = await dao.getSubUsersByMasterUser(
-          { apiKey, apiSecret }
-        )
-
-        if (isEmpty(subUsers)) {
-          continue
-        }
-
-        subUsers.forEach((subUser) => {
-          const { apiKey: subUserApiKey } = { ...subUser }
-
-          auth.set(
-            `${apiKey}-${subUserApiKey}`,
-            { masterUserId, apiKey, apiSecret, subUser }
-          )
-        })
+      if (!isSubAccount) {
+        auth.set(apiKey, authPayload)
 
         continue
       }
+      if (
+        !Array.isArray(subUsers) ||
+        subUsers.length === 0
+      ) {
+        continue
+      }
 
-      auth.set(apiKey, { apiKey, apiSecret, subUser: null })
+      subUsers.forEach((subUser) => {
+        const { apiKey: subUserApiKey } = { ...subUser }
+
+        auth.set(
+          `${apiKey}-${subUserApiKey}`,
+          { ...authPayload, subUser }
+        )
+      })
     }
 
     return auth

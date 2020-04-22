@@ -390,56 +390,15 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async getLastElemFromDb (name, auth, sort = []) {
-    const { apiKey, apiSecret, subUser } = { ...auth }
-    const { _id: subUserId } = { ...subUser }
-    const {
-      subUserId: subUserIdType
-    } = { ...this._getModelsMap().get(name) }
-    const hasSubUserField = (
-      subUserIdType &&
-      typeof subUserIdType === 'string'
-    )
-    const _sort = getOrderQuery(sort)
-    const uTableName = this.TABLES_NAMES.USERS
-    const subUserIdQuery = (
-      hasSubUserField &&
-      Number.isInteger(subUserId)
-    )
-      ? 'AND c.subUserId = $subUserId'
-      : ''
-
-    const sql = `SELECT c.* FROM ${name} AS c
-      INNER JOIN ${uTableName} AS u ON u._id = c.user_id
-      WHERE u.apiKey = $apiKey
-      AND u.apiSecret = $apiSecret
-      ${subUserIdQuery}
-      ${_sort}`
-
-    return this._get(sql, {
-      $apiKey: apiKey,
-      $apiSecret: apiSecret,
-      $subUserId: subUserId
-    })
-  }
-
-  /**
-   * @override
-   */
   async insertElemsToDb (
     name,
     auth,
     data = [],
-    {
-      isReplacedIfExists,
-      isUsedActiveAndInactiveUsers
-    } = {}
+    { isReplacedIfExists } = {}
   ) {
-    const _data = await mixUserIdToArrData(
-      this,
+    const _data = mixUserIdToArrData(
       auth,
-      data,
-      isUsedActiveAndInactiveUsers
+      data
     )
 
     await this._beginTrans(async () => {
@@ -465,14 +424,11 @@ class SqliteDAO extends DAO {
   async insertElemsToDbIfNotExists (
     name,
     auth,
-    data = [],
-    { isUsedActiveAndInactiveUsers } = {}
+    data = []
   ) {
-    const _data = await mixUserIdToArrData(
-      this,
+    const _data = mixUserIdToArrData(
       auth,
-      data,
-      isUsedActiveAndInactiveUsers
+      data
     )
 
     await this._beginTrans(async () => {
@@ -506,6 +462,8 @@ class SqliteDAO extends DAO {
   }
 
   /**
+   * TODO: need to remove
+   * @deprecated
    * @override
    */
   async checkAuthInDb (args, isCheckActiveState = true) {

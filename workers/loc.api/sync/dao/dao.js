@@ -80,11 +80,6 @@ class DAO {
   /**
    * @abstract
    */
-  async getLastElemFromDb () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
   async insertElemToDb () { throw new ImplementationError() }
 
   /**

@@ -18,13 +18,13 @@ module.exports = (
   end,
   id
 }) => {
-  const { auth, subAccountAuth } = { ...args }
-  const { apiKey, apiSecret, subUser } = { ...subAccountAuth }
+  const { auth } = { ...args }
+  const { session: user } = { ...auth }
+  const { subUser } = { ...user }
   const { _id: subUserId } = { ...subUser }
   const subUserIdFilter = Number.isInteger(subUserId)
     ? { subUserId }
     : {}
-  const user = await dao.checkAuthInDb({ auth: { apiKey, apiSecret } })
   const symbArr = Array.isArray(symbol)
     ? symbol
     : [symbol]

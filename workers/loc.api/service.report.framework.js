@@ -251,7 +251,7 @@ class FrameworkReportService extends ReportService {
       )
 
       return this.syncNow()
-    }, 'enableScheduler', cb)
+    }, 'enableScheduler', args, cb)
   }
 
   disableScheduler (space, args, cb) {
@@ -262,7 +262,7 @@ class FrameworkReportService extends ReportService {
       )
 
       return true
-    }, 'disableScheduler', cb)
+    }, 'disableScheduler', args, cb)
   }
 
   isSchedulerEnabled (space, args, cb) {
@@ -292,13 +292,16 @@ class FrameworkReportService extends ReportService {
       )
         ? this._progress.getProgress()
         : false
-    }, 'getSyncProgress', cb)
+    }, 'getSyncProgress', args, cb)
   }
 
   syncNow (space, args = {}, cb) {
     const responder = cb
       ? this._privResponder
       : this._responder
+    const endingArgs = cb
+      ? [args, cb]
+      : [cb]
 
     return responder(async () => {
       const { params } = { ...args }
@@ -307,7 +310,7 @@ class FrameworkReportService extends ReportService {
       } = { ...params }
 
       return this._sync.start(true, syncColls)
-    }, 'syncNow', cb)
+    }, 'syncNow', ...endingArgs)
   }
 
   getPublicTradesConf (space, args = {}, cb) {
@@ -523,7 +526,7 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
           (args) => getDataFromApi(
@@ -537,7 +540,7 @@ class FrameworkReportService extends ReportService {
             )
           }
         )
-    }, 'getPositionsAudit', cb)
+    }, 'getPositionsAudit', args, cb)
   }
 
   /**
