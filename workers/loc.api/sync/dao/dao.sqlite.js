@@ -862,7 +862,24 @@ class SqliteDAO extends DAO {
       ${where}
       ${_sort}`
 
-    return this._all(sql, values)
+    const res = await this._all(sql, values)
+
+    return res.map((user) => {
+      const {
+        active,
+        isDataFromDb,
+        isSubAccount,
+        isSubUser
+      } = { ...user }
+
+      return {
+        ...user,
+        active: !!active,
+        isDataFromDb: !!isDataFromDb,
+        isSubAccount: !!isSubAccount,
+        isSubUser: !!isSubUser
+      }
+    })
   }
 
   /**
