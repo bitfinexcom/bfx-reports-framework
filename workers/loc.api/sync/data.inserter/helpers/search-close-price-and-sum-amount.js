@@ -51,7 +51,9 @@ module.exports = (
   } = await rService.getPositionsAudit(
     null,
     {
-      auth: (subUser && typeof subUser) ? subUser : user,
+      auth: (subUser && typeof subUser === 'object')
+        ? subUser
+        : user,
       params: {
         id: [id],
         limit: 2,

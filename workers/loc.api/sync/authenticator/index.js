@@ -569,14 +569,23 @@ class Authenticator {
         { auth: { jwt } },
         {
           isDecryptedApiKeys: true,
-          isFilledSubUsers: true
+          isFilledSubUsers: true,
+          isReturnedPassword: true
         }
       )
+      const { password, subUsers: reqSubUsers } = user
+      const subUsers = await this.addJWTToSubUsers(
+        reqSubUsers,
+        password
+      )
+      const payload = {
+        ...session,
+        ...user,
+        subUsers,
+        jwt
+      }
 
-      return [
-        id,
-        this.pickSessionProps({ ...session, ...user, jwt })
-      ]
+      return [id, this.pickSessionProps(payload)]
     }
 
     return [id, this.pickSessionProps({ ...session })]
@@ -642,6 +651,27 @@ class Authenticator {
     }
 
     throw new AuthError()
+  }
+
+  async addJWTToSubUsers (subUsers, password) {
+    if (
+      !Array.isArray(subUsers) ||
+      subUsers.length === 0
+    ) {
+      return subUsers
+    }
+
+    const subUsersPromises = subUsers.map(async (subUser) => {
+      const { _id, email } = { ...subUser }
+      const payload = { _id, email, password }
+
+      const jwt = await this.generateAuthJWT(payload)
+
+      return { ...subUser, jwt }
+    })
+    const res = await Promise.all(subUsersPromises)
+
+    return res
   }
 
   async decryptApiKeys (password, users) {
@@ -712,25 +742,27 @@ class Authenticator {
     return isArray ? res : res[0]
   }
 
-  pickSessionProps (data) {
-    return this.pickProps(
-      data,
-      [
-        '_id',
-        'id',
-        'email',
-        'apiKey',
-        'apiSecret',
-        'active',
-        'isDataFromDb',
-        'timezone',
-        'username',
-        'isSubAccount',
-        'isSubUser',
-        'subUsers',
-        'jwt'
-      ]
-    )
+  pickSessionProps (session) {
+    const allowedProps = [
+      '_id',
+      'id',
+      'email',
+      'apiKey',
+      'apiSecret',
+      'active',
+      'isDataFromDb',
+      'timezone',
+      'username',
+      'isSubAccount',
+      'isSubUser',
+      'subUsers',
+      'jwt'
+    ]
+    const { subUsers: reqSubUsers } = { ...session }
+    const subUsers = this.pickProps(reqSubUsers, allowedProps)
+    const data = { ...session, subUsers }
+
+    return this.pickProps(data, allowedProps)
   }
 }
 
