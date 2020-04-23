@@ -58,7 +58,8 @@ class Authenticator {
       isDisabledApiKeysVerification = false,
       isReturnedId = false,
       isNotSetSession = false,
-      isNotInTrans = false
+      isNotInTrans = false,
+      masterUserId
     } = { ...params }
 
     if (
@@ -88,7 +89,7 @@ class Authenticator {
       : await this.rService._checkAuthInApi(args)
 
     const username = this.generateSubUserName(
-      { id, username: uName },
+      { masterUserId, username: uName },
       isSubAccount,
       isSubUser
     )
@@ -206,7 +207,7 @@ class Authenticator {
       auth: { apiKey, apiSecret }
     })
     const username = this.generateSubUserName(
-      { id, username: uName },
+      { username: uName },
       isSubAccount
     )
 
@@ -677,12 +678,12 @@ class Authenticator {
   }
 
   generateSubUserName (user, isSubAccount, isSubUser) {
-    const { id, username: uName } = { ...user }
+    const { masterUserId, username: uName } = { ...user }
     const subAccountNameEnding = isSubAccount
       ? '-sub-account'
       : ''
     const subUserNameEnding = isSubUser
-      ? `-sub-user-${id}`
+      ? `-sub-user-${masterUserId}`
       : ''
     const username = `${uName}${subAccountNameEnding}${subUserNameEnding}`
 

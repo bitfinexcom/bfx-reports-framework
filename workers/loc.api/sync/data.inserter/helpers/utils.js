@@ -1,13 +1,8 @@
 'use strict'
 
 const {
-  pick,
-  isEmpty
+  pick
 } = require('lodash')
-
-const {
-  isSubAccountApiKeys
-} = require('../../../helpers')
 
 const invertSort = (sortArr) => {
   return sortArr.map(item => {

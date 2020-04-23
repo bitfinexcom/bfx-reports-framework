@@ -175,7 +175,8 @@ class SubAccount {
               isReturnedId: true,
               isNotSetSession: true,
               isSubUser: true,
-              isNotInTrans: true
+              isNotInTrans: true,
+              masterUserId: masterUser.id
             }
           )
 
