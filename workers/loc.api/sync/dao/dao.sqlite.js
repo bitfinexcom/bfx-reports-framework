@@ -1,9 +1,7 @@
 'use strict'
 
 const {
-  isEmpty,
-  pick,
-  omit
+  isEmpty
 } = require('lodash')
 const {
   decorate,
@@ -22,14 +20,9 @@ const TYPES = require('../../di/types')
 
 const DAO = require('./dao')
 const {
-  checkParamsAuth,
-  refreshObj,
-  mapObjBySchema,
-  isSubAccountApiKeys
-} = require('../../helpers')
-const {
   mixUserIdToArrData,
   convertDataType,
+  mapObjBySchema,
   getWhereQuery,
   getLimitQuery,
   getOrderQuery,
@@ -43,8 +36,7 @@ const {
   getSubQuery,
   filterModelNameMap,
   getTableCreationQuery,
-  getTriggerCreationQuery,
-  pickUserData
+  getTriggerCreationQuery
 } = require('./helpers')
 const {
   RemoveListElemsError,
@@ -204,25 +196,6 @@ class SqliteDAO extends DAO {
     for (const sql of sqlArr) {
       await this._run(sql)
     }
-  }
-
-  async _getUserByAuth (auth) {
-    const tableName = this.TABLES_NAMES.USERS
-    const sql = `SELECT * FROM ${tableName}
-      WHERE ${tableName}.apiKey = $apiKey
-      AND ${tableName}.apiSecret = $apiSecret`
-
-    const res = await this._get(sql, {
-      $apiKey: auth.apiKey,
-      $apiSecret: auth.apiSecret
-    })
-
-    if (res && typeof res === 'object') {
-      res.active = !!res.active
-      res.isDataFromDb = !!res.isDataFromDb
-    }
-
-    return res
   }
 
   async getTablesNames () {
@@ -462,26 +435,6 @@ class SqliteDAO extends DAO {
   }
 
   /**
-   * TODO: need to remove
-   * @deprecated
-   * @override
-   */
-  async checkAuthInDb (args, isCheckActiveState = true) {
-    checkParamsAuth(args)
-
-    const user = await this._getUserByAuth(args.auth)
-
-    if (
-      isEmpty(user) ||
-      (isCheckActiveState && !user.active)
-    ) {
-      throw new AuthError()
-    }
-
-    return user
-  }
-
-  /**
    * @override
    */
   async findInCollBy (
@@ -535,6 +488,12 @@ class SqliteDAO extends DAO {
     }
 
     if (!isPublic) {
+      const { _id } = { ...user }
+
+      if (!Number.isInteger(_id)) {
+        throw new AuthError()
+      }
+
       exclude.push('user_id')
       filter.user_id = user._id
     }
@@ -590,21 +549,6 @@ class SqliteDAO extends DAO {
     }
 
     return res
-  }
-
-  /**
-   * @override
-   */
-  async getActiveUsers () {
-    const sql = `SELECT * FROM ${this.TABLES_NAMES.USERS} WHERE active = 1`
-
-    const res = await this._all(sql)
-
-    return res.map(item => {
-      item.active = !!item.active
-
-      return item
-    })
   }
 
   /**
@@ -815,7 +759,7 @@ class SqliteDAO extends DAO {
       return users
     }
 
-    const _subUsers = await this.getSubUsersByMasterUser(
+    const _subUsers = await this._getSubUsersByMasterUser(
       { $in: { _id: usersIds } }
     )
 
@@ -839,10 +783,7 @@ class SqliteDAO extends DAO {
     return isArray ? filledUsers : filledUsers[0]
   }
 
-  /**
-   * @override
-   */
-  async getSubUsersByMasterUser (
+  async _getSubUsersByMasterUser (
     masterUser,
     sort = ['_id']
   ) {
@@ -880,97 +821,6 @@ class SqliteDAO extends DAO {
         isSubUser: !!isSubUser
       }
     })
-  }
-
-  /**
-   * @override
-   */
-  async insertOrUpdateUser (data, params = {}) {
-    const user = await this._getUserByAuth(data)
-    const {
-      active = true
-    } = { ...params }
-
-    if (isEmpty(user)) {
-      const {
-        apiKey,
-        apiSecret,
-        email
-      } = { ...data }
-
-      if (
-        !email ||
-        isSubAccountApiKeys({ apiKey, apiSecret })
-      ) {
-        throw new AuthError()
-      }
-
-      await this.insertElemsToDb(
-        this.TABLES_NAMES.USERS,
-        null,
-        [{
-          ...pickUserData(data),
-          active: serializeVal(active),
-          isDataFromDb: 1
-        }]
-      )
-
-      return this._getUserByAuth(data)
-    }
-
-    const newData = { active: serializeVal(active) }
-
-    refreshObj(
-      user,
-      newData,
-      data,
-      ['email', 'timezone', 'username', 'id']
-    )
-
-    const res = await this.updateCollBy(
-      this.TABLES_NAMES.USERS,
-      { _id: user._id },
-      omit(newData, ['_id'])
-    )
-
-    if (res && res.changes < 1) {
-      throw new AuthError()
-    }
-
-    return {
-      ...user,
-      ...newData
-    }
-  }
-
-  /**
-   * @override
-   */
-  async updateUserByAuth (data) {
-    const props = ['apiKey', 'apiSecret']
-    const res = await this.updateCollBy(
-      this.TABLES_NAMES.USERS,
-      pick(data, props),
-      omit(data, [...props, '_id'])
-    )
-
-    if (res && res.changes < 1) {
-      throw new AuthError()
-    }
-
-    return res
-  }
-
-  /**
-   * @override
-   */
-  async deactivateUser (auth) {
-    const res = await this.updateUserByAuth({
-      ...pick(auth, ['apiKey', 'apiSecret']),
-      active: 0
-    })
-
-    return res
   }
 
   /**
@@ -1119,20 +969,6 @@ class SqliteDAO extends DAO {
     }
 
     return res
-  }
-
-  /**
-   * @override
-   */
-  getFirstElemInCollBy (collName, filter = {}) {
-    const {
-      where,
-      values
-    } = getWhereQuery(filter)
-
-    const sql = `SELECT * FROM ${collName} ${where}`
-
-    return this._get(sql, values)
   }
 
   /**

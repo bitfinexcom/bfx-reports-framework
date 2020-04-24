@@ -56,7 +56,7 @@ class Progress extends EventEmitter {
 
   async getProgress () {
     const progress = await this.dao
-      .getFirstElemInCollBy(this.TABLES_NAMES.PROGRESS)
+      .getElemInCollBy(this.TABLES_NAMES.PROGRESS)
 
     return (
       !isEmpty(progress) &&

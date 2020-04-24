@@ -4,9 +4,7 @@ const checkParams = require('./check-params')
 const {
   checkParamsAuth,
   tryParseJSON,
-  collObjToArr,
-  refreshObj,
-  mapObjBySchema
+  collObjToArr
 } = require('./utils')
 const {
   isEnotfoundError,
@@ -23,8 +21,6 @@ module.exports = {
   checkParamsAuth,
   tryParseJSON,
   collObjToArr,
-  refreshObj,
-  mapObjBySchema,
   isEnotfoundError,
   isEaiAgainError,
   isSubAccountApiKeys,

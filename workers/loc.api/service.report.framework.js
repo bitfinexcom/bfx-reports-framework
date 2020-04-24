@@ -231,7 +231,7 @@ class FrameworkReportService extends ReportService {
       const { auth } = { ...args }
       const { isDataFromDb } = { ...auth }
 
-      const firstElem = await this._dao.getFirstElemInCollBy(
+      const firstElem = await this._dao.getElemInCollBy(
         this._TABLES_NAMES.SYNC_MODE
       )
 
@@ -268,7 +268,7 @@ class FrameworkReportService extends ReportService {
   isSchedulerEnabled (space, args, cb) {
     return this._responder(async () => {
       try {
-        const firstElem = await this._dao.getFirstElemInCollBy(
+        const firstElem = await this._dao.getElemInCollBy(
           this._TABLES_NAMES.SCHEDULER,
           { isEnable: 1 }
         )
