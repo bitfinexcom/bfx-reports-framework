@@ -390,6 +390,36 @@ class Authenticator {
     throw new AuthError()
   }
 
+  async verifyRequestUser (
+    args,
+    opts
+  ) {
+    const { isForcedVerification } = { ...opts }
+    const { auth } = { ...args }
+    const { _id } = { ...auth }
+    const params = {
+      isFilledSubUsers: true,
+      isDecryptedApiKeys: true,
+      isReturnedPassword: true
+    }
+
+    const user = (
+      isForcedVerification ||
+      !Number.isInteger(_id)
+    )
+      ? await this.verifyUser(args, params)
+      : auth
+
+    if (
+      args &&
+      typeof args === 'object'
+    ) {
+      args.auth = user
+    }
+
+    return user
+  }
+
   async getUser (filter, params) {
     const {
       isFilledSubUsers,

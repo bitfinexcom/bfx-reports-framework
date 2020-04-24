@@ -325,35 +325,35 @@ class FrameworkReportService extends ReportService {
   }
 
   getPublicTradesConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('publicTradesConf', args)
-    }, 'getPublicTradesConf', cb)
+    }, 'getPublicTradesConf', args, cb)
   }
 
   getTickersHistoryConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('tickersHistoryConf', args)
-    }, 'getTickersHistoryConf', cb)
+    }, 'getTickersHistoryConf', args, cb)
   }
 
   getStatusMessagesConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('statusMessagesConf', args)
-    }, 'getStatusMessagesConf', cb)
+    }, 'getStatusMessagesConf', args, cb)
   }
 
   getCandlesConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('candlesConf', args)
-    }, 'getCandlesConf', cb)
+    }, 'getCandlesConf', args, cb)
   }
 
   editPublicTradesConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
       await this._publicСollsСonfAccessors
@@ -361,11 +361,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
 
       return true
-    }, 'editPublicTradesConf', cb)
+    }, 'editPublicTradesConf', args, cb)
   }
 
   editTickersHistoryConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
       await this._publicСollsСonfAccessors
@@ -373,11 +373,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
 
       return true
-    }, 'editTickersHistoryConf', cb)
+    }, 'editTickersHistoryConf', args, cb)
   }
 
   editStatusMessagesConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
       await this._publicСollsСonfAccessors
@@ -385,11 +385,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
 
       return true
-    }, 'editStatusMessagesConf', cb)
+    }, 'editStatusMessagesConf', args, cb)
   }
 
   editCandlesConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditCandlesСonf')
 
       await this._publicСollsСonfAccessors
@@ -397,11 +397,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.CANDLES)
 
       return true
-    }, 'editCandlesConf', cb)
+    }, 'editCandlesConf', args, cb)
   }
 
   editAllPublicСollsСonfs (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditAllPublicСollsСonfs')
 
       const syncedColls = await this._publicСollsСonfAccessors
@@ -409,14 +409,14 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, syncedColls)
 
       return true
-    }, 'editCandlesConf', cb)
+    }, 'editCandlesConf', args, cb)
   }
 
   getAllPublicСollsСonfs (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getAllPublicСollsСonfs(args)
-    }, 'editCandlesConf', cb)
+    }, 'editCandlesConf', args, cb)
   }
 
   /**
@@ -632,7 +632,7 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getTickersHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getTickersHistory(space, args)
       }
@@ -649,14 +649,14 @@ class FrameworkReportService extends ReportService {
             datePropName: 'mtsUpdate'
           }
         )
-    }, 'getTickersHistory', cb)
+    }, 'getTickersHistory', args, cb)
   }
 
   /**
    * @override
    */
   getPublicTrades (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getPublicTrades(space, args)
       }
@@ -673,14 +673,14 @@ class FrameworkReportService extends ReportService {
             datePropName: 'mts'
           }
         )
-    }, 'getPublicTrades', cb)
+    }, 'getPublicTrades', args, cb)
   }
 
   /**
    * @override
    */
   getStatusMessages (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getStatusMessages(space, args)
       }
@@ -719,14 +719,14 @@ class FrameworkReportService extends ReportService {
             datePropName: 'timestamp'
           }
         )
-    }, 'getStatusMessages', cb)
+    }, 'getStatusMessages', args, cb)
   }
 
   /**
    * @override
    */
   getCandles (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getCandles(space, args)
       }
@@ -757,7 +757,7 @@ class FrameworkReportService extends ReportService {
             datePropName: 'mts'
           }
         )
-    }, 'getCandles', cb)
+    }, 'getCandles', args, cb)
   }
 
   /**

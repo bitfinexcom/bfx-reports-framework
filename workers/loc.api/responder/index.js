@@ -8,18 +8,10 @@ const _getHandler = (
   args
 ) => {
   return async (...handlerArgs) => {
-    const user = await authenticator.verifyUser(
+    await authenticator.verifyRequestUser(
       args,
-      {
-        isFilledSubUsers: true,
-        isDecryptedApiKeys: true,
-        isReturnedPassword: true
-      }
+      { isForcedVerification: true }
     )
-
-    if (args && typeof args === 'object') {
-      args.auth = user
-    }
 
     return handler(...handlerArgs)
   }
