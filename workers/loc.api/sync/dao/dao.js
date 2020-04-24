@@ -130,12 +130,7 @@ class DAO {
   /**
    * @abstract
    */
-  async updateStateOf () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
-  async updateProgress () { throw new ImplementationError() }
+  async updateRecordOf () { throw new ImplementationError() }
 
   /**
    * @abstract

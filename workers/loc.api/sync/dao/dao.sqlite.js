@@ -1,9 +1,6 @@
 'use strict'
 
 const {
-  isEmpty
-} = require('lodash')
-const {
   decorate,
   injectable,
   inject
@@ -40,8 +37,7 @@ const {
 } = require('./helpers')
 const {
   RemoveListElemsError,
-  UpdateStateCollError,
-  UpdateSyncProgressError,
+  UpdateRecordError,
   SqlCorrectnessError,
   DbVersionTypeError
 } = require('../../errors')
@@ -196,6 +192,185 @@ class SqliteDAO extends DAO {
     for (const sql of sqlArr) {
       await this._run(sql)
     }
+  }
+
+  async _getUsers (
+    filter,
+    {
+      isNotInTrans,
+      isFoundOne,
+      haveNotSubUsers,
+      haveSubUsers,
+      isFilledSubUsers,
+      sort = ['_id'],
+      limit
+    } = {}
+  ) {
+    const userTableAlias = 'u'
+    const {
+      limit: _limit,
+      limitVal
+    } = getLimitQuery({ limit: isFoundOne ? null : limit })
+    const {
+      where,
+      values: _values
+    } = getWhereQuery(filter, true, null, userTableAlias)
+    const haveSubUsersQuery = haveSubUsers
+      ? 'sa.subUserId IS NOT NULL'
+      : ''
+    const haveNotSubUsersQuery = haveNotSubUsers
+      ? 'sa.subUserId IS NULL'
+      : ''
+    const whereQueries = [
+      where,
+      haveSubUsersQuery,
+      haveNotSubUsersQuery
+    ].filter((query) => query).join(' AND ')
+    const _where = whereQueries ? `WHERE ${whereQueries}` : ''
+    const _sort = getOrderQuery(sort)
+    const group = `GROUP BY ${userTableAlias}._id`
+    const values = { ..._values, ...limitVal }
+
+    const sql = `SELECT ${userTableAlias}.*, sa.subUserId as haveSubUsers
+      FROM ${this.TABLES_NAMES.USERS} AS ${userTableAlias}
+      LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
+        ON ${userTableAlias}._id = sa.masterUserId
+      ${_where}
+      ${group}
+      ${_sort}
+      ${_limit}`
+
+    const queryUsersFn = async () => {
+      const _res = isFoundOne
+        ? await this._get(sql, values)
+        : await this._all(sql, values)
+
+      if (
+        !_res &&
+        typeof _res !== 'object'
+      ) {
+        return _res
+      }
+
+      const res = isFoundOne
+        ? {
+          ..._res,
+          active: !!_res.active,
+          isDataFromDb: !!_res.isDataFromDb,
+          isSubAccount: !!_res.isSubAccount,
+          isSubUser: !!_res.isSubUser,
+          haveSubUsers: !!_res.haveSubUsers
+        }
+        : _res.map((user) => {
+          const {
+            active,
+            isDataFromDb,
+            isSubAccount,
+            isSubUser,
+            haveSubUsers
+          } = { ...user }
+
+          return {
+            ...user,
+            active: !!active,
+            isDataFromDb: !!isDataFromDb,
+            isSubAccount: !!isSubAccount,
+            isSubUser: !!isSubUser,
+            haveSubUsers: !!haveSubUsers
+          }
+        })
+
+      const usersFilledSubUsers = isFilledSubUsers
+        ? await this._fillSubUsers(res)
+        : res
+
+      return usersFilledSubUsers
+    }
+
+    if (isNotInTrans) {
+      return queryUsersFn()
+    }
+
+    return this._beginTrans(queryUsersFn)
+  }
+
+  async _fillSubUsers (users) {
+    const isArray = Array.isArray(users)
+    const _users = isArray ? users : [users]
+    const usersIds = _users
+      .filter((user) => {
+        const { _id } = { ...user }
+
+        return Number.isInteger(_id)
+      })
+      .map(({ _id }) => _id)
+
+    if (usersIds.length === 0) {
+      return users
+    }
+
+    const _subUsers = await this._getSubUsersByMasterUser(
+      { $in: { _id: usersIds } }
+    )
+
+    const filledUsers = _users.map((user) => {
+      const { _id } = { ...user }
+      const subUsers = _subUsers.filter((subUser) => {
+        const { masterUserId } = { ...subUser }
+
+        return (
+          Number.isInteger(masterUserId) &&
+          masterUserId === _id
+        )
+      })
+
+      return {
+        ...user,
+        subUsers
+      }
+    })
+
+    return isArray ? filledUsers : filledUsers[0]
+  }
+
+  async _getSubUsersByMasterUser (
+    masterUser,
+    sort = ['_id']
+  ) {
+    const tableAlias = 'mu'
+    const {
+      where,
+      values
+    } = getWhereQuery(masterUser, false, null, tableAlias)
+    const _sort = getOrderQuery(sort)
+
+    const sql = `SELECT su.*, ${tableAlias}._id AS masterUserId
+      FROM ${this.TABLES_NAMES.USERS} AS su
+      INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
+        ON su._id = sa.subUserId
+      INNER JOIN ${this.TABLES_NAMES.USERS} AS ${tableAlias}
+        ON ${tableAlias}._id = sa.masterUserId
+      ${where}
+      ${_sort}`
+
+    const res = await this._all(sql, values)
+
+    return res.map((user) => {
+      const {
+        active,
+        isDataFromDb,
+        isSubAccount,
+        isSubUser
+      } = { ...user }
+
+      return {
+        ...user,
+        active: !!active,
+        isDataFromDb: !!isDataFromDb,
+        isSubAccount: !!isSubAccount,
+        isSubUser: !!isSubUser
+      }
+    })
   }
 
   async getTablesNames () {
@@ -644,185 +819,6 @@ class SqliteDAO extends DAO {
     )
   }
 
-  async _getUsers (
-    filter,
-    {
-      isNotInTrans,
-      isFoundOne,
-      haveNotSubUsers,
-      haveSubUsers,
-      isFilledSubUsers,
-      sort = ['_id'],
-      limit
-    } = {}
-  ) {
-    const userTableAlias = 'u'
-    const {
-      limit: _limit,
-      limitVal
-    } = getLimitQuery({ limit: isFoundOne ? null : limit })
-    const {
-      where,
-      values: _values
-    } = getWhereQuery(filter, true, null, userTableAlias)
-    const haveSubUsersQuery = haveSubUsers
-      ? 'sa.subUserId IS NOT NULL'
-      : ''
-    const haveNotSubUsersQuery = haveNotSubUsers
-      ? 'sa.subUserId IS NULL'
-      : ''
-    const whereQueries = [
-      where,
-      haveSubUsersQuery,
-      haveNotSubUsersQuery
-    ].filter((query) => query).join(' AND ')
-    const _where = whereQueries ? `WHERE ${whereQueries}` : ''
-    const _sort = getOrderQuery(sort)
-    const group = `GROUP BY ${userTableAlias}._id`
-    const values = { ..._values, ...limitVal }
-
-    const sql = `SELECT ${userTableAlias}.*, sa.subUserId as haveSubUsers
-      FROM ${this.TABLES_NAMES.USERS} AS ${userTableAlias}
-      LEFT JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
-        ON ${userTableAlias}._id = sa.masterUserId
-      ${_where}
-      ${group}
-      ${_sort}
-      ${_limit}`
-
-    const queryUsersFn = async () => {
-      const _res = isFoundOne
-        ? await this._get(sql, values)
-        : await this._all(sql, values)
-
-      if (
-        !_res &&
-        typeof _res !== 'object'
-      ) {
-        return _res
-      }
-
-      const res = isFoundOne
-        ? {
-          ..._res,
-          active: !!_res.active,
-          isDataFromDb: !!_res.isDataFromDb,
-          isSubAccount: !!_res.isSubAccount,
-          isSubUser: !!_res.isSubUser,
-          haveSubUsers: !!_res.haveSubUsers
-        }
-        : _res.map((user) => {
-          const {
-            active,
-            isDataFromDb,
-            isSubAccount,
-            isSubUser,
-            haveSubUsers
-          } = { ...user }
-
-          return {
-            ...user,
-            active: !!active,
-            isDataFromDb: !!isDataFromDb,
-            isSubAccount: !!isSubAccount,
-            isSubUser: !!isSubUser,
-            haveSubUsers: !!haveSubUsers
-          }
-        })
-
-      const usersFilledSubUsers = isFilledSubUsers
-        ? await this._fillSubUsers(res)
-        : res
-
-      return usersFilledSubUsers
-    }
-
-    if (isNotInTrans) {
-      return queryUsersFn()
-    }
-
-    return this._beginTrans(queryUsersFn)
-  }
-
-  async _fillSubUsers (users) {
-    const isArray = Array.isArray(users)
-    const _users = isArray ? users : [users]
-    const usersIds = _users
-      .filter((user) => {
-        const { _id } = { ...user }
-
-        return Number.isInteger(_id)
-      })
-      .map(({ _id }) => _id)
-
-    if (usersIds.length === 0) {
-      return users
-    }
-
-    const _subUsers = await this._getSubUsersByMasterUser(
-      { $in: { _id: usersIds } }
-    )
-
-    const filledUsers = _users.map((user) => {
-      const { _id } = { ...user }
-      const subUsers = _subUsers.filter((subUser) => {
-        const { masterUserId } = { ...subUser }
-
-        return (
-          Number.isInteger(masterUserId) &&
-          masterUserId === _id
-        )
-      })
-
-      return {
-        ...user,
-        subUsers
-      }
-    })
-
-    return isArray ? filledUsers : filledUsers[0]
-  }
-
-  async _getSubUsersByMasterUser (
-    masterUser,
-    sort = ['_id']
-  ) {
-    const tableAlias = 'mu'
-    const {
-      where,
-      values
-    } = getWhereQuery(masterUser, false, null, tableAlias)
-    const _sort = getOrderQuery(sort)
-
-    const sql = `SELECT su.*, ${tableAlias}._id AS masterUserId
-      FROM ${this.TABLES_NAMES.USERS} AS su
-      INNER JOIN ${this.TABLES_NAMES.SUB_ACCOUNTS} AS sa
-        ON su._id = sa.subUserId
-      INNER JOIN ${this.TABLES_NAMES.USERS} AS ${tableAlias}
-        ON ${tableAlias}._id = sa.masterUserId
-      ${where}
-      ${_sort}`
-
-    const res = await this._all(sql, values)
-
-    return res.map((user) => {
-      const {
-        active,
-        isDataFromDb,
-        isSubAccount,
-        isSubUser
-      } = { ...user }
-
-      return {
-        ...user,
-        active: !!active,
-        isDataFromDb: !!isDataFromDb,
-        isSubAccount: !!isSubAccount,
-        isSubUser: !!isSubUser
-      }
-    })
-  }
-
   /**
    * @override
    */
@@ -938,74 +934,45 @@ class SqliteDAO extends DAO {
   /**
    * @override
    */
-  async updateStateOf (name, isEnable = 1) {
-    const elems = await this.getElemsInCollBy(name)
-    const data = {
-      isEnable: isEnable ? 1 : 0
-    }
+  async updateRecordOf (name, data) {
+    await this._beginTrans(async () => {
+      const elems = await this.getElemsInCollBy(name)
+      const record = Object.entries(data)
+        .reduce((accum, [key, val]) => {
+          return {
+            ...accum,
+            [key]: serializeVal(val)
+          }
+        }, {})
 
-    if (elems.length > 1) {
-      await this.removeElemsFromDb(name, null, {
-        _id: elems.filter((item, i) => i !== 0)
-      })
-    }
+      if (!Array.isArray(elems)) {
+        throw new UpdateRecordError()
+      }
+      if (elems.length > 1) {
+        await this.removeElemsFromDb(name, null, {
+          _id: elems.filter((item, i) => i !== 0)
+        })
+      }
+      if (elems.length === 0) {
+        await this.insertElemToDb(
+          name,
+          record
+        )
 
-    if (isEmpty(elems)) {
-      return this.insertElemsToDb(
+        return
+      }
+
+      const { _id } = { ...elems[0] }
+      const res = await this.updateCollBy(
         name,
-        null,
-        [data]
+        { _id },
+        record
       )
-    }
 
-    const res = await this.updateCollBy(
-      name,
-      { _id: elems[0]._id },
-      data
-    )
-
-    if (res && res.changes < 1) {
-      throw new UpdateStateCollError()
-    }
-
-    return res
-  }
-
-  /**
-   * @override
-   */
-  async updateProgress (value) {
-    const name = this.TABLES_NAMES.PROGRESS
-    const elems = await this.getElemsInCollBy(name)
-    const data = {
-      value: JSON.stringify(value)
-    }
-
-    if (elems.length > 1) {
-      await this.removeElemsFromDb(name, null, {
-        _id: elems.filter((item, i) => i !== 0)
-      })
-    }
-
-    if (isEmpty(elems)) {
-      return this.insertElemsToDb(
-        name,
-        null,
-        [data]
-      )
-    }
-
-    const res = await this.updateCollBy(
-      name,
-      { _id: elems[0]._id },
-      data
-    )
-
-    if (res && res.changes < 1) {
-      throw new UpdateSyncProgressError()
-    }
-
-    return res
+      if (res && res.changes < 1) {
+        throw new UpdateRecordError()
+      }
+    })
   }
 }
 

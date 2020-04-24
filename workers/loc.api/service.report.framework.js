@@ -28,6 +28,8 @@ const {
   isSubAccountApiKeys
 } = require('./helpers')
 
+const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+
 class FrameworkReportService extends ReportService {
   /**
    * @override
@@ -40,9 +42,15 @@ class FrameworkReportService extends ReportService {
 
   async _databaseInitialize (db) {
     await this._dao.databaseInitialize(db)
-    await this._dao.updateProgress('SYNCHRONIZATION_HAS_NOT_STARTED_YET')
-    await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
-    await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, true)
+    await this._progress.setProgress(INITIAL_PROGRESS)
+    await this._dao.updateRecordOf(
+      this._TABLES_NAMES.SYNC_MODE,
+      { isEnable: true }
+    )
+    await this._dao.updateRecordOf(
+      this._TABLES_NAMES.SCHEDULER,
+      { isEnable: true }
+    )
   }
 
   /**
@@ -194,7 +202,10 @@ class FrameworkReportService extends ReportService {
           isDataFromDb: true
         }
       )
-      await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
+      await this._dao.updateRecordOf(
+        this._TABLES_NAMES.SYNC_MODE,
+        { isEnable: true }
+      )
       await this._sync.start(true)
 
       return true
@@ -245,9 +256,9 @@ class FrameworkReportService extends ReportService {
 
   enableScheduler (space, args, cb) {
     return this._privResponder(async () => {
-      await this._dao.updateStateOf(
+      await this._dao.updateRecordOf(
         this._TABLES_NAMES.SCHEDULER,
-        true
+        { isEnable: true }
       )
 
       return this.syncNow()
@@ -256,9 +267,9 @@ class FrameworkReportService extends ReportService {
 
   disableScheduler (space, args, cb) {
     return this._privResponder(async () => {
-      await this._dao.updateStateOf(
+      await this._dao.updateRecordOf(
         this._TABLES_NAMES.SCHEDULER,
-        false
+        { isEnable: false }
       )
 
       return true

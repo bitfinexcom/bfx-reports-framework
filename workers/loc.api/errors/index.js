@@ -35,15 +35,13 @@ class RemoveListElemsError extends BaseError {
   }
 }
 
-class UpdateStateCollError extends BaseError {
+class UpdateRecordError extends BaseError {
   constructor (name) {
-    super(`ERR_CAN_NOT_UPDATE_STATE_OF_${name.toUpperCase()}`)
-  }
-}
+    const recordName = name && typeof name === 'string'
+      ? `_OF_${name.toUpperCase()}`
+      : ''
 
-class UpdateSyncProgressError extends BaseError {
-  constructor (name) {
-    super(`ERR_CAN_NOT_UPDATE_${name.toUpperCase()}`)
+    super(`ERR_CAN_NOT_UPDATE_RECORD_OF_${recordName}`)
   }
 }
 
@@ -144,8 +142,7 @@ module.exports = {
   AsyncProgressHandlerIsNotFnError,
   AfterAllInsertsHookIsNotHookError,
   RemoveListElemsError,
-  UpdateStateCollError,
-  UpdateSyncProgressError,
+  UpdateRecordError,
   ImplementationError,
   DAOInitializationError,
   ServerAvailabilityError,
