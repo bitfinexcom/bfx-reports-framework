@@ -238,7 +238,17 @@ class FrameworkReportService extends ReportService {
   }
 
   isSyncModeWithDbData (space, args, cb) {
-    return this._privResponder(async () => {
+    const { auth } = { ...args }
+    const { _id } = { ...auth }
+    const isRequiredUser = (cb || !Number.isInteger(_id))
+    const responder = isRequiredUser
+      ? this._privResponder
+      : this._responder
+    const endingArgs = isRequiredUser
+      ? [args, cb]
+      : [cb]
+
+    return responder(async () => {
       const { auth } = { ...args }
       const { isDataFromDb } = { ...auth }
 
@@ -251,7 +261,7 @@ class FrameworkReportService extends ReportService {
         !!firstElem.isEnable &&
         isDataFromDb
       )
-    }, 'isSyncModeWithDbData', args, cb)
+    }, 'isSyncModeWithDbData', ...endingArgs)
   }
 
   enableScheduler (space, args, cb) {
@@ -493,7 +503,7 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -510,14 +520,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getPositionsHistory', cb)
+    }, 'getPositionsHistory', args, cb)
   }
 
   /**
    * @override
    */
   getActivePositions (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._subAccountApiData
         .getDataForSubAccount(
           (args) => getDataFromApi(
@@ -530,7 +540,7 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
-    }, 'getActivePositions', cb)
+    }, 'getActivePositions', args, cb)
   }
 
   /**
@@ -555,8 +565,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
-   *
    * @override
    */
   getLedgers (space, args, cb) {
@@ -584,7 +592,7 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getTrades (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -601,14 +609,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getTrades', cb)
+    }, 'getTrades', args, cb)
   }
 
   /**
    * @override
    */
   getFundingTrades (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -625,7 +633,7 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingTrades', cb)
+    }, 'getFundingTrades', args, cb)
   }
 
   /**
@@ -764,7 +772,7 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getOrderTrades (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._orderTrades.getOrderTrades(
         (args) => super.getOrderTrades(space, args),
         args,
@@ -774,14 +782,14 @@ class FrameworkReportService extends ReportService {
           )
         }
       )
-    }, 'getOrderTrades', cb)
+    }, 'getOrderTrades', args, cb)
   }
 
   /**
    * @override
    */
   getOrders (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -798,14 +806,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getOrders', cb)
+    }, 'getOrders', args, cb)
   }
 
   /**
    * @override
    */
   getActiveOrders (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._subAccountApiData
         .getDataForSubAccount(
           (args) => super.getActiveOrders(space, args),
@@ -815,14 +823,14 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
-    }, 'getActiveOrders', cb)
+    }, 'getActiveOrders', args, cb)
   }
 
   /**
    * @override
    */
   getMovements (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -839,14 +847,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getMovements', cb)
+    }, 'getMovements', args, cb)
   }
 
   /**
    * @override
    */
   getFundingOfferHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -863,14 +871,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingOfferHistory', cb)
+    }, 'getFundingOfferHistory', args, cb)
   }
 
   /**
    * @override
    */
   getFundingLoanHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -887,14 +895,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingLoanHistory', cb)
+    }, 'getFundingLoanHistory', args, cb)
   }
 
   /**
    * @override
    */
   getFundingCreditHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -911,14 +919,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingCreditHistory', cb)
+    }, 'getFundingCreditHistory', args, cb)
   }
 
   /**
    * @override
    */
   getLogins (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -935,14 +943,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getLogins', cb)
+    }, 'getLogins', args, cb)
   }
 
   /**
    * @override
    */
   getAccountSummary (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       return this._subAccountApiData
         .getDataForSubAccount(
           async (args) => {
@@ -956,14 +964,14 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
-    }, 'getAccountSummary', cb)
+    }, 'getAccountSummary', args, cb)
   }
 
   /**
    * @override
    */
   getWallets (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -971,7 +979,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForWallets')
 
       return this._wallets.getWallets(args)
-    }, 'getWallets', cb)
+    }, 'getWallets', args, cb)
   }
 
   getBalanceHistory (space, args, cb) {
