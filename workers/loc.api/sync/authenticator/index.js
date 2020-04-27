@@ -208,7 +208,7 @@ class Authenticator {
     })
     const username = this.generateSubUserName(
       { username: uName },
-      isSubAccount
+      isSubAccountFromDb
     )
 
     const freshUserData = {
