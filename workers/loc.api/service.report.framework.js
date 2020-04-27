@@ -423,18 +423,18 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getUsersTimeConf (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
+      const { auth: _auth } = { ...args }
+      const { timezone } = { ..._auth }
+
       if (!await this.isSyncModeWithDbData(space, args)) {
-        const { auth: _auth } = { ...args }
         const auth = getAuthFromSubAccountAuth(_auth)
 
         return super.getUsersTimeConf(space, { ...args, auth })
       }
 
-      const { timezone } = await this._dao.checkAuthInDb(args)
-
       return getTimezoneConf(timezone)
-    }, 'getUsersTimeConf', cb)
+    }, 'getUsersTimeConf', args, cb)
   }
 
   /**
