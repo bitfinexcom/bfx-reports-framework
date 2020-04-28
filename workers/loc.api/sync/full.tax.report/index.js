@@ -16,12 +16,14 @@ class FullTaxReport {
     dao,
     syncSchema,
     ALLOWED_COLLS,
-    fullSnapshotReport
+    fullSnapshotReport,
+    authenticator
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.fullSnapshotReport = fullSnapshotReport
+    this.authenticator = authenticator
   }
 
   async _getMovements ({
@@ -135,7 +137,8 @@ class FullTaxReport {
       end = Date.now()
     } = {}
   } = {}) {
-    const user = await this.dao.checkAuthInDb({ auth })
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
 
     const {
       positionsSnapshot: startingPositionsSnapshot,
@@ -203,5 +206,6 @@ decorate(inject(TYPES.DAO), FullTaxReport, 0)
 decorate(inject(TYPES.SyncSchema), FullTaxReport, 1)
 decorate(inject(TYPES.ALLOWED_COLLS), FullTaxReport, 2)
 decorate(inject(TYPES.FullSnapshotReport), FullTaxReport, 3)
+decorate(inject(TYPES.Authenticator), FullTaxReport, 4)
 
 module.exports = FullTaxReport
