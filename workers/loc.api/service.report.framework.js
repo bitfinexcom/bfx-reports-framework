@@ -1067,7 +1067,7 @@ class FrameworkReportService extends ReportService {
   }
 
   getPerformingLoan (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1075,7 +1075,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForPerformingLoanApi')
 
       return this._performingLoan.getPerformingLoan(args)
-    }, 'getPerformingLoan', cb)
+    }, 'getPerformingLoan', args, cb)
   }
 
   /**
