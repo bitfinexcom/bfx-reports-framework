@@ -1019,7 +1019,7 @@ class FrameworkReportService extends ReportService {
   }
 
   getFullSnapshotReport (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1027,7 +1027,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
 
       return this._fullSnapshotReport.getFullSnapshotReport(args)
-    }, 'getFullSnapshotReport', cb)
+    }, 'getFullSnapshotReport', args, cb)
   }
 
   getFullTaxReport (space, args, cb) {
