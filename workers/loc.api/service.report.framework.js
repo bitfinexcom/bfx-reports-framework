@@ -1007,7 +1007,7 @@ class FrameworkReportService extends ReportService {
   }
 
   getPositionsSnapshot (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1015,7 +1015,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
 
       return this._positionsSnapshot.getPositionsSnapshot(args)
-    }, 'getPositionsSnapshot', cb)
+    }, 'getPositionsSnapshot', args, cb)
   }
 
   getFullSnapshotReport (space, args, cb) {

@@ -17,13 +17,15 @@ class PositionsSnapshot {
     dao,
     ALLOWED_COLLS,
     syncSchema,
-    currencyConverter
+    currencyConverter,
+    authenticator
   ) {
     this.rService = rService
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.syncSchema = syncSchema
     this.currencyConverter = currencyConverter
+    this.authenticator = authenticator
   }
 
   _getPositionsHistory (
@@ -397,7 +399,8 @@ class PositionsSnapshot {
     const {
       end = Date.now()
     } = { ...params }
-    const user = await this.dao.checkAuthInDb({ auth })
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
     const emptyRes = {
       positionsSnapshot: [],
       tickers: []
@@ -477,5 +480,6 @@ decorate(inject(TYPES.DAO), PositionsSnapshot, 1)
 decorate(inject(TYPES.ALLOWED_COLLS), PositionsSnapshot, 2)
 decorate(inject(TYPES.SyncSchema), PositionsSnapshot, 3)
 decorate(inject(TYPES.CurrencyConverter), PositionsSnapshot, 4)
+decorate(inject(TYPES.Authenticator), PositionsSnapshot, 5)
 
 module.exports = PositionsSnapshot
