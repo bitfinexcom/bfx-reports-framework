@@ -887,10 +887,15 @@ class SqliteDAO extends DAO {
    */
   async removeElemsFromDb (name, auth, data = {}) {
     if (auth) {
-      const user = await this.checkAuthInDb({ auth })
+      const { _id } = { ...auth }
 
-      data.user_id = user._id
+      if (!Number.isInteger(_id)) {
+        throw new AuthError()
+      }
+
+      data.user_id = _id
     }
+
     const {
       where,
       values
