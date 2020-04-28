@@ -53,29 +53,6 @@ class FrameworkReportService extends ReportService {
     )
   }
 
-  /**
-   * @override
-   */
-  async _getUserInfo (args) {
-    try {
-      const user = await this._authenticator.verifyUser(
-        args,
-        {
-          projection: [
-            'username',
-            'timezone',
-            'email',
-            'id'
-          ]
-        }
-      )
-
-      return user
-    } catch (err) {
-      return false
-    }
-  }
-
   async _checkAuthInApi (args) {
     checkParamsAuth(args)
 
@@ -87,7 +64,7 @@ class FrameworkReportService extends ReportService {
       timezone,
       username,
       id
-    } = await super._getUserInfo({ ...args, auth })
+    } = await super.verifyUser(null, { ...args, auth })
 
     if (!email) {
       throw new AuthError()
@@ -122,16 +99,35 @@ class FrameworkReportService extends ReportService {
   verifyUser (space, args, cb) {
     return this._responder(async () => {
       if (!await this.isSyncModeConfig(space, args)) {
-        const { email } = await this._checkAuthInApi(args)
+        const {
+          username,
+          timezone,
+          email,
+          id
+        } = await this._checkAuthInApi(args)
         const { auth } = { ...args }
         const isSubAccount = isSubAccountApiKeys(auth)
 
-        return { email, isSubAccount }
+        return {
+          username,
+          timezone,
+          email,
+          id,
+          isSubAccount
+        }
       }
 
       return this._authenticator.verifyUser(
         args,
-        { projection: ['email', 'isSubAccount'] }
+        {
+          projection: [
+            'username',
+            'timezone',
+            'email',
+            'id',
+            'isSubAccount'
+          ]
+        }
       )
     }, 'verifyUser', cb)
   }
