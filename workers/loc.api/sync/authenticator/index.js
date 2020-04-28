@@ -337,17 +337,17 @@ class Authenticator {
         }
       )
       const { passwordHash } = { ..._user }
-      const user = this.pickProps(_user, projection)
 
       await this.crypto.verifyPassword(
         password,
         passwordHash
       )
 
-      return {
-        ...user,
+      const user = {
+        ..._user,
         password: isReturnedPassword ? password : null
       }
+      return this.pickProps(user, projection)
     }
     if (
       jwt &&
