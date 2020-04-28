@@ -1043,7 +1043,7 @@ class FrameworkReportService extends ReportService {
   }
 
   getTradedVolume (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1051,11 +1051,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForTradedVolumeApi')
 
       return this._tradedVolume.getTradedVolume(args)
-    }, 'getTradedVolume', cb)
+    }, 'getTradedVolume', args, cb)
   }
 
   getFeesReport (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1063,7 +1063,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForFeesReportApi')
 
       return this._feesReport.getFeesReport(args)
-    }, 'getFeesReport', cb)
+    }, 'getFeesReport', args, cb)
   }
 
   getPerformingLoan (space, args, cb) {
