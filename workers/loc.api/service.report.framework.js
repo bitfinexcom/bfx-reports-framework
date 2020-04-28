@@ -995,7 +995,7 @@ class FrameworkReportService extends ReportService {
   }
 
   getWinLoss (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1003,7 +1003,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForWinLossApi')
 
       return this._winLoss.getWinLoss(args)
-    }, 'getWinLoss', cb)
+    }, 'getWinLoss', args, cb)
   }
 
   getPositionsSnapshot (space, args, cb) {
