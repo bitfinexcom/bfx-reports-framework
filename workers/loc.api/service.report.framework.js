@@ -24,8 +24,7 @@ const {
   isEnotfoundError,
   isEaiAgainError,
   collObjToArr,
-  getAuthFromSubAccountAuth,
-  isSubAccountApiKeys
+  getAuthFromSubAccountAuth
 } = require('./helpers')
 
 const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
@@ -97,26 +96,7 @@ class FrameworkReportService extends ReportService {
   }
 
   verifyUser (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeConfig(space, args)) {
-        const {
-          username,
-          timezone,
-          email,
-          id
-        } = await this._checkAuthInApi(args)
-        const { auth } = { ...args }
-        const isSubAccount = isSubAccountApiKeys(auth)
-
-        return {
-          username,
-          timezone,
-          email,
-          id,
-          isSubAccount
-        }
-      }
-
+    return this._responder(() => {
       return this._authenticator.verifyUser(
         args,
         {
