@@ -181,6 +181,9 @@ class WSTransport {
         }
 
         socket.isAlive = false
+
+        if (!this._active) return
+
         socket.ping(null, false)
       })
     }, 10000)
