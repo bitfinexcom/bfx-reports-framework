@@ -148,7 +148,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -172,7 +172,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -191,7 +191,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: subAccountAuth,
@@ -214,7 +214,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -233,7 +233,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -255,7 +255,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -274,7 +274,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: subAccountAuth,
@@ -314,14 +314,14 @@ describe('Sub-account', () => {
       db = await connToSQLite()
 
       await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
           method: 'login'
         })
       await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -347,7 +347,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: subAccountAuth,
@@ -368,7 +368,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,
@@ -387,7 +387,7 @@ describe('Sub-account', () => {
       this.timeout(5000)
 
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth: masterUserAuth,

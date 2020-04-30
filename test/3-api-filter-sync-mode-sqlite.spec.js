@@ -87,7 +87,7 @@ describe('API filter', () => {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -106,7 +106,7 @@ describe('API filter', () => {
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -129,7 +129,7 @@ describe('API filter', () => {
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -158,7 +158,7 @@ describe('API filter', () => {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -184,7 +184,7 @@ describe('API filter', () => {
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -213,7 +213,7 @@ describe('API filter', () => {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -239,7 +239,7 @@ describe('API filter', () => {
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -739,7 +739,7 @@ describe('API filter', () => {
 
     for (const { args, responseTest } of argsArr) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send(args)
         .expect('Content-Type', /json/)
@@ -825,7 +825,7 @@ describe('API filter', () => {
 
     for (const { args } of argsArr) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send(args)
         .expect('Content-Type', /json/)
@@ -906,7 +906,7 @@ describe('API filter', () => {
 
     for (const { args, responseTest } of argsArr) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send(args)
         .expect('Content-Type', /json/)
@@ -928,7 +928,7 @@ describe('API filter', () => {
     const aggrPromise = queueToPromise(aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -959,7 +959,7 @@ describe('API filter', () => {
     const aggrPromise = queueToPromise(aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
