@@ -16,6 +16,8 @@ class MigrationV5 extends AbstractMigration {
     const sqlArr = [
       'DROP INDEX users_apiKey_apiSecret',
 
+      'DELETE FROM users',
+
       'ALTER TABLE users ADD COLUMN passwordHash VARCHAR(255)',
       'ALTER TABLE users ADD COLUMN isSubAccount INT',
       'ALTER TABLE users ADD COLUMN isSubUser INT',
@@ -53,6 +55,7 @@ class MigrationV5 extends AbstractMigration {
       'DROP INDEX users_email_username',
 
       'DROP TRIGGER delete_subAccounts_subUsers_from_users',
+      'DELETE FROM users',
 
       ...getSqlArrToModifyColumns(
         'users',
