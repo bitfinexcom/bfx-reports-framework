@@ -7,7 +7,13 @@ class MigrationV5 extends AbstractMigration {
   /**
    * @override
    */
-  beforeUp () { return this.dao.disableForeignKeys() }
+  async before () {
+    await this.dao.executeQueriesInTrans(
+      'DELETE FROM users',
+      { beforeTransFn: () => this.dao.enableForeignKeys() }
+    )
+    await this.dao.disableForeignKeys()
+  }
 
   /**
    * @override
@@ -45,17 +51,11 @@ class MigrationV5 extends AbstractMigration {
   /**
    * @override
    */
-  beforeDown () { return this.dao.disableForeignKeys() }
-
-  /**
-   * @override
-   */
   down () {
     const sqlArr = [
       'DROP INDEX users_email_username',
 
       'DROP TRIGGER delete_subAccounts_subUsers_from_users',
-      'DELETE FROM users',
 
       ...getSqlArrToModifyColumns(
         'users',
