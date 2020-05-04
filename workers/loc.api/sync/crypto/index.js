@@ -14,6 +14,32 @@ const {
 
 const TYPES = require('../../di/types')
 
+/**
+ * Scrypt was introduced into Node.js in v10.5.0,
+ * it can also be used with Node.js v8.5.0...v10.4.1 using the scrypt-async OpenSSL polyfill
+ * https://github.com/dchest/scrypt-async-js
+ */
+if (!crypto.scrypt) {
+  const scryptAsync = require('scrypt-async')
+
+  crypto.scrypt = (password, salt, keylen, options, cb) => {
+    const opt = {
+      ...options,
+      N: 16384,
+      r: 8,
+      p: 1,
+      dkLen: keylen
+    }
+    const fn = typeof cb === 'function' ? cb : options
+
+    scryptAsync(
+      password,
+      salt,
+      opt,
+      (derivedKey) => fn(null, Buffer.from(derivedKey)))
+  }
+}
+
 const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)
 const pbkdf2 = promisify(crypto.pbkdf2)
