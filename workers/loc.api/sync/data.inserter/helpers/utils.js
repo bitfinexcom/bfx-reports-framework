@@ -74,63 +74,59 @@ const normalizeApiData = (
 }
 
 const getAuthFromDb = async (authenticator) => {
-  try {
-    const auth = new Map()
-    const sessions = await authenticator.getUserSessions(
-      { isFilledUsers: true }
-    )
+  const auth = new Map()
+  const sessions = await authenticator.getUserSessions(
+    { isFilledUsers: true }
+  )
 
-    if (sessions.size === 0) {
-      return auth
-    }
-
-    for (const [, session] of sessions) {
-      const {
-        _id,
-        email,
-        apiKey,
-        apiSecret,
-        isSubAccount,
-        subUsers,
-        jwt
-      } = { ...session }
-      const authPayload = {
-        _id,
-        email,
-        apiKey,
-        apiSecret,
-        isSubAccount,
-        subUsers,
-        jwt,
-        subUser: null
-      }
-
-      if (!isSubAccount) {
-        auth.set(apiKey, authPayload)
-
-        continue
-      }
-      if (
-        !Array.isArray(subUsers) ||
-        subUsers.length === 0
-      ) {
-        continue
-      }
-
-      subUsers.forEach((subUser) => {
-        const { apiKey: subUserApiKey } = { ...subUser }
-
-        auth.set(
-          `${apiKey}-${subUserApiKey}`,
-          { ...authPayload, subUser }
-        )
-      })
-    }
-
+  if (sessions.size === 0) {
     return auth
-  } catch (err) {
-    return null
   }
+
+  for (const [, session] of sessions) {
+    const {
+      _id,
+      email,
+      apiKey,
+      apiSecret,
+      isSubAccount,
+      subUsers,
+      jwt
+    } = { ...session }
+    const authPayload = {
+      _id,
+      email,
+      apiKey,
+      apiSecret,
+      isSubAccount,
+      subUsers,
+      jwt,
+      subUser: null
+    }
+
+    if (!isSubAccount) {
+      auth.set(apiKey, authPayload)
+
+      continue
+    }
+    if (
+      !Array.isArray(subUsers) ||
+      subUsers.length === 0
+    ) {
+      continue
+    }
+
+    subUsers.forEach((subUser) => {
+      const { apiKey: subUserApiKey } = { ...subUser }
+
+      auth.set(
+        `${apiKey}-${subUserApiKey}`,
+        { ...authPayload, subUser }
+      )
+    })
+  }
+
+  return auth
 }
 
 const getAllowedCollsNames = (allowedColls) => {

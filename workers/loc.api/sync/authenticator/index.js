@@ -623,13 +623,16 @@ class Authenticator {
 
   async getUserSessions (params) {
     const { isFilledUsers } = { ...params }
+    const userSessions = []
 
-    const userSessionsPromises = [...this.userSessions]
-      .map(([id, session]) => this.getUserSessionById(
+    for (const [id, session] of [...this.userSessions]) {
+      const userSession = await this.getUserSessionById(
         id,
         { isFilledUsers, session }
-      ))
-    const userSessions = await Promise.all(userSessionsPromises)
+      )
+
+      userSessions.push(userSession)
+    }
 
     return new Map(userSessions)
   }
