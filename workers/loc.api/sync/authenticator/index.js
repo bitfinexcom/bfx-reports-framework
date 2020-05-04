@@ -316,7 +316,8 @@ class Authenticator {
       isDecryptedApiKeys,
       isReturnedPassword,
       isSubUser = false,
-      isNotInTrans
+      isNotInTrans,
+      isAppliedProjectionToSubUser
     } = { ...params }
 
     if (
@@ -347,7 +348,11 @@ class Authenticator {
         ..._user,
         password: isReturnedPassword ? password : null
       }
-      return this.pickProps(user, projection)
+      return this.pickProps(
+        user,
+        projection,
+        isAppliedProjectionToSubUser
+      )
     }
     if (
       jwt &&
@@ -384,7 +389,11 @@ class Authenticator {
         ..._user,
         password: isReturnedPassword ? decryptedPassword : null
       }
-      return this.pickProps(user, projection)
+      return this.pickProps(
+        user,
+        projection,
+        isAppliedProjectionToSubUser
+      )
     }
 
     throw new AuthError()
@@ -424,11 +433,16 @@ class Authenticator {
     const {
       isFilledSubUsers,
       projection,
-      password
+      password,
+      isAppliedProjectionToSubUser
     } = { ...params }
 
     const _user = await this.dao.getUser(filter, params)
-    const user = this.pickProps(_user, projection)
+    const user = this.pickProps(
+      _user,
+      projection,
+      isAppliedProjectionToSubUser
+    )
 
     if (
       !password ||
@@ -460,7 +474,8 @@ class Authenticator {
       isFilledSubUsers,
       password,
       emailPasswordsMap,
-      projection
+      projection,
+      isAppliedProjectionToSubUser
     } = { ...params }
     const _emailPasswordsMap = Array.isArray(emailPasswordsMap)
       ? emailPasswordsMap
@@ -478,7 +493,11 @@ class Authenticator {
       })
 
     const _users = await this.dao.getUsers(filter, params)
-    const users = this.pickProps(_users, projection)
+    const users = this.pickProps(
+      _users,
+      projection,
+      isAppliedProjectionToSubUser
+    )
 
     if (
       !password ||
@@ -753,7 +772,7 @@ class Authenticator {
     return username
   }
 
-  pickProps (data, props) {
+  pickProps (data, props, isAppliedProjectionToSubUser) {
     if (
       !Array.isArray(props) ||
       props.length === 0
@@ -769,7 +788,23 @@ class Authenticator {
         return item
       }
 
-      return pick(item, props)
+      if (
+        !isAppliedProjectionToSubUser ||
+        !Array.isArray(item.subUsers) ||
+        item.subUsers.length === 0
+      ) {
+        return pick(item, props)
+      }
+
+      const subUsers = item.subUsers.map((subUser) => {
+        if (!subUser || typeof subUser !== 'object') {
+          return subUser
+        }
+
+        return pick(subUser, props)
+      })
+
+      return pick({ ...item, subUsers }, props)
     })
 
     return isArray ? res : res[0]

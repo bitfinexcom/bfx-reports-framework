@@ -100,12 +100,15 @@ class FrameworkReportService extends ReportService {
       return this._authenticator.verifyUser(
         args,
         {
+          isFilledSubUsers: true,
+          isAppliedProjectionToSubUser: true,
           projection: [
             'username',
             'timezone',
             'email',
             'id',
-            'isSubAccount'
+            'isSubAccount',
+            'subUsers'
           ]
         }
       )
