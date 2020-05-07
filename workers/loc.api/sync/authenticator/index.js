@@ -1,5 +1,6 @@
 'use strict'
 
+const { v4: uuidv4 } = require('uuid')
 const { pick } = require('lodash')
 const {
   decorate,
@@ -29,24 +30,12 @@ class Authenticator {
     this.rService = rService
     this.crypto = crypto
 
-    this.secretKey = this.crypto.getSecretKey()
-
-    this.passRegEx = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/
-
     /**
      * It may only work for one grenache worker instance
      */
     this.userSessions = new Map()
   }
 
-  /**
-   * It creates user entry
-   *
-   * @return { Promise<object> }
-   * Return an object { jsonWebToken, email }
-   * where jsonWebToken payload is
-   * an object { _id, email, encryptedPassword }
-   */
   async signUp (args, params) {
     const { auth } = { ...args }
     const { apiKey, apiSecret, password } = { ...auth }
@@ -56,7 +45,7 @@ class Authenticator {
       isSubAccount = false,
       isSubUser = false,
       isDisabledApiKeysVerification = false,
-      isReturnedId = false,
+      isReturnedFullUserData = false,
       isNotSetSession = false,
       isNotInTrans = false,
       masterUserId
@@ -69,7 +58,6 @@ class Authenticator {
       typeof apiSecret !== 'string' ||
       !password ||
       typeof password !== 'string' ||
-      !this.isSecurePassword(password) ||
       (
         !isDisabledApiKeysVerification &&
         isSubAccountApiKeys({ apiKey, apiSecret })
@@ -116,19 +104,14 @@ class Authenticator {
     const [
       encryptedApiKey,
       encryptedApiSecret,
-      encryptedPassword,
       passwordHash
     ] = await Promise.all([
       this.crypto.encrypt(apiKey, password),
       this.crypto.encrypt(apiSecret, password),
-      this.crypto.encrypt(password, this.secretKey),
       this.crypto.hashPassword(password)
     ])
 
-    const {
-      _id,
-      isSubAccount: isSubAccountFromDb
-    } = await this.createUser(
+    const user = await this.createUser(
       {
         email,
         timezone,
@@ -145,19 +128,18 @@ class Authenticator {
       { isNotInTrans }
     )
 
-    const idParam = isReturnedId ? { _id } : {}
-    const payload = { _id, email, encryptedPassword }
-    const jwt = await this.generateAuthJWT(payload)
+    const userParam = isReturnedFullUserData ? user : {}
+    const token = uuidv4()
 
     if (!isNotSetSession) {
-      this.setUserSession({ _id, email, jwt })
+      this.setUserSession({ ...user, token })
     }
 
     return {
-      ...idParam,
+      ...userParam,
       email,
-      isSubAccount: isSubAccountFromDb,
-      jwt
+      isSubAccount: user.isSubAccount,
+      token
     }
   }
 
@@ -167,7 +149,7 @@ class Authenticator {
       email,
       password,
       isSubAccount,
-      jwt
+      token
     } = { ...auth }
     const {
       active = true,
@@ -181,21 +163,17 @@ class Authenticator {
           email,
           password,
           isSubAccount,
-          jwt
+          token
         }
       },
-      {
-        isDecryptedApiKeys: true,
-        isReturnedPassword: true
-      }
+      { isDecryptedApiKeys: true }
     )
     const {
       _id,
       email: emailFromDb,
       isSubAccount: isSubAccountFromDb,
       apiKey,
-      apiSecret,
-      password: decryptedPassword
+      apiSecret
     } = { ...user }
 
     const {
@@ -233,19 +211,6 @@ class Authenticator {
       throw new AuthError()
     }
 
-    const freshEmail = (
-      (email && typeof email === 'string') ||
-      emailFromApi !== emailFromDb
-    )
-      ? emailFromApi
-      : null
-    const payload = {
-      _id,
-      email: freshEmail,
-      password: decryptedPassword,
-      jwt
-    }
-    const resJWT = await this.generateAuthJWT(payload)
     const returnedUser = isReturnedUser
       ? {
         ...user,
@@ -253,15 +218,17 @@ class Authenticator {
       }
       : {}
 
-    this.setUserSession(
-      { _id, email: emailFromApi, jwt: resJWT }
-    )
+    const createdToken = token && typeof token === 'string'
+      ? token
+      : uuidv4()
+
+    this.setUserSession({ ...user, token: createdToken })
 
     return {
       ...returnedUser,
       email: emailFromApi,
       isSubAccount: isSubAccountFromDb,
-      jwt: resJWT
+      token: createdToken
     }
   }
 
@@ -271,7 +238,7 @@ class Authenticator {
       email,
       password,
       isSubAccount,
-      jwt
+      token
     } = { ...auth }
     const { active = false } = { ...params }
 
@@ -281,7 +248,7 @@ class Authenticator {
           email,
           password,
           isSubAccount,
-          jwt
+          token
         }
       }
     )
@@ -297,7 +264,7 @@ class Authenticator {
       throw new AuthError()
     }
 
-    this.removeUserSessionById(_id)
+    this.removeUserSessionByToken(token)
 
     return true
   }
@@ -308,7 +275,7 @@ class Authenticator {
       email,
       password,
       isSubAccount = false,
-      jwt
+      token
     } = { ...auth }
     const {
       projection,
@@ -348,6 +315,7 @@ class Authenticator {
         ..._user,
         password: isReturnedPassword ? password : null
       }
+
       return this.pickProps(
         user,
         projection,
@@ -355,42 +323,23 @@ class Authenticator {
       )
     }
     if (
-      jwt &&
-      typeof jwt === 'string'
+      token &&
+      typeof token === 'string'
     ) {
-      const {
-        _id,
-        email: emailFromJWT,
-        encryptedPassword
-      } = await this.crypto.verifyJWT(jwt)
-      const decryptedPassword = await this.crypto.decrypt(
-        encryptedPassword,
-        this.secretKey
-      )
-      const pwdParam = isDecryptedApiKeys
-        ? { password: decryptedPassword }
-        : {}
-      const _user = await this.getUser(
-        { _id, email: emailFromJWT },
-        {
-          isNotInTrans,
-          isFilledSubUsers,
-          ...pwdParam
-        }
-      )
-      const { passwordHash } = { ..._user }
+      const session = this.getUserSessionByToken(token)
+      const { apiKey, apiSecret } = { ...session }
 
-      await this.crypto.verifyPassword(
-        decryptedPassword,
-        passwordHash
-      )
-
-      const user = {
-        ..._user,
-        password: isReturnedPassword ? decryptedPassword : null
+      if (
+        !apiKey ||
+        typeof apiKey !== 'string' ||
+        !apiSecret ||
+        typeof apiSecret !== 'string'
+      ) {
+        throw new AuthError()
       }
+
       return this.pickProps(
-        user,
+        session,
         projection,
         isAppliedProjectionToSubUser
       )
@@ -564,24 +513,22 @@ class Authenticator {
       email,
       password,
       isSubAccount,
-      jwt
+      token
     } = { ...auth }
 
-    const user = await this.verifyUser(
+    const {
+      _id,
+      email: emailFromDb
+    } = await this.verifyUser(
       {
         auth: {
           email,
           password,
           isSubAccount,
-          jwt
+          token
         }
-      },
-      { isDecryptedApiKeys: true }
+      }
     )
-    const {
-      _id,
-      email: emailFromDb
-    } = { ...user }
 
     await this.dao.executeQueriesInTrans(async () => {
       const res = await this.dao.removeElemsFromDb(
@@ -594,136 +541,33 @@ class Authenticator {
         throw new UserRemovingError()
       }
 
-      this.removeUserSessionById(_id)
+      this.removeUserSessionByToken(token)
     })
 
     return true
   }
 
-  setUserSession (data) {
-    const { _id, email, jwt } = { ...data }
+  setUserSession (user) {
+    const { token } = { ...user }
 
-    this.userSessions.set(_id, { _id, email, jwt })
+    this.userSessions.set(token, { ...user })
   }
 
-  async getUserSessionById (id, params) {
-    const {
-      isFilledUsers,
-      session = this.userSessions.get(id)
-    } = { ...params }
-    const { jwt } = { ...session }
+  async getUserSessionByToken (token) {
+    const session = this.userSessions.get(token)
 
-    if (isFilledUsers && jwt) {
-      const user = await this.verifyUser(
-        { auth: { jwt } },
-        {
-          isDecryptedApiKeys: true,
-          isFilledSubUsers: true,
-          isReturnedPassword: true
-        }
-      )
-      const { password, subUsers: reqSubUsers } = user
-      const subUsers = await this.addJWTToSubUsers(
-        reqSubUsers,
-        password
-      )
-      const payload = {
-        ...session,
-        ...user,
-        subUsers,
-        jwt
-      }
-
-      return [id, this.pickSessionProps(payload)]
-    }
-
-    return [id, this.pickSessionProps({ ...session })]
+    return this.pickSessionProps(session)
   }
 
-  async getUserSessions (params) {
-    const { isFilledUsers } = { ...params }
-    const userSessions = []
+  async getUserSessions () {
+    const sessionsMap = [...this.userSessions]
+      .map((session) => this.pickSessionProps(session))
 
-    for (const [id, session] of [...this.userSessions]) {
-      const userSession = await this.getUserSessionById(
-        id,
-        { isFilledUsers, session }
-      )
-
-      userSessions.push(userSession)
-    }
-
-    return new Map(userSessions)
+    return new Map(sessionsMap)
   }
 
-  removeUserSessionById (id) {
-    return this.userSessions.delete(id)
-  }
-
-  async generateAuthJWT (payload) {
-    const {
-      _id,
-      email,
-      encryptedPassword,
-      password,
-      jwt
-    } = { ...payload }
-    if (
-      email &&
-      typeof email === 'string'
-    ) {
-      if (
-        encryptedPassword &&
-        typeof encryptedPassword === 'string'
-      ) {
-        const payload = { _id, email, encryptedPassword }
-
-        return this.crypto.generateJWT(payload)
-      }
-      if (
-        password &&
-        typeof password === 'string'
-      ) {
-        const encryptedPassword = await this.crypto.encrypt(
-          password,
-          this.secretKey
-        )
-        const payload = { _id, email, encryptedPassword }
-
-        return this.crypto.generateJWT(payload)
-      }
-
-      throw new AuthError()
-    }
-    if (
-      jwt &&
-      typeof jwt === 'string'
-    ) {
-      return jwt
-    }
-
-    throw new AuthError()
-  }
-
-  async addJWTToSubUsers (subUsers, password) {
-    if (
-      !Array.isArray(subUsers) ||
-      subUsers.length === 0
-    ) {
-      return subUsers
-    }
-
-    const subUsersPromises = subUsers.map(async (subUser) => {
-      const { _id, email } = { ...subUser }
-      const payload = { _id, email, password }
-
-      const jwt = await this.generateAuthJWT(payload)
-
-      return { ...subUser, jwt }
-    })
-    const res = await Promise.all(subUsersPromises)
-
-    return res
+  removeUserSessionByToken (token) {
+    return this.userSessions.delete(token)
   }
 
   async decryptApiKeys (password, users) {
@@ -753,10 +597,6 @@ class Authenticator {
     })
 
     return isArray ? res : res[0]
-  }
-
-  isSecurePassword (password) {
-    return this.passRegEx.test(password)
   }
 
   generateSubUserName (user, isSubAccount, isSubUser) {
@@ -824,7 +664,7 @@ class Authenticator {
       'isSubAccount',
       'isSubUser',
       'subUsers',
-      'jwt'
+      'token'
     ]
     const { subUsers: reqSubUsers } = { ...session }
     const subUsers = this.pickProps(reqSubUsers, allowedProps)

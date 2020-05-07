@@ -157,14 +157,14 @@ class WSTransport {
           const {
             email,
             isSubAccount,
-            jwt
+            token
           } = { ...user }
 
           this._auth.set(sid, user)
           this.transport.sendReply(socket, rid, null, {
             email,
             isSubAccount,
-            jwt
+            token
           })
         } catch (err) {
           this.transport.sendReply(socket, rid, err)

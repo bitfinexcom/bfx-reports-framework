@@ -75,9 +75,7 @@ const normalizeApiData = (
 
 const getAuthFromDb = async (authenticator) => {
   const auth = new Map()
-  const sessions = await authenticator.getUserSessions(
-    { isFilledUsers: true }
-  )
+  const sessions = await authenticator.getUserSessions()
 
   if (sessions.size === 0) {
     return auth
@@ -91,7 +89,7 @@ const getAuthFromDb = async (authenticator) => {
       apiSecret,
       isSubAccount,
       subUsers,
-      jwt
+      token
     } = { ...session }
     const authPayload = {
       _id,
@@ -100,7 +98,7 @@ const getAuthFromDb = async (authenticator) => {
       apiSecret,
       isSubAccount,
       subUsers,
-      jwt,
+      token,
       subUser: null
     }
 

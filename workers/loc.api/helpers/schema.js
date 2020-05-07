@@ -20,7 +20,7 @@ const paramsSchemaForCreateSubAccount = {
         properties: {
           apiKey: { type: 'string' },
           apiSecret: { type: 'string' },
-          jwt: { type: 'string' }
+          token: { type: 'string' }
         }
       }
     },

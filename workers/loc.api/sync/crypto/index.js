@@ -2,7 +2,6 @@
 
 const crypto = require('crypto')
 const { promisify } = require('util')
-const jwt = require('jsonwebtoken')
 const {
   decorate,
   injectable,
@@ -38,8 +37,6 @@ if (!crypto.scrypt) {
 const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)
 const pbkdf2 = promisify(crypto.pbkdf2)
-const jwtSign = promisify(jwt.sign)
-const jwtVerify = promisify(jwt.verify)
 
 class Crypto {
   constructor (CONF) {
@@ -49,7 +46,6 @@ class Crypto {
     this.secretKey = secretKey
 
     this.cryptoAlgorithm = 'aes-256-gcm'
-    this.jwtAlgorithm = 'HS256'
     this.passwordAlgorithm = 'sha512'
   }
 
@@ -97,22 +93,6 @@ class Crypto {
     const generatedHash = await this.hashPassword(password, salt)
 
     if (generatedHash !== conbinedHash) {
-      throw new AuthError()
-    }
-  }
-
-  generateJWT (payload) {
-    return jwtSign(
-      payload,
-      this.secretKey,
-      { algorithm: this.jwtAlgorithm }
-    )
-  }
-
-  async verifyJWT (token) {
-    try {
-      return await jwtVerify(token, this.secretKey)
-    } catch (err) {
       throw new AuthError()
     }
   }

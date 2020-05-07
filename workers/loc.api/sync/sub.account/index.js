@@ -34,7 +34,7 @@ class SubAccount {
     const {
       email,
       password,
-      jwt
+      token
     } = { ...auth }
     const {
       subAccountPassword,
@@ -47,7 +47,7 @@ class SubAccount {
           auth: {
             email,
             password,
-            jwt
+            token
           }
         },
         {
@@ -88,17 +88,18 @@ class SubAccount {
     }
 
     return this.dao.executeQueriesInTrans(async () => {
-      const { _id, email, jwt } = await this.authenticator
+      const subAccountUser = await this.authenticator
         .signUp(
           { auth: subAccount },
           {
             isDisabledApiKeysVerification: true,
-            isReturnedId: true,
+            isReturnedFullUserData: true,
             isNotSetSession: true,
             isSubAccount: true,
             isNotInTrans: true
           }
         )
+      const { _id, email, token } = subAccountUser
 
       const subUsersAuth = [
         ...subAccountApiKeys,
@@ -113,7 +114,7 @@ class SubAccount {
           apiSecret,
           password,
           email,
-          jwt
+          token
         } = { ...subUserAuth }
 
         const isAuthCheckedInDb = (
@@ -124,8 +125,8 @@ class SubAccount {
             typeof password === 'string'
           ) ||
           (
-            jwt &&
-            typeof jwt === 'string'
+            token &&
+            typeof token === 'string'
           )
         )
         const auth = isAuthCheckedInDb
@@ -134,7 +135,7 @@ class SubAccount {
               auth: {
                 email,
                 password,
-                jwt
+                token
               }
             },
             {
@@ -172,7 +173,7 @@ class SubAccount {
             },
             {
               isDisabledApiKeysVerification: isAuthCheckedInDb,
-              isReturnedId: true,
+              isReturnedFullUserData: true,
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
@@ -194,14 +195,12 @@ class SubAccount {
         )
       }
 
-      this.authenticator.setUserSession(
-        { _id, email, jwt }
-      )
+      this.authenticator.setUserSession(subAccountUser)
 
       return {
         email,
         isSubAccount: true,
-        jwt
+        token
       }
     })
   }
