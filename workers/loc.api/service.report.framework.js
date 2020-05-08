@@ -131,13 +131,11 @@ class FrameworkReportService extends ReportService {
   }
 
   createSubAccount (space, args, cb) {
-    return this._responder(async () => {
+    return this._responder(() => {
       checkParams(args, 'paramsSchemaForCreateSubAccount')
 
-      await this._subAccount
+      return this._subAccount
         .createSubAccount(args)
-
-      return true
     }, 'createSubAccount', cb)
   }
 
@@ -530,7 +528,9 @@ class FrameworkReportService extends ReportService {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
           (args) => getDataFromApi(
-            (space, args) => super.getPositionsAudit(space, args),
+            (space, args) => {
+              return super.getPositionsAudit(space, args)
+            },
             args
           ),
           args,

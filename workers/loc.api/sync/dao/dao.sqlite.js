@@ -475,13 +475,16 @@ class SqliteDAO extends DAO {
       afterTransFn
     } = {}
   ) {
-    const sqlArr = Array.isArray(sql)
+    const isArray = Array.isArray(sql)
+    const sqlArr = isArray
       ? sql
       : [sql]
 
     if (sqlArr.length === 0) {
       return
     }
+
+    const res = []
 
     return this._beginTrans(async () => {
       for (const sqlData of sqlArr) {
@@ -501,12 +504,14 @@ class SqliteDAO extends DAO {
         }
 
         if (sql) {
-          await this._run(sql, values)
+          res.push(await this._run(sql, values))
         }
         if (execQueryFn) {
-          await execQueryFn()
+          res.push(await execQueryFn())
         }
       }
+
+      return isArray ? res : res[0]
     }, { beforeTransFn, afterTransFn })
   }
 

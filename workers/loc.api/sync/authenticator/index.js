@@ -128,19 +128,33 @@ class Authenticator {
       { isNotInTrans }
     )
 
-    const userParam = isReturnedFullUserData ? user : {}
     const token = uuidv4()
-
-    if (!isNotSetSession) {
-      this.setUserSession({ ...user, token })
-    }
-
-    return {
-      ...userParam,
-      email,
-      isSubAccount: user.isSubAccount,
+    const fullUserData = {
+      ...user,
+      subUsers: [],
+      apiKey,
+      apiSecret,
+      password,
       token
     }
+    const userParam = isReturnedFullUserData
+      ? fullUserData
+      : {
+        email,
+        isSubAccount: user.isSubAccount,
+        token
+      }
+
+    if (!isNotSetSession) {
+      /**
+       * It stores a password only in memory to allow users
+       * to create sub-account with the same password of
+       * master user don't ask the user when auth by token
+       */
+      this.setUserSession(fullUserData)
+    }
+
+    return { ...userParam }
   }
 
   async signIn (args, params) {
@@ -166,7 +180,11 @@ class Authenticator {
           token
         }
       },
-      { isDecryptedApiKeys: true }
+      {
+        isDecryptedApiKeys: true,
+        isFilledSubUsers: true,
+        isReturnedPassword: true
+      }
     )
     const {
       _id,
@@ -211,18 +229,28 @@ class Authenticator {
       throw new AuthError()
     }
 
+    const refreshedUser = {
+      ...user,
+      ...freshUserData
+    }
     const returnedUser = isReturnedUser
-      ? {
-        ...user,
-        ...freshUserData
-      }
+      ? refreshedUser
       : {}
 
-    const createdToken = token && typeof token === 'string'
+    const existedToken = (
+      token &&
+      typeof token === 'string'
+    )
       ? token
+      : this.getUserSessionByEmail({ email, isSubAccount }).token
+    const createdToken = (
+      existedToken &&
+      typeof existedToken === 'string'
+    )
+      ? existedToken
       : uuidv4()
 
-    this.setUserSession({ ...user, token: createdToken })
+    this.setUserSession({ ...refreshedUser, token: createdToken })
 
     return {
       ...returnedUser,
@@ -326,7 +354,10 @@ class Authenticator {
       token &&
       typeof token === 'string'
     ) {
-      const session = this.getUserSessionByToken(token)
+      const session = this.getUserSessionByToken(
+        token,
+        isReturnedPassword
+      )
       const { apiKey, apiSecret } = { ...session }
 
       if (
@@ -553,15 +584,34 @@ class Authenticator {
     this.userSessions.set(token, { ...user })
   }
 
-  async getUserSessionByToken (token) {
+  getUserSessionByToken (token, isReturnedPassword) {
     const session = this.userSessions.get(token)
 
-    return this.pickSessionProps(session)
+    return this.pickSessionProps(session, isReturnedPassword)
   }
 
-  async getUserSessions () {
+  getUserSessionByEmail (args, isReturnedPassword) {
+    const {
+      email,
+      isSubAccount = false
+    } = { ...args }
+    const keyVal = [...this.userSessions].find(([, session]) => {
+      return (
+        email === session.email &&
+        isSubAccount === session.isSubAccount
+      )
+    })
+    const session = Array.isArray(keyVal) ? keyVal[1] : {}
+
+    return this.pickSessionProps(session, isReturnedPassword)
+  }
+
+  getUserSessions () {
     const sessionsMap = [...this.userSessions]
-      .map((session) => this.pickSessionProps(session))
+      .map(([token, session]) => [
+        token,
+        this.pickSessionProps(session)
+      ])
 
     return new Map(sessionsMap)
   }
@@ -650,7 +700,10 @@ class Authenticator {
     return isArray ? res : res[0]
   }
 
-  pickSessionProps (session) {
+  pickSessionProps (session, isReturnedPassword) {
+    const passwordProp = isReturnedPassword
+      ? ['password']
+      : []
     const allowedProps = [
       '_id',
       'id',
@@ -664,7 +717,8 @@ class Authenticator {
       'isSubAccount',
       'isSubUser',
       'subUsers',
-      'token'
+      'token',
+      ...passwordProp
     ]
     const { subUsers: reqSubUsers } = { ...session }
     const subUsers = this.pickProps(reqSubUsers, allowedProps)

@@ -106,7 +106,7 @@ class SubAccount {
         masterUser
       ]
 
-      const subUsersKeys = []
+      const subUsers = []
 
       for (const subUserAuth of subUsersAuth) {
         const {
@@ -155,7 +155,7 @@ class SubAccount {
           : { apiKey, apiSecret }
 
         if (
-          subUsersKeys.some(item => (
+          subUsers.some(item => (
             auth.apiKey === item.apiKey &&
             auth.apiSecret === item.apiSecret
           ))
@@ -163,7 +163,7 @@ class SubAccount {
           continue
         }
 
-        const { _id: subUserId } = await this.authenticator
+        const subUser = await this.authenticator
           .signUp(
             {
               auth: {
@@ -181,21 +181,19 @@ class SubAccount {
             }
           )
 
-        subUsersKeys.push({
-          apiKey: auth.apiKey,
-          apiSecret: auth.apiSecret
-        })
+        subUsers.push(subUser)
 
         await this.dao.insertElemToDb(
           this.TABLES_NAMES.SUB_ACCOUNTS,
           {
             masterUserId: _id,
-            subUserId
+            subUserId: subUser._id
           }
         )
       }
 
-      this.authenticator.setUserSession(subAccountUser)
+      this.authenticator
+        .setUserSession({ ...subAccountUser, subUsers })
 
       return {
         email,

@@ -125,7 +125,7 @@ class DataInserter extends EventEmitter {
   }
 
   async insertNewDataToDbMultiUser () {
-    this._auth = await getAuthFromDb(this.authenticator)
+    this._auth = getAuthFromDb(this.authenticator)
 
     if (
       !this._auth ||

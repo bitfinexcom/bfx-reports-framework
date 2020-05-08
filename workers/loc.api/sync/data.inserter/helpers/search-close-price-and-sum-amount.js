@@ -48,8 +48,7 @@ module.exports = (
 
   const {
     res: positionsAudit
-  } = await rService.getPositionsAudit(
-    null,
+  } = await rService._getPositionsAudit(
     {
       auth: (subUser && typeof subUser === 'object')
         ? subUser

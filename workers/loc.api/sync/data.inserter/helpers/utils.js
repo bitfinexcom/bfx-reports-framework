@@ -73,9 +73,9 @@ const normalizeApiData = (
   })
 }
 
-const getAuthFromDb = async (authenticator) => {
+const getAuthFromDb = (authenticator) => {
   const auth = new Map()
-  const sessions = await authenticator.getUserSessions()
+  const sessions = authenticator.getUserSessions()
 
   if (sessions.size === 0) {
     return auth
