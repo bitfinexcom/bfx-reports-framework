@@ -691,7 +691,7 @@ class FrameworkReportService extends ReportService {
               symbol[0] === 'ALL'
             )
           )
-            ? null
+            ? undefined
             : symbol
         }
       }
