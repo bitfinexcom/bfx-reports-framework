@@ -214,15 +214,19 @@ class Authenticator {
       email: emailFromApi,
       active: active === null
         ? user.active
-        : serializeVal(active),
+        : active,
       isDataFromDb: isDataFromDb === null
         ? user.isDataFromDb
-        : serializeVal(isDataFromDb)
+        : isDataFromDb
     }
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
-      freshUserData
+      {
+        ...freshUserData,
+        active: serializeVal(freshUserData.active),
+        isDataFromDb: serializeVal(freshUserData.isDataFromDb)
+      }
     )
 
     if (res && res.changes < 1) {
