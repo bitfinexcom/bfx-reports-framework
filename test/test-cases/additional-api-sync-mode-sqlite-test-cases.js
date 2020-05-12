@@ -20,21 +20,29 @@ module.exports = (
 ) => {
   const {
     basePath,
-    auth,
-    email,
+    auth: {
+      email,
+      password,
+      isSubAccount
+    },
     end,
     start
   } = params
+  const auth = { token: '' }
 
-  it('it should be successfully performed by the login method', async function () {
+  it('it should be successfully performed by the signIn method', async function () {
     this.timeout(5000)
 
     const res = await agent
       .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
-        auth,
-        method: 'login',
+        auth: {
+          email,
+          password,
+          isSubAccount
+        },
+        method: 'signIn',
         id: 5
       })
       .expect('Content-Type', /json/)
@@ -42,7 +50,12 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(res.body.result === email)
+    assert.isObject(res.body.result)
+    assert.strictEqual(res.body.result.email, email)
+    assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+    assert.isString(res.body.result.token)
+
+    auth.token = res.body.result.token
   })
 
   it('it should be successfully performed by the enableSyncMode method', async function () {
