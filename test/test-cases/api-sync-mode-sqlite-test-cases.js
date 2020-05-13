@@ -304,7 +304,7 @@ module.exports = (
     })
   })
 
-  it('it should be successfully performed by the verifyUser method', async function () {
+  it('it should be successfully performed by the getUsers method', async function () {
     this.timeout(5000)
 
     const res = await agent

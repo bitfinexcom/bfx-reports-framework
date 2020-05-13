@@ -184,7 +184,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getWinLoss method', async function () {
-    this.timeout(20000)
+    this.timeout(120000)
 
     const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
 
@@ -216,7 +216,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getPositionsSnapshot method', async function () {
-    this.timeout(20000)
+    this.timeout(60000)
 
     const res = await agent
       .post(`${basePath}/json-rpc`)
@@ -257,7 +257,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getFullSnapshotReport method', async function () {
-    this.timeout(20000)
+    this.timeout(60000)
 
     const res = await agent
       .post(`${basePath}/json-rpc`)
@@ -328,7 +328,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getFullTaxReport method', async function () {
-    this.timeout(20000)
+    this.timeout(120000)
 
     const paramsArr = [
       { end, start },
@@ -418,7 +418,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getTradedVolume method', async function () {
-    this.timeout(20000)
+    this.timeout(60000)
 
     const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
 
@@ -450,7 +450,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getFeesReport method', async function () {
-    this.timeout(20000)
+    this.timeout(60000)
 
     const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
 
@@ -482,7 +482,7 @@ module.exports = (
   })
 
   it('it should be successfully performed by the getPerformingLoan method', async function () {
-    this.timeout(20000)
+    this.timeout(60000)
 
     const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
 

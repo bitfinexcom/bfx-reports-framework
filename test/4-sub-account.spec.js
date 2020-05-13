@@ -32,7 +32,8 @@ const agent = request.agent(app)
 
 const {
   apiSyncModeSqliteTestCases,
-  additionalApiSyncModeSqliteTestCases
+  additionalApiSyncModeSqliteTestCases,
+  signUpTestCase
 } = require('./test-cases')
 
 let wrkReportServiceApi = null
@@ -45,20 +46,19 @@ const dbDirPath = path.join(__dirname, '..', 'db')
 const date = new Date()
 const end = date.getTime()
 const start = (new Date()).setDate(date.getDate() - 90)
-const subUserEmail = 'sub-user@email.fake'
-const masterUserEmail = 'master-user@email.fake'
-const subUserAuth = {
+
+const subUserApiKeys = {
   apiKey: 'subUserApiKey',
   apiSecret: 'subUserApiSecret'
 }
-const masterUserAuth = {
+const masterUserApiKeys = {
   apiKey: 'masterUserApiKey',
   apiSecret: 'masterUserApiSecret'
 }
-const subAccountAuth = {
-  apiKey: 'masterUserApiKey-sub-account',
-  apiSecret: 'masterUserApiSecret-sub-account'
-}
+const subUserEmail = 'sub-user@email.fake'
+const masterUserEmail = 'master-user@email.fake'
+const password = '123Qwerty'
+const isSubAccount = true
 
 const masterUserMockData = new Map([
   [
@@ -82,8 +82,7 @@ const _getMockData = (methodName) => {
   )
 }
 
-// TODO:
-describe.skip('Sub-account', () => {
+describe('Sub-account', () => {
   before(async function () {
     this.timeout(20000)
 
@@ -111,8 +110,8 @@ describe.skip('Sub-account', () => {
         const { apiKey, apiSecret } = { ...auth }
 
         if (
-          apiKey === subUserAuth.apiKey &&
-          apiSecret === subUserAuth.apiSecret
+          apiKey === subUserApiKeys.apiKey &&
+          apiSecret === subUserApiKeys.apiSecret
         ) {
           return {
             email: subUserEmail,
@@ -126,7 +125,7 @@ describe.skip('Sub-account', () => {
       }
     })
 
-    rService._subAccount.rService = rServiceProxy
+    rService._authenticator.rService = rServiceProxy
 
     db = await connToSQLite()
   })
@@ -144,7 +143,9 @@ describe.skip('Sub-account', () => {
     } catch (err) { }
   })
 
-  describe('Login as master user', () => {
+  describe('Sign-up as master user', () => {
+    const masterUserAuth = { token: '' }
+
     it('it should not be successfully performed by the createSubAccount method', async function () {
       this.timeout(5000)
 
@@ -152,10 +153,13 @@ describe.skip('Sub-account', () => {
         .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
-          auth: masterUserAuth,
+          auth: {
+            email: masterUserEmail,
+            password
+          },
           method: 'createSubAccount',
           params: {
-            subAccountApiKeys: [subUserAuth]
+            subAccountApiKeys: [subUserApiKeys]
           },
           id: 5
         })
@@ -169,15 +173,35 @@ describe.skip('Sub-account', () => {
       assert.propertyVal(res.body.error, 'message', 'Unauthorized')
     })
 
-    it('it should be successfully performed by the login method for master user', async function () {
+    signUpTestCase(
+      agent,
+      {
+        basePath,
+        auth: {
+          email: masterUserEmail,
+          password,
+          isSubAccount: false
+        },
+        apiKeys: masterUserApiKeys
+      },
+      (token) => {
+        masterUserAuth.token = token
+      }
+    )
+
+    it('it should be successfully performed by the signIn method for master user', async function () {
       this.timeout(5000)
 
       const res = await agent
         .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
-          auth: masterUserAuth,
-          method: 'login',
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount: false
+          },
+          method: 'signIn',
           id: 5
         })
         .expect('Content-Type', /json/)
@@ -185,41 +209,56 @@ describe.skip('Sub-account', () => {
 
       assert.isObject(res.body)
       assert.propertyVal(res.body, 'id', 5)
-      assert.isOk(res.body.result === masterUserEmail)
+      assert.isObject(res.body.result)
+      assert.strictEqual(res.body.result.email, masterUserEmail)
+      assert.isBoolean(res.body.result.isSubAccount)
+      assert.isNotOk(res.body.result.isSubAccount)
+      assert.strictEqual(res.body.result.token, masterUserAuth.token)
     })
 
-    it('it should not be successfully performed by the login method for sub-account', async function () {
+    it('it should not be successfully performed by the signIn method for sub-account', async function () {
       this.timeout(5000)
 
       const res = await agent
         .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
-          auth: subAccountAuth,
-          method: 'login',
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount
+          },
+          method: 'signIn',
           id: 5
         })
         .expect('Content-Type', /json/)
         .expect(401)
 
       assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
       assert.isObject(res.body.error)
       assert.propertyVal(res.body.error, 'code', 401)
       assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+      assert.propertyVal(res.body, 'id', 5)
     })
   })
 
   describe('Create sub-account', () => {
-    it('it should not be successfully performed by the hasSubAccount method with master user keys', async function () {
+    const masterUserAuth = { token: '' }
+    const subAccountAuth = { token: '' }
+
+    it('it should be successfully performed by the signIn method for master user', async function () {
       this.timeout(5000)
 
       const res = await agent
         .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
-          auth: masterUserAuth,
-          method: 'hasSubAccount',
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount: false
+          },
+          method: 'signIn',
           id: 5
         })
         .expect('Content-Type', /json/)
@@ -227,7 +266,13 @@ describe.skip('Sub-account', () => {
 
       assert.isObject(res.body)
       assert.propertyVal(res.body, 'id', 5)
-      assert.isNotOk(res.body.result)
+      assert.isObject(res.body.result)
+      assert.strictEqual(res.body.result.email, masterUserEmail)
+      assert.isBoolean(res.body.result.isSubAccount)
+      assert.isNotOk(res.body.result.isSubAccount)
+      assert.isString(res.body.result.token)
+
+      masterUserAuth.token = res.body.result.token
     })
 
     it('it should be successfully performed by the createSubAccount method', async function () {
@@ -240,7 +285,7 @@ describe.skip('Sub-account', () => {
           auth: masterUserAuth,
           method: 'createSubAccount',
           params: {
-            subAccountApiKeys: [subUserAuth]
+            subAccountApiKeys: [subUserApiKeys]
           },
           id: 5
         })
@@ -249,29 +294,15 @@ describe.skip('Sub-account', () => {
 
       assert.isObject(res.body)
       assert.propertyVal(res.body, 'id', 5)
-      assert.isOk(res.body.result)
+      assert.isObject(res.body.result)
+      assert.strictEqual(res.body.result.email, masterUserEmail)
+      assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+      assert.isString(res.body.result.token)
+
+      subAccountAuth.token = res.body.result.token
     })
 
-    it('it should be successfully performed by the hasSubAccount method with master user keys', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: masterUserAuth,
-          method: 'hasSubAccount',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isOk(res.body.result)
-    })
-
-    it('it should be successfully performed by the hasSubAccount method with sub-account keys', async function () {
+    it('it should be successfully performed by the verifyUser method', async function () {
       this.timeout(5000)
 
       const res = await agent
@@ -279,7 +310,7 @@ describe.skip('Sub-account', () => {
         .type('json')
         .send({
           auth: subAccountAuth,
-          method: 'hasSubAccount',
+          method: 'verifyUser',
           id: 5
         })
         .expect('Content-Type', /json/)
@@ -287,7 +318,23 @@ describe.skip('Sub-account', () => {
 
       assert.isObject(res.body)
       assert.propertyVal(res.body, 'id', 5)
-      assert.isOk(res.body.result)
+      assert.isObject(res.body.result)
+      assert.isNumber(res.body.result.id)
+      assert.isString(res.body.result.username)
+      assert.isString(res.body.result.timezone)
+      assert.strictEqual(res.body.result.email, masterUserEmail)
+      assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+      assert.isArray(res.body.result.subUsers)
+
+      res.body.result.subUsers.forEach((subUser) => {
+        assert.isObject(subUser)
+        assert.isNumber(subUser.id)
+        assert.isString(subUser.username)
+        assert.isString(subUser.timezone)
+        assert.isString(subUser.email)
+        assert.isBoolean(subUser.isSubAccount)
+        assert.isNotOk(subUser.isSubAccount)
+      })
     })
   })
 
@@ -296,8 +343,15 @@ describe.skip('Sub-account', () => {
       processorQueue: null,
       aggregatorQueue: null,
       basePath,
-      auth: subAccountAuth,
-      email: masterUserEmail,
+      auth: {
+        email: masterUserEmail,
+        password,
+        isSubAccount
+      },
+      apiKeys: {
+        apiKey: `${masterUserApiKeys.apiKey}-sub-account`,
+        apiSecret: `${masterUserApiKeys.apiSecret}-sub-account`
+      },
       date,
       end,
       start
@@ -314,20 +368,60 @@ describe.skip('Sub-account', () => {
       await closeSQLite(db)
       db = await connToSQLite()
 
-      await agent
+      signUpTestCase(
+        agent,
+        {
+          basePath,
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount: false
+          },
+          apiKeys: masterUserApiKeys
+        }
+      )
+      signUpTestCase(
+        agent,
+        {
+          basePath,
+          auth: {
+            email: subUserEmail,
+            password,
+            isSubAccount: false
+          },
+          apiKeys: subUserApiKeys
+        }
+      )
+
+      const masterUserRes = await agent
         .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
-          auth: masterUserAuth,
-          method: 'login'
+          auth: {
+            ...masterUserApiKeys,
+            password
+          },
+          method: 'signUp'
+        })
+      const subUserRes = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth: {
+            ...subUserApiKeys,
+            password
+          },
+          method: 'signUp'
         })
       await agent
         .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
-          auth: masterUserAuth,
+          auth: { token: masterUserRes.body.result.token },
           method: 'createSubAccount',
-          params: { subAccountApiKeys: [subUserAuth] }
+          params: {
+            subAccountApiKeys: [{ token: subUserRes.body.result.token }]
+          }
         })
     }
 
@@ -340,67 +434,6 @@ describe.skip('Sub-account', () => {
       before(beforeFn)
 
       additionalApiSyncModeSqliteTestCases(agent, params)
-    })
-  })
-
-  describe('Remove sub-account', () => {
-    it('it should not be successfully performed by the removeSubAccount method', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: subAccountAuth,
-          method: 'removeSubAccount',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(500)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isObject(res.body.error)
-      assert.propertyVal(res.body.error, 'code', 500)
-      assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
-    })
-
-    it('it should be successfully performed by the removeSubAccount method', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: masterUserAuth,
-          method: 'removeSubAccount',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isOk(res.body.result)
-    })
-
-    it('it should not be successfully performed by the hasSubAccount method with master user keys', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: masterUserAuth,
-          method: 'hasSubAccount',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNotOk(res.body.result)
     })
   })
 })
