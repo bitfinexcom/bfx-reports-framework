@@ -20,12 +20,10 @@ class SubAccount {
   constructor (
     dao,
     TABLES_NAMES,
-    rService,
     authenticator
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
-    this.rService = rService
     this.authenticator = authenticator
   }
 
@@ -207,7 +205,6 @@ class SubAccount {
 decorate(injectable(), SubAccount)
 decorate(inject(TYPES.DAO), SubAccount, 0)
 decorate(inject(TYPES.TABLES_NAMES), SubAccount, 1)
-decorate(inject(TYPES.RService), SubAccount, 2)
-decorate(inject(TYPES.Authenticator), SubAccount, 3)
+decorate(inject(TYPES.Authenticator), SubAccount, 2)
 
 module.exports = SubAccount
