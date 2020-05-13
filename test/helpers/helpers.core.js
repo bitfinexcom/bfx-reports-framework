@@ -72,7 +72,7 @@ const getRServiceProxy = (
       if (typeof hooks[propKey] === 'function') {
         return new Proxy(target[propKey], {
           apply (targetMethod, context, argsList) {
-            return Reflect.apply(hooks[propKey], context, ...arguments)
+            return Reflect.apply(hooks[propKey], context, arguments)
           }
         })
       }
