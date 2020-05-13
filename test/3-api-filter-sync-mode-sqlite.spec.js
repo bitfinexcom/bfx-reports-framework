@@ -32,6 +32,8 @@ process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
+const { signUpTestCase } = require('./test-cases')
+
 let wrkReportServiceApi = null
 let processorQueue = null
 let aggregatorQueue = null
@@ -45,14 +47,27 @@ const date = new Date()
 const end = date.getTime()
 const start = (new Date()).setDate(date.getDate() - 90)
 const middle = (new Date()).setDate(date.getDate() - 45)
-const email = 'fake@email.fake'
-const auth = {
+
+const apiKeys = {
   apiKey: 'fake',
   apiSecret: 'fake'
 }
+const email = 'fake@email.fake'
+const password = '123Qwerty'
+const isSubAccount = false
 
-// TODO:
-describe.skip('API filter', () => {
+describe('API filter', () => {
+  const params = {
+    basePath,
+    auth: {
+      email,
+      password,
+      isSubAccount
+    },
+    apiKeys
+  }
+  const auth = { token: '' }
+
   before(async function () {
     this.timeout(5000)
 
@@ -84,23 +99,8 @@ describe.skip('API filter', () => {
     } catch (err) { }
   })
 
-  it('it should be successfully performed by the login method', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/json-rpc`)
-      .type('json')
-      .send({
-        auth,
-        method: 'login',
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(res.body.result === email)
+  signUpTestCase(agent, params, (token) => {
+    auth.token = token
   })
 
   it('it should be successfully performed by the syncNow method', async function () {

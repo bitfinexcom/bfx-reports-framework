@@ -4,7 +4,8 @@ const { assert } = require('chai')
 
 module.exports = (
   agent,
-  params = {}
+  params = {},
+  cb
 ) => {
   const {
     basePath,
@@ -39,5 +40,9 @@ module.exports = (
     assert.strictEqual(res.body.result.email, email)
     assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
     assert.isString(res.body.result.token)
+
+    if (typeof cb === 'function') {
+      await cb(res.body.result.token)
+    }
   })
 }
