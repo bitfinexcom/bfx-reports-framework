@@ -119,6 +119,10 @@ class ApiMiddlewareHandlerAfter {
             {
               fieldName: '_isAffiliateRebate',
               pattern: 'Affiliate Rebate'
+            },
+            {
+              fieldName: '_isStakingPayments',
+              pattern: 'Staking Payments' // TODO: need to check it out
             }
           ]
         ),
