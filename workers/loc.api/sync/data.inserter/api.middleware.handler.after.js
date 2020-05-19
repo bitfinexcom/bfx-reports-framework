@@ -122,7 +122,7 @@ class ApiMiddlewareHandlerAfter {
             },
             {
               fieldName: '_isStakingPayments',
-              pattern: 'Staking Payments' // TODO: need to check it out
+              pattern: 'Staking Payments'
             }
           ]
         ),

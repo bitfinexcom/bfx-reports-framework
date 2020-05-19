@@ -14,7 +14,7 @@ class MigrationV7 extends AbstractMigration {
       `UPDATE ledgers SET _isStakingPayments = (
         SELECT 1 FROM (
           SELECT * FROM ledgers AS l
-          WHERE l.description LIKE '%Staking Payments%'
+          WHERE l.description COLLATE NOCASE LIKE '%Staking Payments%'
             AND l._id = ledgers._id
         )
       )`
