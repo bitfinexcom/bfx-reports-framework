@@ -928,6 +928,30 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getChangeLogs (space, args, cb) {
+    return this._privResponder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getChangeLogs(space, args),
+            args,
+            { datePropName: 'mtsCreate' }
+          )
+      }
+
+      checkParams(args, 'paramsSchemaForApi')
+
+      return this._dao.findInCollBy(
+        '_getChangeLogs',
+        args,
+        { isPrepareResponse: true }
+      )
+    }, 'getChangeLogs', args, cb)
+  }
+
+  /**
+   * @override
+   */
   getAccountSummary (space, args, cb) {
     return this._privResponder(async () => {
       return this._subAccountApiData

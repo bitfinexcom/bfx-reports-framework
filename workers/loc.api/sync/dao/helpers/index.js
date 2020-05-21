@@ -3,7 +3,8 @@
 const {
   mixUserIdToArrData,
   convertDataType,
-  mapObjBySchema
+  mapObjBySchema,
+  isContainedSameMts
 } = require('./utils')
 const {
   serializeVal,
@@ -30,6 +31,7 @@ module.exports = {
   mixUserIdToArrData,
   convertDataType,
   mapObjBySchema,
+  isContainedSameMts,
   serializeVal,
   deserializeVal,
   getWhereQuery,

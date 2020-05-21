@@ -7,6 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
+
 const SUPPORTED_DB_VERSION = 7
 
 const { cloneDeep, omit } = require('lodash')
@@ -368,6 +369,23 @@ const _models = new Map([
     }
   ],
   [
+    TABLES_NAMES.CHANGE_LOGS,
+    {
+      _id: ID_PRIMARY_KEY,
+      mtsCreate: 'BIGINT',
+      log: 'VARCHAR(255)',
+      ip: 'VARCHAR(255)',
+      userAgent: 'TEXT',
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+    }
+  ],
+  [
     TABLES_NAMES.TICKERS_HISTORY,
     {
       _id: ID_PRIMARY_KEY,
@@ -678,6 +696,22 @@ const _methodCollMap = new Map([
       fieldsOfIndex: ['time'],
       fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
       model: { ...getModelsMap().get(TABLES_NAMES.LOGINS) }
+    }
+  ],
+  [
+    '_getChangeLogs',
+    {
+      name: ALLOWED_COLLS.CHANGE_LOGS,
+      maxLimit: 10000,
+      dateFieldName: 'mtsCreate',
+      symbolFieldName: null,
+      sort: [['mtsCreate', -1]],
+      hasNewData: false,
+      start: 0,
+      type: 'insertable:array:objects',
+      fieldsOfIndex: ['mtsCreate'],
+      fieldsOfUniqueIndex: ['mtsCreate', 'log', 'user_id'],
+      model: { ...getModelsMap().get(TABLES_NAMES.CHANGE_LOGS) }
     }
   ],
   [
