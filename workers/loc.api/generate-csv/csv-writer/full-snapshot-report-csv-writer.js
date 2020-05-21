@@ -22,10 +22,13 @@ module.exports = (rService) => async (
   } = { ...jobData }
   const { params: _params } = { ..._args }
   const params = {
+    start: 0,
     end: Date.now(),
     ..._params
   }
   const args = { ..._args, params }
+  const { start, end } = params
+  const mtsCreated = Date.now()
 
   queue.emit('progress', 0)
 
@@ -44,6 +47,10 @@ module.exports = (rService) => async (
 
   wStream.setMaxListeners(20)
 
+  const timestampsStringifier = stringify({
+    header: true,
+    columns: columnsCsv.timestamps
+  })
   const posNameStringifier = stringify(
     { columns: ['name'] }
   )
@@ -81,6 +88,7 @@ module.exports = (rService) => async (
     columns: columnsCsv.walletsTickers
   })
 
+  timestampsStringifier.pipe(wStream)
   posNameStringifier.pipe(wStream)
   posStringifier.pipe(wStream)
   positionsTotalPlUsdStringifier.pipe(wStream)
@@ -106,6 +114,12 @@ module.exports = (rService) => async (
     walletsTotalBalanceUsd
   } = { ...res }
 
+  write(
+    [{ mtsCreated, start, end }, {}],
+    timestampsStringifier,
+    formatSettings.timestamps,
+    params
+  )
   write([{ name: 'POSITIONS' }], posNameStringifier)
   write(
     [...positionsSnapshot, {}],

@@ -244,6 +244,11 @@ class CsvJobData extends BaseCsvJobData {
       fileNamesMap: [['getFullSnapshotReport', 'full-snapshot-report']],
       args: csvArgs,
       columnsCsv: {
+        timestamps: {
+          mtsCreated: 'CREATED',
+          start: 'FROM',
+          end: 'TO'
+        },
         positionsSnapshot: {
           id: '#',
           symbol: 'PAIR',
@@ -282,6 +287,11 @@ class CsvJobData extends BaseCsvJobData {
         }
       },
       formatSettings: {
+        timestamps: {
+          mtsCreated: 'date',
+          start: 'date',
+          end: 'date'
+        },
         positionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
@@ -333,6 +343,11 @@ class CsvJobData extends BaseCsvJobData {
       fileNamesMap: [['getFullTaxReport', 'full-tax-report']],
       args: csvArgs,
       columnsCsv: {
+        timestamps: {
+          mtsCreated: 'CREATED',
+          start: 'FROM',
+          end: 'TO'
+        },
         positionsSnapshot: {
           id: '#',
           symbol: 'PAIR',
@@ -371,6 +386,11 @@ class CsvJobData extends BaseCsvJobData {
         }
       },
       formatSettings: {
+        timestamps: {
+          mtsCreated: 'date',
+          start: 'date',
+          end: 'date'
+        },
         positionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
