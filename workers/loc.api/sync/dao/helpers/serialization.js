@@ -28,7 +28,8 @@ const deserializeVal = (
     'noClose',
     'maker',
     '_isMarginFundingPayment',
-    '_isAffiliateRebate'
+    '_isAffiliateRebate',
+    '_isStakingPayments'
   ]
 ) => {
   if (
