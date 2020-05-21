@@ -50,6 +50,7 @@ class DataInserter extends EventEmitter {
     ALLOWED_COLLS,
     currencyConverter,
     FOREX_SYMBS,
+    authenticator,
     convertCurrencyHook,
     recalcSubAccountLedgersBalancesHook
   ) {
@@ -63,6 +64,7 @@ class DataInserter extends EventEmitter {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.currencyConverter = currencyConverter
     this.FOREX_SYMBS = FOREX_SYMBS
+    this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
 
@@ -123,7 +125,7 @@ class DataInserter extends EventEmitter {
   }
 
   async insertNewDataToDbMultiUser () {
-    this._auth = await getAuthFromDb(this.dao)
+    this._auth = getAuthFromDb(this.authenticator)
 
     if (
       !this._auth ||
@@ -139,7 +141,10 @@ class DataInserter extends EventEmitter {
     let progress = 0
 
     for (const authItem of this._auth) {
-      if (typeof authItem[1] !== 'object') {
+      if (
+        !authItem[1] ||
+        typeof authItem[1] !== 'object'
+      ) {
         continue
       }
 
@@ -230,7 +235,7 @@ class DataInserter extends EventEmitter {
       const args = this._getMethodArgMap(method, auth, 10000000, item.start)
 
       await this._insertApiDataArrObjTypeToDb(
-        { ...args, subAccountAuth: auth },
+        args,
         method,
         item
       )
@@ -529,9 +534,24 @@ class DataInserter extends EventEmitter {
     const args = this._getMethodArgMap(method, auth, 1)
     args.params.notThrowError = true
     args.params.notCheckNextPage = true
-    const lastElemFromDb = await this.dao.getLastElemFromDb(
+
+    const { _id, subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
+    const hasSubUserIdField = (
+      schema.model &&
+      typeof schema.model === 'object' &&
+      typeof schema.model.subUserId === 'string' &&
+      Number.isInteger(subUserId)
+    )
+    const subUserIdFilter = hasSubUserIdField
+      ? { $eq: { subUserId } }
+      : {}
+    const lastElemFromDb = await this.dao.getElemInCollBy(
       schema.name,
-      { ...auth },
+      {
+        user_id: _id,
+        ...subUserIdFilter
+      },
       schema.sort
     )
     const { res: lastElemFromApi } = await this._getDataFromApi(
@@ -723,10 +743,11 @@ class DataInserter extends EventEmitter {
       !subUserId ||
       typeof subUserId !== 'string'
     )
-    const { subAccountAuth } = { ..._args }
-    const auth = isPublic || hasNotSubUserField
+    const { auth } = { ..._args }
+    const { session } = { ...auth }
+    const sessionAuth = isPublic || hasNotSubUserField
       ? null
-      : { ...subAccountAuth }
+      : { ...session }
 
     let count = 0
     let serialRequestsCount = 0
@@ -784,7 +805,7 @@ class DataInserter extends EventEmitter {
 
       await this.dao.insertElemsToDb(
         collName,
-        auth,
+        sessionAuth,
         normalizeApiData(res, model),
         { isReplacedIfExists: true }
       )
@@ -1005,8 +1026,12 @@ class DataInserter extends EventEmitter {
       subUserApiSecret &&
       typeof subUserApiSecret === 'string'
     )
-      ? { apiKey: subUserApiKey, apiSecret: subUserApiSecret }
-      : { apiKey, apiSecret }
+      ? {
+        apiKey: subUserApiKey,
+        apiSecret: subUserApiSecret,
+        session: reqAuth
+      }
+      : { apiKey, apiSecret, session: reqAuth }
 
     return {
       auth,
@@ -1238,7 +1263,8 @@ decorate(inject(TYPES.TABLES_NAMES), DataInserter, 4)
 decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 5)
 decorate(inject(TYPES.CurrencyConverter), DataInserter, 6)
 decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
-decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 8)
-decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
+decorate(inject(TYPES.Authenticator), DataInserter, 8)
+decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 9)
+decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 10)
 
 module.exports = DataInserter

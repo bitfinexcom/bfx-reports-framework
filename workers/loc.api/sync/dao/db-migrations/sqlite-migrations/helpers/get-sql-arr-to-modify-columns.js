@@ -1,6 +1,7 @@
 'use strict'
 
 const CONSTR_FIELD_NAME = '__constraints__'
+const TRIGGER_FIELD_NAME = '__triggers__'
 
 module.exports = (
   tableName,
@@ -34,8 +35,30 @@ module.exports = (
     return `${accum}${constraints}`
   }, '')
 
+  const triggersArr = Array.isArray(requiredModel[TRIGGER_FIELD_NAME])
+    ? requiredModel[TRIGGER_FIELD_NAME]
+    : [requiredModel[TRIGGER_FIELD_NAME]]
+  const triggers = triggersArr.reduce((accum, item) => {
+    if (
+      !item ||
+      typeof item !== 'string'
+    ) {
+      return accum
+    }
+
+    const stm = item.replace(/#{tableName\}/g, tableName)
+    const trigger = `CREATE TRIGGER ${stm}`
+
+    accum.push(trigger)
+
+    return accum
+  }, [])
+
   const keys = Object.keys(requiredModel)
-    .filter((key) => key !== CONSTR_FIELD_NAME)
+    .filter((key) => (
+      key !== CONSTR_FIELD_NAME &&
+      key !== TRIGGER_FIELD_NAME
+    ))
   const columnNames = keys.join(', ')
   const columnDefs = keys.reduce((accum, field, i, arr) => {
     const isLast = arr.length === (i + 1)
@@ -50,7 +73,8 @@ module.exports = (
     `INSERT INTO ${tableName} (${columnNames})
       SELECT ${columnNames}
       FROM ${oldTableName}`,
-    `DROP TABLE ${oldTableName}`
+    `DROP TABLE ${oldTableName}`,
+    ...triggers
   ]
 
   return sqlArr

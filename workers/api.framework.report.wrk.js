@@ -25,6 +25,10 @@ const argv = require('yargs')
   .option('grape', {
     type: 'string'
   })
+  .option('secretKey', {
+    type: 'string',
+    default: 'secretKey'
+  })
   .help('help')
   .argv
 
@@ -78,7 +82,8 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       'syncMode',
       'isSchedulerEnabled',
       'dbDriver',
-      'wsPort'
+      'wsPort',
+      'secretKey'
     ]
   ) {
     super.setArgsOfCommandLineToConf()

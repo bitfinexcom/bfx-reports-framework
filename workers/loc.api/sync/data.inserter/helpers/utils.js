@@ -1,13 +1,8 @@
 'use strict'
 
 const {
-  pick,
-  isEmpty
+  pick
 } = require('lodash')
-
-const {
-  isSubAccountApiKeys
-} = require('../../../helpers')
 
 const invertSort = (sortArr) => {
   return sortArr.map(item => {
@@ -78,48 +73,58 @@ const normalizeApiData = (
   })
 }
 
-const getAuthFromDb = async (dao) => {
-  try {
-    const users = await dao.getActiveUsers()
-    const auth = new Map()
+const getAuthFromDb = (authenticator) => {
+  const auth = new Map()
+  const sessions = authenticator.getUserSessions()
 
-    if (isEmpty(users)) {
-      return auth
-    }
-
-    for (const user of users) {
-      const {
-        _id: masterUserId,
-        apiKey,
-        apiSecret
-      } = { ...user }
-
-      if (isSubAccountApiKeys(user)) {
-        const subUsers = await dao.getSubUsersByMasterUserApiKeys(user)
-
-        if (isEmpty(subUsers)) {
-          continue
-        }
-
-        subUsers.forEach((subUser) => {
-          const { apiKey: subUserApiKey } = { ...subUser }
-
-          auth.set(
-            `${apiKey}-${subUserApiKey}`,
-            { masterUserId, apiKey, apiSecret, subUser }
-          )
-        })
-
-        continue
-      }
-
-      auth.set(apiKey, { apiKey, apiSecret, subUser: null })
-    }
-
+  if (sessions.size === 0) {
     return auth
-  } catch (err) {
-    return null
   }
+
+  for (const [, session] of sessions) {
+    const {
+      _id,
+      email,
+      apiKey,
+      apiSecret,
+      isSubAccount,
+      subUsers,
+      token
+    } = { ...session }
+    const authPayload = {
+      _id,
+      email,
+      apiKey,
+      apiSecret,
+      isSubAccount,
+      subUsers,
+      token,
+      subUser: null
+    }
+
+    if (!isSubAccount) {
+      auth.set(apiKey, authPayload)
+
+      continue
+    }
+    if (
+      !Array.isArray(subUsers) ||
+      subUsers.length === 0
+    ) {
+      continue
+    }
+
+    subUsers.forEach((subUser) => {
+      const { apiKey: subUserApiKey } = { ...subUser }
+
+      auth.set(
+        `${apiKey}-${subUserApiKey}`,
+        { ...authPayload, subUser }
+      )
+    })
+  }
+
+  return auth
 }
 
 const getAllowedCollsNames = (allowedColls) => {

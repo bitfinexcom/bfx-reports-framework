@@ -12,11 +12,13 @@ class Wallets {
   constructor (
     dao,
     currencyConverter,
-    TABLES_NAMES
+    TABLES_NAMES,
+    authenticator
   ) {
     this.dao = dao
     this.currencyConverter = currencyConverter
     this.TABLES_NAMES = TABLES_NAMES
+    this.authenticator = authenticator
   }
 
   _getConvSchema (args) {
@@ -75,7 +77,7 @@ class Wallets {
   }
 
   async getFirstWalletsMts (args) {
-    const user = await this.dao.checkAuthInDb(args)
+    const user = await this.authenticator.verifyRequestUser(args)
     const firstLedger = await this.dao.getElemInCollBy(
       this.TABLES_NAMES.LEDGERS,
       { user_id: user._id },
@@ -115,5 +117,6 @@ decorate(injectable(), Wallets)
 decorate(inject(TYPES.DAO), Wallets, 0)
 decorate(inject(TYPES.CurrencyConverter), Wallets, 1)
 decorate(inject(TYPES.TABLES_NAMES), Wallets, 2)
+decorate(inject(TYPES.Authenticator), Wallets, 3)
 
 module.exports = Wallets
