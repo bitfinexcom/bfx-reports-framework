@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 9
+const SUPPORTED_DB_VERSION = 10
 
 const { cloneDeep, omit } = require('lodash')
 
@@ -518,7 +518,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mts', 'currency'],
-      fieldsOfUniqueIndex: ['id', 'mts', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.LEDGERS)
     }
   ],
@@ -534,7 +534,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'symbol', 'user_id'],
       model: _getModelOf(TABLES_NAMES.TRADES)
     }
   ],
@@ -550,7 +550,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_TRADES)
     }
   ],
@@ -567,7 +567,7 @@ const _methodCollMap = new Map([
       confName: 'publicTradesConf',
       type: 'public:insertable:array:objects',
       fieldsOfIndex: ['mts', '_symbol'],
-      fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
+      fieldsOfUniqueIndex: ['id', '_symbol'],
       model: _getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
   ],
@@ -592,7 +592,7 @@ const _methodCollMap = new Map([
       confName: 'statusMessagesConf',
       type: 'public:updatable:array:objects',
       fieldsOfIndex: ['timestamp', 'key'],
-      fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
+      fieldsOfUniqueIndex: ['key', '_type'],
       model: _getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
   ],
@@ -608,7 +608,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.ORDERS)
     }
   ],
@@ -640,7 +640,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
     }
   ],
@@ -656,7 +656,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
     }
   ],
@@ -672,7 +672,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
     }
   ],
@@ -688,7 +688,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }
   ],
@@ -704,7 +704,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['time'],
-      fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.LOGINS)
     }
   ],
