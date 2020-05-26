@@ -44,6 +44,10 @@ const getModelsMap = (params = {}) => {
   return _cloneSchema(models, omittedFields)
 }
 
+const _getModelOf = (tableName) => {
+  return { ...getModelsMap().get(tableName) }
+}
+
 const _models = new Map([
   [
     TABLES_NAMES.USERS,
@@ -515,7 +519,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mts', 'currency'],
       fieldsOfUniqueIndex: ['id', 'mts', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) }
+      model: _getModelOf(TABLES_NAMES.LEDGERS)
     }
   ],
   [
@@ -531,7 +535,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.TRADES) }
+      model: _getModelOf(TABLES_NAMES.TRADES)
     }
   ],
   [
@@ -547,7 +551,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_TRADES) }
+      model: _getModelOf(TABLES_NAMES.FUNDING_TRADES)
     }
   ],
   [
@@ -564,7 +568,7 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
-      model: { ...getModelsMap().get(TABLES_NAMES.PUBLIC_TRADES) }
+      model: _getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
   ],
   [
@@ -589,7 +593,7 @@ const _methodCollMap = new Map([
       type: 'public:updatable:array:objects',
       fieldsOfIndex: ['timestamp', 'key'],
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
-      model: { ...getModelsMap().get(TABLES_NAMES.STATUS_MESSAGES) }
+      model: _getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
   ],
   [
@@ -605,7 +609,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.ORDERS) }
+      model: _getModelOf(TABLES_NAMES.ORDERS)
     }
   ],
   [
@@ -621,7 +625,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdated', 'currency'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.MOVEMENTS) }
+      model: _getModelOf(TABLES_NAMES.MOVEMENTS)
     }
   ],
   [
@@ -637,7 +641,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
+      model: _getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
     }
   ],
   [
@@ -653,7 +657,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
+      model: _getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
     }
   ],
   [
@@ -669,7 +673,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
+      model: _getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
     }
   ],
   [
@@ -685,7 +689,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.POSITIONS_HISTORY) }
+      model: _getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }
   ],
   [
@@ -701,7 +705,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['time'],
       fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.LOGINS) }
+      model: _getModelOf(TABLES_NAMES.LOGINS)
     }
   ],
   [
@@ -717,7 +721,7 @@ const _methodCollMap = new Map([
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate'],
       fieldsOfUniqueIndex: ['mtsCreate', 'log', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.CHANGE_LOGS) }
+      model: _getModelOf(TABLES_NAMES.CHANGE_LOGS)
     }
   ],
   [
@@ -734,7 +738,7 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfIndex: null,
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
-      model: { ...getModelsMap().get(TABLES_NAMES.TICKERS_HISTORY) }
+      model: _getModelOf(TABLES_NAMES.TICKERS_HISTORY)
     }
   ],
   [
@@ -749,7 +753,7 @@ const _methodCollMap = new Map([
         sort: [['mts', -1], ['id', -1]]
       },
       type: 'hidden:insertable:array:objects',
-      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) },
+      model: _getModelOf(TABLES_NAMES.LEDGERS),
       dataStructureConverter: (accum, {
         wallet: type,
         currency,
@@ -779,7 +783,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ...getModelsMap().get(TABLES_NAMES.SYMBOLS) }
+      model: _getModelOf(TABLES_NAMES.SYMBOLS)
     }
   ],
   [
@@ -791,7 +795,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ...getModelsMap().get(TABLES_NAMES.INACTIVE_SYMBOLS) }
+      model: _getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
     }
   ],
   [
@@ -803,7 +807,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ...getModelsMap().get(TABLES_NAMES.FUTURES) }
+      model: _getModelOf(TABLES_NAMES.FUTURES)
     }
   ],
   [
@@ -816,7 +820,7 @@ const _methodCollMap = new Map([
       hasNewData: true,
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.CURRENCIES) }
+      model: _getModelOf(TABLES_NAMES.CURRENCIES)
     }
   ],
   [
@@ -834,7 +838,7 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['_symbol', '_timeframe', 'mts'],
-      model: { ...getModelsMap().get(TABLES_NAMES.CANDLES) }
+      model: _getModelOf(TABLES_NAMES.CANDLES)
     }
   ]
 ])
