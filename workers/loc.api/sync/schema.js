@@ -592,7 +592,7 @@ const _methodCollMap = new Map([
       confName: 'statusMessagesConf',
       type: 'public:updatable:array:objects',
       fieldsOfIndex: ['timestamp', 'key'],
-      fieldsOfUniqueIndex: ['key', '_type'],
+      fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
       model: _getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
   ],
