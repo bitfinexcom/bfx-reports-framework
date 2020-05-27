@@ -12,7 +12,6 @@ class MigrationV10 extends AbstractMigration {
       'DROP INDEX trades_id_mtsCreate_orderID_fee_user_id',
       'DROP INDEX fundingTrades_id_mtsCreate_offerID_user_id',
       'DROP INDEX publicTrades_id_mts__symbol',
-      'DROP INDEX statusMessages_timestamp_key__type',
       'DROP INDEX orders_id_mtsUpdate_user_id',
       'DROP INDEX fundingOfferHistory_id_mtsUpdate_user_id',
       'DROP INDEX fundingLoanHistory_id_mtsUpdate_user_id',
@@ -24,7 +23,6 @@ class MigrationV10 extends AbstractMigration {
       'DELETE FROM trades',
       'DELETE FROM fundingTrades',
       'DELETE FROM publicTrades',
-      'DELETE FROM statusMessages',
       'DELETE FROM orders',
       'DELETE FROM fundingOfferHistory',
       'DELETE FROM fundingLoanHistory',
@@ -40,8 +38,6 @@ class MigrationV10 extends AbstractMigration {
         ON fundingTrades(id, user_id)`,
       `CREATE UNIQUE INDEX publicTrades_id__symbol
         ON publicTrades(id, _symbol)`,
-      `CREATE UNIQUE INDEX statusMessages_key__type
-        ON statusMessages(key, _type)`,
       `CREATE UNIQUE INDEX orders_id_user_id
         ON orders(id, user_id)`,
       `CREATE UNIQUE INDEX fundingOfferHistory_id_user_id
@@ -68,7 +64,6 @@ class MigrationV10 extends AbstractMigration {
       'DROP INDEX trades_id_symbol_user_id',
       'DROP INDEX fundingTrades_id_user_id',
       'DROP INDEX publicTrades_id__symbol',
-      'DROP INDEX statusMessages_key__type',
       'DROP INDEX orders_id_user_id',
       'DROP INDEX fundingOfferHistory_id_user_id',
       'DROP INDEX fundingLoanHistory_id_user_id',
@@ -80,7 +75,6 @@ class MigrationV10 extends AbstractMigration {
       'DELETE FROM trades',
       'DELETE FROM fundingTrades',
       'DELETE FROM publicTrades',
-      'DELETE FROM statusMessages',
       'DELETE FROM orders',
       'DELETE FROM fundingOfferHistory',
       'DELETE FROM fundingLoanHistory',
@@ -96,8 +90,6 @@ class MigrationV10 extends AbstractMigration {
         ON fundingTrades(id, mtsCreate, offerID, user_id)`,
       `CREATE UNIQUE INDEX publicTrades_id_mts__symbol
         ON publicTrades(id, mts, _symbol)`,
-      `CREATE UNIQUE INDEX statusMessages_timestamp_key__type
-        ON statusMessages(timestamp, key, _type)`,
       `CREATE UNIQUE INDEX orders_id_mtsUpdate_user_id
         ON orders(id, mtsUpdate, user_id)`,
       `CREATE UNIQUE INDEX fundingOfferHistory_id_mtsUpdate_user_id
