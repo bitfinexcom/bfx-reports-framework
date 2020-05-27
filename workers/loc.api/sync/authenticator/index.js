@@ -38,7 +38,15 @@ class Authenticator {
 
   async signUp (args, params) {
     const { auth } = { ...args }
-    const { apiKey, apiSecret, password } = { ...auth }
+    const {
+      apiKey,
+      apiSecret,
+      password: userPwd,
+      isNotProtected
+    } = { ...auth }
+    const password = isNotProtected
+      ? this.crypto.getSecretKey()
+      : userPwd
     const {
       active = true,
       isDataFromDb = true,
@@ -305,10 +313,16 @@ class Authenticator {
     const { auth } = { ...args }
     const {
       email,
-      password,
+      password: userPwd,
       isSubAccount = false,
       token
     } = { ...auth }
+    const password = (
+      userPwd &&
+      typeof userPwd === 'string'
+    )
+      ? userPwd
+      : this.crypto.getSecretKey()
     const {
       projection,
       isFilledSubUsers,
