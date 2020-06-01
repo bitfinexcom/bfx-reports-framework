@@ -709,8 +709,44 @@ class FrameworkReportService extends ReportService {
    */
   getStatusMessages (space, args, cb) {
     return this._responder(async () => {
-      // Temporal fix, return always from online query
-      return super.getStatusMessages(space, args)
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getStatusMessages(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForStatusMessagesApi')
+
+      const { params } = { ...args }
+      const {
+        type = 'deriv',
+        symbol = ['ALL']
+      } = { ...params }
+      const preparedArgs = {
+        ...args,
+        params: {
+          ...params,
+          type,
+          symbol: (
+            symbol === 'ALL' ||
+            (
+              Array.isArray(symbol) &&
+              symbol[0] === 'ALL'
+            )
+          )
+            ? null
+            : symbol
+        }
+      }
+
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getStatusMessages(space, args),
+          preparedArgs,
+          {
+            collName: '_getStatusMessages',
+            confName: 'statusMessagesConf',
+            datePropName: 'timestamp'
+          }
+        )
     }, 'getStatusMessages', cb)
   }
 
