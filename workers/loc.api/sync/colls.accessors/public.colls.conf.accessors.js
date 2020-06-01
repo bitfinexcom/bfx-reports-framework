@@ -26,10 +26,12 @@ const {
 class PublicСollsСonfAccessors {
   constructor (
     dao,
-    TABLES_NAMES
+    TABLES_NAMES,
+    authenticator
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
+    this.authenticator = authenticator
 
     this.confNamesMap = new Map([
       ['candlesConf', this.TABLES_NAMES.CANDLES],
@@ -95,7 +97,7 @@ class PublicСollsСonfAccessors {
       ? [...args.params]
       : [args.params]
 
-    const { _id } = await this.dao.checkAuthInDb(args)
+    const { _id } = await this.authenticator.verifyRequestUser(args)
     const conf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
@@ -181,20 +183,20 @@ class PublicСollsСonfAccessors {
   }
 
   async getAllPublicСollsСonfs (args) {
-    const { auth } = { ...args }
-    const _args = { auth }
+    await this.authenticator.verifyRequestUser(args)
+
     const confNames = [...this.confNamesMap.keys()]
     const res = {}
 
     for (const confName of confNames) {
-      res[confName] = await this.getPublicСollsСonf(confName, _args)
+      res[confName] = await this.getPublicСollsСonf(confName, args)
     }
 
     return res
   }
 
   async getPublicСollsСonf (confName, args) {
-    const { _id } = await this.dao.checkAuthInDb(args)
+    const { _id } = await this.authenticator.verifyRequestUser(args)
     const { params } = { ...args }
     const {
       symbol,
@@ -310,6 +312,7 @@ class PublicСollsСonfAccessors {
 
     return {
       ...args,
+      auth: null,
       params: {
         ...params,
         symbol,
@@ -488,5 +491,6 @@ class PublicСollsСonfAccessors {
 decorate(injectable(), PublicСollsСonfAccessors)
 decorate(inject(TYPES.DAO), PublicСollsСonfAccessors, 0)
 decorate(inject(TYPES.TABLES_NAMES), PublicСollsСonfAccessors, 1)
+decorate(inject(TYPES.Authenticator), PublicСollsСonfAccessors, 2)
 
 module.exports = PublicСollsСonfAccessors

@@ -26,7 +26,10 @@ process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
-const { additionalApiSyncModeSqliteTestCases } = require('./test-cases')
+const {
+  additionalApiSyncModeSqliteTestCases,
+  signUpTestCase
+} = require('./test-cases')
 
 let wrkReportServiceApi = null
 let mockRESTv2Srv = null
@@ -38,19 +41,26 @@ const dbDirPath = path.join(__dirname, '..', 'db')
 const date = new Date()
 const end = date.getTime()
 const start = (new Date()).setDate(date.getDate() - 90)
-const email = 'fake@email.fake'
-const auth = {
+
+const apiKeys = {
   apiKey: 'fake',
   apiSecret: 'fake'
 }
+const email = 'fake@email.fake'
+const password = '123Qwerty'
+const isSubAccount = false
 
 describe('Additional sync mode API with SQLite', () => {
   const params = {
     processorQueue: null,
     aggregatorQueue: null,
     basePath,
-    auth,
-    email,
+    auth: {
+      email,
+      password,
+      isSubAccount
+    },
+    apiKeys,
     date,
     end,
     start
@@ -87,5 +97,6 @@ describe('Additional sync mode API with SQLite', () => {
     } catch (err) { }
   })
 
+  signUpTestCase(agent, params)
   additionalApiSyncModeSqliteTestCases(agent, params)
 })

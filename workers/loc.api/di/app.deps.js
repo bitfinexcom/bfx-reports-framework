@@ -74,6 +74,9 @@ const {
   dbMigratorFactory,
   dataInserterFactory
 } = require('./factories')
+const Crypto = require('../sync/crypto')
+const Authenticator = require('../sync/authenticator')
+const privResponder = require('../responder')
 
 decorate(injectable(), EventEmitter)
 
@@ -106,7 +109,9 @@ module.exports = ({
           ['_performingLoan', TYPES.PerformingLoan],
           ['_subAccountApiData', TYPES.SubAccountApiData],
           ['_positionsAudit', TYPES.PositionsAudit],
-          ['_orderTrades', TYPES.OrderTrades]
+          ['_orderTrades', TYPES.OrderTrades],
+          ['_authenticator', TYPES.Authenticator],
+          ['_privResponder', TYPES.PrivResponder]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -114,6 +119,16 @@ module.exports = ({
         ...ctx.container.get(TYPES.RServiceDepsSchema),
         ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
       ])
+    bind(TYPES.PrivResponder)
+      .toDynamicValue((ctx) => bindDepsToFn(
+        privResponder,
+        [
+          TYPES.Container,
+          TYPES.Logger,
+          TYPES.Authenticator
+        ]
+      ))
+      .inSingletonScope()
     bind(TYPES.TABLES_NAMES).toConstantValue(TABLES_NAMES)
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
@@ -132,6 +147,12 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SubAccount)
       .to(SubAccount)
+    bind(TYPES.Crypto)
+      .to(Crypto)
+      .inSingletonScope()
+    bind(TYPES.Authenticator)
+      .to(Authenticator)
+      .inSingletonScope()
     bind(TYPES.SyncSchema).toConstantValue(
       syncSchema
     )
