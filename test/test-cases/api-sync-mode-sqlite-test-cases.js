@@ -2376,6 +2376,42 @@ module.exports = (
     assert.isObject(resItem.extraData)
   })
 
+  it('it should be successfully performed by the getChangeLogs method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getChangeLogs',
+        params: {
+          start: 0,
+          end,
+          limit: 2
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isNumber(res.body.result.nextPage)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'mtsCreate',
+      'log',
+      'ip',
+      'userAgent'
+    ])
+  })
+
   it('it should not be successfully performed by the getLedgers method, a greater limit is needed', async function () {
     this.timeout(5000)
 
@@ -3119,6 +3155,32 @@ module.exports = (
       .send({
         auth,
         method: 'getLoginsCsv',
+        params: {
+          end,
+          start,
+          limit: 1000,
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getChangeLogsCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getChangeLogsCsv',
         params: {
           end,
           start,

@@ -24,5 +24,6 @@ module.exports = {
   PROGRESS: 'progress',
   SYNC_QUEUE: 'syncQueue',
   LOGINS: 'logins',
+  CHANGE_LOGS: 'changeLogs',
   SUB_ACCOUNTS: 'subAccounts'
 }
