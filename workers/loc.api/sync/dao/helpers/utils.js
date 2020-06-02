@@ -93,8 +93,30 @@ const mapObjBySchema = (obj, schema = {}) => {
   }, {})
 }
 
+const isContainedSameMts = (
+  res,
+  dateFieldName,
+  limit
+) => {
+  if (!Array.isArray(res)) {
+    return false
+  }
+
+  return (
+    res.length >= 2 &&
+    (
+      !Number.isInteger(limit) ||
+      res.length === limit
+    ) &&
+    Number.isInteger(res[res.length - 1][dateFieldName]) &&
+    Number.isInteger(res[res.length - 2][dateFieldName]) &&
+    res[res.length - 1][dateFieldName] === res[res.length - 2][dateFieldName]
+  )
+}
+
 module.exports = {
   mixUserIdToArrData,
   convertDataType,
-  mapObjBySchema
+  mapObjBySchema,
+  isContainedSameMts
 }
