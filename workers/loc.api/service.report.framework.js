@@ -435,44 +435,48 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForApi')
 
-      const symbolsMethod = '_getSymbols'
-      const futuresMethod = '_getFutures'
-      const currenciesMethod = '_getCurrencies'
-      const {
-        field: symbolsField
-      } = this._syncSchema.getMethodCollMap().get(symbolsMethod)
-      const {
-        field: futuresField
-      } = this._syncSchema.getMethodCollMap().get(futuresMethod)
-      const symbols = await this._dao.findInCollBy(
-        symbolsMethod,
-        args,
-        { isPublic: true }
-      )
-      const futures = await this._dao.findInCollBy(
-        futuresMethod,
-        args,
-        { isPublic: true }
-      )
-      const currencies = await this._dao.findInCollBy(
-        currenciesMethod,
-        args,
-        { isPublic: true }
-      )
+      const methods = [
+        '_getSymbols',
+        '_getFutures',
+        '_getCurrencies',
+        '_getInactiveSymbols'
+      ]
+      const promises = methods.map(async (method) => {
+        const res = await this._dao.findInCollBy(
+          method,
+          args,
+          { isPublic: true }
+        )
+
+        if (method === '_getCurrencies') {
+          return res
+        }
+
+        const { field } = this._syncSchema.getMethodCollMap()
+          .get(method)
+
+        return collObjToArr(res, field)
+      })
+
+      const [
+        symbols,
+        futures,
+        currencies,
+        inactiveSymbols
+      ] = await Promise.all(promises)
 
       if (
         isEmpty(symbols) &&
         isEmpty(futures) &&
-        isEmpty(currencies)
+        isEmpty(currencies) &&
+        isEmpty(inactiveSymbols)
       ) {
         return super.getSymbols(space, args)
       }
 
-      const symbolsArr = collObjToArr(symbols, symbolsField)
-      const futuresArr = collObjToArr(futures, futuresField)
-      const pairs = [...symbolsArr, ...futuresArr]
+      const pairs = [...symbols, ...futures]
 
-      return { pairs, currencies }
+      return { pairs, currencies, inactiveSymbols }
     }, 'getSymbols', cb)
   }
 

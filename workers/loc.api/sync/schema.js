@@ -7,7 +7,8 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 7
+
+const SUPPORTED_DB_VERSION = 8
 
 const { cloneDeep, omit } = require('lodash')
 
@@ -433,6 +434,13 @@ const _models = new Map([
     }
   ],
   [
+    TABLES_NAMES.INACTIVE_SYMBOLS,
+    {
+      _id: ID_PRIMARY_KEY,
+      pairs: 'VARCHAR(255)'
+    }
+  ],
+  [
     TABLES_NAMES.FUTURES,
     {
       _id: ID_PRIMARY_KEY,
@@ -773,6 +781,18 @@ const _methodCollMap = new Map([
       hasNewData: true,
       type: 'public:updatable:array',
       model: { ...getModelsMap().get(TABLES_NAMES.SYMBOLS) }
+    }
+  ],
+  [
+    '_getInactiveSymbols',
+    {
+      name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
+      maxLimit: 10000,
+      field: 'pairs',
+      sort: [['pairs', 1]],
+      hasNewData: true,
+      type: 'public:updatable:array',
+      model: { ...getModelsMap().get(TABLES_NAMES.INACTIVE_SYMBOLS) }
     }
   ],
   [
