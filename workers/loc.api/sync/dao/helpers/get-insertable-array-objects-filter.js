@@ -58,7 +58,11 @@ module.exports = (
   const symbFilter = getSymbolFilter(symbol, symbolFieldName)
   const timeframeFilter = getTimeframeFilter(timeframe, timeframeFieldName)
   const fieldsFilters = getFieldsFilters(
-    ['isMarginFundingPayment', 'isAffiliateRebate'],
+    [
+      'isMarginFundingPayment',
+      'isAffiliateRebate',
+      'isStakingPayments'
+    ],
     params,
     model
   )
