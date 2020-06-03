@@ -7,8 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-
-const SUPPORTED_DB_VERSION = 8
+const SUPPORTED_DB_VERSION = 9
 
 const { cloneDeep, omit } = require('lodash')
 
@@ -621,7 +620,7 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdated', 'currency'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdated', 'user_id'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: { ...getModelsMap().get(TABLES_NAMES.MOVEMENTS) }
     }
   ],
