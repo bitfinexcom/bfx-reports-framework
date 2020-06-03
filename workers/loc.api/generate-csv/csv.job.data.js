@@ -230,20 +230,39 @@ class CsvJobData extends BaseCsvJobData {
       uId,
       uInfo
     )
+    const { params } = { ...args }
+    const {
+      isStartSnapshot,
+      isEndSnapshot
+    } = { ...params }
+    const isBaseNameInName = isStartSnapshot || isEndSnapshot
+    const typeName = isStartSnapshot
+      ? 'START_SNAPSHOT'
+      : 'END_SNAPSHOT'
+    const fileName = isBaseNameInName
+      ? `full-tax-report_${typeName}`
+      : 'full-snapshot-report'
 
     const csvArgs = getCsvArgs(
       args,
       null,
-      { isOnMomentInName: true }
+      {
+        isOnMomentInName: !isBaseNameInName,
+        isBaseNameInName
+      }
     )
 
     const jobData = {
       userInfo,
       userId,
       name: 'getFullSnapshotReport',
-      fileNamesMap: [['getFullSnapshotReport', 'full-snapshot-report']],
+      fileNamesMap: [['getFullSnapshotReport', fileName]],
       args: csvArgs,
       columnsCsv: {
+        timestamps: {
+          mtsCreated: 'CREATED',
+          end: 'SNAPSHOT AT'
+        },
         positionsSnapshot: {
           id: '#',
           symbol: 'PAIR',
@@ -282,6 +301,10 @@ class CsvJobData extends BaseCsvJobData {
         }
       },
       formatSettings: {
+        timestamps: {
+          mtsCreated: 'date',
+          end: 'date'
+        },
         positionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
@@ -309,6 +332,30 @@ class CsvJobData extends BaseCsvJobData {
     uId,
     uInfo
   ) {
+    const { params } = { ...args }
+    const {
+      start,
+      end,
+      isStartSnapshot,
+      isEndSnapshot
+    } = { ...params }
+
+    if (isStartSnapshot || isEndSnapshot) {
+      const mts = isStartSnapshot ? start : end
+
+      return this.getFullSnapshotReportCsvJobData(
+        {
+          ...args,
+          params: {
+            ...params,
+            end: mts
+          }
+        },
+        uId,
+        uInfo
+      )
+    }
+
     checkParams(args, 'paramsSchemaForFullTaxReportCsv')
 
     const {
@@ -323,16 +370,21 @@ class CsvJobData extends BaseCsvJobData {
     const csvArgs = getCsvArgs(
       args,
       null,
-      { isOnMomentInName: true }
+      { isBaseNameInName: true }
     )
 
     const jobData = {
       userInfo,
       userId,
       name: 'getFullTaxReport',
-      fileNamesMap: [['getFullTaxReport', 'full-tax-report']],
+      fileNamesMap: [['getFullTaxReport', 'full-tax-report_FULL_PERIOD']],
       args: csvArgs,
       columnsCsv: {
+        timestamps: {
+          mtsCreated: 'CREATED',
+          start: 'FROM',
+          end: 'TO'
+        },
         positionsSnapshot: {
           id: '#',
           symbol: 'PAIR',
@@ -371,6 +423,11 @@ class CsvJobData extends BaseCsvJobData {
         }
       },
       formatSettings: {
+        timestamps: {
+          mtsCreated: 'date',
+          start: 'date',
+          end: 'date'
+        },
         positionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
