@@ -18,10 +18,12 @@ const TYPES = require('../../di/types')
  * it can also be used with Node.js v8.5.0...v10.4.1 using the scrypt-js OpenSSL polyfill
  * https://github.com/ricmoo/scrypt-js
  */
-if (!crypto.scrypt) {
-  const scryptJS = require('scrypt-js')
+const hasScrypt = !!crypto.scrypt
 
-  crypto.scrypt = (password, salt, keylen, options, cb) => {
+if (!hasScrypt) {
+  const { scrypt } = require('scrypt-js')
+
+  crypto.scrypt = (password, salt, keylen, options) => {
     const {
       N = 16384,
       r = 8,
@@ -30,11 +32,11 @@ if (!crypto.scrypt) {
     const _password = Buffer.from(password.normalize('NFKC'))
     const _salt = Buffer.from(salt.normalize('NFKC'))
 
-    scryptJS(_password, _salt, N, r, p, keylen, cb)
+    return scrypt(_password, _salt, N, r, p, keylen)
   }
 }
 
-const scrypt = promisify(crypto.scrypt)
+const scrypt = hasScrypt ? promisify(crypto.scrypt) : crypto.scrypt
 const randomBytes = promisify(crypto.randomBytes)
 const pbkdf2 = promisify(crypto.pbkdf2)
 
