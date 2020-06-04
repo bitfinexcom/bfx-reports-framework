@@ -118,9 +118,7 @@ class SubAccount {
         const isAuthCheckedInDb = (
           (
             email &&
-            typeof email === 'string' &&
-            password &&
-            typeof password === 'string'
+            typeof email === 'string'
           ) ||
           (
             token &&
