@@ -260,7 +260,8 @@ class SqliteDAO extends DAO {
           isDataFromDb: !!_res.isDataFromDb,
           isSubAccount: !!_res.isSubAccount,
           isSubUser: !!_res.isSubUser,
-          haveSubUsers: !!_res.haveSubUsers
+          haveSubUsers: !!_res.haveSubUsers,
+          isNotProtected: !!_res.isNotProtected
         }
         : _res.map((user) => {
           const {
@@ -268,7 +269,8 @@ class SqliteDAO extends DAO {
             isDataFromDb,
             isSubAccount,
             isSubUser,
-            haveSubUsers
+            haveSubUsers,
+            isNotProtected
           } = { ...user }
 
           return {
@@ -277,7 +279,8 @@ class SqliteDAO extends DAO {
             isDataFromDb: !!isDataFromDb,
             isSubAccount: !!isSubAccount,
             isSubUser: !!isSubUser,
-            haveSubUsers: !!haveSubUsers
+            haveSubUsers: !!haveSubUsers,
+            isNotProtected: !!isNotProtected
           }
         })
 
@@ -361,7 +364,8 @@ class SqliteDAO extends DAO {
         active,
         isDataFromDb,
         isSubAccount,
-        isSubUser
+        isSubUser,
+        isNotProtected
       } = { ...user }
 
       return {
@@ -369,7 +373,8 @@ class SqliteDAO extends DAO {
         active: !!active,
         isDataFromDb: !!isDataFromDb,
         isSubAccount: !!isSubAccount,
-        isSubUser: !!isSubUser
+        isSubUser: !!isSubUser,
+        isNotProtected: !!isNotProtected
       }
     })
   }

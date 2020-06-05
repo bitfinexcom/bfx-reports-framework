@@ -131,7 +131,8 @@ class Authenticator {
         isDataFromDb: serializeVal(isDataFromDb),
         isSubAccount: serializeVal(isSubAccount),
         isSubUser: serializeVal(isSubUser),
-        passwordHash
+        passwordHash,
+        isNotProtected: serializeVal(isNotProtected)
       },
       { isNotInTrans }
     )
