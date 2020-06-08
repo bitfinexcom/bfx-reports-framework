@@ -325,6 +325,7 @@ module.exports = (
       assert.isObject(user)
       assert.isString(user.email)
       assert.isBoolean(user.isSubAccount)
+      assert.isBoolean(user.isNotProtected)
     })
   })
 
