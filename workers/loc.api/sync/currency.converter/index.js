@@ -21,6 +21,7 @@ const {
   splitSymbolPairs,
   isForexSymb
 } = require('../helpers')
+const { tryParseJSON } = require('../../helpers')
 const TYPES = require('../../di/types')
 
 class CurrencyConverter {
@@ -42,6 +43,49 @@ class CurrencyConverter {
       CANDLES: 'candles'
     }
     this.candlesTimeframe = '1D'
+  }
+
+  async _getCurrenciesSynonymous () {
+    const currencies = await this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.CURRENCIES
+    )
+
+    if (
+      !Array.isArray(currencies) ||
+      currencies.length === 0
+    ) {
+      return []
+    }
+
+    const synonymous = currencies.reduce((accum, curr) => {
+      const { id, walletFx } = { ...curr }
+      const _walletFx = tryParseJSON(walletFx)
+
+      if (
+        !id ||
+        typeof id !== 'string' ||
+        !Array.isArray(_walletFx) ||
+        _walletFx.length === 0
+      ) {
+        return accum
+      }
+
+      const filteredWalletFx = _walletFx.filter((item) => (
+        Array.isArray(item) &&
+        item.length > 1 &&
+        item[0] &&
+        typeof item[0] === 'string' &&
+        Number.isFinite(item[1])
+      ))
+
+      if (filteredWalletFx.length > 0) {
+        accum.set(id, filteredWalletFx)
+      }
+
+      return accum
+    }, new Map())
+
+    return synonymous
   }
 
   _isEmptyStr (str) {
