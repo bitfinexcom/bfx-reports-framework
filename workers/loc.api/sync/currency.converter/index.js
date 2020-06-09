@@ -45,8 +45,8 @@ class CurrencyConverter {
     this.candlesTimeframe = '1D'
   }
 
-  async _getCurrenciesSynonymous () {
-    const currencies = await this.dao.getElemsInCollBy(
+  async getCurrenciesSynonymous () {
+    let currencies = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.CURRENCIES
     )
 
@@ -54,12 +54,25 @@ class CurrencyConverter {
       !Array.isArray(currencies) ||
       currencies.length === 0
     ) {
-      return []
+      try {
+        currencies = await this.rService._getCurrencies()
+
+        if (
+          !Array.isArray(currencies) ||
+          currencies.length === 0
+        ) {
+          return new Map()
+        }
+      } catch (err) {
+        return new Map()
+      }
     }
 
     const synonymous = currencies.reduce((accum, curr) => {
       const { id, walletFx } = { ...curr }
-      const _walletFx = tryParseJSON(walletFx)
+      const _walletFx = Array.isArray(walletFx)
+        ? walletFx
+        : tryParseJSON(walletFx)
 
       if (
         !id ||
@@ -86,6 +99,44 @@ class CurrencyConverter {
     }, new Map())
 
     return synonymous
+  }
+
+  async _priceFinder (
+    finderFn,
+    symbol,
+    currenciesSynonymous
+  ) {
+    const price = await finderFn(symbol)
+
+    if (Number.isFinite(price)) {
+      return price
+    }
+
+    const _currenciesSynonymous = (
+      currenciesSynonymous instanceof Map &&
+      currenciesSynonymous.size > 0
+    )
+      ? currenciesSynonymous
+      : await this.getCurrenciesSynonymous()
+
+    const synonymous = _currenciesSynonymous.get(symbol)
+
+    if (!synonymous) {
+      return null
+    }
+
+    for (const [symbol, conversion] of synonymous) {
+      const price = await finderFn(symbol)
+
+      if (
+        Number.isFinite(price) &&
+        Number.isFinite(conversion)
+      ) {
+        return price * conversion
+      }
+    }
+
+    return null
   }
 
   _isEmptyStr (str) {
@@ -327,8 +378,17 @@ class CurrencyConverter {
       symbolFieldName: '',
       dateFieldName: '',
       convFields: [{ inputField: '', outputField: '' }],
+      currenciesSynonymous: new Map(),
       ...convSchema
     }
+
+    const currenciesSynonymous = (
+      _convSchema.currenciesSynonymous instanceof Map &&
+      _convSchema.currenciesSynonymous.size > 0
+    )
+      ? _convSchema.currenciesSynonymous
+      : await this.getCurrenciesSynonymous()
+
     const {
       convertTo,
       symbolFieldName,
@@ -361,10 +421,17 @@ class CurrencyConverter {
       const isSameSymb = convertTo === symbol
       const price = isSameSymb
         ? 1
-        : await this._getPrice(
-          collName,
-          item,
-          _convSchema
+        : await this._priceFinder(
+          (symb) => this._getPrice(
+            collName,
+            {
+              ...item,
+              [symbolFieldName]: symb
+            },
+            _convSchema
+          ),
+          symbol,
+          currenciesSynonymous
         )
 
       if (!Number.isFinite(price)) {
@@ -501,12 +568,12 @@ class CurrencyConverter {
     )
 
     if (_isForexSymb) {
-      const btcPriseIn = this._findPublicTradePrice(
+      const btcPriseIn = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${firstSymb}`,
         end
       )
-      const btcPriseOut = this._findPublicTradePrice(
+      const btcPriseOut = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${lastSymb}`,
         end
@@ -524,7 +591,7 @@ class CurrencyConverter {
       return btcPriseOut / btcPriseIn
     }
 
-    return this._findPublicTradePrice(
+    return this._findPublicTradesPrice(
       publicTrades,
       symbol,
       end
@@ -632,6 +699,7 @@ class CurrencyConverter {
     }
   }
 
+  // TODO:
   getPriceFromData (
     reqSymb,
     end,
@@ -660,6 +728,7 @@ class CurrencyConverter {
     throw new CurrencyConversionDataFindingError()
   }
 
+  // TODO:
   async convertManyByCandles (data, convSchema) {
     const _convSchema = {
       convertTo: 'USD',
