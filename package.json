@@ -72,7 +72,13 @@
       }
     },
     "test": {
-      "command": "standard && mocha './test/**/*.spec.js' --config .mocharc.json",
+      "command": "standard && mocha './workers/**/__test__/*.spec.js' './test/**/*.spec.js' --config .mocharc.json",
+      "env": {
+        "NODE_ENV": "test"
+      }
+    },
+    "unit": {
+      "command": "mocha './workers/**/__test__/*.spec.js' --config .mocharc.json",
       "env": {
         "NODE_ENV": "test"
       }
@@ -114,6 +120,7 @@
     "startBackEnd": "better-npm-run start:back",
     "startExpress": "better-npm-run start:express",
     "startUI": "better-npm-run start:ui",
-    "start": "better-npm-run start:all"
+    "start": "better-npm-run start:all",
+    "unit": "better-npm-run unit"
   }
 }
