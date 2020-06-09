@@ -101,11 +101,41 @@ class CurrencyConverter {
     return synonymous
   }
 
-  async _priceFinder (
-    finderFn,
+  _getSynonymous (
     symbol,
     currenciesSynonymous
   ) {
+    if (
+      !(currenciesSynonymous instanceof Map) ||
+      currenciesSynonymous.size === 0
+    ) {
+      return
+    }
+
+    const [firstSymb, lastSymb = ''] = splitSymbolPairs(symbol)
+    const prefix = (
+      symbol[0] === 't' ||
+      symbol[0] === 'f'
+    )
+      ? symbol[0]
+      : ''
+    const synonymous = currenciesSynonymous.get(firstSymb)
+
+    if (!synonymous) {
+      return
+    }
+
+    return synonymous.map(([symbol, conversion]) => (
+      [`${prefix}${symbol}${lastSymb}`, conversion]
+    ))
+  }
+
+  async _priceFinder (
+    finderFn,
+    reqSymb,
+    currenciesSynonymous
+  ) {
+    const symbol = this._getPairFromPair(reqSymb)
     const price = await finderFn(symbol)
 
     if (Number.isFinite(price)) {
@@ -119,7 +149,10 @@ class CurrencyConverter {
       ? currenciesSynonymous
       : await this.getCurrenciesSynonymous()
 
-    const synonymous = _currenciesSynonymous.get(symbol)
+    const synonymous = this._getSynonymous(
+      symbol,
+      _currenciesSynonymous
+    )
 
     if (!synonymous) {
       return null
@@ -127,6 +160,41 @@ class CurrencyConverter {
 
     for (const [symbol, conversion] of synonymous) {
       const price = await finderFn(symbol)
+
+      if (
+        Number.isFinite(price) &&
+        Number.isFinite(conversion)
+      ) {
+        return price * conversion
+      }
+    }
+
+    return null
+  }
+
+  _syncPriceFinder (
+    finderFn,
+    reqSymb,
+    currenciesSynonymous = new Map()
+  ) {
+    const symbol = this._getPairFromPair(reqSymb)
+    const price = finderFn(symbol)
+
+    if (Number.isFinite(price)) {
+      return price
+    }
+
+    const synonymous = this._getSynonymous(
+      symbol,
+      currenciesSynonymous
+    )
+
+    if (!synonymous) {
+      return null
+    }
+
+    for (const [symbol, conversion] of synonymous) {
+      const price = finderFn(symbol)
 
       if (
         Number.isFinite(price) &&
@@ -699,29 +767,35 @@ class CurrencyConverter {
     }
   }
 
-  // TODO:
   getPriceFromData (
     reqSymb,
     end,
     {
       candles,
-      publicTrades
+      publicTrades,
+      currenciesSynonymous
     }
   ) {
-    const symbol = this._getPairFromPair(reqSymb)
-
     if (Array.isArray(candles)) {
-      return this._getCandlesPriceFromData(
-        candles,
-        symbol,
-        end
+      return this._syncPriceFinder(
+        (symb) => this._getCandlesPriceFromData(
+          candles,
+          symb,
+          end
+        ),
+        reqSymb,
+        currenciesSynonymous
       )
     }
     if (Array.isArray(publicTrades)) {
-      return this._getPublicTradesPriceFromData(
-        publicTrades,
-        symbol,
-        end
+      return this._syncPriceFinder(
+        (symb) => this._getPublicTradesPriceFromData(
+          publicTrades,
+          symb,
+          end
+        ),
+        reqSymb,
+        currenciesSynonymous
       )
     }
 
