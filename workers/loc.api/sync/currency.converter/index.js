@@ -101,6 +101,15 @@ class CurrencyConverter {
     return synonymous
   }
 
+  getCurrenciesSynonymousIfEmpty (currenciesSynonymous) {
+    return (
+      currenciesSynonymous instanceof Map &&
+      currenciesSynonymous.size > 0
+    )
+      ? currenciesSynonymous
+      : this.getCurrenciesSynonymous()
+  }
+
   _getSynonymous (
     symbol,
     currenciesSynonymous
@@ -142,13 +151,8 @@ class CurrencyConverter {
       return price
     }
 
-    const _currenciesSynonymous = (
-      currenciesSynonymous instanceof Map &&
-      currenciesSynonymous.size > 0
-    )
-      ? currenciesSynonymous
-      : await this.getCurrenciesSynonymous()
-
+    const _currenciesSynonymous = await this
+      .getCurrenciesSynonymousIfEmpty(currenciesSynonymous)
     const synonymous = this._getSynonymous(
       symbol,
       _currenciesSynonymous
@@ -450,12 +454,8 @@ class CurrencyConverter {
       ...convSchema
     }
 
-    const currenciesSynonymous = (
-      _convSchema.currenciesSynonymous instanceof Map &&
-      _convSchema.currenciesSynonymous.size > 0
-    )
-      ? _convSchema.currenciesSynonymous
-      : await this.getCurrenciesSynonymous()
+    const currenciesSynonymous = await this
+      .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous)
 
     const {
       convertTo,
@@ -683,8 +683,6 @@ class CurrencyConverter {
       timeframeFieldName
     } = this.syncSchema.getMethodCollMap()
       .get('_getCandles')
-    const candlesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.CANDLES)
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
@@ -702,7 +700,7 @@ class CurrencyConverter {
           ...symbFilter
         },
         sort: [[dateFieldName, -1]],
-        projection: candlesModel
+        projection: ['mts', 'close', '_symbol']
       }
     )
   }
@@ -802,13 +800,13 @@ class CurrencyConverter {
     throw new CurrencyConversionDataFindingError()
   }
 
-  // TODO:
   async convertManyByCandles (data, convSchema) {
     const _convSchema = {
       convertTo: 'USD',
       symbolFieldName: '',
       dateFieldName: '',
       convFields: [{ inputField: '', outputField: '' }],
+      currenciesSynonymous: new Map(),
       ...convSchema
     }
     const {
@@ -836,6 +834,8 @@ class CurrencyConverter {
     const end = elems[0][dateFieldName]
     const start = elems[elems.length - 1][dateFieldName]
 
+    const currenciesSynonymous = await this
+      .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous)
     const candles = await this._getCandles({ start, end })
 
     const res = []
@@ -859,10 +859,14 @@ class CurrencyConverter {
       const isSameSymb = convertTo === symbol
       const price = isSameSymb
         ? 1
-        : this._getCandlesPriceFromData(
-          candles,
+        : await this._priceFinder(
+          (symb) => this._getCandlesPriceFromData(
+            candles,
+            symb,
+            item[dateFieldName]
+          ),
           `t${symbol}${convertTo}`,
-          item[dateFieldName]
+          currenciesSynonymous
         )
 
       if (!Number.isFinite(price)) {
