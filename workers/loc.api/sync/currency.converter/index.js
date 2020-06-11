@@ -21,6 +21,7 @@ const {
   splitSymbolPairs,
   isForexSymb
 } = require('../helpers')
+const { tryParseJSON } = require('../../helpers')
 const TYPES = require('../../di/types')
 
 class CurrencyConverter {
@@ -42,6 +43,172 @@ class CurrencyConverter {
       CANDLES: 'candles'
     }
     this.candlesTimeframe = '1D'
+  }
+
+  async getCurrenciesSynonymous () {
+    let currencies = await this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.CURRENCIES
+    )
+
+    if (
+      !Array.isArray(currencies) ||
+      currencies.length === 0
+    ) {
+      try {
+        currencies = await this.rService._getCurrencies()
+
+        if (
+          !Array.isArray(currencies) ||
+          currencies.length === 0
+        ) {
+          return new Map()
+        }
+      } catch (err) {
+        return new Map()
+      }
+    }
+
+    const synonymous = currencies.reduce((accum, curr) => {
+      const { id, walletFx } = { ...curr }
+      const _walletFx = Array.isArray(walletFx)
+        ? walletFx
+        : tryParseJSON(walletFx)
+
+      if (
+        !id ||
+        typeof id !== 'string' ||
+        !Array.isArray(_walletFx) ||
+        _walletFx.length === 0
+      ) {
+        return accum
+      }
+
+      const filteredWalletFx = _walletFx.filter((item) => (
+        Array.isArray(item) &&
+        item.length > 1 &&
+        item[0] &&
+        typeof item[0] === 'string' &&
+        Number.isFinite(item[1])
+      ))
+
+      if (filteredWalletFx.length > 0) {
+        accum.set(id, filteredWalletFx)
+      }
+
+      return accum
+    }, new Map())
+
+    return synonymous
+  }
+
+  getCurrenciesSynonymousIfEmpty (currenciesSynonymous) {
+    return (
+      currenciesSynonymous instanceof Map &&
+      currenciesSynonymous.size > 0
+    )
+      ? currenciesSynonymous
+      : this.getCurrenciesSynonymous()
+  }
+
+  _getSynonymous (
+    symbol,
+    currenciesSynonymous
+  ) {
+    if (
+      !(currenciesSynonymous instanceof Map) ||
+      currenciesSynonymous.size === 0
+    ) {
+      return
+    }
+
+    const [firstSymb, lastSymb = ''] = splitSymbolPairs(symbol)
+    const prefix = (
+      symbol[0] === 't' ||
+      symbol[0] === 'f'
+    )
+      ? symbol[0]
+      : ''
+    const synonymous = currenciesSynonymous.get(firstSymb)
+
+    if (!synonymous) {
+      return
+    }
+
+    return synonymous.map(([symbol, conversion]) => (
+      [`${prefix}${symbol}${lastSymb}`, conversion]
+    ))
+  }
+
+  async _priceFinder (
+    finderFn,
+    reqSymb,
+    currenciesSynonymous
+  ) {
+    const symbol = this._getPairFromPair(reqSymb)
+    const price = await finderFn(symbol)
+
+    if (Number.isFinite(price)) {
+      return price
+    }
+
+    const _currenciesSynonymous = await this
+      .getCurrenciesSynonymousIfEmpty(currenciesSynonymous)
+    const synonymous = this._getSynonymous(
+      symbol,
+      _currenciesSynonymous
+    )
+
+    if (!synonymous) {
+      return null
+    }
+
+    for (const [symbol, conversion] of synonymous) {
+      const price = await finderFn(symbol)
+
+      if (
+        Number.isFinite(price) &&
+        Number.isFinite(conversion)
+      ) {
+        return price * conversion
+      }
+    }
+
+    return null
+  }
+
+  _syncPriceFinder (
+    finderFn,
+    reqSymb,
+    currenciesSynonymous = new Map()
+  ) {
+    const symbol = this._getPairFromPair(reqSymb)
+    const price = finderFn(symbol)
+
+    if (Number.isFinite(price)) {
+      return price
+    }
+
+    const synonymous = this._getSynonymous(
+      symbol,
+      currenciesSynonymous
+    )
+
+    if (!synonymous) {
+      return null
+    }
+
+    for (const [symbol, conversion] of synonymous) {
+      const price = finderFn(symbol)
+
+      if (
+        Number.isFinite(price) &&
+        Number.isFinite(conversion)
+      ) {
+        return price * conversion
+      }
+    }
+
+    return null
   }
 
   _isEmptyStr (str) {
@@ -283,8 +450,13 @@ class CurrencyConverter {
       symbolFieldName: '',
       dateFieldName: '',
       convFields: [{ inputField: '', outputField: '' }],
+      currenciesSynonymous: new Map(),
       ...convSchema
     }
+
+    const currenciesSynonymous = await this
+      .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous)
+
     const {
       convertTo,
       symbolFieldName,
@@ -317,10 +489,17 @@ class CurrencyConverter {
       const isSameSymb = convertTo === symbol
       const price = isSameSymb
         ? 1
-        : await this._getPrice(
-          collName,
-          item,
-          _convSchema
+        : await this._priceFinder(
+          (symb) => this._getPrice(
+            collName,
+            {
+              ...item,
+              [symbolFieldName]: symb
+            },
+            _convSchema
+          ),
+          symbol,
+          currenciesSynonymous
         )
 
       if (!Number.isFinite(price)) {
@@ -457,12 +636,12 @@ class CurrencyConverter {
     )
 
     if (_isForexSymb) {
-      const btcPriseIn = this._findPublicTradePrice(
+      const btcPriseIn = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${firstSymb}`,
         end
       )
-      const btcPriseOut = this._findPublicTradePrice(
+      const btcPriseOut = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${lastSymb}`,
         end
@@ -480,7 +659,7 @@ class CurrencyConverter {
       return btcPriseOut / btcPriseIn
     }
 
-    return this._findPublicTradePrice(
+    return this._findPublicTradesPrice(
       publicTrades,
       symbol,
       end
@@ -504,8 +683,6 @@ class CurrencyConverter {
       timeframeFieldName
     } = this.syncSchema.getMethodCollMap()
       .get('_getCandles')
-    const candlesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.CANDLES)
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
@@ -523,7 +700,7 @@ class CurrencyConverter {
           ...symbFilter
         },
         sort: [[dateFieldName, -1]],
-        projection: candlesModel
+        projection: ['mts', 'close', '_symbol']
       }
     )
   }
@@ -593,23 +770,30 @@ class CurrencyConverter {
     end,
     {
       candles,
-      publicTrades
+      publicTrades,
+      currenciesSynonymous
     }
   ) {
-    const symbol = this._getPairFromPair(reqSymb)
-
     if (Array.isArray(candles)) {
-      return this._getCandlesPriceFromData(
-        candles,
-        symbol,
-        end
+      return this._syncPriceFinder(
+        (symb) => this._getCandlesPriceFromData(
+          candles,
+          symb,
+          end
+        ),
+        reqSymb,
+        currenciesSynonymous
       )
     }
     if (Array.isArray(publicTrades)) {
-      return this._getPublicTradesPriceFromData(
-        publicTrades,
-        symbol,
-        end
+      return this._syncPriceFinder(
+        (symb) => this._getPublicTradesPriceFromData(
+          publicTrades,
+          symb,
+          end
+        ),
+        reqSymb,
+        currenciesSynonymous
       )
     }
 
@@ -622,6 +806,7 @@ class CurrencyConverter {
       symbolFieldName: '',
       dateFieldName: '',
       convFields: [{ inputField: '', outputField: '' }],
+      currenciesSynonymous: new Map(),
       ...convSchema
     }
     const {
@@ -649,6 +834,8 @@ class CurrencyConverter {
     const end = elems[0][dateFieldName]
     const start = elems[elems.length - 1][dateFieldName]
 
+    const currenciesSynonymous = await this
+      .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous)
     const candles = await this._getCandles({ start, end })
 
     const res = []
@@ -672,10 +859,14 @@ class CurrencyConverter {
       const isSameSymb = convertTo === symbol
       const price = isSameSymb
         ? 1
-        : this._getCandlesPriceFromData(
-          candles,
+        : await this._priceFinder(
+          (symb) => this._getCandlesPriceFromData(
+            candles,
+            symb,
+            item[dateFieldName]
+          ),
           `t${symbol}${convertTo}`,
-          item[dateFieldName]
+          currenciesSynonymous
         )
 
       if (!Number.isFinite(price)) {

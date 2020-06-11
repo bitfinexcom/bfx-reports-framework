@@ -149,7 +149,8 @@ class BalanceHistory {
     candles,
     mts,
     timeframe,
-    symb
+    symb,
+    currenciesSynonymous
   ) {
     const mtsMoment = moment.utc(mts)
 
@@ -168,7 +169,7 @@ class BalanceHistory {
     const price = this.currencyConverter.getPriceFromData(
       symb,
       _mts,
-      { candles }
+      { candles, currenciesSynonymous }
     )
 
     return price
@@ -177,7 +178,8 @@ class BalanceHistory {
   _getWalletsByTimeframe (
     firstWallets,
     candles,
-    timeframe
+    timeframe,
+    currenciesSynonymous
   ) {
     let prevRes = { ...firstWallets }
 
@@ -205,7 +207,8 @@ class BalanceHistory {
             candles,
             mts,
             timeframe,
-            `t${currency}USD`
+            `t${currency}USD`,
+            currenciesSynonymous
           )
 
         if (!_isForexSymb && !Number.isFinite(price)) {
@@ -239,7 +242,8 @@ class BalanceHistory {
         res,
         candles,
         mts,
-        timeframe
+        timeframe,
+        currenciesSynonymous
       )
     }
   }
@@ -248,7 +252,8 @@ class BalanceHistory {
     obj,
     candles,
     mts,
-    timeframe
+    timeframe,
+    currenciesSynonymous
   ) {
     const dataArr = Object.entries(obj)
 
@@ -266,7 +271,8 @@ class BalanceHistory {
           candles,
           mts,
           timeframe,
-          `t${symb}USD`
+          `t${symb}USD`,
+          currenciesSynonymous
         )
       }
 
@@ -417,6 +423,9 @@ class BalanceHistory {
       true
     )
 
+    const currenciesSynonymous = await this.currencyConverter
+      .getCurrenciesSynonymous()
+
     const res = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
@@ -426,7 +435,8 @@ class BalanceHistory {
       this._getWalletsByTimeframe(
         firstWalletsGroupedByCurrency,
         candles,
-        timeframe
+        timeframe,
+        currenciesSynonymous
       ),
       true
     )

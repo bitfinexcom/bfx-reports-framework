@@ -1,7 +1,7 @@
 'use strict'
 
 const AbstractMigration = require('./abstract.migration')
-const { getSqlArrToRemoveColumns } = require('./helpers')
+const { getSqlArrToModifyColumns } = require('./helpers')
 
 class MigrationV4 extends AbstractMigration {
   /**
@@ -59,7 +59,7 @@ class MigrationV4 extends AbstractMigration {
       'DROP INDEX candles__symbol__timeframe_mts',
       'DROP INDEX publicСollsСonf_symbol_user_id_confName_timeframe',
 
-      ...getSqlArrToRemoveColumns(
+      ...getSqlArrToModifyColumns(
         'publicСollsСonf',
         {
           _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
@@ -74,7 +74,7 @@ class MigrationV4 extends AbstractMigration {
             ON DELETE CASCADE`
         }
       ),
-      ...getSqlArrToRemoveColumns(
+      ...getSqlArrToModifyColumns(
         'candles',
         {
           _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',

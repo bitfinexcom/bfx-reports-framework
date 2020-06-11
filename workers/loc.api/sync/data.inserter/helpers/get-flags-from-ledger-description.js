@@ -15,9 +15,13 @@ module.exports = (
   return schemas.reduce((accum, schema) => {
     const {
       fieldName,
-      pattern
+      pattern,
+      isCaseSensitivity
     } = { ...schema }
-    const regExp = new RegExp(pattern, 'i')
+    const regExp = new RegExp(
+      pattern,
+      isCaseSensitivity ? '' : 'i'
+    )
 
     return {
       ...accum,

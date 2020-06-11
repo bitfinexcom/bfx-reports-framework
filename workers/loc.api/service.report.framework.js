@@ -1,7 +1,6 @@
 'use strict'
 
 const {
-  pick,
   omit,
   isEmpty
 } = require('lodash')
@@ -10,8 +9,6 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  isAuthError,
-  isNonceSmallError,
   getTimezoneConf,
   getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
@@ -30,6 +27,8 @@ const {
   getAuthFromSubAccountAuth
 } = require('./helpers')
 
+const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+
 class FrameworkReportService extends ReportService {
   /**
    * @override
@@ -42,39 +41,15 @@ class FrameworkReportService extends ReportService {
 
   async _databaseInitialize (db) {
     await this._dao.databaseInitialize(db)
-    await this._dao.updateProgress('SYNCHRONIZATION_HAS_NOT_STARTED_YET')
-    await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
-    await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, true)
-  }
-
-  /**
-   * @override
-   */
-  async _getUserInfo (args) {
-    try {
-      const {
-        username,
-        timezone,
-        email,
-        id
-      } = await this._dao.checkAuthInDb(args)
-
-      if (
-        !username ||
-        typeof username !== 'string'
-      ) {
-        return false
-      }
-
-      return {
-        username,
-        timezone,
-        email,
-        id
-      }
-    } catch (err) {
-      return false
-    }
+    await this._progress.setProgress(INITIAL_PROGRESS)
+    await this._dao.updateRecordOf(
+      this._TABLES_NAMES.SYNC_MODE,
+      { isEnable: true }
+    )
+    await this._dao.updateRecordOf(
+      this._TABLES_NAMES.SCHEDULER,
+      { isEnable: true }
+    )
   }
 
   async _checkAuthInApi (args) {
@@ -88,7 +63,7 @@ class FrameworkReportService extends ReportService {
       timezone,
       username,
       id
-    } = await super._getUserInfo({ ...args, auth })
+    } = await super.verifyUser(null, { ...args, auth })
 
     if (!email) {
       throw new AuthError()
@@ -102,84 +77,66 @@ class FrameworkReportService extends ReportService {
     }
   }
 
-  /**
-   * @override
-   */
-  login (space, args, cb, isInnerCall) {
-    return this._responder(async () => {
-      const { auth } = { ...args }
-      let userInfo = {
-        email: null,
-        timezone: null,
-        id: null
-      }
-
-      try {
-        userInfo = await this._checkAuthInApi(args)
-      } catch (err) {
-        if (
-          isAuthError(err) ||
-          isNonceSmallError(err)
-        ) {
-          throw err
-        }
-      }
-
-      const data = {
-        ...auth,
-        ...userInfo
-      }
-
-      const user = await this._dao.insertOrUpdateUser(data)
-      const isSyncModeConfig = this.isSyncModeConfig()
-
-      return isInnerCall
-        ? { ...user, isSyncModeConfig }
-        : user.email
-    }, 'login', cb)
+  signUp (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.signUp(args)
+    }, 'signUp', cb)
   }
 
-  logout (space, args, cb) {
-    return this._responder(async () => {
-      await this._dao.deactivateUser(args.auth)
+  signIn (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.signIn(args)
+    }, 'signIn', cb)
+  }
 
-      return true
-    }, 'logout', cb)
+  signOut (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.signOut(args)
+    }, 'signOut', cb)
+  }
+
+  verifyUser (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.verifyUser(
+        args,
+        {
+          isFilledSubUsers: true,
+          isAppliedProjectionToSubUser: true,
+          projection: [
+            'username',
+            'timezone',
+            'email',
+            'id',
+            'isSubAccount',
+            'subUsers'
+          ]
+        }
+      )
+    }, 'verifyUser', cb)
+  }
+
+  getUsers (space, args, cb) {
+    return this._responder(async () => {
+      return this._authenticator.getUsers(
+        { isSubUser: false },
+        { projection: ['email', 'isSubAccount', 'isNotProtected'] }
+      )
+    }, 'getUsers', cb)
+  }
+
+  removeUser (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.removeUser(args)
+    }, 'removeUser', cb)
   }
 
   createSubAccount (space, args, cb) {
-    return this._responder(async () => {
+    return this._responder(() => {
       checkParams(args, 'paramsSchemaForCreateSubAccount')
 
-      await this._subAccount
-        .createSubAccount(args)
-
-      return true
-    }, 'createSubAccount', cb)
-  }
-
-  removeSubAccount (space, args, cb) {
-    return this._responder(async () => {
-      await this._subAccount
-        .removeSubAccount(args)
-
-      return true
-    }, 'removeSubAccount', cb)
-  }
-
-  hasSubAccount (space, args, cb) {
-    return this._responder(async () => {
       return this._subAccount
-        .hasSubAccount(args)
-    }, 'hasSubAccount', cb)
-  }
-
-  checkAuthInDb (space, args, cb) {
-    return this._responder(async () => {
-      const { email } = await this._dao.checkAuthInDb(args)
-
-      return email
-    }, 'checkAuthInDb', cb)
+        .createSubAccount(args)
+    }, 'createSubAccount', cb)
   }
 
   pingApi (space, args, cb) {
@@ -215,13 +172,17 @@ class FrameworkReportService extends ReportService {
 
   enableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      checkParamsAuth(args)
-
-      await this._dao.updateStateOf(this._TABLES_NAMES.SYNC_MODE, true)
-      await this._dao.updateUserByAuth({
-        ...pick(args.auth, ['apiKey', 'apiSecret']),
-        isDataFromDb: 1
-      })
+      await this._authenticator.signIn(
+        args,
+        {
+          active: null,
+          isDataFromDb: true
+        }
+      )
+      await this._dao.updateRecordOf(
+        this._TABLES_NAMES.SYNC_MODE,
+        { isEnable: true }
+      )
       await this._sync.start(true)
 
       return true
@@ -230,17 +191,18 @@ class FrameworkReportService extends ReportService {
 
   disableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      checkParamsAuth(args)
+      const auth = await this._authenticator.signIn(
+        args,
+        {
+          active: null,
+          isDataFromDb: false,
+          isReturnedUser: true
+        }
+      )
 
-      const { auth } = { ...args }
-
-      await this._dao.updateUserByAuth({
-        ...pick(auth, ['apiKey', 'apiSecret']),
-        isDataFromDb: 0
-      })
       await this._wsEventEmitter.emitRedirectingRequestsStatusToApi(
         (user) => {
-          if (this._wsEventEmitter.isInvalidAuth(args, user)) {
+          if (this._wsEventEmitter.isInvalidAuth(auth, user)) {
             return null
           }
 
@@ -253,43 +215,58 @@ class FrameworkReportService extends ReportService {
   }
 
   isSyncModeWithDbData (space, args, cb) {
-    return this._responder(async () => {
-      const user = await this._dao.checkAuthInDb(args, false)
-      const firstElem = await this._dao.getFirstElemInCollBy(
+    const { auth } = { ...args }
+    const { _id } = { ...auth }
+    const isRequiredUser = (cb || !Number.isInteger(_id))
+    const responder = isRequiredUser
+      ? this._privResponder
+      : this._responder
+    const endingArgs = isRequiredUser
+      ? [args, cb]
+      : [cb]
+
+    return responder(async () => {
+      const { auth } = { ...args }
+      const { isDataFromDb } = { ...auth }
+
+      const firstElem = await this._dao.getElemInCollBy(
         this._TABLES_NAMES.SYNC_MODE
       )
 
       return (
         !isEmpty(firstElem) &&
-        !isEmpty(user) &&
         !!firstElem.isEnable &&
-        user.isDataFromDb
+        isDataFromDb
       )
-    }, 'isSyncModeWithDbData', cb)
+    }, 'isSyncModeWithDbData', ...endingArgs)
   }
 
   enableScheduler (space, args, cb) {
-    return this._responder(async () => {
-      await this._dao.checkAuthInDb(args)
-      await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, true)
+    return this._privResponder(async () => {
+      await this._dao.updateRecordOf(
+        this._TABLES_NAMES.SCHEDULER,
+        { isEnable: true }
+      )
 
       return this.syncNow()
-    }, 'enableScheduler', cb)
+    }, 'enableScheduler', args, cb)
   }
 
   disableScheduler (space, args, cb) {
-    return this._responder(async () => {
-      await this._dao.checkAuthInDb(args)
-      await this._dao.updateStateOf(this._TABLES_NAMES.SCHEDULER, false)
+    return this._privResponder(async () => {
+      await this._dao.updateRecordOf(
+        this._TABLES_NAMES.SCHEDULER,
+        { isEnable: false }
+      )
 
       return true
-    }, 'disableScheduler', cb)
+    }, 'disableScheduler', args, cb)
   }
 
   isSchedulerEnabled (space, args, cb) {
     return this._responder(async () => {
       try {
-        const firstElem = await this._dao.getFirstElemInCollBy(
+        const firstElem = await this._dao.getElemInCollBy(
           this._TABLES_NAMES.SCHEDULER,
           { isEnable: 1 }
         )
@@ -302,70 +279,68 @@ class FrameworkReportService extends ReportService {
   }
 
   getSyncProgress (space, args, cb) {
-    return this._responder(async () => {
-      const user = await this._dao.checkAuthInDb(args, false)
+    return this._privResponder(async () => {
+      const { auth } = { ...args }
+      const { isDataFromDb } = { ...auth }
       const isSchedulerEnabled = await this.isSchedulerEnabled()
 
       return (
-        !isEmpty(user) &&
-        user.isDataFromDb &&
+        isDataFromDb &&
         isSchedulerEnabled
       )
         ? this._progress.getProgress()
         : false
-    }, 'getSyncProgress', cb)
+    }, 'getSyncProgress', args, cb)
   }
 
   syncNow (space, args = {}, cb) {
-    return this._responder(async () => {
-      if (cb) {
-        await this._dao.checkAuthInDb(args)
-      }
+    const responder = cb
+      ? this._privResponder
+      : this._responder
+    const endingArgs = cb
+      ? [args, cb]
+      : [cb]
 
-      const syncColls = (
-        args &&
-        typeof args === 'object' &&
-        args.params &&
-        typeof args.params === 'object' &&
-        args.params.syncColls
-      )
-        ? args.params.syncColls
-        : this._ALLOWED_COLLS.ALL
+    return responder(async () => {
+      const { params } = { ...args }
+      const {
+        syncColls = this._ALLOWED_COLLS.ALL
+      } = { ...params }
 
       return this._sync.start(true, syncColls)
-    }, 'syncNow', cb)
+    }, 'syncNow', ...endingArgs)
   }
 
   getPublicTradesConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('publicTradesConf', args)
-    }, 'getPublicTradesConf', cb)
+    }, 'getPublicTradesConf', args, cb)
   }
 
   getTickersHistoryConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('tickersHistoryConf', args)
-    }, 'getTickersHistoryConf', cb)
+    }, 'getTickersHistoryConf', args, cb)
   }
 
   getStatusMessagesConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('statusMessagesConf', args)
-    }, 'getStatusMessagesConf', cb)
+    }, 'getStatusMessagesConf', args, cb)
   }
 
   getCandlesConf (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getPublicСollsСonf('candlesConf', args)
-    }, 'getCandlesConf', cb)
+    }, 'getCandlesConf', args, cb)
   }
 
   editPublicTradesConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
       await this._publicСollsСonfAccessors
@@ -373,11 +348,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
 
       return true
-    }, 'editPublicTradesConf', cb)
+    }, 'editPublicTradesConf', args, cb)
   }
 
   editTickersHistoryConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
       await this._publicСollsСonfAccessors
@@ -385,11 +360,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
 
       return true
-    }, 'editTickersHistoryConf', cb)
+    }, 'editTickersHistoryConf', args, cb)
   }
 
   editStatusMessagesConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
 
       await this._publicСollsСonfAccessors
@@ -397,11 +372,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
 
       return true
-    }, 'editStatusMessagesConf', cb)
+    }, 'editStatusMessagesConf', args, cb)
   }
 
   editCandlesConf (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditCandlesСonf')
 
       await this._publicСollsСonfAccessors
@@ -409,11 +384,11 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, this._ALLOWED_COLLS.CANDLES)
 
       return true
-    }, 'editCandlesConf', cb)
+    }, 'editCandlesConf', args, cb)
   }
 
   editAllPublicСollsСonfs (space, args = {}, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditAllPublicСollsСonfs')
 
       const syncedColls = await this._publicСollsСonfAccessors
@@ -421,50 +396,32 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true, syncedColls)
 
       return true
-    }, 'editCandlesConf', cb)
+    }, 'editCandlesConf', args, cb)
   }
 
   getAllPublicСollsСonfs (space, args = {}, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._publicСollsСonfAccessors
         .getAllPublicСollsСonfs(args)
-    }, 'editCandlesConf', cb)
-  }
-
-  /**
-   * @override
-   */
-  getEmail (space, args, cb) {
-    return this._responder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        const { auth: _auth } = { ...args }
-        const auth = getAuthFromSubAccountAuth(_auth)
-
-        return super.getEmail(space, { ...args, auth })
-      }
-
-      const { email } = await this._dao.checkAuthInDb(args)
-
-      return email
-    }, 'getEmail', cb)
+    }, 'editCandlesConf', args, cb)
   }
 
   /**
    * @override
    */
   getUsersTimeConf (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
+      const { auth: _auth } = { ...args }
+      const { timezone } = { ..._auth }
+
       if (!await this.isSyncModeWithDbData(space, args)) {
-        const { auth: _auth } = { ...args }
         const auth = getAuthFromSubAccountAuth(_auth)
 
         return super.getUsersTimeConf(space, { ...args, auth })
       }
 
-      const { timezone } = await this._dao.checkAuthInDb(args)
-
       return getTimezoneConf(timezone)
-    }, 'getUsersTimeConf', cb)
+    }, 'getUsersTimeConf', args, cb)
   }
 
   /**
@@ -478,44 +435,48 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForApi')
 
-      const symbolsMethod = '_getSymbols'
-      const futuresMethod = '_getFutures'
-      const currenciesMethod = '_getCurrencies'
-      const {
-        field: symbolsField
-      } = this._syncSchema.getMethodCollMap().get(symbolsMethod)
-      const {
-        field: futuresField
-      } = this._syncSchema.getMethodCollMap().get(futuresMethod)
-      const symbols = await this._dao.findInCollBy(
-        symbolsMethod,
-        args,
-        { isPublic: true }
-      )
-      const futures = await this._dao.findInCollBy(
-        futuresMethod,
-        args,
-        { isPublic: true }
-      )
-      const currencies = await this._dao.findInCollBy(
-        currenciesMethod,
-        args,
-        { isPublic: true }
-      )
+      const methods = [
+        '_getSymbols',
+        '_getFutures',
+        '_getCurrencies',
+        '_getInactiveSymbols'
+      ]
+      const promises = methods.map(async (method) => {
+        const res = await this._dao.findInCollBy(
+          method,
+          args,
+          { isPublic: true }
+        )
+
+        if (method === '_getCurrencies') {
+          return res
+        }
+
+        const { field } = this._syncSchema.getMethodCollMap()
+          .get(method)
+
+        return collObjToArr(res, field)
+      })
+
+      const [
+        symbols,
+        futures,
+        currencies,
+        inactiveSymbols
+      ] = await Promise.all(promises)
 
       if (
         isEmpty(symbols) &&
         isEmpty(futures) &&
-        isEmpty(currencies)
+        isEmpty(currencies) &&
+        isEmpty(inactiveSymbols)
       ) {
         return super.getSymbols(space, args)
       }
 
-      const symbolsArr = collObjToArr(symbols, symbolsField)
-      const futuresArr = collObjToArr(futures, futuresField)
-      const pairs = [...symbolsArr, ...futuresArr]
+      const pairs = [...symbols, ...futures]
 
-      return { pairs, currencies }
+      return { pairs, currencies, inactiveSymbols }
     }, 'getSymbols', cb)
   }
 
@@ -523,7 +484,7 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -540,14 +501,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getPositionsHistory', cb)
+    }, 'getPositionsHistory', args, cb)
   }
 
   /**
    * @override
    */
   getActivePositions (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._subAccountApiData
         .getDataForSubAccount(
           (args) => getDataFromApi(
@@ -560,18 +521,20 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
-    }, 'getActivePositions', cb)
+    }, 'getActivePositions', args, cb)
   }
 
   /**
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
           (args) => getDataFromApi(
-            (space, args) => super.getPositionsAudit(space, args),
+            (space, args) => {
+              return super.getPositionsAudit(space, args)
+            },
             args
           ),
           args,
@@ -581,14 +544,14 @@ class FrameworkReportService extends ReportService {
             )
           }
         )
-    }, 'getPositionsAudit', cb)
+    }, 'getPositionsAudit', args, cb)
   }
 
   /**
    * @override
    */
   getLedgers (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -605,14 +568,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getLedgers', cb)
+    }, 'getLedgers', args, cb)
   }
 
   /**
    * @override
    */
   getTrades (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -629,14 +592,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getTrades', cb)
+    }, 'getTrades', args, cb)
   }
 
   /**
    * @override
    */
   getFundingTrades (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -653,14 +616,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingTrades', cb)
+    }, 'getFundingTrades', args, cb)
   }
 
   /**
    * @override
    */
   getTickersHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getTickersHistory(space, args)
       }
@@ -677,14 +640,14 @@ class FrameworkReportService extends ReportService {
             datePropName: 'mtsUpdate'
           }
         )
-    }, 'getTickersHistory', cb)
+    }, 'getTickersHistory', args, cb)
   }
 
   /**
    * @override
    */
   getPublicTrades (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getPublicTrades(space, args)
       }
@@ -701,24 +664,60 @@ class FrameworkReportService extends ReportService {
             datePropName: 'mts'
           }
         )
-    }, 'getPublicTrades', cb)
+    }, 'getPublicTrades', args, cb)
   }
 
   /**
    * @override
    */
   getStatusMessages (space, args, cb) {
-    return this._responder(async () => {
-      // Temporal fix, return always from online query
-      return super.getStatusMessages(space, args)
-    }, 'getStatusMessages', cb)
+    return this._privResponder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return super.getStatusMessages(space, args)
+      }
+
+      checkParams(args, 'paramsSchemaForStatusMessagesApi')
+
+      const { params } = { ...args }
+      const {
+        type = 'deriv',
+        symbol = ['ALL']
+      } = { ...params }
+      const preparedArgs = {
+        ...args,
+        params: {
+          ...params,
+          type,
+          symbol: (
+            symbol === 'ALL' ||
+            (
+              Array.isArray(symbol) &&
+              symbol[0] === 'ALL'
+            )
+          )
+            ? undefined
+            : symbol
+        }
+      }
+
+      return this._publicСollsСonfAccessors
+        .getPublicData(
+          (args) => super.getStatusMessages(space, args),
+          preparedArgs,
+          {
+            collName: '_getStatusMessages',
+            confName: 'statusMessagesConf',
+            datePropName: 'timestamp'
+          }
+        )
+    }, 'getStatusMessages', args, cb)
   }
 
   /**
    * @override
    */
   getCandles (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getCandles(space, args)
       }
@@ -749,14 +748,14 @@ class FrameworkReportService extends ReportService {
             datePropName: 'mts'
           }
         )
-    }, 'getCandles', cb)
+    }, 'getCandles', args, cb)
   }
 
   /**
    * @override
    */
   getOrderTrades (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._orderTrades.getOrderTrades(
         (args) => super.getOrderTrades(space, args),
         args,
@@ -766,14 +765,14 @@ class FrameworkReportService extends ReportService {
           )
         }
       )
-    }, 'getOrderTrades', cb)
+    }, 'getOrderTrades', args, cb)
   }
 
   /**
    * @override
    */
   getOrders (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -790,14 +789,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getOrders', cb)
+    }, 'getOrders', args, cb)
   }
 
   /**
    * @override
    */
   getActiveOrders (space, args, cb) {
-    return this._responder(() => {
+    return this._privResponder(() => {
       return this._subAccountApiData
         .getDataForSubAccount(
           (args) => super.getActiveOrders(space, args),
@@ -807,14 +806,14 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
-    }, 'getActiveOrders', cb)
+    }, 'getActiveOrders', args, cb)
   }
 
   /**
    * @override
    */
   getMovements (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -831,14 +830,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getMovements', cb)
+    }, 'getMovements', args, cb)
   }
 
   /**
    * @override
    */
   getFundingOfferHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -855,14 +854,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingOfferHistory', cb)
+    }, 'getFundingOfferHistory', args, cb)
   }
 
   /**
    * @override
    */
   getFundingLoanHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -879,14 +878,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingLoanHistory', cb)
+    }, 'getFundingLoanHistory', args, cb)
   }
 
   /**
    * @override
    */
   getFundingCreditHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -903,14 +902,14 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getFundingCreditHistory', cb)
+    }, 'getFundingCreditHistory', args, cb)
   }
 
   /**
    * @override
    */
   getLogins (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return this._subAccountApiData
           .getDataForSubAccount(
@@ -927,14 +926,38 @@ class FrameworkReportService extends ReportService {
         args,
         { isPrepareResponse: true }
       )
-    }, 'getLogins', cb)
+    }, 'getLogins', args, cb)
+  }
+
+  /**
+   * @override
+   */
+  getChangeLogs (space, args, cb) {
+    return this._privResponder(async () => {
+      if (!await this.isSyncModeWithDbData(space, args)) {
+        return this._subAccountApiData
+          .getDataForSubAccount(
+            (args) => super.getChangeLogs(space, args),
+            args,
+            { datePropName: 'mtsCreate' }
+          )
+      }
+
+      checkParams(args, 'paramsSchemaForApi')
+
+      return this._dao.findInCollBy(
+        '_getChangeLogs',
+        args,
+        { isPrepareResponse: true }
+      )
+    }, 'getChangeLogs', args, cb)
   }
 
   /**
    * @override
    */
   getAccountSummary (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       return this._subAccountApiData
         .getDataForSubAccount(
           async (args) => {
@@ -948,14 +971,14 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
-    }, 'getAccountSummary', cb)
+    }, 'getAccountSummary', args, cb)
   }
 
   /**
    * @override
    */
   getWallets (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -963,11 +986,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForWallets')
 
       return this._wallets.getWallets(args)
-    }, 'getWallets', cb)
+    }, 'getWallets', args, cb)
   }
 
   getBalanceHistory (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -975,11 +998,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForBalanceHistoryApi')
 
       return this._balanceHistory.getBalanceHistory(args)
-    }, 'getBalanceHistory', cb)
+    }, 'getBalanceHistory', args, cb)
   }
 
   getWinLoss (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -987,11 +1010,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForWinLossApi')
 
       return this._winLoss.getWinLoss(args)
-    }, 'getWinLoss', cb)
+    }, 'getWinLoss', args, cb)
   }
 
   getPositionsSnapshot (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -999,11 +1022,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
 
       return this._positionsSnapshot.getPositionsSnapshot(args)
-    }, 'getPositionsSnapshot', cb)
+    }, 'getPositionsSnapshot', args, cb)
   }
 
   getFullSnapshotReport (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1011,11 +1034,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
 
       return this._fullSnapshotReport.getFullSnapshotReport(args)
-    }, 'getFullSnapshotReport', cb)
+    }, 'getFullSnapshotReport', args, cb)
   }
 
   getFullTaxReport (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1023,11 +1046,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForFullTaxReportApi')
 
       return this._fullTaxReport.getFullTaxReport(args)
-    }, 'getFullTaxReport', cb)
+    }, 'getFullTaxReport', args, cb)
   }
 
   getTradedVolume (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1035,11 +1058,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForTradedVolumeApi')
 
       return this._tradedVolume.getTradedVolume(args)
-    }, 'getTradedVolume', cb)
+    }, 'getTradedVolume', args, cb)
   }
 
   getFeesReport (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1047,11 +1070,11 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForFeesReportApi')
 
       return this._feesReport.getFeesReport(args)
-    }, 'getFeesReport', cb)
+    }, 'getFeesReport', args, cb)
   }
 
   getPerformingLoan (space, args, cb) {
-    return this._responder(async () => {
+    return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
         throw new DuringSyncMethodAccessError()
       }
@@ -1059,7 +1082,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForPerformingLoanApi')
 
       return this._performingLoan.getPerformingLoan(args)
-    }, 'getPerformingLoan', cb)
+    }, 'getPerformingLoan', args, cb)
   }
 
   /**

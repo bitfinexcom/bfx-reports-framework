@@ -7,7 +7,10 @@ module.exports = (
   TABLES_NAMES,
   wsEventEmitter
 ) => async (state = true) => {
-  await dao.updateStateOf(TABLES_NAMES.SYNC_MODE, !state)
+  await dao.updateRecordOf(
+    TABLES_NAMES.SYNC_MODE,
+    { isEnable: !state }
+  )
   await wsEventEmitter.emitRedirectingRequestsStatusToApi(
     (user) => {
       return (

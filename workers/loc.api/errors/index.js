@@ -35,15 +35,13 @@ class RemoveListElemsError extends BaseError {
   }
 }
 
-class UpdateStateCollError extends BaseError {
+class UpdateRecordError extends BaseError {
   constructor (name) {
-    super(`ERR_CAN_NOT_UPDATE_STATE_OF_${name.toUpperCase()}`)
-  }
-}
+    const recordName = name && typeof name === 'string'
+      ? `_OF_${name.toUpperCase()}`
+      : ''
 
-class UpdateSyncProgressError extends BaseError {
-  constructor (name) {
-    super(`ERR_CAN_NOT_UPDATE_${name.toUpperCase()}`)
+    super(`ERR_CAN_NOT_UPDATE_RECORD_OF_${recordName}`)
   }
 }
 
@@ -113,8 +111,8 @@ class SubAccountCreatingError extends AuthError {
   }
 }
 
-class SubAccountRemovingError extends AuthError {
-  constructor (message = 'ERR_SUB_ACCOUNT_REMOVE_HAS_FAILED') {
+class UserRemovingError extends AuthError {
+  constructor (message = 'ERR_USER_REMOVE_HAS_FAILED') {
     super(message)
   }
 }
@@ -144,8 +142,7 @@ module.exports = {
   AsyncProgressHandlerIsNotFnError,
   AfterAllInsertsHookIsNotHookError,
   RemoveListElemsError,
-  UpdateStateCollError,
-  UpdateSyncProgressError,
+  UpdateRecordError,
   ImplementationError,
   DAOInitializationError,
   ServerAvailabilityError,
@@ -157,7 +154,7 @@ module.exports = {
   DbVersionTypeError,
   MigrationLaunchingError,
   SubAccountCreatingError,
-  SubAccountRemovingError,
+  UserRemovingError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
   GetPublicDataError

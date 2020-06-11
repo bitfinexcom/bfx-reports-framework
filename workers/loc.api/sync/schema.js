@@ -7,12 +7,16 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 4
+const SUPPORTED_DB_VERSION = 12
 
 const { cloneDeep, omit } = require('lodash')
 
 const TABLES_NAMES = require('./dao/tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
+const {
+  CONSTR_FIELD_NAME,
+  TRIGGER_FIELD_NAME
+} = require('./dao/const')
 
 const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
 
@@ -34,10 +38,14 @@ const getMethodCollMap = (methodCollMap = _methodCollMap) => {
 const getModelsMap = (params = {}) => {
   const {
     models = _models,
-    omittedFields = ['__constraints__']
+    omittedFields = [CONSTR_FIELD_NAME, TRIGGER_FIELD_NAME]
   } = { ...params }
 
   return _cloneSchema(models, omittedFields)
+}
+
+const _getModelOf = (tableName) => {
+  return { ...getModelsMap().get(tableName) }
 }
 
 const _models = new Map([
@@ -52,7 +60,11 @@ const _models = new Map([
       active: 'INT',
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
-      username: 'VARCHAR(255)'
+      username: 'VARCHAR(255)',
+      passwordHash: 'VARCHAR(255)',
+      isNotProtected: 'INT',
+      isSubAccount: 'INT',
+      isSubUser: 'INT'
     }
   ],
   [
@@ -61,7 +73,7 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       masterUserId: 'INT NOT NULL',
       subUserId: 'INT NOT NULL',
-      __constraints__: [
+      [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_masterUserId
         FOREIGN KEY (masterUserId)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
@@ -72,7 +84,14 @@ const _models = new Map([
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`
-      ]
+      ],
+      [TRIGGER_FIELD_NAME]: `delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
+        AFTER DELETE ON #{tableName}
+        FOR EACH ROW
+        BEGIN
+          DELETE FROM ${TABLES_NAMES.USERS}
+            WHERE _id = OLD.subUserId;
+        END`
     }
   ],
   [
@@ -92,10 +111,11 @@ const _models = new Map([
       wallet: 'VARCHAR(255)',
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
+      _isStakingPayments: 'INT',
       _isBalanceRecalced: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -119,7 +139,7 @@ const _models = new Map([
       feeCurrency: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -140,7 +160,7 @@ const _models = new Map([
       maker: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -186,7 +206,7 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -210,7 +230,7 @@ const _models = new Map([
       transactionId: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -239,7 +259,7 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -269,7 +289,7 @@ const _models = new Map([
       noClose: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -300,7 +320,7 @@ const _models = new Map([
       positionPair: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -328,7 +348,7 @@ const _models = new Map([
       mtsUpdate: 'BIGINT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -345,7 +365,24 @@ const _models = new Map([
       extraData: 'TEXT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+    }
+  ],
+  [
+    TABLES_NAMES.CHANGE_LOGS,
+    {
+      _id: ID_PRIMARY_KEY,
+      mtsCreate: 'BIGINT',
+      log: 'VARCHAR(255)',
+      ip: 'VARCHAR(255)',
+      userAgent: 'TEXT',
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -386,7 +423,7 @@ const _models = new Map([
       start: 'BIGINT',
       timeframe: 'VARCHAR(255)',
       user_id: 'INT NOT NULL',
-      __constraints__: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
@@ -395,6 +432,13 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.SYMBOLS,
+    {
+      _id: ID_PRIMARY_KEY,
+      pairs: 'VARCHAR(255)'
+    }
+  ],
+  [
+    TABLES_NAMES.INACTIVE_SYMBOLS,
     {
       _id: ID_PRIMARY_KEY,
       pairs: 'VARCHAR(255)'
@@ -414,7 +458,8 @@ const _models = new Map([
       id: 'VARCHAR(255)',
       name: 'VARCHAR(255)',
       pool: 'VARCHAR(255)',
-      explorer: 'TEXT'
+      explorer: 'TEXT',
+      walletFx: 'TEXT'
     }
   ],
   [
@@ -475,8 +520,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mts', 'currency'],
-      fieldsOfUniqueIndex: ['id', 'mts', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.LEDGERS)
     }
   ],
   [
@@ -491,8 +536,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'orderID', 'fee', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.TRADES) }
+      fieldsOfUniqueIndex: ['id', 'symbol', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.TRADES)
     }
   ],
   [
@@ -507,8 +552,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsCreate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsCreate', 'offerID', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_TRADES) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.FUNDING_TRADES)
     }
   ],
   [
@@ -524,8 +569,8 @@ const _methodCollMap = new Map([
       confName: 'publicTradesConf',
       type: 'public:insertable:array:objects',
       fieldsOfIndex: ['mts', '_symbol'],
-      fieldsOfUniqueIndex: ['id', 'mts', '_symbol'],
-      model: { ...getModelsMap().get(TABLES_NAMES.PUBLIC_TRADES) }
+      fieldsOfUniqueIndex: ['id', '_symbol'],
+      model: _getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
   ],
   [
@@ -550,7 +595,7 @@ const _methodCollMap = new Map([
       type: 'public:updatable:array:objects',
       fieldsOfIndex: ['timestamp', 'key'],
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
-      model: { ...getModelsMap().get(TABLES_NAMES.STATUS_MESSAGES) }
+      model: _getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
   ],
   [
@@ -565,8 +610,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.ORDERS) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.ORDERS)
     }
   ],
   [
@@ -581,8 +626,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdated', 'currency'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdated', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.MOVEMENTS) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.MOVEMENTS)
     }
   ],
   [
@@ -597,8 +642,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_OFFER_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
     }
   ],
   [
@@ -613,8 +658,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_LOAN_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
     }
   ],
   [
@@ -629,8 +674,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.FUNDING_CREDIT_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
     }
   ],
   [
@@ -645,8 +690,8 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'mtsUpdate', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.POSITIONS_HISTORY) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }
   ],
   [
@@ -661,8 +706,24 @@ const _methodCollMap = new Map([
       start: 0,
       type: 'insertable:array:objects',
       fieldsOfIndex: ['time'],
-      fieldsOfUniqueIndex: ['id', 'time', 'user_id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.LOGINS) }
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.LOGINS)
+    }
+  ],
+  [
+    '_getChangeLogs',
+    {
+      name: ALLOWED_COLLS.CHANGE_LOGS,
+      maxLimit: 10000,
+      dateFieldName: 'mtsCreate',
+      symbolFieldName: null,
+      sort: [['mtsCreate', -1]],
+      hasNewData: false,
+      start: 0,
+      type: 'insertable:array:objects',
+      fieldsOfIndex: ['mtsCreate'],
+      fieldsOfUniqueIndex: ['mtsCreate', 'log', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.CHANGE_LOGS)
     }
   ],
   [
@@ -679,7 +740,7 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfIndex: null,
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
-      model: { ...getModelsMap().get(TABLES_NAMES.TICKERS_HISTORY) }
+      model: _getModelOf(TABLES_NAMES.TICKERS_HISTORY)
     }
   ],
   [
@@ -694,7 +755,7 @@ const _methodCollMap = new Map([
         sort: [['mts', -1], ['id', -1]]
       },
       type: 'hidden:insertable:array:objects',
-      model: { ...getModelsMap().get(TABLES_NAMES.LEDGERS) },
+      model: _getModelOf(TABLES_NAMES.LEDGERS),
       dataStructureConverter: (accum, {
         wallet: type,
         currency,
@@ -724,7 +785,19 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ...getModelsMap().get(TABLES_NAMES.SYMBOLS) }
+      model: _getModelOf(TABLES_NAMES.SYMBOLS)
+    }
+  ],
+  [
+    '_getInactiveSymbols',
+    {
+      name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
+      maxLimit: 10000,
+      field: 'pairs',
+      sort: [['pairs', 1]],
+      hasNewData: true,
+      type: 'public:updatable:array',
+      model: _getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
     }
   ],
   [
@@ -736,7 +809,7 @@ const _methodCollMap = new Map([
       sort: [['pairs', 1]],
       hasNewData: true,
       type: 'public:updatable:array',
-      model: { ...getModelsMap().get(TABLES_NAMES.FUTURES) }
+      model: _getModelOf(TABLES_NAMES.FUTURES)
     }
   ],
   [
@@ -749,7 +822,7 @@ const _methodCollMap = new Map([
       hasNewData: true,
       type: 'public:updatable:array:objects',
       fieldsOfUniqueIndex: ['id'],
-      model: { ...getModelsMap().get(TABLES_NAMES.CURRENCIES) }
+      model: _getModelOf(TABLES_NAMES.CURRENCIES)
     }
   ],
   [
@@ -767,7 +840,7 @@ const _methodCollMap = new Map([
       type: 'public:insertable:array:objects',
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['_symbol', '_timeframe', 'mts'],
-      model: { ...getModelsMap().get(TABLES_NAMES.CANDLES) }
+      model: _getModelOf(TABLES_NAMES.CANDLES)
     }
   ]
 ])

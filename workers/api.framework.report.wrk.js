@@ -25,6 +25,13 @@ const argv = require('yargs')
   .option('grape', {
     type: 'string'
   })
+  .option('secretKey', {
+    type: 'string',
+    default: 'secretKey'
+  })
+  .option('schedulerRule', {
+    type: 'string'
+  })
   .help('help')
   .argv
 
@@ -78,7 +85,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       'syncMode',
       'isSchedulerEnabled',
       'dbDriver',
-      'wsPort'
+      'wsPort',
+      'secretKey',
+      'schedulerRule'
     ]
   ) {
     super.setArgsOfCommandLineToConf()
@@ -135,11 +144,16 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       return
     }
 
-    const { rule } = require(path.join(
-      this.ctx.root,
-      'config',
-      'schedule.json'
-    ))
+    const { rule } = (
+      conf.schedulerRule &&
+      typeof conf.schedulerRule === 'string'
+    )
+      ? { rule: conf.schedulerRule }
+      : require(path.join(
+        this.ctx.root,
+        'config',
+        'schedule.json'
+      ))
     const name = 'sync'
 
     this.scheduler_sync.add(name, () => sync.start(), rule)

@@ -4,16 +4,15 @@ const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
-const {
-  ObjectMappingError
-} = require('../errors')
-
 const checkParamsAuth = (args) => {
+  const { auth } = { ...args }
+  const { apiKey, apiSecret } = { ...auth }
+
   if (
-    !args.auth ||
-    typeof args.auth !== 'object' ||
-    typeof args.auth.apiKey !== 'string' ||
-    typeof args.auth.apiSecret !== 'string'
+    !apiKey ||
+    typeof apiKey !== 'string' ||
+    !apiSecret ||
+    typeof apiSecret !== 'string'
   ) {
     throw new AuthError()
   }
@@ -59,59 +58,8 @@ const collObjToArr = (coll = [], fieldName) => {
   return res
 }
 
-const refreshObj = (
-  oldObj,
-  newObj,
-  currObj,
-  props = []
-) => {
-  props.forEach(prop => {
-    if (
-      currObj[prop] &&
-      oldObj[prop] !== currObj[prop]
-    ) {
-      newObj[prop] = currObj[prop]
-    }
-  })
-}
-
-const mapObjBySchema = (obj, schema = {}) => {
-  const err = new ObjectMappingError()
-
-  if (
-    !obj ||
-    typeof obj !== 'object' ||
-    !schema ||
-    typeof schema !== 'object'
-  ) {
-    throw err
-  }
-
-  const map = Array.isArray(schema)
-    ? schema.map(item => [item, null])
-    : Object.entries(schema)
-
-  return map.reduce((accum, [key, val]) => {
-    const _val = val && typeof val === 'string' ? val : key
-
-    if (
-      !key ||
-      typeof key !== 'string' ||
-      typeof obj[_val] === 'undefined'
-    ) {
-      throw err
-    }
-
-    accum[key] = obj[_val]
-
-    return accum
-  }, {})
-}
-
 module.exports = {
   checkParamsAuth,
   tryParseJSON,
-  collObjToArr,
-  refreshObj,
-  mapObjBySchema
+  collObjToArr
 }

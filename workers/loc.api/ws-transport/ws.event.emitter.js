@@ -13,12 +13,10 @@ class WSEventEmitter {
     this.wsTransport = wsTransport
   }
 
-  isInvalidAuth (args = {}, { apiKey, apiSecret } = {}) {
-    const { auth = {} } = { ...args }
-
+  isInvalidAuth (auth = {}, { _id, email } = {}) {
     return (
-      auth.apiKey !== apiKey ||
-      auth.apiSecret !== apiSecret
+      auth._id !== _id ||
+      auth.email !== email
     )
   }
 

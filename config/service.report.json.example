@@ -19,5 +19,6 @@
   "isLoggerDisabled": false,
   "dbDriver": "sqlite",
   "syncMode": true,
+  "secretKey": "secretKey",
   "wsPort": 1455
 }

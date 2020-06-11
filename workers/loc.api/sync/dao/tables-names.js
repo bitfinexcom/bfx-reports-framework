@@ -14,6 +14,7 @@ module.exports = {
   TICKERS_HISTORY: 'tickersHistory',
   POSITIONS_HISTORY: 'positionsHistory',
   SYMBOLS: 'symbols',
+  INACTIVE_SYMBOLS: 'inactiveSymbols',
   FUTURES: 'futures',
   CURRENCIES: 'currencies',
   CANDLES: 'candles',
@@ -24,5 +25,6 @@ module.exports = {
   PROGRESS: 'progress',
   SYNC_QUEUE: 'syncQueue',
   LOGINS: 'logins',
+  CHANGE_LOGS: 'changeLogs',
   SUB_ACCOUNTS: 'subAccounts'
 }

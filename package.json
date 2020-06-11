@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
@@ -15,8 +15,10 @@
     "inversify": "^5.0.1",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "yargs": "^13.2.4",
-    "sqlite3": "4.1.1"
+    "scrypt-js": "^3.0.0",
+    "sqlite3": "4.1.1",
+    "uuid": "^8.0.0",
+    "yargs": "^13.2.4"
   },
   "devDependencies": {
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
@@ -70,7 +72,13 @@
       }
     },
     "test": {
-      "command": "standard && mocha './test/**/*.spec.js' --config .mocharc.json",
+      "command": "standard && mocha './workers/**/__test__/*.spec.js' './test/**/*.spec.js' --config .mocharc.json",
+      "env": {
+        "NODE_ENV": "test"
+      }
+    },
+    "unit": {
+      "command": "mocha './workers/**/__test__/*.spec.js' --config .mocharc.json",
       "env": {
         "NODE_ENV": "test"
       }
@@ -112,6 +120,7 @@
     "startBackEnd": "better-npm-run start:back",
     "startExpress": "better-npm-run start:express",
     "startUI": "better-npm-run start:ui",
-    "start": "better-npm-run start:all"
+    "start": "better-npm-run start:all",
+    "unit": "better-npm-run unit"
   }
 }

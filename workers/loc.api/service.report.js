@@ -57,8 +57,16 @@ class ReportService extends BaseReportService {
     return super.getLogins(null, args)
   }
 
+  _getChangeLogs (args) {
+    return super.getChangeLogs(null, args)
+  }
+
   _getCandles (args) {
     return super.getCandles(null, args)
+  }
+
+  _getPositionsAudit (args) {
+    return super.getPositionsAudit(null, args)
   }
 }
 

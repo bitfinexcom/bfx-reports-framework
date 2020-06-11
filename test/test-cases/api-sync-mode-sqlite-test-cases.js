@@ -20,12 +20,16 @@ module.exports = (
 ) => {
   const {
     basePath,
-    auth,
-    email,
+    auth: {
+      email,
+      password,
+      isSubAccount
+    },
     date,
     end,
     start
   } = params
+  const auth = { token: '' }
 
   it('it should be successfully performed by the pingApi method', async function () {
     this.timeout(5000)
@@ -49,7 +53,7 @@ module.exports = (
 
     for (const args of argsArr) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send(args)
         .expect('Content-Type', /json/)
@@ -65,7 +69,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         method: 'isSyncModeConfig',
@@ -79,15 +83,19 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the login method', async function () {
+  it('it should be successfully performed by the signIn method', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
-        auth,
-        method: 'login',
+        auth: {
+          email,
+          password,
+          isSubAccount
+        },
+        method: 'signIn',
         id: 5
       })
       .expect('Content-Type', /json/)
@@ -95,18 +103,23 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(res.body.result === email)
+    assert.isObject(res.body.result)
+    assert.strictEqual(res.body.result.email, email)
+    assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+    assert.isString(res.body.result.token)
+
+    auth.token = res.body.result.token
   })
 
-  it('it should be successfully performed by the checkAuthInDb method', async function () {
+  it('it should be successfully performed by the signIn method by token', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
-        method: 'checkAuthInDb',
+        method: 'signIn',
         id: 5
       })
       .expect('Content-Type', /json/)
@@ -114,14 +127,213 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(res.body.result === email)
+    assert.isObject(res.body.result)
+    assert.strictEqual(res.body.result.email, email)
+    assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+    assert.strictEqual(res.body.result.token, auth.token)
+  })
+
+  it('it should not be successfully performed by the signIn method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth: {
+          email,
+          password: 'wrong-password',
+          isSubAccount
+        },
+        method: 'signIn',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(401)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 401)
+    assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+    assert.propertyVal(res.body, 'id', 5)
+  })
+
+  it('it should not be successfully performed by the signIn method by token', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth: { token: 'wrong-token' },
+        method: 'signIn',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(401)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 401)
+    assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+    assert.propertyVal(res.body, 'id', 5)
+  })
+
+  it('it should not be successfully performed by the verifyUser method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth: { token: 'wrong-token' },
+        method: 'verifyUser',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(401)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 401)
+    assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+    assert.propertyVal(res.body, 'id', 5)
+  })
+
+  it('it should be successfully performed by the signOut method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'signOut',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
+  })
+
+  it('it should not be successfully performed by the verifyUser method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'verifyUser',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(401)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 401)
+    assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+    assert.propertyVal(res.body, 'id', 5)
+  })
+
+  it('it should be successfully performed by the signIn method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth: {
+          email,
+          password,
+          isSubAccount
+        },
+        method: 'signIn',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.strictEqual(res.body.result.email, email)
+    assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+    assert.isString(res.body.result.token)
+
+    auth.token = res.body.result.token
+  })
+
+  it('it should be successfully performed by the verifyUser method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'verifyUser',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isNumber(res.body.result.id)
+    assert.isString(res.body.result.username)
+    assert.isString(res.body.result.timezone)
+    assert.strictEqual(res.body.result.email, email)
+    assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+    assert.isArray(res.body.result.subUsers)
+
+    res.body.result.subUsers.forEach((subUser) => {
+      assert.isObject(subUser)
+      assert.isNumber(subUser.id)
+      assert.isString(subUser.username)
+      assert.isString(subUser.timezone)
+      assert.isString(subUser.email)
+      assert.isBoolean(subUser.isSubAccount)
+      assert.isNotOk(subUser.isSubAccount)
+    })
+  })
+
+  it('it should be successfully performed by the getUsers method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        method: 'getUsers',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+
+    res.body.result.forEach((user) => {
+      assert.isObject(user)
+      assert.isString(user.email)
+      assert.isBoolean(user.isSubAccount)
+      assert.isBoolean(user.isNotProtected)
+    })
   })
 
   it('it should be successfully performed by the enableSyncMode method', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -140,7 +352,7 @@ module.exports = (
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -162,7 +374,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         method: 'isSchedulerEnabled',
@@ -181,7 +393,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -210,7 +422,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -234,7 +446,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -263,7 +475,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -293,7 +505,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -322,7 +534,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -350,7 +562,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -374,7 +586,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -403,7 +615,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -433,7 +645,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -462,7 +674,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -490,7 +702,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -516,7 +728,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -545,7 +757,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -569,7 +781,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -596,7 +808,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -625,7 +837,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -650,7 +862,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -705,7 +917,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -734,7 +946,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -784,7 +996,7 @@ module.exports = (
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -807,7 +1019,7 @@ module.exports = (
 
     while (true) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -836,7 +1048,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -849,46 +1061,6 @@ module.exports = (
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
     assert.isOk(res.body.result)
-  })
-
-  it('it should be successfully auth', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/check-auth`)
-      .type('json')
-      .send({
-        auth,
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'result', true)
-    assert.propertyVal(res.body, 'id', 5)
-  })
-
-  it('it should not be successfully auth', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/check-auth`)
-      .type('json')
-      .send({
-        auth: {
-          apiKey: '',
-          apiSecret: ''
-        }
-      })
-      .expect('Content-Type', /json/)
-      .expect(401)
-
-    assert.isObject(res.body)
-    assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 401)
-    assert.propertyVal(res.body.error, 'message', 'Unauthorized')
-    assert.propertyVal(res.body, 'id', null)
   })
 
   it('it should be successfully check, csv is stored locally', async function () {
@@ -909,30 +1081,11 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should be successfully performed by the getEmail method', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/get-data`)
-      .type('json')
-      .send({
-        auth,
-        method: 'getEmail',
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(res.body.result === email)
-  })
-
   it('it should be successfully performed by the getUsersTimeConf method', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -952,7 +1105,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -967,8 +1120,10 @@ module.exports = (
     assert.isObject(res.body.result)
     assert.isArray(res.body.result.pairs)
     assert.isArray(res.body.result.currencies)
+    assert.isArray(res.body.result.inactiveSymbols)
     assert.lengthOf(res.body.result.pairs, 13)
     assert.lengthOf(res.body.result.currencies, 11)
+    assert.lengthOf(res.body.result.inactiveSymbols, 2)
 
     res.body.result.pairs.forEach(item => {
       assert.isString(item)
@@ -984,7 +1139,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1022,7 +1177,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1070,7 +1225,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1120,7 +1275,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1168,7 +1323,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1201,7 +1356,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1250,7 +1405,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1300,7 +1455,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1351,7 +1506,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1407,7 +1562,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1443,7 +1598,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1487,7 +1642,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1531,7 +1686,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1575,7 +1730,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1616,7 +1771,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1653,7 +1808,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1690,7 +1845,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1727,7 +1882,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1754,7 +1909,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1791,7 +1946,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1828,7 +1983,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1865,7 +2020,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1915,7 +2070,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1943,7 +2098,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -1993,7 +2148,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2045,7 +2200,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2089,7 +2244,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2132,7 +2287,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2169,7 +2324,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2191,7 +2346,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2224,11 +2379,47 @@ module.exports = (
     assert.isObject(resItem.extraData)
   })
 
+  it('it should be successfully performed by the getChangeLogs method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getChangeLogs',
+        params: {
+          start: 0,
+          end,
+          limit: 2
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+    assert.isNumber(res.body.result.nextPage)
+
+    const resItem = res.body.result.res[0]
+
+    assert.isObject(resItem)
+    assert.containsAllKeys(resItem, [
+      'mtsCreate',
+      'log',
+      'ip',
+      'userAgent'
+    ])
+  })
+
   it('it should not be successfully performed by the getLedgers method, a greater limit is needed', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2255,7 +2446,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2298,7 +2489,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2322,7 +2513,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2359,7 +2550,7 @@ module.exports = (
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2395,7 +2586,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2422,7 +2613,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2449,7 +2640,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2477,7 +2668,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2501,7 +2692,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2529,7 +2720,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2556,7 +2747,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2583,7 +2774,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2610,7 +2801,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2637,7 +2828,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2664,7 +2855,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2689,7 +2880,7 @@ module.exports = (
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2718,7 +2909,7 @@ module.exports = (
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2750,7 +2941,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2775,7 +2966,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2804,7 +2995,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2833,7 +3024,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2859,7 +3050,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2882,7 +3073,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2908,7 +3099,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2935,7 +3126,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2962,7 +3153,7 @@ module.exports = (
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -2981,11 +3172,37 @@ module.exports = (
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
 
+  it('it should be successfully performed by the getChangeLogsCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getChangeLogsCsv',
+        params: {
+          end,
+          start,
+          limit: 1000,
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
   it('it should not be successfully auth by the getLedgersCsv method', async function () {
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         method: 'getLedgersCsv',
@@ -3022,7 +3239,7 @@ module.exports = (
 
     for (let i = 0; i < count; i += 1) {
       const res = await agent
-        .post(`${basePath}/get-data`)
+        .post(`${basePath}/json-rpc`)
         .type('json')
         .send({
           auth,
@@ -3052,7 +3269,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -3071,7 +3288,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         method: 'isSchedulerEnabled',
@@ -3089,7 +3306,7 @@ module.exports = (
     this.timeout(60000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -3108,7 +3325,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -3127,7 +3344,7 @@ module.exports = (
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
@@ -3142,15 +3359,15 @@ module.exports = (
     assert.isNotOk(res.body.result)
   })
 
-  it('it should be successfully performed by the logout method', async function () {
+  it('it should be successfully performed by the removeUser method', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
-        method: 'logout',
+        method: 'removeUser',
         id: 5
       })
       .expect('Content-Type', /json/)
@@ -3158,18 +3375,19 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
-  it('it should not be successfully performed by the enableScheduler method, unauth', async function () {
+  it('it should not be successfully performed by the verifyUser method', async function () {
     this.timeout(5000)
 
     const res = await agent
-      .post(`${basePath}/get-data`)
+      .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
         auth,
-        method: 'enableScheduler',
+        method: 'verifyUser',
         id: 5
       })
       .expect('Content-Type', /json/)

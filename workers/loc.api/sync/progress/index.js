@@ -38,7 +38,10 @@ class Progress extends EventEmitter {
       : progress
 
     try {
-      await this.dao.updateProgress(_progress)
+      await this.dao.updateRecordOf(
+        this.TABLES_NAMES.PROGRESS,
+        { value: JSON.stringify(_progress) }
+      )
       this.emit(_progress)
       await this.wsEventEmitter.emitProgress(() => _progress)
     } catch (e) {
@@ -56,7 +59,7 @@ class Progress extends EventEmitter {
 
   async getProgress () {
     const progress = await this.dao
-      .getFirstElemInCollBy(this.TABLES_NAMES.PROGRESS)
+      .getElemInCollBy(this.TABLES_NAMES.PROGRESS)
 
     return (
       !isEmpty(progress) &&
