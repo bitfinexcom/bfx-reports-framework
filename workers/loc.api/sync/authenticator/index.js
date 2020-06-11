@@ -15,7 +15,8 @@ const TYPES = require('../../di/types')
 const { serializeVal } = require('../dao/helpers')
 const { isSubAccountApiKeys } = require('../../helpers')
 const {
-  UserRemovingError
+  UserRemovingError,
+  UserWasPreviouslyStoredInDbError
 } = require('../../errors')
 
 class Authenticator {
@@ -84,6 +85,13 @@ class Authenticator {
       ? { ...auth }
       : await this.rService._checkAuthInApi(args)
 
+    if (
+      !email ||
+      typeof email !== 'string'
+    ) {
+      throw new AuthError()
+    }
+
     const username = this.generateSubUserName(
       { masterUserId, username: uName },
       isSubAccount,
@@ -98,15 +106,11 @@ class Authenticator {
       )
 
     if (
-      !email ||
-      typeof email !== 'string' ||
-      (
-        userFromDb &&
-        typeof userFromDb === 'object' &&
-        Number.isInteger(userFromDb._id)
-      )
+      userFromDb &&
+      typeof userFromDb === 'object' &&
+      Number.isInteger(userFromDb._id)
     ) {
-      throw new AuthError()
+      throw new UserWasPreviouslyStoredInDbError()
     }
 
     const [
