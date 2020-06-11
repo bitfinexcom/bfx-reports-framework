@@ -20,6 +20,7 @@ const startWorkers = (
     wsPort: 23381,
     syncMode: true,
     isSchedulerEnabled: true,
+    schedulerRule: '0 */5 * * *',
     ...conf
   }
 

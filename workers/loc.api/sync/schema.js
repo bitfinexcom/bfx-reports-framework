@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 11
+const SUPPORTED_DB_VERSION = 12
 
 const { cloneDeep, omit } = require('lodash')
 
@@ -458,7 +458,8 @@ const _models = new Map([
       id: 'VARCHAR(255)',
       name: 'VARCHAR(255)',
       pool: 'VARCHAR(255)',
-      explorer: 'TEXT'
+      explorer: 'TEXT',
+      walletFx: 'TEXT'
     }
   ],
   [

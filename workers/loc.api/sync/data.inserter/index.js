@@ -1090,7 +1090,36 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const _collСonfig = uniqueLedgersSymbs.map(({ currency }) => {
+    const currenciesSynonymous = await this.currencyConverter
+      .getCurrenciesSynonymous()
+
+    const uniqueSymbs = uniqueLedgersSymbs.reduce((accum, ledger) => {
+      const { currency } = { ...ledger }
+
+      if (!currency) {
+        return accum
+      }
+
+      accum.push(currency)
+
+      const synonymous = currenciesSynonymous.get(currency)
+
+      if (!synonymous) {
+        return accum
+      }
+
+      const uniqueSynonymous = synonymous
+        .filter(([syn]) => (
+          accum.every((symb) => symb !== syn)
+        ))
+        .map(([syn]) => syn)
+
+      accum.push(...uniqueSynonymous)
+
+      return accum
+    }, [])
+
+    const _collСonfig = uniqueSymbs.map((currency) => {
       const _currency = typeof currency === 'string'
         ? currency.replace(/F0$/i, '')
         : currency
