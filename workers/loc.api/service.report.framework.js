@@ -95,6 +95,19 @@ class FrameworkReportService extends ReportService {
     }, 'signOut', cb)
   }
 
+  recoverPassword (space, args, cb) {
+    return this._responder(() => {
+      const { auth } = { ...args }
+      const { isSubAccount } = { ...auth }
+
+      if (isSubAccount) {
+        return this._subAccount.recoverPassword(args)
+      }
+
+      return this._authenticator.recoverPassword(args)
+    }, 'recoverPassword', cb)
+  }
+
   verifyUser (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.verifyUser(

@@ -198,6 +198,22 @@ class SubAccount {
       }
     })
   }
+
+  // TODO:
+  async recoverPassword (args) {
+    const { auth, params } = { ...args }
+    const {
+      apiKey,
+      apiSecret,
+      newPassword,
+      isSubAccount,
+      isNotProtected
+    } = { ...auth }
+    const {
+      subAccountPassword,
+      subAccountApiKeys
+    } = { ...params }
+  }
 }
 
 decorate(injectable(), SubAccount)
