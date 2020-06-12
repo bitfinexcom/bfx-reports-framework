@@ -314,6 +314,138 @@ class Authenticator {
     return true
   }
 
+  async recoverPassword (args, params) {
+    const { auth } = { ...args }
+    const {
+      apiKey,
+      apiSecret,
+      newPassword,
+      isSubAccount,
+      isNotProtected
+    } = { ...auth }
+    const password = isNotProtected
+      ? this.crypto.getSecretKey()
+      : newPassword
+    const {
+      active = true,
+      isDataFromDb = true,
+      isReturnedUser
+    } = { ...params }
+
+    if (
+      !apiKey ||
+      typeof apiKey !== 'string' ||
+      !apiSecret ||
+      typeof apiSecret !== 'string' ||
+      !password ||
+      typeof password !== 'string'
+    ) {
+      throw new AuthError()
+    }
+
+    const {
+      id,
+      email,
+      timezone,
+      username: uName
+    } = await this.rService._checkAuthInApi(args)
+
+    if (
+      !email ||
+      typeof email !== 'string'
+    ) {
+      throw new AuthError()
+    }
+
+    const userFromDb = await this.getUser(
+      {
+        email,
+        isSubAccount,
+        isSubUser: false,
+        isFilledSubUsers: true
+      }
+    )
+
+    if (
+      !userFromDb ||
+      typeof userFromDb !== 'object' ||
+      !Number.isInteger(userFromDb._id)
+    ) {
+      throw new AuthError()
+    }
+
+    const [
+      encryptedApiKey,
+      encryptedApiSecret,
+      passwordHash
+    ] = await Promise.all([
+      this.crypto.encrypt(apiKey, password),
+      this.crypto.encrypt(apiSecret, password),
+      this.crypto.hashPassword(password)
+    ])
+
+    const username = this.generateSubUserName(
+      { username: uName },
+      isSubAccount
+    )
+    const freshUserData = {
+      id,
+      timezone,
+      username,
+      email,
+      apiKey: encryptedApiKey,
+      apiSecret: encryptedApiSecret,
+      passwordHash,
+      active: active === null
+        ? userFromDb.active
+        : active,
+      isDataFromDb: isDataFromDb === null
+        ? userFromDb.isDataFromDb
+        : isDataFromDb
+    }
+
+    const res = await this.dao.updateCollBy(
+      this.TABLES_NAMES.USERS,
+      { _id: userFromDb._id, email },
+      {
+        ...freshUserData,
+        active: serializeVal(freshUserData.active),
+        isDataFromDb: serializeVal(freshUserData.isDataFromDb)
+      }
+    )
+
+    if (res && res.changes < 1) {
+      throw new AuthError()
+    }
+
+    const refreshedUser = {
+      ...userFromDb,
+      ...freshUserData
+    }
+    const returnedUser = isReturnedUser
+      ? refreshedUser
+      : {}
+
+    const existedToken = this.getUserSessionByEmail(
+      { email, isSubAccount }
+    ).token
+    const createdToken = (
+      existedToken &&
+      typeof existedToken === 'string'
+    )
+      ? existedToken
+      : uuidv4()
+
+    this.setUserSession({ ...refreshedUser, token: createdToken })
+
+    return {
+      ...returnedUser,
+      email,
+      isSubAccount,
+      token: createdToken
+    }
+  }
+
   async verifyUser (args, params) {
     const { auth } = { ...args }
     const {
