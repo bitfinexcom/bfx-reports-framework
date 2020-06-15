@@ -117,6 +117,12 @@ class UserRemovingError extends AuthError {
   }
 }
 
+class UserWasPreviouslyStoredInDbError extends AuthError {
+  constructor (message = 'ERR_USER_WAS_PREVIOUSLY_STORED_IN_DB') {
+    super(message)
+  }
+}
+
 class SubAccountLedgersBalancesRecalcError extends BaseError {
   constructor (message = 'ERR_SUB_ACCOUNT_LEDGERS_BALANCES_RECALC_HAS_FAILED') {
     super(message)
@@ -155,6 +161,7 @@ module.exports = {
   MigrationLaunchingError,
   SubAccountCreatingError,
   UserRemovingError,
+  UserWasPreviouslyStoredInDbError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
   GetPublicDataError
