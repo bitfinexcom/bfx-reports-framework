@@ -320,8 +320,8 @@ class Authenticator {
       apiKey,
       apiSecret,
       newPassword,
-      isSubAccount,
-      isNotProtected
+      isSubAccount = false,
+      isNotProtected = false
     } = { ...auth }
     const password = isNotProtected
       ? this.crypto.getSecretKey()
@@ -329,7 +329,9 @@ class Authenticator {
     const {
       active = true,
       isDataFromDb = true,
-      isReturnedUser
+      isReturnedUser = false,
+      isNotInTrans = false,
+      isSubUser = false
     } = { ...params }
 
     if (
@@ -338,7 +340,8 @@ class Authenticator {
       !apiSecret ||
       typeof apiSecret !== 'string' ||
       !password ||
-      typeof password !== 'string'
+      typeof password !== 'string' ||
+      (isSubAccount && isSubUser)
     ) {
       throw new AuthError()
     }
@@ -361,9 +364,12 @@ class Authenticator {
       {
         email,
         isSubAccount,
-        isSubUser: false
+        isSubUser
       },
-      { isFilledSubUsers: true }
+      {
+        isFilledSubUsers: true,
+        isNotInTrans
+      }
     )
 
     if (
@@ -386,7 +392,8 @@ class Authenticator {
 
     const username = this.generateSubUserName(
       { username: uName },
-      isSubAccount
+      isSubAccount,
+      isSubUser
     )
     const freshUserData = {
       id,
@@ -425,6 +432,10 @@ class Authenticator {
     const returnedUser = isReturnedUser
       ? refreshedUser
       : {}
+
+    if (isSubUser) {
+      return returnedUser
+    }
 
     const existedToken = this.getUserSessionByEmail(
       { email, isSubAccount }
