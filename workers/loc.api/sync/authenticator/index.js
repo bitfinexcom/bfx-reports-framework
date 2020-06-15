@@ -361,9 +361,9 @@ class Authenticator {
       {
         email,
         isSubAccount,
-        isSubUser: false,
-        isFilledSubUsers: true
-      }
+        isSubUser: false
+      },
+      { isFilledSubUsers: true }
     )
 
     if (
