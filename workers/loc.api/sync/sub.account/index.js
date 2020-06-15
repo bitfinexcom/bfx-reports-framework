@@ -1,20 +1,22 @@
 'use strict'
 
 const {
+  decorate,
+  injectable,
+  inject
+} = require('inversify')
+const {
+  AuthError
+} = require('bfx-report/workers/loc.api/errors')
+
+const TYPES = require('../../di/types')
+const {
   isSubAccountApiKeys,
   getSubAccountAuthFromAuth
 } = require('../../helpers')
 const {
   SubAccountCreatingError
 } = require('../../errors')
-
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../di/types')
 
 class SubAccount {
   constructor (
@@ -199,7 +201,6 @@ class SubAccount {
     })
   }
 
-  // TODO:
   async recoverPassword (args) {
     const { auth, params } = { ...args }
     const {
@@ -210,9 +211,83 @@ class SubAccount {
       isNotProtected
     } = { ...auth }
     const {
-      subAccountPassword,
       subAccountApiKeys
     } = { ...params }
+
+    if (
+      !isSubAccount ||
+      !Array.isArray(subAccountApiKeys) ||
+      subAccountApiKeys.length === 0
+    ) {
+      throw new AuthError()
+    }
+
+    return this.dao.executeQueriesInTrans(async () => {
+      const subAccount = await this.authenticator
+        .recoverPassword(
+          args,
+          {
+            isReturnedUser: true,
+            isNotInTrans: true
+          }
+        )
+      const {
+        subUsers,
+        email,
+        isSubAccount,
+        token
+      } = { ...subAccount }
+
+      if (
+        !Array.isArray(subUsers) ||
+        subUsers.length === 0
+      ) {
+        throw new AuthError()
+      }
+
+      const subUsersAuth = [
+        ...subAccountApiKeys,
+        { apiKey, apiSecret }
+      ]
+
+      for (const subUserAuth of subUsersAuth) {
+        const {
+          apiKey,
+          apiSecret
+        } = { ...subUserAuth }
+        const refreshedSubUser = await this.authenticator
+          .recoverPassword(
+            {
+              auth: {
+                apiKey,
+                apiSecret,
+                newPassword,
+                isNotProtected
+              }
+            },
+            {
+              isReturnedUser: true,
+              isNotInTrans: true,
+              isSubUser: true
+            }
+          )
+        const isNotExistInDb = subUsers.every((subUser) => {
+          const { _id } = { ...subUser }
+
+          return refreshedSubUser._id !== _id
+        })
+
+        if (isNotExistInDb) {
+          throw new AuthError()
+        }
+      }
+
+      return {
+        email,
+        isSubAccount,
+        token
+      }
+    })
   }
 }
 
