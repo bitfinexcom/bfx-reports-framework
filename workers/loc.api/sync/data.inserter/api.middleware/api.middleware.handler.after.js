@@ -6,7 +6,7 @@ const {
   inject
 } = require('inversify')
 
-const TYPES = require('../../di/types')
+const TYPES = require('../../../di/types')
 const {
   addPropsToResIfExist,
   getFlagsFromLedgerDescription

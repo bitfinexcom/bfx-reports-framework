@@ -13,12 +13,8 @@ const {
   compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
-  getAllowedCollsNames,
-  addPropsToResIfExist
+  getAllowedCollsNames
 } = require('./utils')
-const getFlagsFromLedgerDescription = require(
-  './get-flags-from-ledger-description'
-)
 
 module.exports = {
   searchClosePriceAndSumAmount,
@@ -29,7 +25,5 @@ module.exports = {
   compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
-  getAllowedCollsNames,
-  addPropsToResIfExist,
-  getFlagsFromLedgerDescription
+  getAllowedCollsNames
 }

@@ -31,7 +31,7 @@ const {
   searchClosePriceAndSumAmount
 } = require('../sync/data.inserter/helpers')
 const ApiMiddlewareHandlerAfter = require(
-  '../sync/data.inserter/api.middleware.handler.after'
+  '../sync/data.inserter/api.middleware/api.middleware.handler.after'
 )
 const ApiMiddleware = require(
   '../sync/data.inserter/api.middleware'
