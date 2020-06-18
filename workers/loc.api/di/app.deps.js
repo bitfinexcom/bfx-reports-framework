@@ -36,6 +36,7 @@ const ApiMiddlewareHandlerAfter = require(
 const ApiMiddleware = require(
   '../sync/data.inserter/api.middleware'
 )
+const DataChecker = require('../sync/data.inserter/data.checker')
 const DataInserter = require('../sync/data.inserter')
 const ConvertCurrencyHook = require(
   '../sync/data.inserter/hooks/convert.currency.hook'
@@ -218,6 +219,8 @@ module.exports = ({
       .to(ApiMiddlewareHandlerAfter)
     bind(TYPES.ApiMiddleware)
       .to(ApiMiddleware)
+    bind(TYPES.DataChecker)
+      .to(DataChecker)
     bind(TYPES.DataInserter)
       .to(DataInserter)
     bind(TYPES.DataInserterFactory)

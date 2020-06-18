@@ -10,6 +10,7 @@ module.exports = {
   GRC_BFX_OPTS: Symbol.for('GRC_BFX_OPTS'),
   ApiMiddlewareHandlerAfter: Symbol.for('ApiMiddlewareHandlerAfter'),
   ApiMiddleware: Symbol.for('ApiMiddleware'),
+  DataChecker: Symbol.for('DataChecker'),
   DataInserter: Symbol.for('DataInserter'),
   DataInserterFactory: Symbol.for('DataInserterFactory'),
   WSTransport: Symbol.for('WSTransport'),

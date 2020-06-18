@@ -52,7 +52,8 @@ class DataInserter extends EventEmitter {
     FOREX_SYMBS,
     authenticator,
     convertCurrencyHook,
-    recalcSubAccountLedgersBalancesHook
+    recalcSubAccountLedgersBalancesHook,
+    dataChecker
   ) {
     super()
 
@@ -67,6 +68,7 @@ class DataInserter extends EventEmitter {
     this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
+    this.dataChecker = dataChecker
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -1295,5 +1297,6 @@ decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
 decorate(inject(TYPES.Authenticator), DataInserter, 8)
 decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 9)
 decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 10)
+decorate(inject(TYPES.DataChecker), DataInserter, 11)
 
 module.exports = DataInserter
