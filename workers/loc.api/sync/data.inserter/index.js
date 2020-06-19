@@ -102,6 +102,7 @@ class DataInserter extends EventEmitter {
       this.recalcSubAccountLedgersBalancesHook
     ])
     this.dataChecker.init({
+      methodCollMap: this._methodCollMap,
       convertTo: this.convertTo,
       candlesTimeframe: this.candlesTimeframe,
       candlesSection: this.candlesSection
@@ -199,7 +200,6 @@ class DataInserter extends EventEmitter {
   }
 
   async insertNewPublicDataToDb (prevProgress) {
-    // TODO:
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
     const size = methodCollMap.size
@@ -231,7 +231,6 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    // TODO:
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size

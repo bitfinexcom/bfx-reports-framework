@@ -47,37 +47,20 @@ class DataChecker {
     this.currencyConverter = currencyConverter
 
     this._methodCollMap = new Map()
-  }
 
-  _getMethodCollMap () {
-    return new Map(this._methodCollMap)
-  }
-
-  _getMethodArgMap (method, opts) {
-    return getMethodArgMap(
-      this._methodCollMap.get(method),
-      opts
-    )
-  }
-
-  _getDataFromApi (methodApi, args, isCheckCall) {
-    if (typeof this.rService[methodApi] !== 'function') {
-      throw new FindMethodError()
-    }
-
-    return getDataFromApi(
-      methodApi,
-      args,
-      null,
-      isCheckCall
-    )
+    this.convertTo = null
+    this.candlesTimeframe = null
+    this.candlesSection = null
   }
 
   init ({
+    methodCollMap,
     convertTo,
     candlesTimeframe,
     candlesSection
   }) {
+    this._methodCollMap = this.syncSchema
+      .getMethodCollMap(methodCollMap)
     this.convertTo = convertTo
     this.candlesTimeframe = candlesTimeframe
     this.candlesSection = candlesSection
@@ -530,7 +513,7 @@ class DataChecker {
 
       if (isEmpty(lastElemFromDb)) {
         schema.hasNewData = true
-        this._pushConfigurablePublicDataStartConf(
+        pushConfigurablePublicDataStartConf(
           schema,
           symbol,
           { currStart: start },
@@ -577,13 +560,36 @@ class DataChecker {
         }
       }
 
-      this._pushConfigurablePublicDataStartConf(
+      pushConfigurablePublicDataStartConf(
         schema,
         symbol,
         startConf,
         this.candlesTimeframe
       )
     }
+  }
+
+  _getMethodCollMap () {
+    return new Map(this._methodCollMap)
+  }
+
+  _getMethodArgMap (method, opts) {
+    return getMethodArgMap(
+      this._methodCollMap.get(method),
+      opts
+    )
+  }
+
+  _getDataFromApi (methodApi, args) {
+    if (typeof this.rService[methodApi] !== 'function') {
+      throw new FindMethodError()
+    }
+
+    return getDataFromApi(
+      (space, args) => this.rService[methodApi]
+        .bind(this.rService)(args),
+      args
+    )
   }
 }
 
