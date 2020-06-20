@@ -26,7 +26,7 @@ Bfx Reports Framework can be run by its own, without need of adding code, it alr
 
 ```console
 git clone https://github.com/bitfinexcom/bfx-reports-framework.git
-cd bfx-facs-reports-framework
+cd bfx-reports-framework
 npm run init
 ```
 - As to run framework on a network different that localhost, add to init the IP or URL as following:
