@@ -238,22 +238,28 @@ class DataInserter extends EventEmitter {
     let count = 0
     let progress = 0
 
-    for (const [method, item] of methodCollMap) {
-      const { start } = item
-      const args = this._getMethodArgMap(
-        method,
-        {
-          auth,
-          limit: 10000000,
-          start
-        }
-      )
+    for (const [method, schema] of methodCollMap) {
+      const { start } = schema
 
-      await this._insertApiDataArrObjTypeToDb(
-        args,
-        method,
-        item
-      )
+      for (const [symbol, dates] of start) {
+        const { baseStartFrom = 0 } = { ...dates }
+        const addApiParams = (
+          !symbol ||
+          (
+            Array.isArray(symbol) &&
+            symbol.length === 0
+          )
+        )
+          ? {}
+          : { symbol }
+
+        await this._insertConfigurableApiData(
+          method,
+          schema,
+          { ...dates, baseStartFrom },
+          addApiParams
+        )
+      }
 
       count += 1
       progress = Math.round(
@@ -299,15 +305,15 @@ class DataInserter extends EventEmitter {
       for (const [symbol, dates, timeframe] of start) {
         const addApiParams = name === this.ALLOWED_COLLS.CANDLES
           ? {
+            symbol,
             timeframe,
             section: this.candlesSection
           }
-          : {}
+          : { symbol }
 
-        await this._insertConfigurablePublicApiData(
+        await this._insertConfigurableApiData(
           methodApi,
           schema,
-          symbol,
           dates,
           addApiParams
         )
@@ -315,52 +321,43 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  async _insertConfigurablePublicApiData (
+  async _insertConfigurableApiData (
     methodApi,
     schema,
-    symbol,
     dates,
     addApiParams = {}
   ) {
+    const {
+      baseStartFrom,
+      baseStartTo,
+      currStart
+    } = { ...dates }
+
     if (
-      !dates ||
-      typeof dates !== 'object'
-    ) {
-      return
-    }
-    if (
-      Number.isInteger(dates.baseStartFrom) &&
-      Number.isInteger(dates.baseStartTo)
+      Number.isInteger(baseStartFrom) &&
+      Number.isInteger(baseStartTo)
     ) {
       const args = this._getMethodArgMap(
         methodApi,
         {
           limit: 10000000,
-          start: dates.baseStartFrom,
-          end: dates.baseStartTo
+          start: baseStartFrom,
+          end: baseStartTo,
+          params: { ...addApiParams }
         }
       )
-      args.params = {
-        ...args.params,
-        symbol,
-        ...addApiParams
-      }
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema, true)
     }
-    if (Number.isInteger(dates.currStart)) {
+    if (Number.isInteger(currStart)) {
       const args = this._getMethodArgMap(
         methodApi,
         {
           limit: 10000000,
-          start: dates.currStart
+          start: currStart,
+          params: { ...addApiParams }
         }
       )
-      args.params = {
-        ...args.params,
-        symbol,
-        ...addApiParams
-      }
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema, true)
     }
