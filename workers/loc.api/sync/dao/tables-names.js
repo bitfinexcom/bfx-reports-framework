@@ -26,5 +26,6 @@ module.exports = {
   SYNC_QUEUE: 'syncQueue',
   LOGINS: 'logins',
   CHANGE_LOGS: 'changeLogs',
-  SUB_ACCOUNTS: 'subAccounts'
+  SUB_ACCOUNTS: 'subAccounts',
+  COMPLETED_ON_FIRST_SYNC_COLLS: 'completedOnFirstSyncColls'
 }

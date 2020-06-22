@@ -23,7 +23,7 @@ const {
 } = require('../helpers')
 const {
   filterMethodCollMap,
-  pushConfigurablePublicDataStartConf,
+  pushConfigurableDataStartConf,
   invertSort,
   compareElemsDbAndApi
 } = require('./helpers')
@@ -140,7 +140,11 @@ class DataChecker {
 
     if (isEmpty(lastElemFromDb)) {
       schema.hasNewData = true
-      schema.start = 0
+      pushConfigurableDataStartConf(
+        schema,
+        '_ALL',
+        { currStart: 0 }
+      )
       return
     }
 
@@ -150,10 +154,50 @@ class DataChecker {
       lastElemFromApi
     )
 
+    const startConf = {
+      baseStartFrom: 0,
+      baseStartTo: null,
+      currStart: null
+    }
+
     if (lastDateInDb) {
       schema.hasNewData = true
-      schema.start = lastDateInDb + 1
+      startConf.currStart = lastDateInDb + 1
     }
+
+    const completedColl = await this.dao.getElemInCollBy(
+      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+      {
+        user_id: _id,
+        collName: method
+      }
+    )
+
+    if (!isEmpty(completedColl)) {
+      return
+    }
+
+    const firstElemFromDb = await this.dao.getElemInCollBy(
+      schema.name,
+      {
+        user_id: _id,
+        ...subUserIdFilter
+      },
+      invertSort(schema.sort)
+    )
+
+    if (isEmpty(firstElemFromDb)) {
+      return
+    }
+
+    schema.hasNewData = true
+    startConf.baseStartTo = firstElemFromDb[schema.dateFieldName] - 1
+
+    pushConfigurableDataStartConf(
+      schema,
+      '_ALL',
+      startConf
+    )
   }
 
   async _checkNewDataPublicArrObjType (methodCollMap) {
@@ -282,7 +326,7 @@ class DataChecker {
       }
       if (isEmpty(lastElemFromDb)) {
         schema.hasNewData = true
-        pushConfigurablePublicDataStartConf(
+        pushConfigurableDataStartConf(
           schema,
           symbol,
           { currStart: start },
@@ -329,7 +373,7 @@ class DataChecker {
         }
       }
 
-      pushConfigurablePublicDataStartConf(
+      pushConfigurableDataStartConf(
         schema,
         symbol,
         startConf,
@@ -513,7 +557,7 @@ class DataChecker {
 
       if (isEmpty(lastElemFromDb)) {
         schema.hasNewData = true
-        pushConfigurablePublicDataStartConf(
+        pushConfigurableDataStartConf(
           schema,
           symbol,
           { currStart: start },
@@ -560,7 +604,7 @@ class DataChecker {
         }
       }
 
-      pushConfigurablePublicDataStartConf(
+      pushConfigurableDataStartConf(
         schema,
         symbol,
         startConf,

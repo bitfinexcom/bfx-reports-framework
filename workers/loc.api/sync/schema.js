@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 12
+const SUPPORTED_DB_VERSION = 13
 
 const { cloneDeep, omit } = require('lodash')
 
@@ -503,6 +503,19 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
       state: 'VARCHAR(255)'
+    }
+  ],
+  [
+    TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+    {
+      _id: ID_PRIMARY_KEY,
+      collName: 'VARCHAR(255)',
+      user_id: 'INT NOT NULL',
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
     }
   ]
 ])

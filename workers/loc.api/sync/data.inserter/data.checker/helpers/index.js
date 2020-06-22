@@ -3,8 +3,8 @@
 const filterMethodCollMap = require(
   './filter-method-coll-map'
 )
-const pushConfigurablePublicDataStartConf = require(
-  './push-configurable-public-data-start-conf'
+const pushConfigurableDataStartConf = require(
+  './push-configurable-data-start-conf'
 )
 const invertSort = require('./invert-sort')
 const compareElemsDbAndApi = require(
@@ -13,7 +13,7 @@ const compareElemsDbAndApi = require(
 
 module.exports = {
   filterMethodCollMap,
-  pushConfigurablePublicDataStartConf,
+  pushConfigurableDataStartConf,
   invertSort,
   compareElemsDbAndApi
 }

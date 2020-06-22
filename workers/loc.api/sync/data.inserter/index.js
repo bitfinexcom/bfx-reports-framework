@@ -242,9 +242,13 @@ class DataInserter extends EventEmitter {
       const { start } = schema
 
       for (const [symbol, dates] of start) {
-        const { baseStartFrom = 0 } = { ...dates }
+        const {
+          baseStartFrom = 0,
+          baseStartTo
+        } = { ...dates }
         const addApiParams = (
           !symbol ||
+          symbol === '_ALL' ||
           (
             Array.isArray(symbol) &&
             symbol.length === 0
@@ -257,8 +261,26 @@ class DataInserter extends EventEmitter {
           method,
           schema,
           { ...dates, baseStartFrom },
-          addApiParams
+          addApiParams,
+          auth
         )
+
+        if (
+          Number.isInteger(baseStartFrom) &&
+          Number.isInteger(baseStartTo)
+        ) {
+          const { session } = { ...auth }
+          const { _id } = { ...session }
+
+          await this.dao.insertElemToDb(
+            this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+            {
+              collName: method,
+              user_id: _id
+            },
+            { isReplacedIfExists: true }
+          )
+        }
       }
 
       count += 1
@@ -325,7 +347,8 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema,
     dates,
-    addApiParams = {}
+    addApiParams = {},
+    auth = {}
   ) {
     const {
       baseStartFrom,
@@ -340,6 +363,7 @@ class DataInserter extends EventEmitter {
       const args = this._getMethodArgMap(
         methodApi,
         {
+          auth,
           limit: 10000000,
           start: baseStartFrom,
           end: baseStartTo,
