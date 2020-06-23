@@ -143,7 +143,10 @@ class DataChecker {
       pushConfigurableDataStartConf(
         schema,
         '_ALL',
-        { currStart: 0 }
+        {
+          baseStartFrom: 0,
+          baseStartTo: Date.now()
+        }
       )
       return
     }
@@ -174,6 +177,12 @@ class DataChecker {
     )
 
     if (!isEmpty(completedColl)) {
+      pushConfigurableDataStartConf(
+        schema,
+        '_ALL',
+        startConf
+      )
+
       return
     }
 
@@ -191,7 +200,7 @@ class DataChecker {
     }
 
     schema.hasNewData = true
-    startConf.baseStartTo = firstElemFromDb[schema.dateFieldName] - 1
+    startConf.baseStartTo = firstElemFromDb[schema.dateFieldName]
 
     pushConfigurableDataStartConf(
       schema,
@@ -223,8 +232,6 @@ class DataChecker {
 
         continue
       }
-
-      await this._checkItemNewDataArrObjType(method, schema)
     }
   }
 

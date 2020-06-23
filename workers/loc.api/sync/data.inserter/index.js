@@ -269,8 +269,7 @@ class DataInserter extends EventEmitter {
           Number.isInteger(baseStartFrom) &&
           Number.isInteger(baseStartTo)
         ) {
-          const { session } = { ...auth }
-          const { _id } = { ...session }
+          const { _id } = { ...auth }
 
           await this.dao.insertElemToDb(
             this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
@@ -371,28 +370,37 @@ class DataInserter extends EventEmitter {
         }
       )
 
-      await this._insertApiDataArrObjTypeToDb(args, methodApi, schema, true)
+      await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
     if (Number.isInteger(currStart)) {
       const args = this._getMethodArgMap(
         methodApi,
         {
+          auth,
           limit: 10000000,
           start: currStart,
           params: { ...addApiParams }
         }
       )
 
-      await this._insertApiDataArrObjTypeToDb(args, methodApi, schema, true)
+      await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
   }
 
   async _insertApiDataArrObjTypeToDb (
     args,
     methodApi,
-    schema,
-    isPublic
+    schema
   ) {
+    const { auth } = { ...args }
+    const { apiKey, apiSecret } = { ...auth }
+    const isPublic = (
+      !apiKey ||
+      typeof apiKey !== 'string' ||
+      !apiSecret ||
+      typeof apiSecret !== 'string'
+    )
+
     if (!isInsertableArrObjTypeOfColl(schema, isPublic)) {
       return
     }
@@ -412,8 +420,8 @@ class DataInserter extends EventEmitter {
       !subUserId ||
       typeof subUserId !== 'string'
     )
-    const { auth } = { ..._args }
-    const { session } = { ...auth }
+    const { auth: _auth } = { ..._args }
+    const { session } = { ..._auth }
     const sessionAuth = isPublic || hasNotSubUserField
       ? null
       : { ...session }
