@@ -19,6 +19,10 @@ const {
 
 const TYPES = require('../../di/types')
 const {
+  CANDLES_SECTION,
+  ALL_SYMBOLS_TO_SYNC
+} = require('./const')
+const {
   filterMethodCollMapByList,
   isInsertableArrObjTypeOfColl,
   isUpdatableArrObjTypeOfColl,
@@ -73,11 +77,6 @@ class DataInserter extends EventEmitter {
       this.ALLOWED_COLLS
     )
     this._afterAllInsertsHooks = []
-
-    this.convertTo = 'USD'
-
-    this.candlesTimeframe = '1D'
-    this.candlesSection = 'hist'
   }
 
   init (syncColls = this.ALLOWED_COLLS.ALL) {
@@ -93,20 +92,12 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
-    this.convertCurrencyHook.init({
-      convertTo: this.convertTo,
-      syncColls: this.syncColls
-    })
+    this.convertCurrencyHook.init({ syncColls: this.syncColls })
     this.addAfterAllInsertsHooks([
       this.convertCurrencyHook,
       this.recalcSubAccountLedgersBalancesHook
     ])
-    this.dataChecker.init({
-      methodCollMap: this._methodCollMap,
-      convertTo: this.convertTo,
-      candlesTimeframe: this.candlesTimeframe,
-      candlesSection: this.candlesSection
-    })
+    this.dataChecker.init({ methodCollMap: this._methodCollMap })
   }
 
   addAsyncProgressHandler (handler) {
@@ -248,7 +239,7 @@ class DataInserter extends EventEmitter {
         } = { ...dates }
         const addApiParams = (
           !symbol ||
-          symbol === '_ALL' ||
+          symbol === ALL_SYMBOLS_TO_SYNC ||
           (
             Array.isArray(symbol) &&
             symbol.length === 0
@@ -328,7 +319,7 @@ class DataInserter extends EventEmitter {
           ? {
             symbol,
             timeframe,
-            section: this.candlesSection
+            section: CANDLES_SECTION
           }
           : { symbol }
 

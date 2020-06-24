@@ -27,6 +27,12 @@ const {
   invertSort,
   compareElemsDbAndApi
 } = require('./helpers')
+const {
+  CONVERT_TO,
+  CANDLES_TIMEFRAME,
+  CANDLES_SECTION,
+  ALL_SYMBOLS_TO_SYNC
+} = require('../const')
 
 class DataChecker {
   constructor (
@@ -47,23 +53,11 @@ class DataChecker {
     this.currencyConverter = currencyConverter
 
     this._methodCollMap = new Map()
-
-    this.convertTo = null
-    this.candlesTimeframe = null
-    this.candlesSection = null
   }
 
-  init ({
-    methodCollMap,
-    convertTo,
-    candlesTimeframe,
-    candlesSection
-  }) {
+  init ({ methodCollMap }) {
     this._methodCollMap = this.syncSchema
       .getMethodCollMap(methodCollMap)
-    this.convertTo = convertTo
-    this.candlesTimeframe = candlesTimeframe
-    this.candlesSection = candlesSection
   }
 
   async checkNewData (auth) {
@@ -142,7 +136,7 @@ class DataChecker {
       schema.hasNewData = true
       pushConfigurableDataStartConf(
         schema,
-        '_ALL',
+        ALL_SYMBOLS_TO_SYNC,
         {
           baseStartFrom: 0,
           baseStartTo: Date.now()
@@ -179,7 +173,7 @@ class DataChecker {
     if (!isEmpty(completedColl)) {
       pushConfigurableDataStartConf(
         schema,
-        '_ALL',
+        ALL_SYMBOLS_TO_SYNC,
         startConf
       )
 
@@ -204,7 +198,7 @@ class DataChecker {
 
     pushConfigurableDataStartConf(
       schema,
-      '_ALL',
+      ALL_SYMBOLS_TO_SYNC,
       startConf
     )
   }
@@ -265,7 +259,7 @@ class DataChecker {
 
     const params = name === this.ALLOWED_COLLS.CANDLES
       ? {
-        section: this.candlesSection,
+        section: CANDLES_SECTION,
         notThrowError: true,
         notCheckNextPage: true
       }
@@ -472,7 +466,7 @@ class DataChecker {
         : ''
 
       return {
-        symbol: `t${_currency}${separator}${this.convertTo}`,
+        symbol: `t${_currency}${separator}${CONVERT_TO}`,
         start: lastElemLedgers.mts
       }
     })
@@ -497,8 +491,8 @@ class DataChecker {
         ? mtsMoment
         : configStart
       const params = {
-        timeframe: this.candlesTimeframe,
-        section: this.candlesSection,
+        timeframe: CANDLES_TIMEFRAME,
+        section: CANDLES_SECTION,
         notThrowError: true,
         notCheckNextPage: true,
         symbol
@@ -525,7 +519,7 @@ class DataChecker {
 
       const filter = {
         [symbolFieldName]: symbol,
-        [timeframeFieldName]: this.candlesTimeframe
+        [timeframeFieldName]: CANDLES_TIMEFRAME
       }
       const lastElemFromDb = await this.dao.getElemInCollBy(
         name,
@@ -568,7 +562,7 @@ class DataChecker {
           schema,
           symbol,
           { currStart: start },
-          this.candlesTimeframe
+          CANDLES_TIMEFRAME
         )
 
         continue
@@ -615,7 +609,7 @@ class DataChecker {
         schema,
         symbol,
         startConf,
-        this.candlesTimeframe
+        CANDLES_TIMEFRAME
       )
     }
   }
