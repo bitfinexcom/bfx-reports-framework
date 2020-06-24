@@ -12,8 +12,8 @@ const { bindDepsToFn } = require(
 
 const TYPES = require('./types')
 
-const TABLES_NAMES = require('../sync/dao/tables-names')
-const ALLOWED_COLLS = require('../sync/allowed.colls')
+const TABLES_NAMES = require('../sync/schema/tables-names')
+const ALLOWED_COLLS = require('../sync/schema/allowed.colls')
 const WSTransport = require('../ws-transport')
 const WSEventEmitter = require(
   '../ws-transport/ws.event.emitter'

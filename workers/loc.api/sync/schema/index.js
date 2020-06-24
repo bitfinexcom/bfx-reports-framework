@@ -1,6 +1,8 @@
 'use strict'
 
-/**
+const { cloneDeep, omit } = require('lodash')
+
+/*
  * The version must be increased when DB schema is changed
  *
  * For each new DB version need to implement new migration
@@ -9,16 +11,13 @@
  */
 const SUPPORTED_DB_VERSION = 13
 
-const { cloneDeep, omit } = require('lodash')
-
-const TABLES_NAMES = require('./dao/tables-names')
+const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
 const {
   CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME
-} = require('./dao/const')
-
-const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
+  TRIGGER_FIELD_NAME,
+  ID_PRIMARY_KEY
+} = require('./const')
 
 const _cloneSchema = (map, omittedFields = []) => {
   const arr = [...map].map(([key, schema]) => {
