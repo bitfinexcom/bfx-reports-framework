@@ -18,6 +18,7 @@ const {
   TRIGGER_FIELD_NAME,
   ID_PRIMARY_KEY
 } = require('./const')
+const COLLS_TYPES = require('./colls.types')
 
 const _cloneSchema = (map, omittedFields = []) => {
   const arr = [...map].map(([key, schema]) => {
@@ -530,7 +531,7 @@ const _methodCollMap = new Map([
       sort: [['mts', -1], ['id', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mts', 'currency'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.LEDGERS)
@@ -546,7 +547,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsCreate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'symbol', 'user_id'],
       model: _getModelOf(TABLES_NAMES.TRADES)
@@ -562,7 +563,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsCreate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_TRADES)
@@ -579,7 +580,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'publicTradesConf',
-      type: 'public:insertable:array:objects',
+      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['id', '_symbol'],
       model: _getModelOf(TABLES_NAMES.PUBLIC_TRADES)
@@ -604,7 +605,7 @@ const _methodCollMap = new Map([
       sort: [['timestamp', -1]],
       hasNewData: true,
       confName: 'statusMessagesConf',
-      type: 'public:updatable:array:objects',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['timestamp', 'key'],
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
       model: _getModelOf(TABLES_NAMES.STATUS_MESSAGES)
@@ -620,7 +621,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.ORDERS)
@@ -636,7 +637,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdated', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdated', 'currency'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.MOVEMENTS)
@@ -652,7 +653,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
@@ -668,7 +669,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
@@ -684,7 +685,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
@@ -700,7 +701,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
@@ -716,7 +717,7 @@ const _methodCollMap = new Map([
       sort: [['time', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['time'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.LOGINS)
@@ -732,7 +733,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
-      type: 'insertable:array:objects',
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsCreate'],
       fieldsOfUniqueIndex: ['mtsCreate', 'log', 'user_id'],
       model: _getModelOf(TABLES_NAMES.CHANGE_LOGS)
@@ -749,7 +750,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'tickersHistoryConf',
-      type: 'public:insertable:array:objects',
+      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: null,
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
       model: _getModelOf(TABLES_NAMES.TICKERS_HISTORY)
@@ -766,7 +767,7 @@ const _methodCollMap = new Map([
       subQuery: {
         sort: [['mts', -1], ['id', -1]]
       },
-      type: 'hidden:insertable:array:objects',
+      type: COLLS_TYPES.HIDDEN_INSERTABLE_ARRAY_OBJECTS,
       model: _getModelOf(TABLES_NAMES.LEDGERS),
       dataStructureConverter: (accum, {
         wallet: type,
@@ -796,7 +797,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
-      type: 'public:updatable:array',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: _getModelOf(TABLES_NAMES.SYMBOLS)
     }
   ],
@@ -808,7 +809,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
-      type: 'public:updatable:array',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: _getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
     }
   ],
@@ -820,7 +821,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
-      type: 'public:updatable:array',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: _getModelOf(TABLES_NAMES.FUTURES)
     }
   ],
@@ -832,7 +833,7 @@ const _methodCollMap = new Map([
       fields: ['id'],
       sort: [['name', 1]],
       hasNewData: true,
-      type: 'public:updatable:array:objects',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       fieldsOfUniqueIndex: ['id'],
       model: _getModelOf(TABLES_NAMES.CURRENCIES)
     }
@@ -849,7 +850,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'candlesConf',
-      type: 'public:insertable:array:objects',
+      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['_symbol', '_timeframe', 'mts'],
       model: _getModelOf(TABLES_NAMES.CANDLES)

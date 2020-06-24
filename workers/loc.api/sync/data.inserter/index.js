@@ -24,9 +24,6 @@ const {
 } = require('./const')
 const {
   filterMethodCollMapByList,
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl,
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
@@ -36,6 +33,11 @@ const DataInserterHook = require('./hooks/data.inserter.hook')
 const {
   checkCollPermission
 } = require('../helpers')
+const {
+  isInsertableArrObjTypeOfColl,
+  isUpdatableArrObjTypeOfColl,
+  isUpdatableArrTypeOfColl
+} = require('../schema/utils')
 const {
   AsyncProgressHandlerIsNotFnError,
   AfterAllInsertsHookIsNotHookError

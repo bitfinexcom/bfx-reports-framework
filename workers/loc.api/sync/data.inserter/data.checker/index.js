@@ -18,9 +18,11 @@ const {
 
 const TYPES = require('../../../di/types')
 const {
-  isInsertableArrObjTypeOfColl,
   getMethodArgMap
 } = require('../helpers')
+const {
+  isInsertableArrObjTypeOfColl
+} = require('../../schema/utils')
 const {
   filterMethodCollMap,
   pushConfigurableDataStartConf,

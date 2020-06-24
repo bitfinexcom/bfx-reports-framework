@@ -9,6 +9,7 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
+const COLLS_TYPES = require('../schema/colls.types')
 
 const {
   checkCollPermission
@@ -43,15 +44,15 @@ class SyncQueue extends EventEmitter {
 
     this.methodCollMap = this._filterMethodCollMap(
       this.syncSchema.getMethodCollMap(),
-      /^(?!hidden:)/i
+      new RegExp(`^(?!${COLLS_TYPES.HIDDEN})`, 'i')
     )
     this.privMethodCollMap = this._filterMethodCollMap(
       this.methodCollMap,
-      /^(?!public:)/i
+      new RegExp(`^(?!${COLLS_TYPES.PUBLIC})`, 'i')
     )
     this.pubMethodCollMap = this._filterMethodCollMap(
       this.methodCollMap,
-      /^public:/i
+      new RegExp(`^${COLLS_TYPES.PUBLIC}`, 'i')
     )
 
     this.allMultipliers = this._getAllMultipliers()

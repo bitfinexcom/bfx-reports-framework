@@ -11,12 +11,6 @@ const {
   getAuthFromDb,
   getAllowedCollsNames
 } = require('./utils')
-const {
-  checkCollType,
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl
-} = require('./check-coll-type')
 const getMethodArgMap = require('./get-method-arg-map')
 
 module.exports = {
@@ -25,9 +19,5 @@ module.exports = {
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  checkCollType,
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl,
   getMethodArgMap
 }

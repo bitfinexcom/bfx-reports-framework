@@ -2,11 +2,9 @@
 
 const getSymbolFilter = require('./get-symbol-filter')
 const getTimeframeFilter = require('./get-timeframe-filter')
-
-const _isInsertableArrayObjects = (type = '') => {
-  return /^((hidden:)|(public:)|())insertable:array:objects$/i
-    .test(type)
-}
+const {
+  isInsertableArrObjAnyProtection
+} = require('../../schema/utils')
 
 const getFieldsFilters = (
   fieldNames = [],
@@ -44,7 +42,7 @@ module.exports = (
   } = {},
   params = {}
 ) => {
-  if (!_isInsertableArrayObjects(type)) {
+  if (!isInsertableArrObjAnyProtection(type)) {
     return {}
   }
 
