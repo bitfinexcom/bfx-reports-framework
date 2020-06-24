@@ -1,7 +1,5 @@
 'use strict'
 
-const { cloneDeep, omit } = require('lodash')
-
 /*
  * The version must be increased when DB schema is changed
  *
@@ -19,33 +17,22 @@ const {
   ID_PRIMARY_KEY
 } = require('./const')
 const COLLS_TYPES = require('./colls.types')
-
-const _cloneSchema = (map, omittedFields = []) => {
-  const arr = [...map].map(([key, schema]) => {
-    const normalizedSchema = omit(schema, omittedFields)
-    const clonedSchema = cloneDeep(normalizedSchema)
-
-    return [key, clonedSchema]
-  })
-
-  return new Map(arr)
-}
+const {
+  cloneSchema,
+  getModelsMap: _getModelsMap,
+  getModelOf
+} = require('./helpers')
 
 const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return _cloneSchema(methodCollMap)
+  return cloneSchema(methodCollMap)
 }
 
 const getModelsMap = (params = {}) => {
-  const {
-    models = _models,
-    omittedFields = [CONSTR_FIELD_NAME, TRIGGER_FIELD_NAME]
-  } = { ...params }
-
-  return _cloneSchema(models, omittedFields)
+  return _getModelsMap({ models: _models, ...params })
 }
 
 const _getModelOf = (tableName) => {
-  return { ...getModelsMap().get(tableName) }
+  return getModelOf(tableName, _models)
 }
 
 const _models = new Map([
