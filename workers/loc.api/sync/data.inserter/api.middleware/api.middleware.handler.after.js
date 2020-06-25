@@ -7,6 +7,7 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../../di/types')
+const SYNC_API_METHODS = require('../../schema/sync.api.methods')
 const {
   addPropsToResIfExist,
   getFlagsFromLedgerDescription
@@ -19,7 +20,7 @@ class ApiMiddlewareHandlerAfter {
     this.searchClosePriceAndSumAmount = searchClosePriceAndSumAmount
   }
 
-  async _getPositionsHistory (
+  async [SYNC_API_METHODS.POSITIONS_HISTORY] (
     args,
     apiRes,
     isCheckCall
@@ -95,7 +96,7 @@ class ApiMiddlewareHandlerAfter {
     }
   }
 
-  _getPublicTrades (args, apiRes) {
+  [SYNC_API_METHODS.PUBLIC_TRADES] (args, apiRes) {
     return addPropsToResIfExist(
       args,
       apiRes,
@@ -103,7 +104,7 @@ class ApiMiddlewareHandlerAfter {
     )
   }
 
-  _getLedgers (args, apiRes) {
+  [SYNC_API_METHODS.LEDGERS] (args, apiRes) {
     const res = apiRes.res.map(item => {
       const { balance } = { ...item }
 
@@ -136,7 +137,7 @@ class ApiMiddlewareHandlerAfter {
     }
   }
 
-  _getCandles (args, apiRes) {
+  [SYNC_API_METHODS.CANDLES] (args, apiRes) {
     return addPropsToResIfExist(
       args,
       apiRes,
@@ -147,7 +148,7 @@ class ApiMiddlewareHandlerAfter {
     )
   }
 
-  _getStatusMessages (args, apiRes) {
+  [SYNC_API_METHODS.STATUS_MESSAGES] (args, apiRes) {
     return addPropsToResIfExist(
       args,
       apiRes,
