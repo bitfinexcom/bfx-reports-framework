@@ -6,6 +6,7 @@ module.exports = {
   ...TYPES,
   TABLES_NAMES: Symbol.for('TABLES_NAMES'),
   ALLOWED_COLLS: Symbol.for('ALLOWED_COLLS'),
+  SYNC_API_METHODS: Symbol.for('SYNC_API_METHODS'),
   FrameworkRServiceDepsSchema: Symbol.for('FrameworkRServiceDepsSchema'),
   GRC_BFX_OPTS: Symbol.for('GRC_BFX_OPTS'),
   ApiMiddlewareHandlerAfter: Symbol.for('ApiMiddlewareHandlerAfter'),
