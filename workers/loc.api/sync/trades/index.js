@@ -21,7 +21,8 @@ class Trades {
     syncSchema,
     FOREX_SYMBS,
     currencyConverter,
-    authenticator
+    authenticator,
+    SYNC_API_METHODS
   ) {
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
@@ -29,9 +30,10 @@ class Trades {
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
+    this.SYNC_API_METHODS = SYNC_API_METHODS
 
     this.tradesMethodColl = this.syncSchema.getMethodCollMap()
-      .get('_getTrades')
+      .get(this.SYNC_API_METHODS.TRADES)
   }
 
   async _getTrades ({
@@ -316,5 +318,6 @@ decorate(inject(TYPES.SyncSchema), Trades, 2)
 decorate(inject(TYPES.FOREX_SYMBS), Trades, 3)
 decorate(inject(TYPES.CurrencyConverter), Trades, 4)
 decorate(inject(TYPES.Authenticator), Trades, 5)
+decorate(inject(TYPES.SYNC_API_METHODS), Trades, 6)
 
 module.exports = Trades

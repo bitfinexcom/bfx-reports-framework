@@ -11,6 +11,7 @@ const SUPPORTED_DB_VERSION = 13
 
 const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
+const SYNC_API_METHODS = require('./sync.api.methods')
 const {
   CONSTR_FIELD_NAME,
   TRIGGER_FIELD_NAME,
@@ -509,7 +510,7 @@ const _models = new Map([
 
 const _methodCollMap = new Map([
   [
-    '_getLedgers',
+    SYNC_API_METHODS.LEDGERS,
     {
       name: ALLOWED_COLLS.LEDGERS,
       maxLimit: 2500,
@@ -525,7 +526,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getTrades',
+    SYNC_API_METHODS.TRADES,
     {
       name: ALLOWED_COLLS.TRADES,
       maxLimit: 2500,
@@ -541,7 +542,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getFundingTrades',
+    SYNC_API_METHODS.FUNDING_TRADES,
     {
       name: ALLOWED_COLLS.FUNDING_TRADES,
       maxLimit: 1000,
@@ -557,7 +558,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getPublicTrades',
+    SYNC_API_METHODS.PUBLIC_TRADES,
     {
       name: ALLOWED_COLLS.PUBLIC_TRADES,
       maxLimit: 5000,
@@ -574,7 +575,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getStatusMessages',
+    SYNC_API_METHODS.STATUS_MESSAGES,
     {
       name: ALLOWED_COLLS.STATUS_MESSAGES,
       maxLimit: 5000,
@@ -599,7 +600,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getOrders',
+    SYNC_API_METHODS.ORDERS,
     {
       name: ALLOWED_COLLS.ORDERS,
       maxLimit: 2500,
@@ -615,7 +616,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getMovements',
+    SYNC_API_METHODS.MOVEMENTS,
     {
       name: ALLOWED_COLLS.MOVEMENTS,
       maxLimit: 250,
@@ -631,7 +632,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getFundingOfferHistory',
+    SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
     {
       name: ALLOWED_COLLS.FUNDING_OFFER_HISTORY,
       maxLimit: 10000,
@@ -647,7 +648,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getFundingLoanHistory',
+    SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
     {
       name: ALLOWED_COLLS.FUNDING_LOAN_HISTORY,
       maxLimit: 10000,
@@ -663,7 +664,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getFundingCreditHistory',
+    SYNC_API_METHODS.FUNDING_CREDIT_HISTORY,
     {
       name: ALLOWED_COLLS.FUNDING_CREDIT_HISTORY,
       maxLimit: 10000,
@@ -679,7 +680,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getPositionsHistory',
+    SYNC_API_METHODS.POSITIONS_HISTORY,
     {
       name: ALLOWED_COLLS.POSITIONS_HISTORY,
       maxLimit: 10000,
@@ -695,7 +696,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getLogins',
+    SYNC_API_METHODS.LOGINS,
     {
       name: ALLOWED_COLLS.LOGINS,
       maxLimit: 10000,
@@ -711,7 +712,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getChangeLogs',
+    SYNC_API_METHODS.CHANGE_LOGS,
     {
       name: ALLOWED_COLLS.CHANGE_LOGS,
       maxLimit: 10000,
@@ -727,7 +728,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getTickersHistory',
+    SYNC_API_METHODS.TICKERS_HISTORY,
     {
       name: ALLOWED_COLLS.TICKERS_HISTORY,
       maxLimit: 10000,
@@ -744,7 +745,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getWallets',
+    SYNC_API_METHODS.WALLETS,
     {
       name: ALLOWED_COLLS.LEDGERS,
       dateFieldName: 'mts',
@@ -777,7 +778,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getSymbols',
+    SYNC_API_METHODS.SYMBOLS,
     {
       name: ALLOWED_COLLS.SYMBOLS,
       maxLimit: 10000,
@@ -789,7 +790,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getInactiveSymbols',
+    SYNC_API_METHODS.INACTIVE_SYMBOLS,
     {
       name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
       maxLimit: 10000,
@@ -801,7 +802,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getFutures',
+    SYNC_API_METHODS.FUTURES,
     {
       name: ALLOWED_COLLS.FUTURES,
       maxLimit: 10000,
@@ -813,7 +814,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getCurrencies',
+    SYNC_API_METHODS.CURRENCIES,
     {
       name: ALLOWED_COLLS.CURRENCIES,
       maxLimit: 10000,
@@ -826,7 +827,7 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getCandles',
+    SYNC_API_METHODS.CANDLES,
     {
       name: ALLOWED_COLLS.CANDLES,
       maxLimit: 10000,
