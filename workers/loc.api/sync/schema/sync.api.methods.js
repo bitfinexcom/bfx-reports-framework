@@ -14,12 +14,13 @@ const POSITIONS_HISTORY = '_getPositionsHistory'
 const LOGINS = '_getLogins'
 const CHANGE_LOGS = '_getChangeLogs'
 const TICKERS_HISTORY = '_getTickersHistory'
+const CANDLES = '_getCandles'
+
 const WALLETS = '_getWallets'
 const SYMBOLS = '_getSymbols'
 const INACTIVE_SYMBOLS = '_getInactiveSymbols'
 const FUTURES = '_getFutures'
 const CURRENCIES = '_getCurrencies'
-const CANDLES = '_getCandles'
 
 module.exports = {
   LEDGERS,
@@ -36,10 +37,11 @@ module.exports = {
   LOGINS,
   CHANGE_LOGS,
   TICKERS_HISTORY,
+  CANDLES,
+
   WALLETS,
   SYMBOLS,
   INACTIVE_SYMBOLS,
   FUTURES,
-  CURRENCIES,
-  CANDLES
+  CURRENCIES
 }

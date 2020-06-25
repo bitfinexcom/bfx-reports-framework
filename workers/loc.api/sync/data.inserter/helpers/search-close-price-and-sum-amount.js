@@ -1,5 +1,7 @@
 'use strict'
 
+const { omit } = require('lodash')
+
 const _isContainedPosStatus = (positions, status) => {
   return positions.every(pos => (
     !pos ||
@@ -45,14 +47,17 @@ module.exports = (
       sort: [['mtsCreate', -1]]
     }
   )
+  const _user = (subUser && typeof subUser === 'object')
+    ? subUser
+    : user
+  const _auth = omit(_user, ['email'])
 
   const {
     res: positionsAudit
-  } = await rService._getPositionsAudit(
+  } = await rService.getPositionsAudit(
+    null,
     {
-      auth: (subUser && typeof subUser === 'object')
-        ? subUser
-        : user,
+      auth: _auth,
       params: {
         id: [id],
         limit: 2,
