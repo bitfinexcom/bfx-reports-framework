@@ -50,6 +50,11 @@ class FrameworkReportService extends ReportService {
       this._TABLES_NAMES.SCHEDULER,
       { isEnable: true }
     )
+    await this._dao.updateCollBy(
+      this._TABLES_NAMES.SYNC_QUEUE,
+      { state: this._SYNC_QUEUE_STATES.LOCKED_JOB_STATE },
+      { state: this._SYNC_QUEUE_STATES.NEW_JOB_STATE }
+    )
   }
 
   async _checkAuthInApi (args) {
