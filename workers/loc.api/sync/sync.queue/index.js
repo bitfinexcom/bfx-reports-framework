@@ -18,10 +18,12 @@ const {
   UpdateSyncQueueJobError
 } = require('../../errors')
 
-const LOCKED_JOB_STATE = 'LOCKED'
-const NEW_JOB_STATE = 'NEW'
-const FINISHED_JOB_STATE = 'FINISHED'
-const ERROR_JOB_STATE = 'ERROR'
+const {
+  LOCKED_JOB_STATE,
+  NEW_JOB_STATE,
+  FINISHED_JOB_STATE,
+  ERROR_JOB_STATE
+} = require('./sync.queue.states')
 
 class SyncQueue extends EventEmitter {
   constructor (

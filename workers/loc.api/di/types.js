@@ -7,6 +7,7 @@ module.exports = {
   TABLES_NAMES: Symbol.for('TABLES_NAMES'),
   ALLOWED_COLLS: Symbol.for('ALLOWED_COLLS'),
   SYNC_API_METHODS: Symbol.for('SYNC_API_METHODS'),
+  SYNC_QUEUE_STATES: Symbol.for('SYNC_QUEUE_STATES'),
   FrameworkRServiceDepsSchema: Symbol.for('FrameworkRServiceDepsSchema'),
   GRC_BFX_OPTS: Symbol.for('GRC_BFX_OPTS'),
   ApiMiddlewareHandlerAfter: Symbol.for('ApiMiddlewareHandlerAfter'),

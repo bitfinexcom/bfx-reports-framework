@@ -15,6 +15,7 @@ const TYPES = require('./types')
 const TABLES_NAMES = require('../sync/schema/tables-names')
 const ALLOWED_COLLS = require('../sync/schema/allowed.colls')
 const SYNC_API_METHODS = require('../sync/schema/sync.api.methods')
+const SYNC_QUEUE_STATES = require('../sync/sync.queue/sync.queue.states')
 const WSTransport = require('../ws-transport')
 const WSEventEmitter = require(
   '../ws-transport/ws.event.emitter'
@@ -95,6 +96,7 @@ module.exports = ({
           ['_TABLES_NAMES', TYPES.TABLES_NAMES],
           ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS],
           ['_SYNC_API_METHODS', TYPES.SYNC_API_METHODS],
+          ['_SYNC_QUEUE_STATES', TYPES.SYNC_QUEUE_STATES],
           ['_prepareResponse', TYPES.PrepareResponse],
           ['_subAccount', TYPES.SubAccount],
           ['_progress', TYPES.Progress],
@@ -135,6 +137,7 @@ module.exports = ({
     bind(TYPES.TABLES_NAMES).toConstantValue(TABLES_NAMES)
     bind(TYPES.ALLOWED_COLLS).toConstantValue(ALLOWED_COLLS)
     bind(TYPES.SYNC_API_METHODS).toConstantValue(SYNC_API_METHODS)
+    bind(TYPES.SYNC_QUEUE_STATES).toConstantValue(SYNC_QUEUE_STATES)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
     bind(TYPES.WSTransport)
