@@ -541,7 +541,23 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    return this._privResponder(() => {
+    const { auth } = { ...args }
+    const { apiKey, apiSecret } = { ...auth }
+    const isRequiredUser = (
+      cb ||
+      !apiKey ||
+      typeof apiKey !== 'string' ||
+      !apiSecret ||
+      typeof apiSecret !== 'string'
+    )
+    const responder = isRequiredUser
+      ? this._privResponder
+      : this._responder
+    const endingArgs = isRequiredUser
+      ? [args, cb]
+      : [cb]
+
+    return responder(async () => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
           (args) => getDataFromApi(
@@ -557,7 +573,7 @@ class FrameworkReportService extends ReportService {
             )
           }
         )
-    }, 'getPositionsAudit', args, cb)
+    }, 'getPositionsAudit', ...endingArgs)
   }
 
   /**
