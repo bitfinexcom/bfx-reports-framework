@@ -188,7 +188,18 @@ class SqliteDAO extends DAO {
       ['email', 'username'],
       { name: this.TABLES_NAMES.USERS, isUnique: true }
     )
-    const sqlArr = [...publicСollsСonfSql, ...userSql]
+    const completedOnFirstSyncCollsSql = getIndexQuery(
+      ['collName', 'user_id'],
+      {
+        name: this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+        isUnique: true
+      }
+    )
+    const sqlArr = [
+      ...publicСollsСonfSql,
+      ...userSql,
+      ...completedOnFirstSyncCollsSql
+    ]
 
     for (const sql of sqlArr) {
       await this._run(sql)

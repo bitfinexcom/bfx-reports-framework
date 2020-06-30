@@ -1,5 +1,7 @@
 'use strict'
 
+const { isPublic } = require('../../schema/utils')
+
 const _reduceMethodCollMap = (
   _methodCollMap,
   res,
@@ -19,7 +21,7 @@ const _reduceMethodCollMap = (
 }
 
 const _isPubColl = (coll) => {
-  return /^public:.*/i.test(coll[1].type)
+  return isPublic(coll[1].type)
 }
 
 const _isAllowedColl = (coll, allowedCollsNames) => {

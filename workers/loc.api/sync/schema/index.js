@@ -1,51 +1,39 @@
 'use strict'
 
-/**
+/*
  * The version must be increased when DB schema is changed
  *
  * For each new DB version need to implement new migration
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 12
+const SUPPORTED_DB_VERSION = 13
 
-const { cloneDeep, omit } = require('lodash')
-
-const TABLES_NAMES = require('./dao/tables-names')
+const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
+const SYNC_API_METHODS = require('./sync.api.methods')
 const {
   CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME
-} = require('./dao/const')
-
-const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
-
-const _cloneSchema = (map, omittedFields = []) => {
-  const arr = [...map].map(([key, schema]) => {
-    const normalizedSchema = omit(schema, omittedFields)
-    const clonedSchema = cloneDeep(normalizedSchema)
-
-    return [key, clonedSchema]
-  })
-
-  return new Map(arr)
-}
+  TRIGGER_FIELD_NAME,
+  ID_PRIMARY_KEY
+} = require('./const')
+const COLLS_TYPES = require('./colls.types')
+const {
+  cloneSchema,
+  getModelsMap: _getModelsMap,
+  getModelOf
+} = require('./helpers')
 
 const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return _cloneSchema(methodCollMap)
+  return cloneSchema(methodCollMap)
 }
 
 const getModelsMap = (params = {}) => {
-  const {
-    models = _models,
-    omittedFields = [CONSTR_FIELD_NAME, TRIGGER_FIELD_NAME]
-  } = { ...params }
-
-  return _cloneSchema(models, omittedFields)
+  return _getModelsMap({ models: _models, ...params })
 }
 
 const _getModelOf = (tableName) => {
-  return { ...getModelsMap().get(tableName) }
+  return getModelOf(tableName, _models)
 }
 
 const _models = new Map([
@@ -504,12 +492,25 @@ const _models = new Map([
       collName: 'VARCHAR(255)',
       state: 'VARCHAR(255)'
     }
+  ],
+  [
+    TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+    {
+      _id: ID_PRIMARY_KEY,
+      collName: 'VARCHAR(255)',
+      user_id: 'INT NOT NULL',
+      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+    }
   ]
 ])
 
 const _methodCollMap = new Map([
   [
-    '_getLedgers',
+    SYNC_API_METHODS.LEDGERS,
     {
       name: ALLOWED_COLLS.LEDGERS,
       maxLimit: 2500,
@@ -517,15 +518,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'currency',
       sort: [['mts', -1], ['id', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mts', 'currency'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.LEDGERS)
     }
   ],
   [
-    '_getTrades',
+    SYNC_API_METHODS.TRADES,
     {
       name: ALLOWED_COLLS.TRADES,
       maxLimit: 2500,
@@ -533,15 +534,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsCreate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsCreate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'symbol', 'user_id'],
       model: _getModelOf(TABLES_NAMES.TRADES)
     }
   ],
   [
-    '_getFundingTrades',
+    SYNC_API_METHODS.FUNDING_TRADES,
     {
       name: ALLOWED_COLLS.FUNDING_TRADES,
       maxLimit: 1000,
@@ -549,15 +550,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsCreate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsCreate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_TRADES)
     }
   ],
   [
-    '_getPublicTrades',
+    SYNC_API_METHODS.PUBLIC_TRADES,
     {
       name: ALLOWED_COLLS.PUBLIC_TRADES,
       maxLimit: 5000,
@@ -567,14 +568,14 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'publicTradesConf',
-      type: 'public:insertable:array:objects',
+      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['id', '_symbol'],
       model: _getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
   ],
   [
-    '_getStatusMessages',
+    SYNC_API_METHODS.STATUS_MESSAGES,
     {
       name: ALLOWED_COLLS.STATUS_MESSAGES,
       maxLimit: 5000,
@@ -592,14 +593,14 @@ const _methodCollMap = new Map([
       sort: [['timestamp', -1]],
       hasNewData: true,
       confName: 'statusMessagesConf',
-      type: 'public:updatable:array:objects',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['timestamp', 'key'],
       fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
       model: _getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
   ],
   [
-    '_getOrders',
+    SYNC_API_METHODS.ORDERS,
     {
       name: ALLOWED_COLLS.ORDERS,
       maxLimit: 2500,
@@ -607,15 +608,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.ORDERS)
     }
   ],
   [
-    '_getMovements',
+    SYNC_API_METHODS.MOVEMENTS,
     {
       name: ALLOWED_COLLS.MOVEMENTS,
       maxLimit: 250,
@@ -623,15 +624,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'currency',
       sort: [['mtsUpdated', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdated', 'currency'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.MOVEMENTS)
     }
   ],
   [
-    '_getFundingOfferHistory',
+    SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
     {
       name: ALLOWED_COLLS.FUNDING_OFFER_HISTORY,
       maxLimit: 10000,
@@ -639,15 +640,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
     }
   ],
   [
-    '_getFundingLoanHistory',
+    SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
     {
       name: ALLOWED_COLLS.FUNDING_LOAN_HISTORY,
       maxLimit: 10000,
@@ -655,15 +656,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
     }
   ],
   [
-    '_getFundingCreditHistory',
+    SYNC_API_METHODS.FUNDING_CREDIT_HISTORY,
     {
       name: ALLOWED_COLLS.FUNDING_CREDIT_HISTORY,
       maxLimit: 10000,
@@ -671,15 +672,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
     }
   ],
   [
-    '_getPositionsHistory',
+    SYNC_API_METHODS.POSITIONS_HISTORY,
     {
       name: ALLOWED_COLLS.POSITIONS_HISTORY,
       maxLimit: 10000,
@@ -687,15 +688,15 @@ const _methodCollMap = new Map([
       symbolFieldName: 'symbol',
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }
   ],
   [
-    '_getLogins',
+    SYNC_API_METHODS.LOGINS,
     {
       name: ALLOWED_COLLS.LOGINS,
       maxLimit: 10000,
@@ -703,15 +704,15 @@ const _methodCollMap = new Map([
       symbolFieldName: null,
       sort: [['time', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['time'],
       fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.LOGINS)
     }
   ],
   [
-    '_getChangeLogs',
+    SYNC_API_METHODS.CHANGE_LOGS,
     {
       name: ALLOWED_COLLS.CHANGE_LOGS,
       maxLimit: 10000,
@@ -719,15 +720,15 @@ const _methodCollMap = new Map([
       symbolFieldName: null,
       sort: [['mtsCreate', -1]],
       hasNewData: false,
-      start: 0,
-      type: 'insertable:array:objects',
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsCreate'],
       fieldsOfUniqueIndex: ['mtsCreate', 'log', 'user_id'],
       model: _getModelOf(TABLES_NAMES.CHANGE_LOGS)
     }
   ],
   [
-    '_getTickersHistory',
+    SYNC_API_METHODS.TICKERS_HISTORY,
     {
       name: ALLOWED_COLLS.TICKERS_HISTORY,
       maxLimit: 10000,
@@ -737,14 +738,14 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'tickersHistoryConf',
-      type: 'public:insertable:array:objects',
+      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: null,
       fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
       model: _getModelOf(TABLES_NAMES.TICKERS_HISTORY)
     }
   ],
   [
-    '_getWallets',
+    SYNC_API_METHODS.WALLETS,
     {
       name: ALLOWED_COLLS.LEDGERS,
       dateFieldName: 'mts',
@@ -754,7 +755,7 @@ const _methodCollMap = new Map([
       subQuery: {
         sort: [['mts', -1], ['id', -1]]
       },
-      type: 'hidden:insertable:array:objects',
+      type: COLLS_TYPES.HIDDEN_INSERTABLE_ARRAY_OBJECTS,
       model: _getModelOf(TABLES_NAMES.LEDGERS),
       dataStructureConverter: (accum, {
         wallet: type,
@@ -777,56 +778,56 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    '_getSymbols',
+    SYNC_API_METHODS.SYMBOLS,
     {
       name: ALLOWED_COLLS.SYMBOLS,
       maxLimit: 10000,
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
-      type: 'public:updatable:array',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: _getModelOf(TABLES_NAMES.SYMBOLS)
     }
   ],
   [
-    '_getInactiveSymbols',
+    SYNC_API_METHODS.INACTIVE_SYMBOLS,
     {
       name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
       maxLimit: 10000,
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
-      type: 'public:updatable:array',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: _getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
     }
   ],
   [
-    '_getFutures',
+    SYNC_API_METHODS.FUTURES,
     {
       name: ALLOWED_COLLS.FUTURES,
       maxLimit: 10000,
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
-      type: 'public:updatable:array',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: _getModelOf(TABLES_NAMES.FUTURES)
     }
   ],
   [
-    '_getCurrencies',
+    SYNC_API_METHODS.CURRENCIES,
     {
       name: ALLOWED_COLLS.CURRENCIES,
       maxLimit: 10000,
       fields: ['id'],
       sort: [['name', 1]],
       hasNewData: true,
-      type: 'public:updatable:array:objects',
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       fieldsOfUniqueIndex: ['id'],
       model: _getModelOf(TABLES_NAMES.CURRENCIES)
     }
   ],
   [
-    '_getCandles',
+    SYNC_API_METHODS.CANDLES,
     {
       name: ALLOWED_COLLS.CANDLES,
       maxLimit: 10000,
@@ -837,7 +838,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'candlesConf',
-      type: 'public:insertable:array:objects',
+      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mts', '_symbol'],
       fieldsOfUniqueIndex: ['_symbol', '_timeframe', 'mts'],
       model: _getModelOf(TABLES_NAMES.CANDLES)

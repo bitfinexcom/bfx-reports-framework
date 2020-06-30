@@ -1,6 +1,6 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
+const TABLES_NAMES = require('../../schema/tables-names')
 const getSymbolFilter = require('./get-symbol-filter')
 
 module.exports = (

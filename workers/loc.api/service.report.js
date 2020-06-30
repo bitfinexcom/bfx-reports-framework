@@ -4,69 +4,67 @@ const BaseReportService = require(
   'bfx-report/workers/loc.api/service.report'
 )
 
+const SYNC_API_METHODS = require('./sync/schema/sync.api.methods')
+
 class ReportService extends BaseReportService {
-  _getTickersHistory (args) {
+  [SYNC_API_METHODS.TICKERS_HISTORY] (args) {
     return super.getTickersHistory(null, args)
   }
 
-  _getPositionsHistory (args) {
+  [SYNC_API_METHODS.POSITIONS_HISTORY] (args) {
     return super.getPositionsHistory(null, args)
   }
 
-  _getLedgers (args) {
+  [SYNC_API_METHODS.LEDGERS] (args) {
     return super.getLedgers(null, args)
   }
 
-  _getTrades (args) {
+  [SYNC_API_METHODS.TRADES] (args) {
     return super.getTrades(null, args)
   }
 
-  _getFundingTrades (args) {
+  [SYNC_API_METHODS.FUNDING_TRADES] (args) {
     return super.getFundingTrades(null, args)
   }
 
-  _getPublicTrades (args) {
+  [SYNC_API_METHODS.PUBLIC_TRADES] (args) {
     return super.getPublicTrades(null, args)
   }
 
-  _getStatusMessages (args) {
+  [SYNC_API_METHODS.STATUS_MESSAGES] (args) {
     return super.getStatusMessages(null, args)
   }
 
-  _getOrders (args) {
+  [SYNC_API_METHODS.ORDERS] (args) {
     return super.getOrders(null, args)
   }
 
-  _getMovements (args) {
+  [SYNC_API_METHODS.MOVEMENTS] (args) {
     return super.getMovements(null, args)
   }
 
-  _getFundingOfferHistory (args) {
+  [SYNC_API_METHODS.FUNDING_OFFER_HISTORY] (args) {
     return super.getFundingOfferHistory(null, args)
   }
 
-  _getFundingLoanHistory (args) {
+  [SYNC_API_METHODS.FUNDING_LOAN_HISTORY] (args) {
     return super.getFundingLoanHistory(null, args)
   }
 
-  _getFundingCreditHistory (args) {
+  [SYNC_API_METHODS.FUNDING_CREDIT_HISTORY] (args) {
     return super.getFundingCreditHistory(null, args)
   }
 
-  _getLogins (args) {
+  [SYNC_API_METHODS.LOGINS] (args) {
     return super.getLogins(null, args)
   }
 
-  _getChangeLogs (args) {
+  [SYNC_API_METHODS.CHANGE_LOGS] (args) {
     return super.getChangeLogs(null, args)
   }
 
-  _getCandles (args) {
+  [SYNC_API_METHODS.CANDLES] (args) {
     return super.getCandles(null, args)
-  }
-
-  _getPositionsAudit (args) {
-    return super.getPositionsAudit(null, args)
   }
 }
 

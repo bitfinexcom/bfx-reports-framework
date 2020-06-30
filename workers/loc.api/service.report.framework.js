@@ -50,6 +50,11 @@ class FrameworkReportService extends ReportService {
       this._TABLES_NAMES.SCHEDULER,
       { isEnable: true }
     )
+    await this._dao.updateCollBy(
+      this._TABLES_NAMES.SYNC_QUEUE,
+      { state: this._SYNC_QUEUE_STATES.LOCKED_JOB_STATE },
+      { state: this._SYNC_QUEUE_STATES.NEW_JOB_STATE }
+    )
   }
 
   async _checkAuthInApi (args) {
@@ -155,7 +160,7 @@ class FrameworkReportService extends ReportService {
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
-        const { pingMethod = '_getSymbols' } = { ...args }
+        const { pingMethod = this._SYNC_API_METHODS.SYMBOLS } = { ...args }
         const _args = omit(args, ['pingMethod'])
 
         if (typeof this[pingMethod] !== 'function') {
@@ -449,10 +454,10 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       const methods = [
-        '_getSymbols',
-        '_getFutures',
-        '_getCurrencies',
-        '_getInactiveSymbols'
+        this._SYNC_API_METHODS.SYMBOLS,
+        this._SYNC_API_METHODS.FUTURES,
+        this._SYNC_API_METHODS.CURRENCIES,
+        this._SYNC_API_METHODS.INACTIVE_SYMBOLS
       ]
       const promises = methods.map(async (method) => {
         const res = await this._dao.findInCollBy(
@@ -461,7 +466,7 @@ class FrameworkReportService extends ReportService {
           { isPublic: true }
         )
 
-        if (method === '_getCurrencies') {
+        if (method === this._SYNC_API_METHODS.CURRENCIES) {
           return res
         }
 
@@ -510,7 +515,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getPositionsHistory',
+        this._SYNC_API_METHODS.POSITIONS_HISTORY,
         args,
         { isPrepareResponse: true }
       )
@@ -541,7 +546,23 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    return this._privResponder(() => {
+    const { auth } = { ...args }
+    const { apiKey, apiSecret } = { ...auth }
+    const isRequiredUser = (
+      cb ||
+      !apiKey ||
+      typeof apiKey !== 'string' ||
+      !apiSecret ||
+      typeof apiSecret !== 'string'
+    )
+    const responder = isRequiredUser
+      ? this._privResponder
+      : this._responder
+    const endingArgs = isRequiredUser
+      ? [args, cb]
+      : [cb]
+
+    return responder(async () => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
           (args) => getDataFromApi(
@@ -557,7 +578,7 @@ class FrameworkReportService extends ReportService {
             )
           }
         )
-    }, 'getPositionsAudit', args, cb)
+    }, 'getPositionsAudit', ...endingArgs)
   }
 
   /**
@@ -577,7 +598,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getLedgers',
+        this._SYNC_API_METHODS.LEDGERS,
         args,
         { isPrepareResponse: true }
       )
@@ -601,7 +622,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getTrades',
+        this._SYNC_API_METHODS.TRADES,
         args,
         { isPrepareResponse: true }
       )
@@ -625,7 +646,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getFundingTrades',
+        this._SYNC_API_METHODS.FUNDING_TRADES,
         args,
         { isPrepareResponse: true }
       )
@@ -648,7 +669,7 @@ class FrameworkReportService extends ReportService {
           (args) => super.getTickersHistory(space, args),
           args,
           {
-            collName: '_getTickersHistory',
+            collName: this._SYNC_API_METHODS.TICKERS_HISTORY,
             confName: 'tickersHistoryConf',
             datePropName: 'mtsUpdate'
           }
@@ -672,7 +693,7 @@ class FrameworkReportService extends ReportService {
           (args) => super.getPublicTrades(space, args),
           args,
           {
-            collName: '_getPublicTrades',
+            collName: this._SYNC_API_METHODS.PUBLIC_TRADES,
             confName: 'publicTradesConf',
             datePropName: 'mts'
           }
@@ -718,7 +739,7 @@ class FrameworkReportService extends ReportService {
           (args) => super.getStatusMessages(space, args),
           preparedArgs,
           {
-            collName: '_getStatusMessages',
+            collName: this._SYNC_API_METHODS.STATUS_MESSAGES,
             confName: 'statusMessagesConf',
             datePropName: 'timestamp'
           }
@@ -756,7 +777,7 @@ class FrameworkReportService extends ReportService {
           (args) => super.getCandles(space, args),
           argsWithParamsByDefault,
           {
-            collName: '_getCandles',
+            collName: this._SYNC_API_METHODS.CANDLES,
             confName: 'candlesConf',
             datePropName: 'mts'
           }
@@ -798,7 +819,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getOrders',
+        this._SYNC_API_METHODS.ORDERS,
         args,
         { isPrepareResponse: true }
       )
@@ -839,7 +860,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getMovements',
+        this._SYNC_API_METHODS.MOVEMENTS,
         args,
         { isPrepareResponse: true }
       )
@@ -863,7 +884,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getFundingOfferHistory',
+        this._SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
         args,
         { isPrepareResponse: true }
       )
@@ -887,7 +908,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getFundingLoanHistory',
+        this._SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
         args,
         { isPrepareResponse: true }
       )
@@ -911,7 +932,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getFundingCreditHistory',
+        this._SYNC_API_METHODS.FUNDING_CREDIT_HISTORY,
         args,
         { isPrepareResponse: true }
       )
@@ -935,7 +956,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getLogins',
+        this._SYNC_API_METHODS.LOGINS,
         args,
         { isPrepareResponse: true }
       )
@@ -959,7 +980,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
-        '_getChangeLogs',
+        this._SYNC_API_METHODS.CHANGE_LOGS,
         args,
         { isPrepareResponse: true }
       )

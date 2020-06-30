@@ -3,7 +3,7 @@
 const {
   CONSTR_FIELD_NAME,
   TRIGGER_FIELD_NAME
-} = require('../const')
+} = require('../../schema/const')
 
 const _getConstraintsQuery = (name, model) => {
   const constraintsArr = Array.isArray(model[CONSTR_FIELD_NAME])

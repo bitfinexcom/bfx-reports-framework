@@ -21,12 +21,14 @@ class BalanceHistory {
     dao,
     wallets,
     FOREX_SYMBS,
-    currencyConverter
+    currencyConverter,
+    SYNC_API_METHODS
   ) {
     this.dao = dao
     this.wallets = wallets
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
+    this.SYNC_API_METHODS = SYNC_API_METHODS
   }
 
   _groupWalletsByCurrency (wallets = []) {
@@ -112,7 +114,7 @@ class BalanceHistory {
     }
 
     return this.dao.findInCollBy(
-      '_getWallets',
+      this.SYNC_API_METHODS.WALLETS,
       {
         auth,
         params: { start, end }
@@ -135,7 +137,7 @@ class BalanceHistory {
       ? mtsMoment
       : start
     return this.dao.findInCollBy(
-      '_getCandles',
+      this.SYNC_API_METHODS.CANDLES,
       { params: { start: _start, end, timeframe: '1D' } },
       {
         isPublic: true,
@@ -450,5 +452,6 @@ decorate(inject(TYPES.DAO), BalanceHistory, 0)
 decorate(inject(TYPES.Wallets), BalanceHistory, 1)
 decorate(inject(TYPES.FOREX_SYMBS), BalanceHistory, 2)
 decorate(inject(TYPES.CurrencyConverter), BalanceHistory, 3)
+decorate(inject(TYPES.SYNC_API_METHODS), BalanceHistory, 4)
 
 module.exports = BalanceHistory

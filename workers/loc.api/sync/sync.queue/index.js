@@ -9,6 +9,7 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
+const COLLS_TYPES = require('../schema/colls.types')
 
 const {
   checkCollPermission
@@ -17,10 +18,12 @@ const {
   UpdateSyncQueueJobError
 } = require('../../errors')
 
-const LOCKED_JOB_STATE = 'LOCKED'
-const NEW_JOB_STATE = 'NEW'
-const FINISHED_JOB_STATE = 'FINISHED'
-const ERROR_JOB_STATE = 'ERROR'
+const {
+  LOCKED_JOB_STATE,
+  NEW_JOB_STATE,
+  FINISHED_JOB_STATE,
+  ERROR_JOB_STATE
+} = require('./sync.queue.states')
 
 class SyncQueue extends EventEmitter {
   constructor (
@@ -43,15 +46,15 @@ class SyncQueue extends EventEmitter {
 
     this.methodCollMap = this._filterMethodCollMap(
       this.syncSchema.getMethodCollMap(),
-      /^(?!hidden:)/i
+      new RegExp(`^(?!${COLLS_TYPES.HIDDEN})`, 'i')
     )
     this.privMethodCollMap = this._filterMethodCollMap(
       this.methodCollMap,
-      /^(?!public:)/i
+      new RegExp(`^(?!${COLLS_TYPES.PUBLIC})`, 'i')
     )
     this.pubMethodCollMap = this._filterMethodCollMap(
       this.methodCollMap,
-      /^public:/i
+      new RegExp(`^${COLLS_TYPES.PUBLIC}`, 'i')
     )
 
     this.allMultipliers = this._getAllMultipliers()

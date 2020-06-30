@@ -7,6 +7,7 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../../di/types')
+const { CONVERT_TO } = require('../const')
 const DataInserterHook = require('./data.inserter.hook')
 
 class ConvertCurrencyHook extends DataInserterHook {
@@ -55,10 +56,7 @@ class ConvertCurrencyHook extends DataInserterHook {
    * @override
    */
   async execute () {
-    const {
-      convertTo,
-      syncColls
-    } = this._opts
+    const { syncColls } = this._opts
 
     if (syncColls.every(name => (
       name !== this.ALLOWED_COLLS.ALL &&
@@ -110,7 +108,7 @@ class ConvertCurrencyHook extends DataInserterHook {
           .convertByCandles(
             elems,
             {
-              convertTo,
+              convertTo: CONVERT_TO,
               ...schema
             }
           )

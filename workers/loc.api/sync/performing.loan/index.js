@@ -19,16 +19,18 @@ class PerformingLoan {
     ALLOWED_COLLS,
     syncSchema,
     FOREX_SYMBS,
-    authenticator
+    authenticator,
+    SYNC_API_METHODS
   ) {
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
+    this.SYNC_API_METHODS = SYNC_API_METHODS
 
     this.tradesMethodColl = this.syncSchema.getMethodCollMap()
-      .get('_getLedgers')
+      .get(this.SYNC_API_METHODS.LEDGERS)
   }
 
   async _getLedgers ({
@@ -267,5 +269,6 @@ decorate(inject(TYPES.ALLOWED_COLLS), PerformingLoan, 1)
 decorate(inject(TYPES.SyncSchema), PerformingLoan, 2)
 decorate(inject(TYPES.FOREX_SYMBS), PerformingLoan, 3)
 decorate(inject(TYPES.Authenticator), PerformingLoan, 4)
+decorate(inject(TYPES.SYNC_API_METHODS), PerformingLoan, 5)
 
 module.exports = PerformingLoan

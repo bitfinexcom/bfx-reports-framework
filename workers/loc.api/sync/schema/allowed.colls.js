@@ -1,6 +1,6 @@
 'use strict'
 
-const TABLES_NAMES = require('./dao/tables-names')
+const TABLES_NAMES = require('./tables-names')
 
 module.exports = {
   ALL: '_ALL',
