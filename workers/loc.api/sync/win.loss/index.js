@@ -24,7 +24,8 @@ class WinLoss {
     balanceHistory,
     positionsSnapshot,
     FOREX_SYMBS,
-    authenticator
+    authenticator,
+    SYNC_API_METHODS
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
@@ -34,6 +35,7 @@ class WinLoss {
     this.positionsSnapshot = positionsSnapshot
     this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
+    this.SYNC_API_METHODS = SYNC_API_METHODS
   }
 
   async _getPlFromPositionsSnapshot (args) {
@@ -280,7 +282,7 @@ class WinLoss {
     const movementsModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.MOVEMENTS)
     const movementsMethodColl = this.syncSchema.getMethodCollMap()
-      .get('_getMovements')
+      .get(this.SYNC_API_METHODS.MOVEMENTS)
     const {
       symbolFieldName: movementsSymbolFieldName
     } = movementsMethodColl
@@ -394,5 +396,6 @@ decorate(inject(TYPES.BalanceHistory), WinLoss, 4)
 decorate(inject(TYPES.PositionsSnapshot), WinLoss, 5)
 decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 6)
 decorate(inject(TYPES.Authenticator), WinLoss, 7)
+decorate(inject(TYPES.SYNC_API_METHODS), WinLoss, 8)
 
 module.exports = WinLoss

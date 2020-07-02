@@ -1,0 +1,13 @@
+'use strict'
+
+const CONVERT_TO = 'USD'
+const CANDLES_TIMEFRAME = '1D'
+const CANDLES_SECTION = 'hist'
+const ALL_SYMBOLS_TO_SYNC = '_ALL'
+
+module.exports = {
+  CONVERT_TO,
+  CANDLES_TIMEFRAME,
+  CANDLES_SECTION,
+  ALL_SYMBOLS_TO_SYNC
+}

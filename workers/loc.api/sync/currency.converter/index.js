@@ -30,13 +30,15 @@ class CurrencyConverter {
     dao,
     syncSchema,
     FOREX_SYMBS,
-    ALLOWED_COLLS
+    ALLOWED_COLLS,
+    SYNC_API_METHODS
   ) {
     this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.SYNC_API_METHODS = SYNC_API_METHODS
 
     this._COLL_NAMES = {
       PUBLIC_TRADES: 'publicTrades',
@@ -327,7 +329,7 @@ class CurrencyConverter {
     end
   ) {
     const candlesSchema = this.syncSchema.getMethodCollMap()
-      .get('_getCandles')
+      .get(this.SYNC_API_METHODS.CANDLES)
 
     if (
       !reqSymb ||
@@ -682,7 +684,7 @@ class CurrencyConverter {
       dateFieldName,
       timeframeFieldName
     } = this.syncSchema.getMethodCollMap()
-      .get('_getCandles')
+      .get(this.SYNC_API_METHODS.CANDLES)
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
@@ -902,5 +904,6 @@ decorate(inject(TYPES.DAO), CurrencyConverter, 1)
 decorate(inject(TYPES.SyncSchema), CurrencyConverter, 2)
 decorate(inject(TYPES.FOREX_SYMBS), CurrencyConverter, 3)
 decorate(inject(TYPES.ALLOWED_COLLS), CurrencyConverter, 4)
+decorate(inject(TYPES.SYNC_API_METHODS), CurrencyConverter, 5)
 
 module.exports = CurrencyConverter

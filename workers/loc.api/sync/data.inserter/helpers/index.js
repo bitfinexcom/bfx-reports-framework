@@ -7,29 +7,17 @@ const filterMethodCollMapByList = require(
   './filter-method-coll-map-by-list'
 )
 const {
-  invertSort,
-  filterMethodCollMap,
-  checkCollType,
-  compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
-  getAllowedCollsNames,
-  addPropsToResIfExist
+  getAllowedCollsNames
 } = require('./utils')
-const getFlagsFromLedgerDescription = require(
-  './get-flags-from-ledger-description'
-)
+const getMethodArgMap = require('./get-method-arg-map')
 
 module.exports = {
   searchClosePriceAndSumAmount,
   filterMethodCollMapByList,
-  invertSort,
-  filterMethodCollMap,
-  checkCollType,
-  compareElemsDbAndApi,
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  addPropsToResIfExist,
-  getFlagsFromLedgerDescription
+  getMethodArgMap
 }

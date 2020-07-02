@@ -13,12 +13,14 @@ class Wallets {
     dao,
     currencyConverter,
     TABLES_NAMES,
-    authenticator
+    authenticator,
+    SYNC_API_METHODS
   ) {
     this.dao = dao
     this.currencyConverter = currencyConverter
     this.TABLES_NAMES = TABLES_NAMES
     this.authenticator = authenticator
+    this.SYNC_API_METHODS = SYNC_API_METHODS
   }
 
   _getConvSchema (args) {
@@ -43,7 +45,7 @@ class Wallets {
     } = { ...args }
 
     const walletsFromLedgers = await this.dao.findInCollBy(
-      '_getWallets',
+      this.SYNC_API_METHODS.WALLETS,
       {
         auth,
         params: { end }
@@ -118,5 +120,6 @@ decorate(inject(TYPES.DAO), Wallets, 0)
 decorate(inject(TYPES.CurrencyConverter), Wallets, 1)
 decorate(inject(TYPES.TABLES_NAMES), Wallets, 2)
 decorate(inject(TYPES.Authenticator), Wallets, 3)
+decorate(inject(TYPES.SYNC_API_METHODS), Wallets, 4)
 
 module.exports = Wallets
