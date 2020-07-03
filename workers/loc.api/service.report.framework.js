@@ -1011,6 +1011,68 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getSettings (space, args, cb) {
+    return this._privResponder(async () => {
+      const { auth } = { ...args }
+      const { apiKey, apiSecret, subUsers } = { ...auth }
+
+      if (
+        Array.isArray(subUsers) &&
+        subUsers.length > 1
+      ) {
+        const promises = subUsers.map((subUser) => {
+          const { apiKey, apiSecret } = { ...subUser }
+
+          const _args = {
+            ...args,
+            auth: { apiKey, apiSecret }
+          }
+
+          return super.getSettings(space, _args)
+        })
+        const resArr = await Promise.all(promises)
+
+        return resArr.reduce((accum, curr) => {
+          if (Array.isArray(curr)) {
+            accum.push(...curr)
+          }
+
+          return accum
+        }, [])
+      }
+
+      const _args = {
+        ...args,
+        auth: getAuthFromSubAccountAuth(
+          { apiKey, apiSecret }
+        )
+      }
+
+      return super.getSettings(space, _args)
+    }, 'getSettings', args, cb)
+  }
+
+  /**
+   * @override
+   */
+  updateSettings (space, args, cb) {
+    return this._privResponder(async () => {
+      const { auth } = { ...args }
+      const { apiKey, apiSecret } = { ...auth }
+      const _args = {
+        ...args,
+        auth: getAuthFromSubAccountAuth(
+          { apiKey, apiSecret }
+        )
+      }
+
+      return super.updateSettings(space, _args)
+    }, 'updateSettings', args, cb)
+  }
+
+  /**
+   * @override
+   */
   getWallets (space, args, cb) {
     return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
