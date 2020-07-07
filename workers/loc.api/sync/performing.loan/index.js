@@ -100,7 +100,7 @@ class PerformingLoan {
       return 0
     }
 
-    return (amount / balance) * 365 * 100
+    return (Math.pow(1 + amount / balance, 365) - 1) * 100
   }
 
   _calcDailyPercs (data) {
