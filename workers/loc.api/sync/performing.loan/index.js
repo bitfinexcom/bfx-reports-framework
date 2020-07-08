@@ -10,7 +10,8 @@ const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
-  getStartMtsByTimeframe
+  getStartMtsByTimeframe,
+  getBackIterable
 } = require('../helpers')
 
 class PerformingLoan {
@@ -93,25 +94,14 @@ class PerformingLoan {
     })
   }
 
-  _findMaxBalanceBetweenMts (
-    balances = [],
-    params = {}
-  ) {
-    const {
-      end = Date.now(),
-      start = 0,
+  _findMaxBalanceBetweenMtsFromStart (
+    balances,
+    {
+      end,
+      start,
       symbol
-    } = { ...params }
-
-    if (
-      !Array.isArray(balances) ||
-      balances.length === 0 ||
-      !Number.isInteger(end) ||
-      !Number.isInteger(start)
-    ) {
-      return null
     }
-
+  ) {
     let maxBalance = null
 
     for (const ledger of balances) {
@@ -136,6 +126,83 @@ class PerformingLoan {
     }
 
     return maxBalance
+  }
+
+  _findMaxBalanceBetweenMtsFromEnd (
+    balances,
+    {
+      end,
+      start,
+      symbol
+    }
+  ) {
+    const backIterableBalances = getBackIterable(balances)
+
+    let maxBalance = null
+
+    for (const ledger of backIterableBalances) {
+      const {
+        mts,
+        currency,
+        balance
+      } = { ...ledger }
+
+      if (mts > end) {
+        break
+      }
+      if (
+        mts < start ||
+        currency !== symbol
+      ) {
+        continue
+      }
+      if (balance > maxBalance) {
+        maxBalance = balance
+      }
+    }
+
+    return maxBalance
+  }
+
+  _findMaxBalanceBetweenMts (
+    balances = [],
+    params = {}
+  ) {
+    const {
+      end = Date.now(),
+      start = 0,
+      symbol
+    } = { ...params }
+
+    if (
+      !Array.isArray(balances) ||
+      balances.length === 0 ||
+      !Number.isInteger(end) ||
+      !Number.isInteger(start)
+    ) {
+      return null
+    }
+
+    const { mts: middleEntryMts } = balances[
+      Math.trunc((balances.length - 1) / 2)
+    ]
+    const _params = {
+      end,
+      start,
+      symbol
+    }
+
+    if (middleEntryMts > end) {
+      return this._findMaxBalanceBetweenMtsFromEnd(
+        balances,
+        _params
+      )
+    }
+
+    return this._findMaxBalanceBetweenMtsFromStart(
+      balances,
+      _params
+    )
   }
 
   _calcPercsArr (percs) {
