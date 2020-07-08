@@ -180,12 +180,12 @@ class PerformingLoan {
           {
             end: mts,
             start: Number.isInteger(mts)
-              ? mts - 24 * 60 * 60 * 1000
+              /* Used 30h instead of 24h as might have overlaps */
+              ? mts - 30 * 60 * 60 * 1000
               : null,
             symbol: currency
           }
         )
-        console.log('[maxBalance]:'.bgRed, maxBalance)
 
         if (
           accum.length !== 0 &&
