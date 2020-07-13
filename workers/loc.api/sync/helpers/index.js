@@ -12,6 +12,7 @@ const splitSymbolPairs = require('./split-symbol-pairs')
 const setMtsToStartingAndEndingFrames = require(
   './set-mts-to-starting-and-ending-frames'
 )
+const getBackIterable = require('./get-back-iterable')
 const {
   delay
 } = require('./utils')
@@ -27,5 +28,6 @@ module.exports = {
   checkCollPermission,
   splitSymbolPairs,
   delay,
-  setMtsToStartingAndEndingFrames
+  setMtsToStartingAndEndingFrames,
+  getBackIterable
 }

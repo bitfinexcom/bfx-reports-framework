@@ -1083,6 +1083,64 @@ module.exports = (
     assert.isNumber(res.body.result.timezoneOffset)
   })
 
+  it('it should be successfully performed by the updateSettings method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'updateSettings',
+        params: {
+          settings: { 'api:testKey': { value: 'strVal' } }
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.isNumber(res.body.result[0])
+    assert.isString(res.body.result[1])
+    assert.strictEqual(res.body.result[1], 'acc_ss')
+    assert.isArray(res.body.result[4])
+    assert.isNumber(res.body.result[4][0])
+    assert.strictEqual(res.body.result[4][0], 1)
+    assert.isString(res.body.result[6])
+    assert.strictEqual(res.body.result[6], 'SUCCESS')
+  })
+
+  it('it should be successfully performed by the getSettings method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getSettings',
+        params: {
+          keys: ['api:testKey']
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.isArray(res.body.result[0])
+    assert.isString(res.body.result[0][0])
+    assert.strictEqual(res.body.result[0][0], 'testKey')
+    assert.isObject(res.body.result[0][1])
+    assert.isString(res.body.result[0][1].value)
+    assert.strictEqual(res.body.result[0][1].value, 'strVal')
+  })
+
   it('it should be successfully performed by the getSymbols method', async function () {
     this.timeout(5000)
 

@@ -10,7 +10,8 @@ const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
-  getStartMtsByTimeframe
+  getStartMtsByTimeframe,
+  getBackIterable
 } = require('../helpers')
 
 class PerformingLoan {
@@ -31,6 +32,8 @@ class PerformingLoan {
 
     this.tradesMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
+    this.ledgersModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.LEDGERS)
   }
 
   async _getLedgers ({
@@ -40,7 +43,8 @@ class PerformingLoan {
     symbol,
     filter = {
       $eq: { _isMarginFundingPayment: 1 }
-    }
+    },
+    projection = this.ledgersModel
   }) {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
@@ -51,8 +55,6 @@ class PerformingLoan {
     )
       ? { $in: { currency: symbol } }
       : {}
-    const ledgersModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.LEDGERS)
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
@@ -65,10 +67,141 @@ class PerformingLoan {
           ...symbFilter
         },
         sort: [['mts', -1]],
-        projection: ledgersModel,
+        projection,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
+    )
+  }
+
+  _getFundingBalances ({
+    auth,
+    start,
+    end,
+    symbol,
+    filter = {
+      $eq: { wallet: 'funding' },
+      $isNotNull: ['balance']
+    }
+  }) {
+    return this._getLedgers({
+      auth,
+      start,
+      end,
+      symbol,
+      filter,
+      projection: ['mts', 'currency', 'balance']
+    })
+  }
+
+  _findMaxBalanceBetweenMtsFromStart (
+    balances,
+    {
+      end,
+      start,
+      symbol
+    }
+  ) {
+    let maxBalance = null
+
+    for (const ledger of balances) {
+      const {
+        mts,
+        currency,
+        balance
+      } = { ...ledger }
+
+      if (mts < start) {
+        break
+      }
+      if (
+        mts > end ||
+        currency !== symbol
+      ) {
+        continue
+      }
+      if (balance > maxBalance) {
+        maxBalance = balance
+      }
+    }
+
+    return maxBalance
+  }
+
+  _findMaxBalanceBetweenMtsFromEnd (
+    balances,
+    {
+      end,
+      start,
+      symbol
+    }
+  ) {
+    const backIterableBalances = getBackIterable(balances)
+
+    let maxBalance = null
+
+    for (const ledger of backIterableBalances) {
+      const {
+        mts,
+        currency,
+        balance
+      } = { ...ledger }
+
+      if (mts > end) {
+        break
+      }
+      if (
+        mts < start ||
+        currency !== symbol
+      ) {
+        continue
+      }
+      if (balance > maxBalance) {
+        maxBalance = balance
+      }
+    }
+
+    return maxBalance
+  }
+
+  _findMaxBalanceBetweenMts (
+    balances = [],
+    params = {}
+  ) {
+    const {
+      end = Date.now(),
+      start = 0,
+      symbol
+    } = { ...params }
+
+    if (
+      !Array.isArray(balances) ||
+      balances.length === 0 ||
+      !Number.isInteger(end) ||
+      !Number.isInteger(start)
+    ) {
+      return null
+    }
+
+    const { mts: middleEntryMts } = balances[
+      Math.trunc((balances.length - 1) / 2)
+    ]
+    const _params = {
+      end,
+      start,
+      symbol
+    }
+
+    if (middleEntryMts > end) {
+      return this._findMaxBalanceBetweenMtsFromEnd(
+        balances,
+        _params
+      )
+    }
+
+    return this._findMaxBalanceBetweenMtsFromStart(
+      balances,
+      _params
     )
   }
 
@@ -100,29 +233,40 @@ class PerformingLoan {
       return 0
     }
 
-    return (amount / balance) * 365 * 100
+    return (Math.pow(1 + amount / balance, 365) - 1) * 100
   }
 
-  _calcDailyPercs (data) {
+  _calcDailyPercs (data, balances) {
     let prevMts = 0
 
     const percsGroupedByDays = data.reduce(
       (accum, ledger = {}) => {
-        const { amount, balance, mts } = { ...ledger }
+        const { amount, mts, currency } = { ...ledger }
+        const maxBalance = this._findMaxBalanceBetweenMts(
+          balances,
+          {
+            end: mts,
+            start: Number.isInteger(mts)
+              /* Used 30h instead of 24h as might have overlaps */
+              ? mts - 30 * 60 * 60 * 1000
+              : null,
+            symbol: currency
+          }
+        )
 
         if (
           accum.length !== 0 &&
           this._isSameDay(prevMts, mts)
         ) {
           accum[accum.length - 1].push(
-            this._calcPerc(amount, balance)
+            this._calcPerc(amount, maxBalance)
           )
           prevMts = mts
 
           return accum
         }
 
-        accum.push([this._calcPerc(amount, balance)])
+        accum.push([this._calcPerc(amount, maxBalance)])
         prevMts = mts
 
         return accum
@@ -135,7 +279,7 @@ class PerformingLoan {
     })
   }
 
-  _calcLedgers () {
+  _calcLedgers (balances) {
     return (data = []) => {
       const res = data.reduce((accum, ledger = {}) => {
         const { amountUsd } = { ...ledger }
@@ -151,7 +295,7 @@ class PerformingLoan {
             : amountUsd
         }
       }, {})
-      const dailyPercs = this._calcDailyPercs(data)
+      const dailyPercs = this._calcDailyPercs(data, balances)
 
       return {
         ...res,
@@ -237,6 +381,7 @@ class PerformingLoan {
     }
 
     const ledgers = await this._getLedgers(args)
+    const balances = await this._getFundingBalances(args)
 
     const {
       dateFieldName: ledgersDateFieldName,
@@ -249,7 +394,7 @@ class PerformingLoan {
       this.FOREX_SYMBS,
       ledgersDateFieldName,
       ledgersSymbolFieldName,
-      this._calcLedgers()
+      this._calcLedgers(balances)
     )
 
     const groupedData = await calcGroupedData(
