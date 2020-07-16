@@ -7,7 +7,8 @@ const {
 } = require('inversify')
 const {
   getLimitNotMoreThan,
-  checkFilterParams
+  checkFilterParams,
+  normalizeFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   AuthError
@@ -636,7 +637,7 @@ class SqliteDAO extends DAO {
    */
   async findInCollBy (
     method,
-    args,
+    reqArgs,
     {
       isPrepareResponse = false,
       isPublic = false,
@@ -648,6 +649,7 @@ class SqliteDAO extends DAO {
   ) {
     const filterModelName = filterModelNameMap.get(method)
 
+    const args = normalizeFilterParams(method, reqArgs)
     checkFilterParams(filterModelName, args)
 
     const { auth: user } = { ...args }
