@@ -7,8 +7,10 @@ const {
   injectable,
   inject
 } = require('inversify')
+const {
+  splitSymbolPairs
+} = require('bfx-report/workers/loc.api/helpers')
 
-const { splitSymbolPairs } = require('../helpers')
 const TYPES = require('../../di/types')
 
 class PositionsSnapshot {
