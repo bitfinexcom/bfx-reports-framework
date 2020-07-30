@@ -17,13 +17,20 @@ const getFieldsFilters = (
     const field = _params[fieldName]
 
     if (
-      typeof field === 'boolean' &&
       Object.keys(model)
         .some(key => key === modelFieldName)
     ) {
-      return {
-        ...accum,
-        [modelFieldName]: Number(field)
+      if (typeof field === 'boolean') {
+        return {
+          ...accum,
+          [modelFieldName]: Number(field)
+        }
+      }
+      if (typeof field === 'number') {
+        return {
+          ...accum,
+          [modelFieldName]: field
+        }
       }
     }
 
@@ -59,7 +66,8 @@ module.exports = (
     [
       'isMarginFundingPayment',
       'isAffiliateRebate',
-      'isStakingPayments'
+      'isStakingPayments',
+      'category'
     ],
     params,
     model
