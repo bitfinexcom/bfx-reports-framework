@@ -6,8 +6,12 @@ const addPropsToResIfExist = require(
 const getFlagsFromLedgerDescription = require(
   './get-flags-from-ledger-description'
 )
+const getCategoryFromDescription = require(
+  './get-category-from-description'
+)
 
 module.exports = {
   addPropsToResIfExist,
-  getFlagsFromLedgerDescription
+  getFlagsFromLedgerDescription,
+  getCategoryFromDescription
 }
