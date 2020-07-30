@@ -127,6 +127,7 @@ class ApiMiddlewareHandlerAfter {
               pattern: 'Staking Payments'
             },
             {
+              fieldName: '_category',
               handler: getCategoryFromDescription
             }
           ]
