@@ -90,13 +90,7 @@ const _schema = [
   },
   {
     tester: (d) => (
-      _startsWith(d, 'canceled withdrawale')
-    ),
-    category: 105
-  },
-  {
-    tester: (d) => (
-      _startsWith(d, 'canceled withdrawale')
+      _startsWith(d, 'canceled withdrawal')
     ),
     category: 105
   },
