@@ -102,6 +102,12 @@ const _schema = [
   },
   {
     tester: (d) => (
+      _includes(d, 'trading rebate')
+    ),
+    category: 202
+  },
+  {
+    tester: (d) => (
       _startsWith(d, 'hidden order fee')
     ),
     category: 204
