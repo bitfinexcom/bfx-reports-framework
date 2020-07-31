@@ -11,14 +11,14 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  getDataFromApi
+  getDataFromApi,
+  splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
 
 const {
   CurrencyConversionDataFindingError
 } = require('../../errors')
 const {
-  splitSymbolPairs,
   isForexSymb
 } = require('../helpers')
 const { tryParseJSON } = require('../../helpers')

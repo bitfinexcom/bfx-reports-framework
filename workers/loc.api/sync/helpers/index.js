@@ -8,7 +8,6 @@ const FOREX_SYMBS = require('./forex-symbs')
 const isForexSymb = require('./is-forex-symb')
 const redirectRequestsToApi = require('./redirect-requests-to-api')
 const checkCollPermission = require('./check-coll-permission')
-const splitSymbolPairs = require('./split-symbol-pairs')
 const setMtsToStartingAndEndingFrames = require(
   './set-mts-to-starting-and-ending-frames'
 )
@@ -26,7 +25,6 @@ module.exports = {
   isForexSymb,
   redirectRequestsToApi,
   checkCollPermission,
-  splitSymbolPairs,
   delay,
   setMtsToStartingAndEndingFrames,
   getBackIterable
