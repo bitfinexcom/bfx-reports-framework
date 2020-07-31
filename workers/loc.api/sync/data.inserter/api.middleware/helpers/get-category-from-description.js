@@ -65,7 +65,7 @@ const _schema = [
   },
   {
     tester: (d) => (
-      _startsWith(d, 'settlement')
+      _includes(d, 'settlement')
     ),
     category: 31
   },
@@ -132,7 +132,7 @@ const _schema = [
   },
   {
     tester: (d) => (
-      _startsWith(d, 'margin funding charge')
+      _includes(d, 'margin funding charge')
     ),
     category: 226
   },
