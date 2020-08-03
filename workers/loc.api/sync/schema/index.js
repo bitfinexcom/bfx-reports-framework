@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 13
+const SUPPORTED_DB_VERSION = 14
 
 const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
@@ -97,6 +97,7 @@ const _models = new Map([
       _nativeBalanceUsd: 'DECIMAL(22,12)',
       description: 'TEXT',
       wallet: 'VARCHAR(255)',
+      _category: 'INT',
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
       _isStakingPayments: 'INT',

@@ -16,8 +16,17 @@ module.exports = (
     const {
       fieldName,
       pattern,
+      handler,
       isCaseSensitivity
     } = { ...schema }
+
+    if (typeof handler === 'function') {
+      return {
+        ...accum,
+        [fieldName]: handler(ledger.description)
+      }
+    }
+
     const regExp = new RegExp(
       pattern,
       isCaseSensitivity ? '' : 'i'
