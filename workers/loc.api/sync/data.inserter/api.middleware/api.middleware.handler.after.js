@@ -10,7 +10,8 @@ const TYPES = require('../../../di/types')
 const SYNC_API_METHODS = require('../../schema/sync.api.methods')
 const {
   addPropsToResIfExist,
-  getFlagsFromLedgerDescription
+  getFlagsFromLedgerDescription,
+  getCategoryFromDescription
 } = require('./helpers')
 
 class ApiMiddlewareHandlerAfter {
@@ -124,6 +125,10 @@ class ApiMiddlewareHandlerAfter {
             {
               fieldName: '_isStakingPayments',
               pattern: 'Staking Payments'
+            },
+            {
+              fieldName: '_category',
+              handler: getCategoryFromDescription
             }
           ]
         ),

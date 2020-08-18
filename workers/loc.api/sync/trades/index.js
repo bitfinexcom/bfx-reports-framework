@@ -5,12 +5,14 @@ const {
   injectable,
   inject
 } = require('inversify')
+const {
+  splitSymbolPairs
+} = require('bfx-report/workers/loc.api/helpers')
 
 const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
-  splitSymbolPairs,
   getMtsGroupedByTimeframe
 } = require('../helpers')
 

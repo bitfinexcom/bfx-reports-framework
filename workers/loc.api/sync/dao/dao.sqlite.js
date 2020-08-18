@@ -7,7 +7,8 @@ const {
 } = require('inversify')
 const {
   getLimitNotMoreThan,
-  checkFilterParams
+  checkFilterParams,
+  normalizeFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   AuthError
@@ -44,6 +45,12 @@ const {
 } = require('../../errors')
 
 class SqliteDAO extends DAO {
+  constructor (...args) {
+    super(...args)
+
+    this._transactionPromise = Promise.resolve()
+  }
+
   _run (sql, params = []) {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, function (err) {
@@ -94,14 +101,16 @@ class SqliteDAO extends DAO {
     return this._run('ROLLBACK')
   }
 
-  _beginTrans (
+  async _beginTrans (
     asyncExecQuery,
     {
       beforeTransFn,
       afterTransFn
     } = {}
   ) {
-    return new Promise((resolve, reject) => {
+    await this._transactionPromise
+
+    const promise = new Promise((resolve, reject) => {
       this.db.serialize(async () => {
         let isTransBegun = false
 
@@ -139,6 +148,10 @@ class SqliteDAO extends DAO {
         }
       })
     })
+
+    this._transactionPromise = promise
+
+    return promise
   }
 
   async _createTablesIfNotExists () {
@@ -636,7 +649,7 @@ class SqliteDAO extends DAO {
    */
   async findInCollBy (
     method,
-    args,
+    reqArgs,
     {
       isPrepareResponse = false,
       isPublic = false,
@@ -648,6 +661,7 @@ class SqliteDAO extends DAO {
   ) {
     const filterModelName = filterModelNameMap.get(method)
 
+    const args = normalizeFilterParams(method, reqArgs)
     checkFilterParams(filterModelName, args)
 
     const { auth: user } = { ...args }
