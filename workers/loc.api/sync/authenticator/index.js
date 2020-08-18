@@ -478,7 +478,8 @@ class Authenticator {
       isReturnedPassword,
       isSubUser = false,
       isNotInTrans,
-      isAppliedProjectionToSubUser
+      isAppliedProjectionToSubUser,
+      subUsersProjection
     } = { ...params }
 
     if (
@@ -513,7 +514,10 @@ class Authenticator {
       return this.pickProps(
         user,
         projection,
-        isAppliedProjectionToSubUser
+        {
+          isAppliedProjectionToSubUser,
+          subUsersProjection
+        }
       )
     }
     if (
@@ -538,7 +542,10 @@ class Authenticator {
       return this.pickProps(
         session,
         projection,
-        isAppliedProjectionToSubUser
+        {
+          isAppliedProjectionToSubUser,
+          subUsersProjection
+        }
       )
     }
 
@@ -580,14 +587,18 @@ class Authenticator {
       isFilledSubUsers,
       projection,
       password,
-      isAppliedProjectionToSubUser
+      isAppliedProjectionToSubUser,
+      subUsersProjection
     } = { ...params }
 
     const _user = await this.dao.getUser(filter, params)
     const user = this.pickProps(
       _user,
       projection,
-      isAppliedProjectionToSubUser
+      {
+        isAppliedProjectionToSubUser,
+        subUsersProjection
+      }
     )
 
     if (
@@ -621,7 +632,8 @@ class Authenticator {
       password,
       emailPasswordsMap,
       projection,
-      isAppliedProjectionToSubUser
+      isAppliedProjectionToSubUser,
+      subUsersProjection
     } = { ...params }
     const _emailPasswordsMap = Array.isArray(emailPasswordsMap)
       ? emailPasswordsMap
@@ -642,7 +654,10 @@ class Authenticator {
     const users = this.pickProps(
       _users,
       projection,
-      isAppliedProjectionToSubUser
+      {
+        isAppliedProjectionToSubUser,
+        subUsersProjection
+      }
     )
 
     if (
@@ -828,13 +843,22 @@ class Authenticator {
     return username
   }
 
-  pickProps (data, props, isAppliedProjectionToSubUser) {
+  pickProps (
+    data,
+    projection,
+    opts
+  ) {
     if (
-      !Array.isArray(props) ||
-      props.length === 0
+      !Array.isArray(projection) ||
+      projection.length === 0
     ) {
       return data
     }
+
+    const {
+      isAppliedProjectionToSubUser,
+      subUsersProjection = projection
+    } = { ...opts }
 
     const isArray = Array.isArray(data)
     const dataArr = isArray ? data : [data]
@@ -846,10 +870,12 @@ class Authenticator {
 
       if (
         !isAppliedProjectionToSubUser ||
+        !Array.isArray(subUsersProjection) ||
+        subUsersProjection.length === 0 ||
         !Array.isArray(item.subUsers) ||
         item.subUsers.length === 0
       ) {
-        return pick(item, props)
+        return pick(item, projection)
       }
 
       const subUsers = item.subUsers.map((subUser) => {
@@ -857,10 +883,10 @@ class Authenticator {
           return subUser
         }
 
-        return pick(subUser, props)
+        return pick(subUser, subUsersProjection)
       })
 
-      return pick({ ...item, subUsers }, props)
+      return pick({ ...item, subUsers }, projection)
     })
 
     return isArray ? res : res[0]
