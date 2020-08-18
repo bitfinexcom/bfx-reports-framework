@@ -137,7 +137,17 @@ class FrameworkReportService extends ReportService {
     return this._responder(async () => {
       return this._authenticator.getUsers(
         { isSubUser: false },
-        { projection: ['email', 'isSubAccount', 'isNotProtected'] }
+        {
+          isFilledSubUsers: true,
+          isAppliedProjectionToSubUser: true,
+          subUsersProjection: ['email'],
+          projection: [
+            'email',
+            'isSubAccount',
+            'isNotProtected',
+            'subUsers'
+          ]
+        }
       )
     }, 'getUsers', cb)
   }
