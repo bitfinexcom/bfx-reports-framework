@@ -48,7 +48,7 @@ class SqliteDAO extends DAO {
   constructor (...args) {
     super(...args)
 
-    this._transactionPromise = Promise.resolve()
+    this._transactionPromises = []
   }
 
   _run (sql, params = []) {
@@ -101,16 +101,14 @@ class SqliteDAO extends DAO {
     return this._run('ROLLBACK')
   }
 
-  async _beginTrans (
+  _proccesTrans (
     asyncExecQuery,
     {
       beforeTransFn,
       afterTransFn
     } = {}
   ) {
-    await this._transactionPromise
-
-    const promise = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.db.serialize(async () => {
         let isTransBegun = false
 
@@ -148,10 +146,42 @@ class SqliteDAO extends DAO {
         }
       })
     })
+  }
 
-    this._transactionPromise = promise
+  async _manageTrans (...args) {
+    await Promise.allSettled(this._transactionPromises)
 
-    return promise
+    return this._proccesTrans(...args)
+  }
+
+  async _beginTrans (
+    asyncExecQuery,
+    {
+      beforeTransFn,
+      afterTransFn
+    } = {}
+  ) {
+    const _transactionPromise = this._manageTrans(
+      asyncExecQuery,
+      {
+        beforeTransFn,
+        afterTransFn
+      }
+    )
+    const length = this._transactionPromises
+      .push(_transactionPromise)
+    const index = length - 1
+
+    try {
+      const res = await _transactionPromise
+      this._transactionPromises.splice(index, 1)
+
+      return res
+    } catch (err) {
+      this._transactionPromises.splice(index, 1)
+
+      throw err
+    }
   }
 
   async _createTablesIfNotExists () {
