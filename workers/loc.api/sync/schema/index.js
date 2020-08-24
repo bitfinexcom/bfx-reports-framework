@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 14
+const SUPPORTED_DB_VERSION = 15
 
 const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
@@ -400,6 +400,8 @@ const _models = new Map([
       fundBal: 'DECIMAL(22,12)',
       fundingAccrued: 'DECIMAL(22,12)',
       fundingStep: 'DECIMAL(22,12)',
+      clampMin: 'DECIMAL(22,12)',
+      clampMax: 'DECIMAL(22,12)',
       _type: 'VARCHAR(255)'
     }
   ],

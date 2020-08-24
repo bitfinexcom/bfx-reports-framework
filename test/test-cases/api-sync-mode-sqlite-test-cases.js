@@ -1983,7 +1983,9 @@ module.exports = (
       'priceSpot',
       'fundBal',
       'fundingAccrued',
-      'fundingStep'
+      'fundingStep',
+      'clampMin',
+      'clampMax'
     ])
   })
 
