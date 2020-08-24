@@ -1,5 +1,7 @@
 'use strict'
 
+const { orderBy } = require('lodash')
+
 const {
   decorate,
   injectable,
@@ -51,14 +53,18 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
 
   _getRecalcBalance (auth, elems, item) {
     const {
+      id,
       mts,
       wallet,
       currency,
-      user_id: id,
+      user_id: userId,
       _nativeBalance,
       _nativeBalanceUsd
     } = { ...item }
-    const subUsersIds = this._getSubUsersIdsByMasterUserId(auth, id)
+    const subUsersIds = this._getSubUsersIdsByMasterUserId(
+      auth,
+      userId
+    )
 
     if (
       !Array.isArray(subUsersIds) ||
@@ -72,19 +78,20 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
 
     const _elems = elems
       .filter(({
+        id: _id,
         mts: _mts,
         wallet: _wallet,
         currency: _currency,
-        user_id: userId,
-        subUserId
+        user_id: _userId,
+        subUserId: _subUserId
       }) => (
-        Number.isInteger(subUserId) &&
-        userId === id &&
+        Number.isInteger(_subUserId) &&
+        _userId === userId &&
+        _id <= id &&
         _mts <= mts &&
         _wallet === wallet &&
         _currency === currency
       ))
-      .reverse()
     const subUsersBalances = []
     const subUsersBalancesUsd = []
 
@@ -304,10 +311,11 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         auth,
         firstGroupedRecords
       )
-      const recordsToGetBalances = [
-        ...initialElems,
-        ...elems
-      ]
+      const recordsToGetBalances = orderBy(
+        [...initialElems, ...elems],
+        ['mts', 'id'],
+        ['desc', 'desc']
+      )
       const recalcElems = []
 
       for (const elem of elems) {
