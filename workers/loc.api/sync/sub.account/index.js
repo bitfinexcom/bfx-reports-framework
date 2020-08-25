@@ -15,7 +15,8 @@ const {
   getSubAccountAuthFromAuth
 } = require('../../helpers')
 const {
-  SubAccountCreatingError
+  SubAccountCreatingError,
+  SubAccountUpdatingError
 } = require('../../errors')
 
 class SubAccount {
@@ -307,6 +308,124 @@ class SubAccount {
         email,
         isSubAccount,
         token
+      }
+    })
+  }
+
+  // TODO:
+  async updateSubAccount (args) {
+    const { auth, params } = { ...args }
+    const {
+      email,
+      password,
+      token
+    } = { ...auth }
+    const {
+      subAccountApiKeys
+    } = { ...params }
+
+    return this.dao.executeQueriesInTrans(async () => {
+      const subAccountUser = await this.authenticator
+        .signIn(
+          {
+            auth: {
+              email,
+              password,
+              isSubAccount: true,
+              token
+            }
+          },
+          {
+            isReturnedUser: true,
+            isNotInTrans: true
+          }
+        )
+
+      if (
+        !isSubAccountApiKeys(subAccountUser) ||
+        !Array.isArray(subAccountApiKeys) ||
+        subAccountApiKeys.length === 0 ||
+        subAccountApiKeys.some(isSubAccountApiKeys)
+      ) {
+        throw new SubAccountUpdatingError()
+      }
+
+      const { _id, email, token } = subAccountUser
+
+      const masterUser = {} // TODO:
+      const subUsersAuth = [
+        ...subAccountApiKeys,
+        masterUser
+      ]
+
+      const subUsers = []
+      let isSubUserFromMasterCreated = false
+      let subUsersCount = 0
+
+      for (const subUserAuth of subUsersAuth) {
+        subUsersCount += 1
+        const isLastSubUser = subUsersAuth.length === subUsersCount
+
+        const {
+          apiKey,
+          apiSecret,
+          password,
+          email,
+          token
+        } = { ...subUserAuth }
+
+        const isAuthCheckedInDb = (
+          (
+            email &&
+            typeof email === 'string'
+          ) ||
+          (
+            token &&
+            typeof token === 'string'
+          )
+        )
+        const auth = isAuthCheckedInDb
+          ? await this.authenticator.verifyUser(
+            {
+              auth: {
+                email,
+                password,
+                token
+              }
+            },
+            {
+              projection: [
+                '_id',
+                'id',
+                'email',
+                'apiKey',
+                'apiSecret',
+                'timezone',
+                'username'
+              ],
+              isDecryptedApiKeys: true,
+              isNotInTrans: true
+            }
+          )
+          : { apiKey, apiSecret }
+
+        if (
+          isLastSubUser &&
+          isSubUserFromMasterCreated &&
+          masterUser.apiKey === auth.apiKey &&
+          masterUser.apiSecret === auth.apiSecret &&
+          subUsers.length === 1
+        ) {
+          throw new SubAccountCreatingError()
+        }
+        if (
+          subUsers.some(item => (
+            auth.apiKey === item.apiKey &&
+            auth.apiSecret === item.apiSecret
+          ))
+        ) {
+          continue
+        }
       }
     })
   }

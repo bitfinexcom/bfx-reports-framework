@@ -181,7 +181,8 @@ class Authenticator {
     const {
       active = true,
       isDataFromDb = true,
-      isReturnedUser
+      isReturnedUser,
+      isNotInTrans
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -196,7 +197,8 @@ class Authenticator {
       {
         isDecryptedApiKeys: true,
         isFilledSubUsers: true,
-        isReturnedPassword: true
+        isReturnedPassword: true,
+        isNotInTrans
       }
     )
     const {
