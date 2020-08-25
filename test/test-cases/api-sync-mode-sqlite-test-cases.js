@@ -326,6 +326,11 @@ module.exports = (
       assert.isString(user.email)
       assert.isBoolean(user.isSubAccount)
       assert.isBoolean(user.isNotProtected)
+      assert.isArray(user.subUsers)
+
+      user.subUsers.forEach((subUser) => {
+        assert.isString(subUser.email)
+      })
     })
   })
 
@@ -1978,7 +1983,9 @@ module.exports = (
       'priceSpot',
       'fundBal',
       'fundingAccrued',
-      'fundingStep'
+      'fundingStep',
+      'clampMin',
+      'clampMax'
     ])
   })
 
