@@ -167,6 +167,16 @@ class FrameworkReportService extends ReportService {
     }, 'createSubAccount', cb)
   }
 
+  updateSubAccount (space, args, cb) {
+    return this._responder(() => {
+      // TODO: need to check the schema
+      checkParams(args, 'paramsSchemaForCreateSubAccount')
+
+      return this._subAccount
+        .updateSubAccount(args)
+    }, 'updateSubAccount', cb)
+  }
+
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
