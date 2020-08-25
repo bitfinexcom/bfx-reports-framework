@@ -107,8 +107,13 @@ class SubAccount {
       ]
 
       const subUsers = []
+      let isSubUserFromMasterCreated = false
+      let subUsersCount = 0
 
       for (const subUserAuth of subUsersAuth) {
+        subUsersCount += 1
+        const isLastSubUser = subUsersAuth.length === subUsersCount
+
         const {
           apiKey,
           apiSecret,
@@ -153,6 +158,15 @@ class SubAccount {
           : { apiKey, apiSecret }
 
         if (
+          isLastSubUser &&
+          isSubUserFromMasterCreated &&
+          masterUser.apiKey === auth.apiKey &&
+          masterUser.apiSecret === auth.apiSecret &&
+          subUsers.length === 1
+        ) {
+          throw new SubAccountCreatingError()
+        }
+        if (
           subUsers.some(item => (
             auth.apiKey === item.apiKey &&
             auth.apiSecret === item.apiSecret
@@ -188,6 +202,13 @@ class SubAccount {
             subUserId: subUser._id
           }
         )
+
+        if (
+          masterUser.apiKey === subUser.apiKey &&
+          masterUser.apiSecret === subUser.apiSecret
+        ) {
+          isSubUserFromMasterCreated = true
+        }
       }
 
       this.authenticator
