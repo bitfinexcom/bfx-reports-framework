@@ -169,8 +169,7 @@ class FrameworkReportService extends ReportService {
 
   updateSubAccount (space, args, cb) {
     return this._responder(() => {
-      // TODO: need to check the schema
-      checkParams(args, 'paramsSchemaForCreateSubAccount')
+      checkParams(args, 'paramsSchemaForUpdateSubAccount')
 
       return this._subAccount
         .updateSubAccount(args)
