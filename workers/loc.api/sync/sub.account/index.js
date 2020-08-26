@@ -16,7 +16,8 @@ const {
 } = require('../../helpers')
 const {
   SubAccountCreatingError,
-  SubAccountUpdatingError
+  SubAccountUpdatingError,
+  UserRemovingError
 } = require('../../errors')
 
 class SubAccount {
@@ -314,25 +315,18 @@ class SubAccount {
 
   // TODO:
   async updateSubAccount (args) {
-    const { auth, params } = { ...args }
-    const {
-      email,
-      password,
-      token
-    } = { ...auth }
-    const {
-      subAccountApiKeys
-    } = { ...params }
+    const { auth: subAccountAuth, params } = { ...args }
+    const { subAccountApiKeys } = { ...params }
+
+    // TODO: need to interrupt sync
 
     return this.dao.executeQueriesInTrans(async () => {
       const subAccountUser = await this.authenticator
         .signIn(
           {
             auth: {
-              email,
-              password,
-              isSubAccount: true,
-              token
+              ...subAccountAuth,
+              isSubAccount: true
             }
           },
           {
@@ -350,22 +344,17 @@ class SubAccount {
         throw new SubAccountUpdatingError()
       }
 
-      const { _id, email, token } = subAccountUser
+      const { _id, email, token, subUsers } = subAccountUser
 
-      const masterUser = {} // TODO:
-      const subUsersAuth = [
-        ...subAccountApiKeys,
-        masterUser
-      ]
+      const masterUser = subUsers.find((subUser) => {
+        const { email: _email } = { ...subUser }
 
-      const subUsers = []
-      let isSubUserFromMasterCreated = false
-      let subUsersCount = 0
+        return _email === email
+      })
 
-      for (const subUserAuth of subUsersAuth) {
-        subUsersCount += 1
-        const isLastSubUser = subUsersAuth.length === subUsersCount
+      const processedSubUsers = []
 
+      for (const subUserAuth of subAccountApiKeys) {
         const {
           apiKey,
           apiSecret,
@@ -410,22 +399,90 @@ class SubAccount {
           : { apiKey, apiSecret }
 
         if (
-          isLastSubUser &&
-          isSubUserFromMasterCreated &&
-          masterUser.apiKey === auth.apiKey &&
-          masterUser.apiSecret === auth.apiSecret &&
-          subUsers.length === 1
-        ) {
-          throw new SubAccountCreatingError()
-        }
-        if (
-          subUsers.some(item => (
+          (
+            masterUser.apiKey === auth.apiKey &&
+            masterUser.apiSecret === auth.apiSecret
+          ) ||
+          processedSubUsers.some(item => (
             auth.apiKey === item.apiKey &&
             auth.apiSecret === item.apiSecret
           ))
         ) {
           continue
         }
+        if (
+          subUsers.some((subUser) => (
+            auth.apiKey === subUser.apiKey &&
+            auth.apiSecret === subUser.apiSecret
+          ))
+        ) {
+          processedSubUsers.push(auth)
+
+          continue
+        }
+
+        const subUser = await this.authenticator
+          .signUp(
+            {
+              auth: {
+                ...auth,
+                password: subAccountUser.password
+              }
+            },
+            {
+              isDisabledApiKeysVerification: isAuthCheckedInDb,
+              isReturnedFullUserData: true,
+              isNotSetSession: true,
+              isSubUser: true,
+              isNotInTrans: true,
+              masterUserId: masterUser.id
+            }
+          )
+
+        await this.dao.insertElemToDb(
+          this.TABLES_NAMES.SUB_ACCOUNTS,
+          {
+            masterUserId: _id,
+            subUserId: subUser._id
+          }
+        )
+
+        processedSubUsers.push(auth)
+      }
+
+      const removingSubUsers = subUsers.filter((subUser) => (
+        processedSubUsers.every((processedSubUser) => (
+          processedSubUser.apiKey !== subUser.apiKey ||
+          processedSubUser.apiSecret !== subUser.apiSecret
+        ))
+      ))
+
+      if (removingSubUsers.length > 0) {
+        const removingRes = await this.dao.removeElemsFromDb(
+          this.TABLES_NAMES.USERS,
+          null,
+          {
+            $in: {
+              _id: removingSubUsers.map(({ _id }) => _id)
+            }
+          }
+        )
+
+        if (
+          removingRes &&
+          removingRes.changes < 1
+        ) {
+          throw new UserRemovingError()
+        }
+      }
+
+      // TODO: need to set _isBalanceRecalced = null into ledregs table
+      // TODO: need to launch sync
+
+      return {
+        email,
+        isSubAccount: true,
+        token
       }
     })
   }
