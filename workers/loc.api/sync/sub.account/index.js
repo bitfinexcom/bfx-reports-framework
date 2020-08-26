@@ -320,7 +320,7 @@ class SubAccount {
 
     // TODO: need to interrupt sync
 
-    return this.dao.executeQueriesInTrans(async () => {
+    const res = await this.dao.executeQueriesInTrans(async () => {
       const subAccountUser = await this.authenticator
         .signIn(
           {
@@ -331,7 +331,8 @@ class SubAccount {
           },
           {
             isReturnedUser: true,
-            isNotInTrans: true
+            isNotInTrans: true,
+            isNotSetSession: true
           }
         )
 
@@ -353,6 +354,7 @@ class SubAccount {
       })
 
       const processedSubUsers = []
+      const addedSubUsers = []
 
       for (const subUserAuth of subAccountApiKeys) {
         const {
@@ -410,13 +412,17 @@ class SubAccount {
         ) {
           continue
         }
+
+        const existedSubUser = subUsers.find((subUser) => (
+          auth.apiKey === subUser.apiKey &&
+          auth.apiSecret === subUser.apiSecret
+        ))
+
         if (
-          subUsers.some((subUser) => (
-            auth.apiKey === subUser.apiKey &&
-            auth.apiSecret === subUser.apiSecret
-          ))
+          existedSubUser &&
+          typeof existedSubUser === 'object'
         ) {
-          processedSubUsers.push(auth)
+          processedSubUsers.push(existedSubUser)
 
           continue
         }
@@ -447,7 +453,8 @@ class SubAccount {
           }
         )
 
-        processedSubUsers.push(auth)
+        processedSubUsers.push(subUser)
+        addedSubUsers.push(subUser)
       }
 
       const removingSubUsers = subUsers.filter((subUser) => (
@@ -475,9 +482,21 @@ class SubAccount {
           throw new UserRemovingError()
         }
       }
+      if (
+        addedSubUsers.length > 0 ||
+        removingSubUsers.length > 0
+      ) {
+        await this.dao.updateCollBy(
+          this.TABLES_NAMES.LEDGERS,
+          { user_id: _id },
+          { _isBalanceRecalced: null }
+        )
+      }
 
-      // TODO: need to set _isBalanceRecalced = null into ledregs table
-      // TODO: need to launch sync
+      this.authenticator.setUserSession({
+        ...subAccountUser,
+        subUsers: processedSubUsers
+      })
 
       return {
         email,
@@ -485,6 +504,10 @@ class SubAccount {
         token
       }
     })
+
+    // TODO: need to launch sync
+
+    return res
   }
 }
 

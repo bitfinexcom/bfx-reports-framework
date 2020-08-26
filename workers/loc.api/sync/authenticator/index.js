@@ -182,7 +182,8 @@ class Authenticator {
       active = true,
       isDataFromDb = true,
       isReturnedUser,
-      isNotInTrans
+      isNotInTrans,
+      isNotSetSession
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -269,7 +270,9 @@ class Authenticator {
       ? existedToken
       : uuidv4()
 
-    this.setUserSession({ ...refreshedUser, token: createdToken })
+    if (!isNotSetSession) {
+      this.setUserSession({ ...refreshedUser, token: createdToken })
+    }
 
     return {
       ...returnedUser,
