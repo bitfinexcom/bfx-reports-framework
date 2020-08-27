@@ -84,6 +84,9 @@ class Sync {
 
     return this._sync(isSkipSync)
   }
+
+  // TODO:
+  async stop () {}
 }
 
 decorate(injectable(), Sync)

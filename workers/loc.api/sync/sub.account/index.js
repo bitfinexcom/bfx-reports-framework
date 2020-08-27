@@ -24,11 +24,13 @@ class SubAccount {
   constructor (
     dao,
     TABLES_NAMES,
-    authenticator
+    authenticator,
+    sync
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.authenticator = authenticator
+    this.sync = sync
   }
 
   async createSubAccount (args) {
@@ -313,12 +315,15 @@ class SubAccount {
     })
   }
 
-  // TODO:
   async updateSubAccount (args) {
     const { auth: subAccountAuth, params } = { ...args }
     const { subAccountApiKeys } = { ...params }
 
-    // TODO: need to interrupt sync
+    await this.dao.updateRecordOf(
+      this.TABLES_NAMES.SCHEDULER,
+      { isEnable: false }
+    )
+    await this.sync.stop()
 
     const res = await this.dao.executeQueriesInTrans(async () => {
       const subAccountUser = await this.authenticator
@@ -510,7 +515,11 @@ class SubAccount {
       }
     })
 
-    // TODO: need to launch sync
+    await this.dao.updateRecordOf(
+      this.TABLES_NAMES.SCHEDULER,
+      { isEnable: true }
+    )
+    await this.sync.start(true)
 
     return res
   }
@@ -520,5 +529,6 @@ decorate(injectable(), SubAccount)
 decorate(inject(TYPES.DAO), SubAccount, 0)
 decorate(inject(TYPES.TABLES_NAMES), SubAccount, 1)
 decorate(inject(TYPES.Authenticator), SubAccount, 2)
+decorate(inject(TYPES.Sync), SubAccount, 3)
 
 module.exports = SubAccount
