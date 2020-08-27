@@ -353,10 +353,14 @@ class SubAccount {
         return _email === email
       })
 
+      const subUsersAuth = [
+        ...subAccountApiKeys,
+        masterUser
+      ]
       const processedSubUsers = []
       const addedSubUsers = []
 
-      for (const subUserAuth of subAccountApiKeys) {
+      for (const subUserAuth of subUsersAuth) {
         const {
           apiKey,
           apiSecret,
@@ -400,7 +404,16 @@ class SubAccount {
           )
           : { apiKey, apiSecret }
 
-        if (
+        const existedSubUser = subUsers.find((subUser) => (
+          auth.apiKey === subUser.apiKey &&
+          auth.apiSecret === subUser.apiSecret
+        ))
+        const isSubUserExisted = (
+          existedSubUser &&
+          typeof existedSubUser === 'object'
+        )
+        const isSubUserAddingSkiped = (
+          isSubUserExisted ||
           (
             masterUser.apiKey === auth.apiKey &&
             masterUser.apiSecret === auth.apiSecret
@@ -409,20 +422,12 @@ class SubAccount {
             auth.apiKey === item.apiKey &&
             auth.apiSecret === item.apiSecret
           ))
-        ) {
-          continue
-        }
+        )
 
-        const existedSubUser = subUsers.find((subUser) => (
-          auth.apiKey === subUser.apiKey &&
-          auth.apiSecret === subUser.apiSecret
-        ))
-
-        if (
-          existedSubUser &&
-          typeof existedSubUser === 'object'
-        ) {
-          processedSubUsers.push(existedSubUser)
+        if (isSubUserAddingSkiped) {
+          if (isSubUserExisted) {
+            processedSubUsers.push(existedSubUser)
+          }
 
           continue
         }
