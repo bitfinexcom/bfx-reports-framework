@@ -82,7 +82,7 @@ class DataInserter extends EventEmitter {
     )
     this._afterAllInsertsHooks = []
 
-    this._isInterrupted = false
+    this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
   init (syncColls = this.ALLOWED_COLLS.ALL) {
