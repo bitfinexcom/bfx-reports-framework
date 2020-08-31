@@ -15,13 +15,15 @@ class Sync {
     rService,
     ALLOWED_COLLS,
     progress,
-    redirectRequestsToApi
+    redirectRequestsToApi,
+    syncInterrupter
   ) {
     this.syncQueue = syncQueue
     this.rService = rService
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.progress = progress
     this.redirectRequestsToApi = redirectRequestsToApi
+    this.syncInterrupter = syncInterrupter
   }
 
   async _sync (isSkipSync) {
@@ -29,6 +31,7 @@ class Sync {
       try {
         await this.syncQueue.process()
       } catch (err) {
+        this.syncInterrupter.emitSyncInterrupted(err)
         await this.progress.setProgress(err)
       }
     }
@@ -85,8 +88,9 @@ class Sync {
     return this._sync(isSkipSync)
   }
 
-  // TODO:
-  async stop () {}
+  stop () {
+    return this.syncInterrupter.interruptSync()
+  }
 }
 
 decorate(injectable(), Sync)
@@ -95,5 +99,6 @@ decorate(inject(TYPES.RService), Sync, 1)
 decorate(inject(TYPES.ALLOWED_COLLS), Sync, 2)
 decorate(inject(TYPES.Progress), Sync, 3)
 decorate(inject(TYPES.RedirectRequestsToApi), Sync, 4)
+decorate(inject(TYPES.SyncInterrupter), Sync, 5)
 
 module.exports = Sync
