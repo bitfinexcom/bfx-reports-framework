@@ -236,18 +236,15 @@ class FrameworkReportService extends ReportService {
           isReturnedUser: true
         }
       )
+      const progress = await this._syncInterrupter.stop()
 
-      await this._wsEventEmitter.emitRedirectingRequestsStatusToApi(
-        (user) => {
-          if (this._wsEventEmitter.isInvalidAuth(auth, user)) {
-            return null
-          }
+      await this._redirectRequestsToApi({
+        isRedirected: true,
+        isAuthSpecified: true,
+        auth
+      })
 
-          return true
-        }
-      )
-
-      return true
+      return progress
     }, 'disableSyncMode', cb)
   }
 
