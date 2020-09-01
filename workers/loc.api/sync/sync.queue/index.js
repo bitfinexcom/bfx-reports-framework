@@ -25,8 +25,6 @@ const {
   ERROR_JOB_STATE
 } = require('./sync.queue.states')
 
-const INTERRUPTED_PROGRESS = 'SYNCHRONIZATION_HAS_BEEN_INTERRUPTED'
-
 class SyncQueue extends EventEmitter {
   constructor (
     TABLES_NAMES,
@@ -66,9 +64,7 @@ class SyncQueue extends EventEmitter {
     this._sort = [['_id', 1]]
     this._isFirstSync = true
 
-    this._progress = 0
-    this._isInterrupted = this.syncInterrupter
-      .hasInterrupted()
+    this._progress = this.syncInterrupter.INITIAL_PROGRESS
   }
 
   setName (name) {
@@ -116,9 +112,6 @@ class SyncQueue extends EventEmitter {
 
     while (true) {
       if (isInterrupted) {
-        this.syncInterrupter
-          .emitSyncInterrupted(null, this._progress)
-
         break
       }
 
@@ -150,13 +143,11 @@ class SyncQueue extends EventEmitter {
 
     await this._removeByState(FINISHED_JOB_STATE)
 
-    if (isInterrupted) {
-      await this.setProgress(INTERRUPTED_PROGRESS)
-
-      return
+    if (!isInterrupted) {
+      await this.setProgress(100)
     }
 
-    await this.setProgress(100)
+    return this._progress
   }
 
   async _subProcess (nextSync, multiplier) {

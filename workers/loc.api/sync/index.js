@@ -26,30 +26,57 @@ class Sync {
     this.syncInterrupter = syncInterrupter
   }
 
-  async _sync (isSkipSync) {
-    if (!isSkipSync) {
+  async _sync (error) {
+    const isInterrupted = this.syncInterrupter
+      .hasInterrupted()
+    let errorForInterrupter = null
+    let progressForInterrupter = this.syncInterrupter
+      .INITIAL_PROGRESS
+
+    if (!error) {
       try {
-        await this.syncQueue.process()
+        progressForInterrupter = await this.syncQueue.process()
       } catch (err) {
-        this.syncInterrupter.emitSyncInterrupted(err)
+        errorForInterrupter = err
+
         await this.progress.setProgress(err)
       }
     }
 
     try {
-      await this.redirectRequestsToApi(false)
+      await this.redirectRequestsToApi({ isRedirected: false })
     } catch (err) {
+      errorForInterrupter = err
+
       await this.progress.setProgress(err)
     }
 
-    return this.progress.getProgress()
+    if (
+      isInterrupted &&
+      !errorForInterrupter
+    ) {
+      await this.progress.setProgress(
+        this.syncInterrupter.INTERRUPTED_PROGRESS
+      )
+    }
+
+    const currProgress = await this.progress.getProgress()
+
+    if (isInterrupted) {
+      this.syncInterrupter.emitSyncInterrupted(
+        errorForInterrupter,
+        progressForInterrupter
+      )
+    }
+
+    return currProgress
   }
 
   async start (
     isSolveAfterRedirToApi,
     syncColls = this.ALLOWED_COLLS.ALL
   ) {
-    let isSkipSync = false
+    let error = null
 
     try {
       const isEnable = await this.rService.isSchedulerEnabled()
@@ -68,28 +95,34 @@ class Sync {
       await this.rService.pingApi()
 
       await this.progress.setProgress(0)
-      await this.redirectRequestsToApi(true)
+      await this.redirectRequestsToApi({ isRedirected: true })
     } catch (err) {
       if (err instanceof CollSyncPermissionError) {
         throw err
       }
 
-      isSkipSync = true
+      error = err
 
       await this.progress.setProgress(err)
     }
 
-    if (!isSkipSync && isSolveAfterRedirToApi) {
-      this._sync(isSkipSync).then(() => {}, () => {})
+    if (!error && isSolveAfterRedirToApi) {
+      this._sync(error).then(() => {}, () => {})
 
       return 'SYNCHRONIZATION_IS_STARTED'
     }
 
-    return this._sync(isSkipSync)
+    return this._sync(error)
   }
 
-  stop () {
-    return this.syncInterrupter.interruptSync()
+  async stop () {
+    const currProgress = await this.progress.getProgress()
+
+    if (currProgress < 100) {
+      return this.syncInterrupter.interruptSync()
+    }
+
+    return this.syncInterrupter.INITIAL_PROGRESS
   }
 }
 

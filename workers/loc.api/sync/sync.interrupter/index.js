@@ -14,6 +14,9 @@ class SyncInterrupter extends EventEmitter {
     this.SYNC_INTERRUPTED_EVENT = 'SYNC_INTERRUPTED_EVENT'
     this.SYNC_INTERRUPTED_WITH_ERR_EVENT = 'ERR_SYNC_INTERRUPTED_WITH_ERR_EVENT'
 
+    this.INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_HOT_BEEN_STARTED_TO_INTERRUPT'
+    this.INTERRUPTED_PROGRESS = 'SYNCHRONIZATION_HAS_BEEN_INTERRUPTED'
+
     this._isInterrupted = false
     this._interruptPromise = Promise.resolve()
   }
