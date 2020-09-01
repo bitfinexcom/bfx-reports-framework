@@ -93,7 +93,7 @@ module.exports = ({
         return [
           ['_conf', TYPES.CONF],
           ['_sync', TYPES.Sync],
-          ['_wsEventEmitter', TYPES.WSEventEmitter],
+          ['_redirectRequestsToApi', TYPES.RedirectRequestsToApi],
           ['_TABLES_NAMES', TYPES.TABLES_NAMES],
           ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS],
           ['_SYNC_API_METHODS', TYPES.SYNC_API_METHODS],
