@@ -27,8 +27,6 @@ class Sync {
   }
 
   async _sync (error) {
-    const isInterrupted = this.syncInterrupter
-      .hasInterrupted()
     let errorForInterrupter = null
     let progressForInterrupter = this.syncInterrupter
       .INITIAL_PROGRESS
@@ -52,7 +50,7 @@ class Sync {
     }
 
     if (
-      isInterrupted &&
+      this.syncInterrupter.hasInterrupted() &&
       !errorForInterrupter
     ) {
       await this.progress.setProgress(
@@ -62,7 +60,7 @@ class Sync {
 
     const currProgress = await this.progress.getProgress()
 
-    if (isInterrupted) {
+    if (this.syncInterrupter.hasInterrupted()) {
       this.syncInterrupter.emitSyncInterrupted(
         errorForInterrupter,
         progressForInterrupter

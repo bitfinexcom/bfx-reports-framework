@@ -104,14 +104,11 @@ class SyncQueue extends EventEmitter {
   }
 
   async process () {
-    const isInterrupted = this.syncInterrupter
-      .hasInterrupted()
-
     let count = 0
     let multiplier = 0
 
     while (true) {
-      if (isInterrupted) {
+      if (this.syncInterrupter.hasInterrupted()) {
         break
       }
 
@@ -132,10 +129,10 @@ class SyncQueue extends EventEmitter {
       await this._updateStateById(_id, LOCKED_JOB_STATE)
       multiplier = await this._subProcess(nextSync, multiplier)
 
-      if (isInterrupted) {
+      if (this.syncInterrupter.hasInterrupted()) {
         await this._updateStateById(_id, NEW_JOB_STATE)
 
-        continue
+        break
       }
 
       await this._updateStateById(_id, FINISHED_JOB_STATE)
@@ -143,7 +140,7 @@ class SyncQueue extends EventEmitter {
 
     await this._removeByState(FINISHED_JOB_STATE)
 
-    if (!isInterrupted) {
+    if (!this.syncInterrupter.hasInterrupted()) {
       await this.setProgress(100)
     }
 
