@@ -86,7 +86,7 @@ class DataInserter extends EventEmitter {
   }
 
   init (syncColls = this.ALLOWED_COLLS.ALL) {
-    this.syncInterrupter.onceInterruptSync(() => {
+    this.syncInterrupter.onceInterrupt(() => {
       this._isInterrupted = true
     })
 
@@ -343,7 +343,8 @@ class DataInserter extends EventEmitter {
       methodApi,
       args,
       this.apiMiddleware.request.bind(this.apiMiddleware),
-      isCheckCall
+      isCheckCall,
+      this.syncInterrupter
     )
   }
 
@@ -488,10 +489,18 @@ class DataInserter extends EventEmitter {
         return
       }
 
-      let { res, nextPage } = await this._getDataFromApi(
+      let {
+        res,
+        nextPage,
+        isInterrupted
+      } = await this._getDataFromApi(
         methodApi,
         currIterationArgs
       )
+
+      if (isInterrupted) {
+        return
+      }
 
       currIterationArgs.params.end = nextPage
 
@@ -585,6 +594,13 @@ class DataInserter extends EventEmitter {
     const elemsFromApi = await this._getDataFromApi(methodApi, args)
 
     if (
+      elemsFromApi &&
+      typeof elemsFromApi === 'object' &&
+      elemsFromApi.isInterrupted
+    ) {
+      return
+    }
+    if (
       Array.isArray(elemsFromApi) &&
       elemsFromApi.length > 0
     ) {
@@ -656,9 +672,20 @@ class DataInserter extends EventEmitter {
           }
         )
         const apiRes = await this._getDataFromApi(methodApi, args)
-        const oneSymbElemsFromApi = (
+        const isApiResObj = (
           apiRes &&
-          typeof apiRes === 'object' &&
+          typeof apiRes === 'object'
+        )
+
+        if (
+          isApiResObj &&
+          apiRes.isInterrupted
+        ) {
+          return
+        }
+
+        const oneSymbElemsFromApi = (
+          isApiResObj &&
           !Array.isArray(apiRes) &&
           Array.isArray(apiRes.res)
         )
@@ -723,9 +750,20 @@ class DataInserter extends EventEmitter {
       { start: null, end: null }
     )
     const apiRes = await this._getDataFromApi(methodApi, args)
-    const elemsFromApi = (
+    const isApiResObj = (
       apiRes &&
-      typeof apiRes === 'object' &&
+      typeof apiRes === 'object'
+    )
+
+    if (
+      isApiResObj &&
+      apiRes.isInterrupted
+    ) {
+      return
+    }
+
+    const elemsFromApi = (
+      isApiResObj &&
       !Array.isArray(apiRes) &&
       Array.isArray(apiRes.res)
     )
