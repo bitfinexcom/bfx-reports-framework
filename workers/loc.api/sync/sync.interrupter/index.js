@@ -1,12 +1,15 @@
 'use strict'
 
-const EventEmitter = require('events')
 const {
   decorate,
   injectable
 } = require('inversify')
 
-class SyncInterrupter extends EventEmitter {
+const Interrupter = require(
+  'bfx-report/workers/loc.api/interrupter'
+)
+
+class SyncInterrupter extends Interrupter {
   constructor () {
     super()
 
@@ -16,55 +19,32 @@ class SyncInterrupter extends EventEmitter {
 
     this.INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_HOT_BEEN_STARTED_TO_INTERRUPT'
     this.INTERRUPTED_PROGRESS = 'SYNCHRONIZATION_HAS_BEEN_INTERRUPTED'
-
-    this._isInterrupted = false
-    this._interruptPromise = Promise.resolve()
   }
 
-  hasInterrupted () {
-    return this._isInterrupted
+  _init () {
+    this.on(
+      this.INTERRUPT_EVENT,
+      () => this.emit(this.INTERRUPT_SYNC_EVENT)
+    )
+    this.on(
+      this.SYNC_INTERRUPTED_EVENT,
+      () => this.emit(this.INTERRUPTED_EVENT)
+    )
+    this.on(
+      this.SYNC_INTERRUPTED_WITH_ERR_EVENT,
+      () => this.emit(this.INTERRUPTED_WITH_ERR_EVENT)
+    )
   }
 
-  interruptSync () {
-    if (this._isInterrupted) {
-      return this._interruptPromise
-    }
-
-    this._isInterrupted = true
-    this._interruptPromise = new Promise((resolve, reject) => {
-      try {
-        this.emit(this.INTERRUPT_SYNC_EVENT)
-
-        const errorHandler = (err) => {
-          this.off(this.SYNC_INTERRUPTED_EVENT, progressHandler)
-          this._isInterrupted = false
-
-          reject(err)
-        }
-        const progressHandler = (progress) => {
-          this.off(this.SYNC_INTERRUPTED_WITH_ERR_EVENT, errorHandler)
-          this._isInterrupted = false
-
-          resolve(progress)
-        }
-
-        this.once(this.SYNC_INTERRUPTED_WITH_ERR_EVENT, errorHandler)
-        this.once(this.SYNC_INTERRUPTED_EVENT, progressHandler)
-      } catch (err) {
-        this._isInterrupted = false
-
-        reject(err)
-      }
-    })
-
-    return this._interruptPromise
-  }
-
-  onceInterruptSync (cb) {
+  onceInterrupt (cb) {
     this.once(this.INTERRUPT_SYNC_EVENT, cb)
   }
 
-  emitSyncInterrupted (error, progress) {
+  offInterrupt (cb) {
+    this.off(this.INTERRUPT_SYNC_EVENT, cb)
+  }
+
+  emitInterrupted (error, progress) {
     if (error) {
       this.emit(this.SYNC_INTERRUPTED_WITH_ERR_EVENT, error)
 

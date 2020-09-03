@@ -61,7 +61,7 @@ class Sync {
     const currProgress = await this.progress.getProgress()
 
     if (this.syncInterrupter.hasInterrupted()) {
-      this.syncInterrupter.emitSyncInterrupted(
+      this.syncInterrupter.emitInterrupted(
         errorForInterrupter,
         progressForInterrupter
       )
@@ -117,7 +117,7 @@ class Sync {
     const currProgress = await this.progress.getProgress()
 
     if (currProgress < 100) {
-      return this.syncInterrupter.interruptSync()
+      return this.syncInterrupter.interrupt()
     }
 
     return this.syncInterrupter.INITIAL_PROGRESS
