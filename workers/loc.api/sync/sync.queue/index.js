@@ -104,6 +104,8 @@ class SyncQueue extends EventEmitter {
   }
 
   async process () {
+    this._progress = this.syncInterrupter.INITIAL_PROGRESS
+
     let count = 0
     let multiplier = 0
 
