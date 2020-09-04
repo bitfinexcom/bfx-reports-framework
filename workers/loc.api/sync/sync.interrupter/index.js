@@ -19,20 +19,29 @@ class SyncInterrupter extends Interrupter {
 
     this.INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_HOT_BEEN_STARTED_TO_INTERRUPT'
     this.INTERRUPTED_PROGRESS = 'SYNCHRONIZATION_HAS_BEEN_INTERRUPTED'
+
+    this._init()
   }
 
   _init () {
-    this.on(
+    this._pipe(
       this.INTERRUPT_EVENT,
-      () => this.emit(this.INTERRUPT_SYNC_EVENT)
+      this.INTERRUPT_SYNC_EVENT
     )
-    this.on(
+    this._pipe(
       this.SYNC_INTERRUPTED_EVENT,
-      () => this.emit(this.INTERRUPTED_EVENT)
+      this.INTERRUPTED_EVENT
     )
-    this.on(
+    this._pipe(
       this.SYNC_INTERRUPTED_WITH_ERR_EVENT,
-      () => this.emit(this.INTERRUPTED_WITH_ERR_EVENT)
+      this.INTERRUPTED_WITH_ERR_EVENT
+    )
+  }
+
+  _pipe (event, pipedEvent) {
+    this.on(
+      event,
+      (...args) => this.emit(pipedEvent, ...args)
     )
   }
 
