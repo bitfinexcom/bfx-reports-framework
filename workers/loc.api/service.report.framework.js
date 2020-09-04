@@ -228,7 +228,7 @@ class FrameworkReportService extends ReportService {
 
   disableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      const auth = await this._authenticator.signIn(
+      await this._authenticator.signIn(
         args,
         {
           active: null,
@@ -236,13 +236,12 @@ class FrameworkReportService extends ReportService {
           isReturnedUser: true
         }
       )
-      const progress = await this._syncInterrupter.stop()
+      const progress = await this._sync.stop()
 
-      await this._redirectRequestsToApi({
-        isRedirected: true,
-        isAuthSpecified: true,
-        auth
-      })
+      await this._dao.updateRecordOf(
+        this._TABLES_NAMES.SYNC_MODE,
+        { isEnable: false }
+      )
 
       return progress
     }, 'disableSyncMode', cb)
