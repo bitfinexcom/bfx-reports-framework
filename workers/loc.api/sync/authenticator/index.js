@@ -417,7 +417,8 @@ class Authenticator {
       {
         ...freshUserData,
         active: serializeVal(freshUserData.active),
-        isDataFromDb: serializeVal(freshUserData.isDataFromDb)
+        isDataFromDb: serializeVal(freshUserData.isDataFromDb),
+        isNotProtected: serializeVal(isNotProtected)
       }
     )
 
