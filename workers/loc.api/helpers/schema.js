@@ -16,7 +16,8 @@ const subAccountApiKeys = {
     properties: {
       apiKey: { type: 'string' },
       apiSecret: { type: 'string' },
-      token: { type: 'string' }
+      token: { type: 'string' },
+      email: { type: 'string' }
     }
   }
 }
@@ -30,11 +31,29 @@ const paramsSchemaForCreateSubAccount = {
   }
 }
 
-const paramsSchemaForUpdateSubAccount = {
+const paramsSchemaForUpdateSubAccountByArrayAuth = {
   type: 'object',
   required: ['subAccountApiKeys'],
   properties: {
     subAccountApiKeys
+  }
+}
+
+const paramsSchemaForUpdateSubAccount = {
+  type: 'object',
+  properties: {
+    addingSubUsers: subAccountApiKeys,
+    removingSubUsersByEmails: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 300,
+      items: {
+        type: 'object',
+        properties: {
+          email: { type: 'string' }
+        }
+      }
+    }
   }
 }
 
@@ -438,6 +457,7 @@ module.exports = {
   paramsSchemaForEditCandlesСonf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
+  paramsSchemaForUpdateSubAccountByArrayAuth,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
