@@ -43,7 +43,7 @@ class Authenticator {
       apiKey,
       apiSecret,
       password: userPwd,
-      isNotProtected
+      isNotProtected = false
     } = { ...auth }
     const password = isNotProtected
       ? this.crypto.getSecretKey()
