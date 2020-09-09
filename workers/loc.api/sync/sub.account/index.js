@@ -691,10 +691,10 @@ class SubAccount {
 
       const removingSubUsers = subUsers.filter((subUser) => (
         Array.isArray(removingSubUsersByEmails) &&
-        removingSubUsersByEmails.every((removingSubUserByEmail) => {
+        removingSubUsersByEmails.some((removingSubUserByEmail) => {
           const { email } = { ...removingSubUserByEmail }
 
-          return email !== subUser.email
+          return email === subUser.email
         })
       ))
 
