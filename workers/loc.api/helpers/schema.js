@@ -31,14 +31,6 @@ const paramsSchemaForCreateSubAccount = {
   }
 }
 
-const paramsSchemaForUpdateSubAccountByArrayAuth = {
-  type: 'object',
-  required: ['subAccountApiKeys'],
-  properties: {
-    subAccountApiKeys
-  }
-}
-
 const paramsSchemaForUpdateSubAccount = {
   type: 'object',
   properties: {
@@ -457,7 +449,6 @@ module.exports = {
   paramsSchemaForEditCandlesСonf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
-  paramsSchemaForUpdateSubAccountByArrayAuth,
   paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,

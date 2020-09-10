@@ -167,15 +167,6 @@ class FrameworkReportService extends ReportService {
     }, 'createSubAccount', cb)
   }
 
-  updateSubAccountByArrayAuth (space, args, cb) {
-    return this._responder(() => {
-      checkParams(args, 'paramsSchemaForUpdateSubAccountByArrayAuth')
-
-      return this._subAccount
-        .updateSubAccountByArrayAuth(args)
-    }, 'updateSubAccountByArrayAuth', cb)
-  }
-
   updateSubAccount (space, args, cb) {
     return this._responder(() => {
       checkParams(args, 'paramsSchemaForUpdateSubAccount')
