@@ -12,6 +12,7 @@ const Interrupter = require(
 class SyncInterrupter extends Interrupter {
   constructor () {
     super()
+    this.setMaxListeners(50)
 
     this.INTERRUPT_SYNC_EVENT = 'INTERRUPT_SYNC_EVENT'
     this.SYNC_INTERRUPTED_EVENT = 'SYNC_INTERRUPTED_EVENT'
