@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 17
+const SUPPORTED_DB_VERSION = 18
 
 const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
@@ -374,6 +374,41 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.POSITIONS_HISTORY,
+    {
+      _id: ID_PRIMARY_KEY,
+      id: 'BIGINT',
+      symbol: 'VARCHAR(255)',
+      status: 'VARCHAR(255)',
+      amount: 'DECIMAL(22,12)',
+      basePrice: 'DECIMAL(22,12)',
+      closePrice: 'DECIMAL(22,12)',
+      marginFunding: 'DECIMAL(22,12)',
+      marginFundingType: 'INT',
+      pl: 'DECIMAL(22,12)',
+      plPerc: 'DECIMAL(22,12)',
+      liquidationPrice: 'DECIMAL(22,12)',
+      leverage: 'DECIMAL(22,12)',
+      placeholder: 'TEXT',
+      mtsCreate: 'BIGINT',
+      mtsUpdate: 'BIGINT',
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+      ]
+    }
+  ],
+  [
+    TABLES_NAMES.POSITIONS_SNAPSHOT,
     {
       _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
