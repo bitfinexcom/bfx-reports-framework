@@ -811,6 +811,22 @@ const _methodCollMap = new Map([
     }
   ],
   [
+    SYNC_API_METHODS.POSITIONS_SNAPSHOT,
+    {
+      name: ALLOWED_COLLS.POSITIONS_HISTORY,
+      maxLimit: 10000,
+      dateFieldName: 'mtsUpdate',
+      symbolFieldName: 'symbol',
+      sort: [['mtsUpdate', -1]],
+      hasNewData: false,
+      start: [],
+      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
+      fieldsOfIndex: ['mtsUpdate', 'symbol'],
+      fieldsOfUniqueIndex: ['id', 'user_id'],
+      model: _getModelOf(TABLES_NAMES.POSITIONS_SNAPSHOT)
+    }
+  ],
+  [
     SYNC_API_METHODS.LOGINS,
     {
       name: ALLOWED_COLLS.LOGINS,
