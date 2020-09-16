@@ -52,5 +52,6 @@ module.exports = {
   OrderTrades: Symbol.for('OrderTrades'),
   Crypto: Symbol.for('Crypto'),
   Authenticator: Symbol.for('Authenticator'),
-  PrivResponder: Symbol.for('PrivResponder')
+  PrivResponder: Symbol.for('PrivResponder'),
+  SyncInterrupter: Symbol.for('SyncInterrupter')
 }

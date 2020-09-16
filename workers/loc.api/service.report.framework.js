@@ -167,6 +167,15 @@ class FrameworkReportService extends ReportService {
     }, 'createSubAccount', cb)
   }
 
+  updateSubAccount (space, args, cb) {
+    return this._responder(() => {
+      checkParams(args, 'paramsSchemaForUpdateSubAccount')
+
+      return this._subAccount
+        .updateSubAccount(args)
+    }, 'updateSubAccount', cb)
+  }
+
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
@@ -219,7 +228,7 @@ class FrameworkReportService extends ReportService {
 
   disableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      const auth = await this._authenticator.signIn(
+      await this._authenticator.signIn(
         args,
         {
           active: null,
@@ -227,18 +236,14 @@ class FrameworkReportService extends ReportService {
           isReturnedUser: true
         }
       )
+      const progress = await this._sync.stop()
 
-      await this._wsEventEmitter.emitRedirectingRequestsStatusToApi(
-        (user) => {
-          if (this._wsEventEmitter.isInvalidAuth(auth, user)) {
-            return null
-          }
-
-          return true
-        }
+      await this._dao.updateRecordOf(
+        this._TABLES_NAMES.SYNC_MODE,
+        { isEnable: false }
       )
 
-      return true
+      return progress
     }, 'disableSyncMode', cb)
   }
 

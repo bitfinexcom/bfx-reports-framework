@@ -6,15 +6,15 @@ module.exports = (
   dao,
   TABLES_NAMES,
   wsEventEmitter
-) => async (state = true) => {
+) => async ({ isRedirected = true } = {}) => {
   await dao.updateRecordOf(
     TABLES_NAMES.SYNC_MODE,
-    { isEnable: !state }
+    { isEnable: !isRedirected }
   )
   await wsEventEmitter.emitRedirectingRequestsStatusToApi(
     (user) => {
       return (
-        state ||
+        isRedirected ||
         isEmpty(user) ||
         !user.isDataFromDb
       )

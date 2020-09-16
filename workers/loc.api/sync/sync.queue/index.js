@@ -32,7 +32,8 @@ class SyncQueue extends EventEmitter {
     dao,
     dataInserterFactory,
     progress,
-    syncSchema
+    syncSchema,
+    syncInterrupter
   ) {
     super()
 
@@ -42,6 +43,7 @@ class SyncQueue extends EventEmitter {
     this.dataInserterFactory = dataInserterFactory
     this.progress = progress
     this.syncSchema = syncSchema
+    this.syncInterrupter = syncInterrupter
     this.name = this.TABLES_NAMES.SYNC_QUEUE
 
     this.methodCollMap = this._filterMethodCollMap(
@@ -61,6 +63,8 @@ class SyncQueue extends EventEmitter {
 
     this._sort = [['_id', 1]]
     this._isFirstSync = true
+
+    this._progress = this.syncInterrupter.INITIAL_PROGRESS
   }
 
   setName (name) {
@@ -100,10 +104,16 @@ class SyncQueue extends EventEmitter {
   }
 
   async process () {
+    this._progress = this.syncInterrupter.INITIAL_PROGRESS
+
     let count = 0
     let multiplier = 0
 
     while (true) {
+      if (this.syncInterrupter.hasInterrupted()) {
+        break
+      }
+
       count += 1
 
       const nextSync = await this._getNext()
@@ -120,11 +130,23 @@ class SyncQueue extends EventEmitter {
 
       await this._updateStateById(_id, LOCKED_JOB_STATE)
       multiplier = await this._subProcess(nextSync, multiplier)
+
+      if (this.syncInterrupter.hasInterrupted()) {
+        await this._updateStateById(_id, NEW_JOB_STATE)
+
+        break
+      }
+
       await this._updateStateById(_id, FINISHED_JOB_STATE)
     }
 
     await this._removeByState(FINISHED_JOB_STATE)
-    await this.setProgress(100)
+
+    if (!this.syncInterrupter.hasInterrupted()) {
+      await this.setProgress(100)
+    }
+
+    return this._progress
   }
 
   async _subProcess (nextSync, multiplier) {
@@ -311,6 +333,8 @@ class SyncQueue extends EventEmitter {
   }
 
   async setProgress (progress) {
+    this._progress = progress
+
     await this.progress.setProgress(progress)
 
     this.emit('progress', progress)
@@ -324,5 +348,6 @@ decorate(inject(TYPES.DAO), SyncQueue, 2)
 decorate(inject(TYPES.DataInserterFactory), SyncQueue, 3)
 decorate(inject(TYPES.Progress), SyncQueue, 4)
 decorate(inject(TYPES.SyncSchema), SyncQueue, 5)
+decorate(inject(TYPES.SyncInterrupter), SyncQueue, 6)
 
 module.exports = SyncQueue

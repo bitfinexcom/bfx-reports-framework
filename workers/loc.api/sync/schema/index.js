@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 15
+const SUPPORTED_DB_VERSION = 16
 
 const TABLES_NAMES = require('./tables-names')
 const ALLOWED_COLLS = require('./allowed.colls')
@@ -104,11 +104,18 @@ const _models = new Map([
       _isBalanceRecalced: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -128,11 +135,18 @@ const _models = new Map([
       feeCurrency: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -149,11 +163,18 @@ const _models = new Map([
       maker: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -195,11 +216,18 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -219,11 +247,18 @@ const _models = new Map([
       transactionId: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -248,11 +283,18 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -278,11 +320,18 @@ const _models = new Map([
       noClose: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -309,11 +358,18 @@ const _models = new Map([
       positionPair: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -337,11 +393,18 @@ const _models = new Map([
       mtsUpdate: 'BIGINT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -354,11 +417,18 @@ const _models = new Map([
       extraData: 'TEXT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [
@@ -371,11 +441,18 @@ const _models = new Map([
       userAgent: 'TEXT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ],
   [

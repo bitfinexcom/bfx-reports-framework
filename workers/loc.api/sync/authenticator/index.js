@@ -43,7 +43,7 @@ class Authenticator {
       apiKey,
       apiSecret,
       password: userPwd,
-      isNotProtected
+      isNotProtected = false
     } = { ...auth }
     const password = isNotProtected
       ? this.crypto.getSecretKey()
@@ -181,7 +181,9 @@ class Authenticator {
     const {
       active = true,
       isDataFromDb = true,
-      isReturnedUser
+      isReturnedUser,
+      isNotInTrans,
+      isNotSetSession
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -196,7 +198,8 @@ class Authenticator {
       {
         isDecryptedApiKeys: true,
         isFilledSubUsers: true,
-        isReturnedPassword: true
+        isReturnedPassword: true,
+        isNotInTrans
       }
     )
     const {
@@ -267,7 +270,9 @@ class Authenticator {
       ? existedToken
       : uuidv4()
 
-    this.setUserSession({ ...refreshedUser, token: createdToken })
+    if (!isNotSetSession) {
+      this.setUserSession({ ...refreshedUser, token: createdToken })
+    }
 
     return {
       ...returnedUser,
