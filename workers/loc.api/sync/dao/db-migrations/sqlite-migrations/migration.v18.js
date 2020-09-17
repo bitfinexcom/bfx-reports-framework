@@ -44,8 +44,9 @@ class MigrationV18 extends AbstractMigration {
           ON DELETE CASCADE
       )`,
 
-      `CREATE UNIQUE INDEX positionsSnapshot_id_user_id
-        ON positionsSnapshot(id, user_id)`,
+      // TODO: The API returns a lot of data with the same values
+      // `CREATE UNIQUE INDEX positionsSnapshot_id_user_id
+      //   ON positionsSnapshot(id, user_id)`,
       `CREATE INDEX positionsSnapshot_mtsUpdate_symbol
         ON positionsSnapshot(mtsUpdate, symbol)`
     ]
