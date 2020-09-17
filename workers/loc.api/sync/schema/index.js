@@ -813,7 +813,7 @@ const _methodCollMap = new Map([
   [
     SYNC_API_METHODS.POSITIONS_SNAPSHOT,
     {
-      name: ALLOWED_COLLS.POSITIONS_HISTORY,
+      name: ALLOWED_COLLS.POSITIONS_SNAPSHOT,
       maxLimit: 10000,
       dateFieldName: 'mtsUpdate',
       symbolFieldName: 'symbol',
@@ -822,7 +822,8 @@ const _methodCollMap = new Map([
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
+      // TODO: The API returns a lot of data with the same values
+      // fieldsOfUniqueIndex: ['id', 'user_id'],
       model: _getModelOf(TABLES_NAMES.POSITIONS_SNAPSHOT)
     }
   ],
