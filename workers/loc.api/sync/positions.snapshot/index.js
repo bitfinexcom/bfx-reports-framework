@@ -28,15 +28,17 @@ class PositionsSnapshot {
     this.syncSchema = syncSchema
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
+
+    this.positionsHistoryModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
+    this.positionsSnapshotModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
   }
 
   _getPositionsHistory (
     user,
     endMts
   ) {
-    const positionsHistoryModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
-
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.POSITIONS_HISTORY,
       {
@@ -46,7 +48,27 @@ class PositionsSnapshot {
           $gte: { mtsUpdate: endMts }
         },
         sort: [['mtsUpdate', -1]],
-        projection: positionsHistoryModel,
+        projection: this.positionsHistoryModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+  }
+
+  _getPositionsSnapshotFromDb (
+    user,
+    endMts
+  ) {
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.POSITIONS_SNAPSHOT,
+      {
+        filter: {
+          user_id: user._id,
+          $lte: { mtsCreate: endMts },
+          $gte: { mtsUpdate: endMts }
+        },
+        sort: [['mtsUpdate', -1]],
+        projection: this.positionsSnapshotModel,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -144,8 +166,12 @@ class PositionsSnapshot {
 
   async _getCalculatedPositions (
     positions,
-    end
+    end,
+    opts = {}
   ) {
+    const {
+      isNotTickersRequired = false
+    } = { ...opts }
     const positionsSnapshot = []
     const tickers = []
 
@@ -203,6 +229,7 @@ class PositionsSnapshot {
       })
 
       if (
+        !isNotTickersRequired &&
         currency &&
         currency !== 'USD' &&
         Number.isFinite(pl) &&
@@ -453,6 +480,41 @@ class PositionsSnapshot {
       positionsSnapshot,
       tickers
     }
+  }
+
+  async getSyncedPositionsSnapshot (args) {
+    const {
+      auth = {},
+      params = {}
+    } = { ...args }
+    const {
+      end = Date.now()
+    } = { ...params }
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+    const emptyRes = []
+
+    const syncedPositionsSnapshot = await this._getPositionsSnapshotFromDb(
+      user,
+      end
+    )
+
+    if (
+      !Array.isArray(syncedPositionsSnapshot) ||
+      syncedPositionsSnapshot.length === 0
+    ) {
+      return emptyRes
+    }
+
+    const {
+      positionsSnapshot
+    } = await this._getCalculatedPositions(
+      syncedPositionsSnapshot,
+      end,
+      { isNotTickersRequired: true }
+    )
+
+    return positionsSnapshot
   }
 
   async getPositionsSnapshot (args) {
