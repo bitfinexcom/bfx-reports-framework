@@ -50,7 +50,7 @@ class WinLoss {
     }
 
     const positionsSnapshot = await this.positionsSnapshot
-      .getPositionsSnapshot(_args)
+      .getSyncedPositionsSnapshot(_args)
 
     if (
       !Array.isArray(positionsSnapshot) ||
