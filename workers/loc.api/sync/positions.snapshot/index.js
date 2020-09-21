@@ -13,6 +13,8 @@ const {
 
 const TYPES = require('../../di/types')
 
+const { getTimeframeQuery } = require('../dao/helpers')
+
 class PositionsSnapshot {
   constructor (
     rService,
@@ -29,10 +31,16 @@ class PositionsSnapshot {
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
 
-    this.positionsHistoryModel = this.syncSchema.getModelsMap()
+    this.positionsHistoryObjModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
-    this.positionsSnapshotModel = this.syncSchema.getModelsMap()
+    this.positionsSnapshotObjModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
+    this.positionsHistoryModel = Object.keys(
+      this.positionsHistoryObjModel
+    )
+    this.positionsSnapshotModel = Object.keys(
+      this.positionsSnapshotObjModel
+    )
   }
 
   _getPositionsHistory (
@@ -55,20 +63,90 @@ class PositionsSnapshot {
     )
   }
 
+  _getTimeframeQuery (alias, isMtsExisted) {
+    const res = getTimeframeQuery(
+      'day',
+      {
+        propName: 'mtsUpdate',
+        alias
+      }
+    )
+
+    return isMtsExisted ? [res] : []
+  }
+
+  _getMtsStr (mts, propName) {
+    if (
+      !Number.isInteger(mts) ||
+      mts === 0
+    ) {
+      return
+    }
+
+    const date = new Date(mts)
+    const year = date.getUTCFullYear()
+    const _month = date.getUTCMonth() + 1
+    const month = _month < 10
+      ? `0${_month}`
+      : _month
+    const day = date.getUTCDate()
+    const mtsStr = `${year}-${month}-${day}`
+
+    return { [propName]: mtsStr }
+  }
+
   _getPositionsSnapshotFromDb (
     user,
-    endMts
+    params
   ) {
+    const { start, end } = { ...params }
+
+    const isStartExisted = Number.isInteger(start)
+    const isEndExisted = Number.isInteger(end)
+
+    const startSqlTimeframe = this._getTimeframeQuery(
+      'startMtsUpdateStr',
+      isStartExisted
+    )
+    const endSqlTimeframe = this._getTimeframeQuery(
+      'endMtsUpdateStr',
+      isEndExisted
+    )
+
+    const startMtsUpdateStr = this._getMtsStr(
+      start,
+      'startMtsUpdateStr'
+    )
+    const endMtsUpdateStr = this._getMtsStr(
+      end,
+      'endMtsUpdateStr'
+    )
+
+    const gteFilter = isStartExisted
+      ? { $gte: { mtsUpdate: start } }
+      : {}
+    const lteFilter = isEndExisted
+      ? { $lte: { mtsUpdate: end } }
+      : {}
+    const eqFilter = isStartExisted || isEndExisted
+      ? { $eq: { ...startMtsUpdateStr, ...endMtsUpdateStr } }
+      : {}
+
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.POSITIONS_SNAPSHOT,
       {
         filter: {
           user_id: user._id,
-          $lte: { mtsCreate: endMts },
-          $gte: { mtsUpdate: endMts }
+          ...gteFilter,
+          ...lteFilter,
+          ...eqFilter
         },
         sort: [['mtsUpdate', -1]],
-        projection: this.positionsSnapshotModel,
+        projection: [
+          ...this.positionsSnapshotModel,
+          ...startSqlTimeframe,
+          ...endSqlTimeframe
+        ],
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -488,7 +566,8 @@ class PositionsSnapshot {
       params = {}
     } = { ...args }
     const {
-      end = Date.now()
+      start,
+      end
     } = { ...params }
     const user = await this.authenticator
       .verifyRequestUser({ auth })
@@ -496,7 +575,7 @@ class PositionsSnapshot {
 
     const syncedPositionsSnapshot = await this._getPositionsSnapshotFromDb(
       user,
-      end
+      { start, end }
     )
 
     if (
@@ -510,7 +589,7 @@ class PositionsSnapshot {
       positionsSnapshot
     } = await this._getCalculatedPositions(
       syncedPositionsSnapshot,
-      end,
+      start || end,
       { isNotTickersRequired: true }
     )
 

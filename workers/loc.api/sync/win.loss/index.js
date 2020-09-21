@@ -39,18 +39,8 @@ class WinLoss {
   }
 
   async _getPlFromPositionsSnapshot (args) {
-    const {
-      auth = {},
-      params = {}
-    } = { ...args }
-    const { mts: end = Date.now() } = { ...params }
-    const _args = {
-      auth,
-      params: { end }
-    }
-
     const positionsSnapshot = await this.positionsSnapshot
-      .getSyncedPositionsSnapshot(_args)
+      .getSyncedPositionsSnapshot(args)
 
     if (
       !Array.isArray(positionsSnapshot) ||
@@ -262,15 +252,16 @@ class WinLoss {
 
   async getWinLoss ({
     auth = {},
-    params: {
-      timeframe = 'day',
-      start = 0,
-      end = Date.now()
-    } = {}
+    params = {}
   } = {}) {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
 
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now()
+    } = { ...params }
     const args = {
       auth,
       params: {
@@ -353,11 +344,11 @@ class WinLoss {
 
     const startPl = await this._getPlFromPositionsSnapshot({
       auth,
-      params: { mts: start }
+      params: { start }
     })
     const endPl = await this._getPlFromPositionsSnapshot({
       auth,
-      params: { mts: end }
+      params: { end }
     })
 
     const groupedData = await calcGroupedData(
