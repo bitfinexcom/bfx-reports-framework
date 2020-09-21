@@ -15,6 +15,7 @@ const {
   groupByTimeframe,
   isForexSymb
 } = require('../helpers')
+const { getTimeframeQuery } = require('../dao/helpers')
 
 class BalanceHistory {
   constructor (
@@ -65,21 +66,13 @@ class BalanceHistory {
     }
   }
 
-  _getSqlTimeframe (timeframe) {
-    const day = timeframe === 'day' ? '-%m-%d' : ''
-    const month = timeframe === 'month' ? '-%m' : ''
-    const year = '%Y'
-
-    return `strftime('${year}${month}${day}', mts/1000, 'unixepoch') AS timeframe`
-  }
-
   _getWallets ({
     auth,
     timeframe,
     start,
     end
   }) {
-    const sqlTimeframe = this._getSqlTimeframe(timeframe)
+    const sqlTimeframe = getTimeframeQuery(timeframe)
     const schema = {
       groupResBy: ['wallet', 'currency', 'timeframe'],
       dataStructureConverter: (accum, {
