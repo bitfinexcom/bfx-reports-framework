@@ -147,6 +147,12 @@ class GetPublicDataError extends BaseError {
   }
 }
 
+class SyncedPositionsSnapshotParamsError extends BaseError {
+  constructor (message = 'ERR_SYNCED_POSITIONS_SNAPSHOT_PARAMS_IS_NOT_CORRECT') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -171,5 +177,6 @@ module.exports = {
   UserWasPreviouslyStoredInDbError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
-  GetPublicDataError
+  GetPublicDataError,
+  SyncedPositionsSnapshotParamsError
 }

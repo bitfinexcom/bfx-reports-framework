@@ -14,6 +14,9 @@ const {
 const TYPES = require('../../di/types')
 
 const { getTimeframeQuery } = require('../dao/helpers')
+const {
+  SyncedPositionsSnapshotParamsError
+} = require('../../errors')
 
 class PositionsSnapshot {
   constructor (
@@ -572,6 +575,13 @@ class PositionsSnapshot {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const emptyRes = []
+
+    if (
+      Number.isInteger(start) &&
+      Number.isInteger(end)
+    ) {
+      throw new SyncedPositionsSnapshotParamsError()
+    }
 
     const syncedPositionsSnapshot = await this._getPositionsSnapshotFromDb(
       user,
