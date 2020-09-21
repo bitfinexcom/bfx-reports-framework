@@ -26,6 +26,7 @@ const getStatusMessagesFilter = require('./get-status-messages-filter')
 const getTableCreationQuery = require('./get-table-creation-query')
 const getTriggerCreationQuery = require('./get-trigger-creation-query')
 const getTimeframeFilter = require('./get-timeframe-filter')
+const getTimeframeQuery = require('./get-timeframe-query')
 
 module.exports = {
   mixUserIdToArrData,
@@ -49,5 +50,6 @@ module.exports = {
   getStatusMessagesFilter,
   getTableCreationQuery,
   getTriggerCreationQuery,
-  getTimeframeFilter
+  getTimeframeFilter,
+  getTimeframeQuery
 }
