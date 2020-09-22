@@ -13,6 +13,8 @@ const TABLES_NAMES = require('./tables-names')
 const {
   CONSTR_FIELD_NAME,
   TRIGGER_FIELD_NAME,
+  INDEX_FIELD_NAME,
+  UNIQUE_INDEX_FIELD_NAME,
   ID_PRIMARY_KEY
 } = require('./const')
 const {
@@ -44,7 +46,9 @@ const _models = new Map([
       passwordHash: 'VARCHAR(255)',
       isNotProtected: 'INT',
       isSubAccount: 'INT',
-      isSubUser: 'INT'
+      isSubUser: 'INT',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['email', 'username']
     }
   ],
   [
@@ -96,6 +100,9 @@ const _models = new Map([
       _isBalanceRecalced: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mts', 'currency'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -127,6 +134,9 @@ const _models = new Map([
       feeCurrency: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'symbol', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsCreate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -155,6 +165,9 @@ const _models = new Map([
       maker: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsCreate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -179,7 +192,10 @@ const _models = new Map([
       period: 'BIGINT',
       amount: 'DECIMAL(22,12)',
       price: 'DECIMAL(22,12)',
-      _symbol: 'VARCHAR(255)'
+      _symbol: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', '_symbol'],
+      [INDEX_FIELD_NAME]: ['mts', '_symbol']
     }
   ],
   [
@@ -208,6 +224,9 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -239,6 +258,9 @@ const _models = new Map([
       transactionId: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdated', 'currency'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -275,6 +297,9 @@ const _models = new Map([
       amountExecuted: 'DECIMAL(22,12)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -312,6 +337,9 @@ const _models = new Map([
       noClose: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -350,6 +378,9 @@ const _models = new Map([
       positionPair: 'VARCHAR(255)',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -385,6 +416,9 @@ const _models = new Map([
       mtsUpdate: 'BIGINT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -420,6 +454,10 @@ const _models = new Map([
       mtsUpdate: 'BIGINT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      // TODO: The API returns a lot of data with the same values
+      // [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -444,6 +482,9 @@ const _models = new Map([
       extraData: 'TEXT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      [INDEX_FIELD_NAME]: ['time'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -468,6 +509,9 @@ const _models = new Map([
       userAgent: 'TEXT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['mtsCreate', 'log', 'user_id'],
+      [INDEX_FIELD_NAME]: ['mtsCreate'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -490,7 +534,9 @@ const _models = new Map([
       bid: 'DECIMAL(22,12)',
       bidPeriod: 'INT',
       ask: 'DECIMAL(22,12)',
-      mtsUpdate: 'BIGINT'
+      mtsUpdate: 'BIGINT',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol']
     }
   ],
   [
@@ -506,7 +552,10 @@ const _models = new Map([
       fundingStep: 'DECIMAL(22,12)',
       clampMin: 'DECIMAL(22,12)',
       clampMax: 'DECIMAL(22,12)',
-      _type: 'VARCHAR(255)'
+      _type: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['timestamp', 'key', '_type'],
+      [INDEX_FIELD_NAME]: ['timestamp', 'key']
     }
   ],
   [
@@ -518,6 +567,10 @@ const _models = new Map([
       start: 'BIGINT',
       timeframe: 'VARCHAR(255)',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: [
+        'symbol', 'user_id', 'confName', 'timeframe'
+      ],
       [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
@@ -554,7 +607,9 @@ const _models = new Map([
       name: 'VARCHAR(255)',
       pool: 'VARCHAR(255)',
       explorer: 'TEXT',
-      walletFx: 'TEXT'
+      walletFx: 'TEXT',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['id']
     }
   ],
   [
@@ -568,7 +623,10 @@ const _models = new Map([
       low: 'DECIMAL(22,12)',
       volume: 'DECIMAL(22,12)',
       _symbol: 'VARCHAR(255)',
-      _timeframe: 'VARCHAR(255)'
+      _timeframe: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['_symbol', '_timeframe', 'mts'],
+      [INDEX_FIELD_NAME]: ['mts', '_symbol']
     }
   ],
   [
@@ -606,6 +664,8 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
       user_id: 'INT NOT NULL',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['collName', 'user_id'],
       [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)

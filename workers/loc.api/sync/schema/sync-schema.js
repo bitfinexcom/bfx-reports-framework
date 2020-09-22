@@ -23,8 +23,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mts', 'currency'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.LEDGERS)
     }
   ],
@@ -39,8 +37,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsCreate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'symbol', 'user_id'],
       model: getModelOf(TABLES_NAMES.TRADES)
     }
   ],
@@ -55,8 +51,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsCreate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.FUNDING_TRADES)
     }
   ],
@@ -72,8 +66,6 @@ const _methodCollMap = new Map([
       start: [],
       confName: 'publicTradesConf',
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mts', '_symbol'],
-      fieldsOfUniqueIndex: ['id', '_symbol'],
       model: getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
   ],
@@ -97,8 +89,6 @@ const _methodCollMap = new Map([
       hasNewData: true,
       confName: 'statusMessagesConf',
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['timestamp', 'key'],
-      fieldsOfUniqueIndex: ['timestamp', 'key', '_type'],
       model: getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
   ],
@@ -113,8 +103,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.ORDERS)
     }
   ],
@@ -129,8 +117,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdated', 'currency'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.MOVEMENTS)
     }
   ],
@@ -145,8 +131,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
     }
   ],
@@ -161,8 +145,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
     }
   ],
@@ -177,8 +159,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
     }
   ],
@@ -193,8 +173,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }
   ],
@@ -209,9 +187,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsUpdate', 'symbol'],
-      // TODO: The API returns a lot of data with the same values
-      // fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.POSITIONS_SNAPSHOT)
     }
   ],
@@ -226,8 +201,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['time'],
-      fieldsOfUniqueIndex: ['id', 'user_id'],
       model: getModelOf(TABLES_NAMES.LOGINS)
     }
   ],
@@ -242,8 +215,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mtsCreate'],
-      fieldsOfUniqueIndex: ['mtsCreate', 'log', 'user_id'],
       model: getModelOf(TABLES_NAMES.CHANGE_LOGS)
     }
   ],
@@ -259,8 +230,6 @@ const _methodCollMap = new Map([
       start: [],
       confName: 'tickersHistoryConf',
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: null,
-      fieldsOfUniqueIndex: ['mtsUpdate', 'symbol'],
       model: getModelOf(TABLES_NAMES.TICKERS_HISTORY)
     }
   ],
@@ -342,7 +311,6 @@ const _methodCollMap = new Map([
       sort: [['name', 1]],
       hasNewData: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
-      fieldsOfUniqueIndex: ['id'],
       model: getModelOf(TABLES_NAMES.CURRENCIES)
     }
   ],
@@ -359,8 +327,6 @@ const _methodCollMap = new Map([
       start: [],
       confName: 'candlesConf',
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-      fieldsOfIndex: ['mts', '_symbol'],
-      fieldsOfUniqueIndex: ['_symbol', '_timeframe', 'mts'],
       model: getModelOf(TABLES_NAMES.CANDLES)
     }
   ]
