@@ -455,8 +455,8 @@ const _models = new Map([
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
 
-      // TODO: The API returns a lot of data with the same values
-      // [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+      // The API returns a lot of data with the same values,
+      // that cause unique indexes are not included
       [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
