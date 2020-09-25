@@ -66,6 +66,10 @@ class ReportService extends BaseReportService {
   [SYNC_API_METHODS.CANDLES] (args) {
     return super.getCandles(null, args)
   }
+
+  [SYNC_API_METHODS.POSITIONS_SNAPSHOT] (args) {
+    return super.getPositionsSnapshot(null, args)
+  }
 }
 
 module.exports = ReportService

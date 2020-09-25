@@ -226,6 +226,75 @@ module.exports = new Map([
     ]
   ],
   [
+    'positions_snap',
+    [
+      [
+        'tBTCUSD',
+        'ACTIVE',
+        0.12345,
+        12345,
+        -0.012345,
+        0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        12345,
+        _ms,
+        _ms
+      ],
+      [
+        'tBTCEUR',
+        'ACTIVE',
+        0.12345,
+        12345,
+        -0.012345,
+        0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        10012345,
+        _ms,
+        _ms
+      ],
+      [
+        'tBTCGBP',
+        'ACTIVE',
+        0.12345,
+        12345,
+        -0.012345,
+        0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        20012345,
+        _ms,
+        _ms
+      ],
+      [
+        'tBTCJPY',
+        'ACTIVE',
+        0.12345,
+        12345,
+        -0.012345,
+        0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        30012345,
+        _ms,
+        _ms
+      ]
+    ]
+  ],
+  [
     'movements',
     [
       [

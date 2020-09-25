@@ -13,7 +13,7 @@ const {
 const getWhereQuery = require('./get-where-query')
 const getLimitQuery = require('./get-limit-query')
 const getOrderQuery = require('./get-order-query')
-const getIndexQuery = require('./get-index-query')
+const getIndexCreationQuery = require('./get-index-creation-query')
 const getInsertableArrayObjectsFilter = require('./get-insertable-array-objects-filter')
 const getProjectionQuery = require('./get-projection-query')
 const getPlaceholdersQuery = require('./get-placeholders-query')
@@ -26,6 +26,7 @@ const getStatusMessagesFilter = require('./get-status-messages-filter')
 const getTableCreationQuery = require('./get-table-creation-query')
 const getTriggerCreationQuery = require('./get-trigger-creation-query')
 const getTimeframeFilter = require('./get-timeframe-filter')
+const getTimeframeQuery = require('./get-timeframe-query')
 
 module.exports = {
   mixUserIdToArrData,
@@ -37,7 +38,7 @@ module.exports = {
   getWhereQuery,
   getLimitQuery,
   getOrderQuery,
-  getIndexQuery,
+  getIndexCreationQuery,
   getInsertableArrayObjectsFilter,
   getProjectionQuery,
   getPlaceholdersQuery,
@@ -49,5 +50,6 @@ module.exports = {
   getStatusMessagesFilter,
   getTableCreationQuery,
   getTriggerCreationQuery,
-  getTimeframeFilter
+  getTimeframeFilter,
+  getTimeframeQuery
 }

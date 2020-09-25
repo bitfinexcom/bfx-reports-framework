@@ -13,6 +13,7 @@ module.exports = {
   FUNDING_CREDIT_HISTORY: 'fundingCreditHistory',
   TICKERS_HISTORY: 'tickersHistory',
   POSITIONS_HISTORY: 'positionsHistory',
+  POSITIONS_SNAPSHOT: 'positionsSnapshot',
   SYMBOLS: 'symbols',
   INACTIVE_SYMBOLS: 'inactiveSymbols',
   FUTURES: 'futures',

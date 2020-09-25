@@ -1,9 +1,6 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME
-} = require('../../schema/const')
+const { CONSTR_FIELD_NAME } = require('../../schema/const')
 
 const _getConstraintsQuery = (name, model) => {
   const constraintsArr = Array.isArray(model[CONSTR_FIELD_NAME])
@@ -36,10 +33,7 @@ module.exports = (models = [], isCreatedIfNotExists) => {
     const constraints = _getConstraintsQuery(name, model)
 
     const keys = Object.keys(model)
-      .filter((field) => (
-        field !== CONSTR_FIELD_NAME &&
-        field !== TRIGGER_FIELD_NAME
-      ))
+      .filter((field) => field !== CONSTR_FIELD_NAME)
     const columnDefs = keys.reduce((accum, field, i, arr) => {
       const isLast = arr.length === (i + 1)
       const type = model[field]

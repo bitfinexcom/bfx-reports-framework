@@ -21,6 +21,7 @@ const SYMBOLS = '_getSymbols'
 const INACTIVE_SYMBOLS = '_getInactiveSymbols'
 const FUTURES = '_getFutures'
 const CURRENCIES = '_getCurrencies'
+const POSITIONS_SNAPSHOT = '_getPositionsSnapshot'
 
 module.exports = {
   LEDGERS,
@@ -43,5 +44,6 @@ module.exports = {
   SYMBOLS,
   INACTIVE_SYMBOLS,
   FUTURES,
-  CURRENCIES
+  CURRENCIES,
+  POSITIONS_SNAPSHOT
 }
