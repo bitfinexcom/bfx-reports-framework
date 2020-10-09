@@ -24,7 +24,8 @@ const _schema = [
       _startsWith(d, 'position modified') ||
       _startsWith(d, 'position closed') ||
       _test(d, /position #[0-9]* close/) ||
-      _test(d, /position #[0-9]* liquidate/)
+      _test(d, /position #[0-9]* liquidate/) ||
+      _test(d, /position pl @\s?[0-9]*\.?[0-9]* settlement \(trade\) on wallet margin/)
     ),
     category: 22
   },

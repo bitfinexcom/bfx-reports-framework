@@ -13,6 +13,11 @@ const {
 
 const TYPES = require('../../di/types')
 
+const { getTimeframeQuery } = require('../dao/helpers')
+const {
+  SyncedPositionsSnapshotParamsError
+} = require('../../errors')
+
 class PositionsSnapshot {
   constructor (
     rService,
@@ -28,15 +33,23 @@ class PositionsSnapshot {
     this.syncSchema = syncSchema
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
+
+    this.positionsHistoryObjModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
+    this.positionsSnapshotObjModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
+    this.positionsHistoryModel = Object.keys(
+      this.positionsHistoryObjModel
+    )
+    this.positionsSnapshotModel = Object.keys(
+      this.positionsSnapshotObjModel
+    )
   }
 
   _getPositionsHistory (
     user,
     endMts
   ) {
-    const positionsHistoryModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
-
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.POSITIONS_HISTORY,
       {
@@ -46,7 +59,97 @@ class PositionsSnapshot {
           $gte: { mtsUpdate: endMts }
         },
         sort: [['mtsUpdate', -1]],
-        projection: positionsHistoryModel,
+        projection: this.positionsHistoryModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+  }
+
+  _getTimeframeQuery (alias, isMtsExisted) {
+    const res = getTimeframeQuery(
+      'day',
+      {
+        propName: 'mtsUpdate',
+        alias
+      }
+    )
+
+    return isMtsExisted ? [res] : []
+  }
+
+  _getMtsStr (mts, propName) {
+    if (
+      !Number.isInteger(mts) ||
+      mts === 0
+    ) {
+      return
+    }
+
+    const date = new Date(mts)
+    const year = date.getUTCFullYear()
+    const _month = date.getUTCMonth() + 1
+    const month = _month < 10
+      ? `0${_month}`
+      : _month
+    const day = date.getUTCDate()
+    const mtsStr = `${year}-${month}-${day}`
+
+    return { [propName]: mtsStr }
+  }
+
+  _getPositionsSnapshotFromDb (
+    user,
+    params
+  ) {
+    const { start, end } = { ...params }
+
+    const isStartExisted = Number.isInteger(start)
+    const isEndExisted = Number.isInteger(end)
+
+    const startSqlTimeframe = this._getTimeframeQuery(
+      'startMtsUpdateStr',
+      isStartExisted
+    )
+    const endSqlTimeframe = this._getTimeframeQuery(
+      'endMtsUpdateStr',
+      isEndExisted
+    )
+
+    const startMtsUpdateStr = this._getMtsStr(
+      start,
+      'startMtsUpdateStr'
+    )
+    const endMtsUpdateStr = this._getMtsStr(
+      end,
+      'endMtsUpdateStr'
+    )
+
+    const gteFilter = isStartExisted
+      ? { $gte: { mtsUpdate: start } }
+      : {}
+    const lteFilter = isEndExisted
+      ? { $lte: { mtsUpdate: end } }
+      : {}
+    const eqFilter = isStartExisted || isEndExisted
+      ? { $eq: { ...startMtsUpdateStr, ...endMtsUpdateStr } }
+      : {}
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.POSITIONS_SNAPSHOT,
+      {
+        filter: {
+          user_id: user._id,
+          ...gteFilter,
+          ...lteFilter,
+          ...eqFilter
+        },
+        sort: [['mtsUpdate', -1]],
+        projection: [
+          ...this.positionsSnapshotModel,
+          ...startSqlTimeframe,
+          ...endSqlTimeframe
+        ],
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -144,8 +247,12 @@ class PositionsSnapshot {
 
   async _getCalculatedPositions (
     positions,
-    end
+    end,
+    opts = {}
   ) {
+    const {
+      isNotTickersRequired = false
+    } = { ...opts }
     const positionsSnapshot = []
     const tickers = []
 
@@ -203,6 +310,7 @@ class PositionsSnapshot {
       })
 
       if (
+        !isNotTickersRequired &&
         currency &&
         currency !== 'USD' &&
         Number.isFinite(pl) &&
@@ -453,6 +561,49 @@ class PositionsSnapshot {
       positionsSnapshot,
       tickers
     }
+  }
+
+  async getSyncedPositionsSnapshot (args) {
+    const {
+      auth = {},
+      params = {}
+    } = { ...args }
+    const {
+      start,
+      end
+    } = { ...params }
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+    const emptyRes = []
+
+    if (
+      Number.isInteger(start) &&
+      Number.isInteger(end)
+    ) {
+      throw new SyncedPositionsSnapshotParamsError()
+    }
+
+    const syncedPositionsSnapshot = await this._getPositionsSnapshotFromDb(
+      user,
+      { start, end }
+    )
+
+    if (
+      !Array.isArray(syncedPositionsSnapshot) ||
+      syncedPositionsSnapshot.length === 0
+    ) {
+      return emptyRes
+    }
+
+    const {
+      positionsSnapshot
+    } = await this._getCalculatedPositions(
+      syncedPositionsSnapshot,
+      start || end,
+      { isNotTickersRequired: true }
+    )
+
+    return positionsSnapshot
   }
 
   async getPositionsSnapshot (args) {

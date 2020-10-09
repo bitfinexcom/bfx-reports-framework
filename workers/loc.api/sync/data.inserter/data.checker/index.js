@@ -44,7 +44,8 @@ class DataChecker {
     TABLES_NAMES,
     ALLOWED_COLLS,
     FOREX_SYMBS,
-    currencyConverter
+    currencyConverter,
+    syncInterrupter
   ) {
     this.rService = rService
     this.dao = dao
@@ -53,17 +54,28 @@ class DataChecker {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
+    this.syncInterrupter = syncInterrupter
 
     this._methodCollMap = new Map()
+
+    this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
   init ({ methodCollMap }) {
+    this.syncInterrupter.onceInterrupt(() => {
+      this._isInterrupted = true
+    })
+
     this._methodCollMap = this.syncSchema
       .getMethodCollMap(methodCollMap)
   }
 
   async checkNewData (auth) {
     const methodCollMap = this._getMethodCollMap()
+
+    if (this._isInterrupted) {
+      return filterMethodCollMap(methodCollMap)
+    }
 
     await this._checkNewDataArrObjType(auth, methodCollMap)
 
@@ -73,6 +85,10 @@ class DataChecker {
   async checkNewPublicData () {
     const methodCollMap = this._getMethodCollMap()
 
+    if (this._isInterrupted) {
+      return filterMethodCollMap(methodCollMap, true)
+    }
+
     await this._checkNewDataPublicArrObjType(methodCollMap)
 
     return filterMethodCollMap(methodCollMap, true)
@@ -80,6 +96,9 @@ class DataChecker {
 
   async _checkNewDataArrObjType (auth, methodCollMap) {
     for (const [method, item] of methodCollMap) {
+      if (this._isInterrupted) {
+        return
+      }
       if (!isInsertableArrObjTypeOfColl(item)) {
         continue
       }
@@ -90,8 +109,6 @@ class DataChecker {
         auth
       )
     }
-
-    return methodCollMap
   }
 
   async _checkItemNewDataArrObjType (
@@ -99,6 +116,10 @@ class DataChecker {
     schema,
     auth
   ) {
+    if (this._isInterrupted) {
+      return
+    }
+
     schema.hasNewData = false
 
     const args = this._getMethodArgMap(method, { auth, limit: 1 })
@@ -124,13 +145,19 @@ class DataChecker {
       },
       schema.sort
     )
-    const { res: lastElemFromApi } = await this._getDataFromApi(
+    const {
+      res: lastElemFromApi,
+      isInterrupted
+    } = await this._getDataFromApi(
       method,
       args,
       true
     )
 
-    if (isEmpty(lastElemFromApi)) {
+    if (
+      isInterrupted ||
+      isEmpty(lastElemFromApi)
+    ) {
       return
     }
 
@@ -207,6 +234,9 @@ class DataChecker {
 
   async _checkNewDataPublicArrObjType (methodCollMap) {
     for (const [method, schema] of methodCollMap) {
+      if (this._isInterrupted) {
+        return
+      }
       if (!isInsertableArrObjTypeOfColl(schema, true)) {
         continue
       }
@@ -232,6 +262,10 @@ class DataChecker {
   }
 
   async _checkNewConfigurablePublicData (method, schema) {
+    if (this._isInterrupted) {
+      return
+    }
+
     const {
       confName,
       symbolFieldName,
@@ -271,6 +305,10 @@ class DataChecker {
       }
 
     for (const confs of publicСollsСonf) {
+      if (this._isInterrupted) {
+        return
+      }
+
       const {
         symbol,
         start,
@@ -310,12 +348,18 @@ class DataChecker {
         filter,
         sort
       )
-      const { res: lastElemFromApi } = await this._getDataFromApi(
+      const {
+        res: lastElemFromApi,
+        isInterrupted
+      } = await this._getDataFromApi(
         method,
         args,
         true
       )
 
+      if (isInterrupted) {
+        return
+      }
       if (
         isEmpty(lastElemFromApi) ||
         (
@@ -389,6 +433,10 @@ class DataChecker {
     method,
     schema
   ) {
+    if (this._isInterrupted) {
+      return
+    }
+
     const {
       symbolFieldName,
       timeframeFieldName,
@@ -486,6 +534,10 @@ class DataChecker {
     }, _collСonfig)
 
     for (const { symbol, start: configStart } of collСonfig) {
+      if (this._isInterrupted) {
+        return
+      }
+
       const mtsMoment = moment.utc(configStart)
         .add(-1, 'days')
         .valueOf()
@@ -529,12 +581,22 @@ class DataChecker {
         sort
       )
       const {
-        res: lastElemFromApi
+        res: lastElemFromApi,
+        isInterrupted: isInterruptedForLast
       } = await this._getDataFromApi(method, argsForLastElem)
+
+      if (isInterruptedForLast) {
+        return
+      }
+
       const {
-        res: startElemFromApi
+        res: startElemFromApi,
+        isInterrupted: isInterruptedForStart
       } = await this._getDataFromApi(method, argsForReceivingStart)
 
+      if (isInterruptedForStart) {
+        return
+      }
       if (
         isEmpty(lastElemFromApi) ||
         (
@@ -635,7 +697,10 @@ class DataChecker {
     return getDataFromApi(
       (space, args) => this.rService[methodApi]
         .bind(this.rService)(args),
-      args
+      args,
+      null,
+      null,
+      this.syncInterrupter
     )
   }
 }
@@ -648,5 +713,6 @@ decorate(inject(TYPES.TABLES_NAMES), DataChecker, 3)
 decorate(inject(TYPES.ALLOWED_COLLS), DataChecker, 4)
 decorate(inject(TYPES.FOREX_SYMBS), DataChecker, 5)
 decorate(inject(TYPES.CurrencyConverter), DataChecker, 6)
+decorate(inject(TYPES.SyncInterrupter), DataChecker, 7)
 
 module.exports = DataChecker

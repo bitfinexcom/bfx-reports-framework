@@ -57,7 +57,8 @@ class DataInserter extends EventEmitter {
     authenticator,
     convertCurrencyHook,
     recalcSubAccountLedgersBalancesHook,
-    dataChecker
+    dataChecker,
+    syncInterrupter
   ) {
     super()
 
@@ -72,6 +73,7 @@ class DataInserter extends EventEmitter {
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
     this.dataChecker = dataChecker
+    this.syncInterrupter = syncInterrupter
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -79,9 +81,15 @@ class DataInserter extends EventEmitter {
       this.ALLOWED_COLLS
     )
     this._afterAllInsertsHooks = []
+
+    this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
   init (syncColls = this.ALLOWED_COLLS.ALL) {
+    this.syncInterrupter.onceInterrupt(() => {
+      this._isInterrupted = true
+    })
+
     this.syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
@@ -123,6 +131,10 @@ class DataInserter extends EventEmitter {
   }
 
   async insertNewDataToDbMultiUser () {
+    if (this._isInterrupted) {
+      return
+    }
+
     this._auth = getAuthFromDb(this.authenticator)
 
     if (
@@ -139,6 +151,10 @@ class DataInserter extends EventEmitter {
     let progress = 0
 
     for (const authItem of this._auth) {
+      if (this._isInterrupted) {
+        return
+      }
+
       if (
         !authItem[1] ||
         typeof authItem[1] !== 'object'
@@ -155,10 +171,19 @@ class DataInserter extends EventEmitter {
     await this.insertNewPublicDataToDb(progress)
 
     await this._afterAllInserts()
+
+    if (this._isInterrupted) {
+      return
+    }
+
     await this.setProgress(100)
   }
 
   async _afterAllInserts () {
+    if (this._isInterrupted) {
+      return
+    }
+
     if (
       !Array.isArray(this._afterAllInsertsHooks) ||
       this._afterAllInsertsHooks.length === 0 ||
@@ -168,6 +193,10 @@ class DataInserter extends EventEmitter {
     }
 
     for (const hook of this._afterAllInsertsHooks) {
+      if (this._isInterrupted) {
+        return
+      }
+
       await hook.execute()
     }
   }
@@ -193,6 +222,10 @@ class DataInserter extends EventEmitter {
   }
 
   async insertNewPublicDataToDb (prevProgress) {
+    if (this._isInterrupted) {
+      return
+    }
+
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
     const size = methodCollMap.size
@@ -201,12 +234,18 @@ class DataInserter extends EventEmitter {
     let progress = 0
 
     for (const [method, item] of methodCollMap) {
+      if (this._isInterrupted) {
+        return
+      }
+
       await this._updateApiDataArrObjTypeToDb(method, item)
       await this._updateApiDataArrTypeToDb(method, item)
       await this._insertApiDataPublicArrObjTypeToDb(method, item)
 
       count += 1
-      progress = Math.round(prevProgress + (count / size) * 100 * ((100 - prevProgress) / 100))
+      progress = Math.round(
+        prevProgress + (count / size) * 100 * ((100 - prevProgress) / 100)
+      )
 
       if (progress < 100) {
         await this.setProgress(progress)
@@ -215,13 +254,16 @@ class DataInserter extends EventEmitter {
   }
 
   async insertNewDataToDb (auth, userProgress = 0) {
+    if (this._isInterrupted) {
+      return userProgress
+    }
     if (
       typeof auth.apiKey !== 'string' ||
       typeof auth.apiSecret !== 'string'
     ) {
       await this.setProgress(MESS_ERR_UNAUTH)
 
-      return
+      return userProgress
     }
 
     const methodCollMap = await this.dataChecker
@@ -232,6 +274,10 @@ class DataInserter extends EventEmitter {
     let progress = 0
 
     for (const [method, schema] of methodCollMap) {
+      if (this._isInterrupted) {
+        return userProgress
+      }
+
       const { start } = schema
 
       for (const [symbol, dates] of start) {
@@ -297,7 +343,8 @@ class DataInserter extends EventEmitter {
       methodApi,
       args,
       this.apiMiddleware.request.bind(this.apiMiddleware),
-      isCheckCall
+      isCheckCall,
+      this.syncInterrupter
     )
   }
 
@@ -305,7 +352,10 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
-    if (!isInsertableArrObjTypeOfColl(schema, true)) {
+    if (
+      this._isInterrupted ||
+      !isInsertableArrObjTypeOfColl(schema, true)
+    ) {
       return
     }
 
@@ -317,6 +367,10 @@ class DataInserter extends EventEmitter {
       name === this.ALLOWED_COLLS.CANDLES
     ) {
       for (const [symbol, dates, timeframe] of start) {
+        if (this._isInterrupted) {
+          return
+        }
+
         const addApiParams = name === this.ALLOWED_COLLS.CANDLES
           ? {
             symbol,
@@ -342,6 +396,10 @@ class DataInserter extends EventEmitter {
     addApiParams = {},
     auth = {}
   ) {
+    if (this._isInterrupted) {
+      return
+    }
+
     const {
       baseStartFrom,
       baseStartTo,
@@ -385,6 +443,10 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
+    if (this._isInterrupted) {
+      return
+    }
+
     const { auth } = { ...args }
     const { apiKey, apiSecret } = { ...auth }
     const isPublic = (
@@ -423,10 +485,22 @@ class DataInserter extends EventEmitter {
     let serialRequestsCount = 0
 
     while (true) {
-      let { res, nextPage } = await this._getDataFromApi(
+      if (this._isInterrupted) {
+        return
+      }
+
+      let {
+        res,
+        nextPage,
+        isInterrupted
+      } = await this._getDataFromApi(
         methodApi,
         currIterationArgs
       )
+
+      if (isInterrupted) {
+        return
+      }
 
       currIterationArgs.params.end = nextPage
 
@@ -502,7 +576,10 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
-    if (!isUpdatableArrTypeOfColl(schema, true)) {
+    if (
+      this._isInterrupted ||
+      !isUpdatableArrTypeOfColl(schema, true)
+    ) {
       return
     }
 
@@ -516,6 +593,13 @@ class DataInserter extends EventEmitter {
       { start: null, end: null })
     const elemsFromApi = await this._getDataFromApi(methodApi, args)
 
+    if (
+      elemsFromApi &&
+      typeof elemsFromApi === 'object' &&
+      elemsFromApi.isInterrupted
+    ) {
+      return
+    }
     if (
       Array.isArray(elemsFromApi) &&
       elemsFromApi.length > 0
@@ -536,6 +620,10 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
+    if (this._isInterrupted) {
+      return
+    }
+
     const {
       dateFieldName,
       name: collName,
@@ -560,7 +648,15 @@ class DataInserter extends EventEmitter {
     const elemsFromApi = []
 
     for (const { symbol, start } of publicСollsСonf) {
+      if (this._isInterrupted) {
+        return
+      }
+
       for (const type of syncingTypes) {
+        if (this._isInterrupted) {
+          return
+        }
+
         const args = this._getMethodArgMap(
           methodApi,
           {
@@ -576,9 +672,20 @@ class DataInserter extends EventEmitter {
           }
         )
         const apiRes = await this._getDataFromApi(methodApi, args)
-        const oneSymbElemsFromApi = (
+        const isApiResObj = (
           apiRes &&
-          typeof apiRes === 'object' &&
+          typeof apiRes === 'object'
+        )
+
+        if (
+          isApiResObj &&
+          apiRes.isInterrupted
+        ) {
+          return
+        }
+
+        const oneSymbElemsFromApi = (
+          isApiResObj &&
           !Array.isArray(apiRes) &&
           Array.isArray(apiRes.res)
         )
@@ -616,7 +723,10 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
-    if (!isUpdatableArrObjTypeOfColl(schema, true)) {
+    if (
+      this._isInterrupted ||
+      !isUpdatableArrObjTypeOfColl(schema, true)
+    ) {
       return
     }
 
@@ -640,9 +750,20 @@ class DataInserter extends EventEmitter {
       { start: null, end: null }
     )
     const apiRes = await this._getDataFromApi(methodApi, args)
-    const elemsFromApi = (
+    const isApiResObj = (
       apiRes &&
-      typeof apiRes === 'object' &&
+      typeof apiRes === 'object'
+    )
+
+    if (
+      isApiResObj &&
+      apiRes.isInterrupted
+    ) {
+      return
+    }
+
+    const elemsFromApi = (
+      isApiResObj &&
       !Array.isArray(apiRes) &&
       Array.isArray(apiRes.res)
     )
@@ -696,5 +817,6 @@ decorate(inject(TYPES.Authenticator), DataInserter, 7)
 decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 8)
 decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 decorate(inject(TYPES.DataChecker), DataInserter, 10)
+decorate(inject(TYPES.SyncInterrupter), DataInserter, 11)
 
 module.exports = DataInserter

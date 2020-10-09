@@ -24,6 +24,7 @@ const SubAccount = require('../sync/sub.account')
 const Progress = require('../sync/progress')
 const syncSchema = require('../sync/schema')
 const Sync = require('../sync')
+const SyncInterrupter = require('../sync/sync.interrupter')
 const SyncQueue = require('../sync/sync.queue')
 const {
   redirectRequestsToApi,
@@ -92,7 +93,7 @@ module.exports = ({
         return [
           ['_conf', TYPES.CONF],
           ['_sync', TYPES.Sync],
-          ['_wsEventEmitter', TYPES.WSEventEmitter],
+          ['_redirectRequestsToApi', TYPES.RedirectRequestsToApi],
           ['_TABLES_NAMES', TYPES.TABLES_NAMES],
           ['_ALLOWED_COLLS', TYPES.ALLOWED_COLLS],
           ['_SYNC_API_METHODS', TYPES.SYNC_API_METHODS],
@@ -240,6 +241,9 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.Sync)
       .to(Sync)
+      .inSingletonScope()
+    bind(TYPES.SyncInterrupter)
+      .to(SyncInterrupter)
       .inSingletonScope()
     bind(TYPES.Wallets)
       .to(Wallets)

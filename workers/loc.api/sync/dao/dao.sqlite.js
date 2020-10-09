@@ -24,7 +24,7 @@ const {
   getWhereQuery,
   getLimitQuery,
   getOrderQuery,
-  getIndexQuery,
+  getIndexCreationQuery,
   getInsertableArrayObjectsFilter,
   getStatusMessagesFilter,
   getProjectionQuery,
@@ -43,6 +43,11 @@ const {
   SqlCorrectnessError,
   DbVersionTypeError
 } = require('../../errors')
+const {
+  TRIGGER_FIELD_NAME,
+  INDEX_FIELD_NAME,
+  UNIQUE_INDEX_FIELD_NAME
+} = require('../schema/const')
 
 class SqliteDAO extends DAO {
   constructor (...args) {
@@ -185,7 +190,13 @@ class SqliteDAO extends DAO {
   }
 
   async _createTablesIfNotExists () {
-    const models = this._getModelsMap({ omittedFields: null })
+    const models = this._getModelsMap({
+      omittedFields: [
+        TRIGGER_FIELD_NAME,
+        INDEX_FIELD_NAME,
+        UNIQUE_INDEX_FIELD_NAME
+      ]
+    })
     const sqlArr = getTableCreationQuery(models, true)
 
     for (const sql of sqlArr) {
@@ -194,7 +205,7 @@ class SqliteDAO extends DAO {
   }
 
   async _createTriggerIfNotExists () {
-    const models = this._getModelsMap({ omittedFields: null })
+    const models = this._getModelsMap({ omittedFields: [] })
     const sqlArr = getTriggerCreationQuery(models, true)
 
     for (const sql of sqlArr) {
@@ -203,46 +214,8 @@ class SqliteDAO extends DAO {
   }
 
   async _createIndexisIfNotExists () {
-    for (const currItem of this._getMethodCollMap()) {
-      const syncSchema = currItem[1]
-      const {
-        name,
-        fieldsOfIndex,
-        fieldsOfUniqueIndex
-      } = syncSchema
-
-      const indexSql = getIndexQuery(fieldsOfIndex, { name })
-      const uniqueIndexSql = getIndexQuery(
-        fieldsOfUniqueIndex,
-        { name, isUnique: true }
-      )
-      const sqlArr = [...indexSql, ...uniqueIndexSql]
-
-      for (const sql of sqlArr) {
-        await this._run(sql)
-      }
-    }
-
-    const publicСollsСonfSql = getIndexQuery(
-      ['symbol', 'user_id', 'confName', 'timeframe'],
-      { name: this.TABLES_NAMES.PUBLIC_COLLS_CONF, isUnique: true }
-    )
-    const userSql = getIndexQuery(
-      ['email', 'username'],
-      { name: this.TABLES_NAMES.USERS, isUnique: true }
-    )
-    const completedOnFirstSyncCollsSql = getIndexQuery(
-      ['collName', 'user_id'],
-      {
-        name: this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-        isUnique: true
-      }
-    )
-    const sqlArr = [
-      ...publicСollsСonfSql,
-      ...userSql,
-      ...completedOnFirstSyncCollsSql
-    ]
+    const models = this._getModelsMap({ omittedFields: [] })
+    const sqlArr = getIndexCreationQuery(models)
 
     for (const sql of sqlArr) {
       await this._run(sql)

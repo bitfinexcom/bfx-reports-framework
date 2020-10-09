@@ -111,6 +111,12 @@ class SubAccountCreatingError extends AuthError {
   }
 }
 
+class SubAccountUpdatingError extends AuthError {
+  constructor (message = 'ERR_SUB_ACCOUNT_UPDATE_HAS_FAILED') {
+    super(message)
+  }
+}
+
 class UserRemovingError extends AuthError {
   constructor (message = 'ERR_USER_REMOVE_HAS_FAILED') {
     super(message)
@@ -141,6 +147,12 @@ class GetPublicDataError extends BaseError {
   }
 }
 
+class SyncedPositionsSnapshotParamsError extends BaseError {
+  constructor (message = 'ERR_SYNCED_POSITIONS_SNAPSHOT_PARAMS_IS_NOT_CORRECT') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -160,9 +172,11 @@ module.exports = {
   DbVersionTypeError,
   MigrationLaunchingError,
   SubAccountCreatingError,
+  SubAccountUpdatingError,
   UserRemovingError,
   UserWasPreviouslyStoredInDbError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
-  GetPublicDataError
+  GetPublicDataError,
+  SyncedPositionsSnapshotParamsError
 }

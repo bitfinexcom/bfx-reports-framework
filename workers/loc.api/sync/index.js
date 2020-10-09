@@ -15,38 +15,66 @@ class Sync {
     rService,
     ALLOWED_COLLS,
     progress,
-    redirectRequestsToApi
+    redirectRequestsToApi,
+    syncInterrupter
   ) {
     this.syncQueue = syncQueue
     this.rService = rService
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.progress = progress
     this.redirectRequestsToApi = redirectRequestsToApi
+    this.syncInterrupter = syncInterrupter
   }
 
-  async _sync (isSkipSync) {
-    if (!isSkipSync) {
+  async _sync (error) {
+    let errorForInterrupter = null
+    let progressForInterrupter = this.syncInterrupter
+      .INITIAL_PROGRESS
+
+    if (!error) {
       try {
-        await this.syncQueue.process()
+        progressForInterrupter = await this.syncQueue.process()
       } catch (err) {
+        errorForInterrupter = err
+
         await this.progress.setProgress(err)
       }
     }
 
     try {
-      await this.redirectRequestsToApi(false)
+      await this.redirectRequestsToApi({ isRedirected: false })
     } catch (err) {
+      errorForInterrupter = err
+
       await this.progress.setProgress(err)
     }
 
-    return this.progress.getProgress()
+    if (
+      this.syncInterrupter.hasInterrupted() &&
+      !errorForInterrupter
+    ) {
+      await this.progress.setProgress(
+        this.syncInterrupter.INTERRUPTED_PROGRESS
+      )
+    }
+
+    const currProgress = await this.progress.getProgress()
+
+    if (this.syncInterrupter.hasInterrupted()) {
+      this.syncInterrupter.emitInterrupted(
+        errorForInterrupter,
+        progressForInterrupter
+      )
+    }
+
+    return currProgress
   }
 
   async start (
     isSolveAfterRedirToApi,
     syncColls = this.ALLOWED_COLLS.ALL
   ) {
-    let isSkipSync = false
+    let error = null
 
     try {
       const isEnable = await this.rService.isSchedulerEnabled()
@@ -65,24 +93,34 @@ class Sync {
       await this.rService.pingApi()
 
       await this.progress.setProgress(0)
-      await this.redirectRequestsToApi(true)
+      await this.redirectRequestsToApi({ isRedirected: true })
     } catch (err) {
       if (err instanceof CollSyncPermissionError) {
         throw err
       }
 
-      isSkipSync = true
+      error = err
 
       await this.progress.setProgress(err)
     }
 
-    if (!isSkipSync && isSolveAfterRedirToApi) {
-      this._sync(isSkipSync).then(() => {}, () => {})
+    if (!error && isSolveAfterRedirToApi) {
+      this._sync(error).then(() => {}, () => {})
 
       return 'SYNCHRONIZATION_IS_STARTED'
     }
 
-    return this._sync(isSkipSync)
+    return this._sync(error)
+  }
+
+  async stop () {
+    const currProgress = await this.progress.getProgress()
+
+    if (currProgress < 100) {
+      return this.syncInterrupter.interrupt()
+    }
+
+    return this.syncInterrupter.INITIAL_PROGRESS
   }
 }
 
@@ -92,5 +130,6 @@ decorate(inject(TYPES.RService), Sync, 1)
 decorate(inject(TYPES.ALLOWED_COLLS), Sync, 2)
 decorate(inject(TYPES.Progress), Sync, 3)
 decorate(inject(TYPES.RedirectRequestsToApi), Sync, 4)
+decorate(inject(TYPES.SyncInterrupter), Sync, 5)
 
 module.exports = Sync

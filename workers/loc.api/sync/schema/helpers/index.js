@@ -4,7 +4,9 @@ const { cloneDeep, omit } = require('lodash')
 
 const {
   CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME
+  TRIGGER_FIELD_NAME,
+  INDEX_FIELD_NAME,
+  UNIQUE_INDEX_FIELD_NAME
 } = require('../const')
 
 const cloneSchema = (map, omittedFields = []) => {
@@ -23,7 +25,9 @@ const getModelsMap = (params = {}) => {
     models,
     omittedFields = [
       CONSTR_FIELD_NAME,
-      TRIGGER_FIELD_NAME
+      TRIGGER_FIELD_NAME,
+      INDEX_FIELD_NAME,
+      UNIQUE_INDEX_FIELD_NAME
     ]
   } = { ...params }
 
