@@ -1,9 +1,9 @@
 'use strict'
 
 const { omit } = require('lodash')
-const {
-  FILTER_CONDITIONS
-} = require('bfx-report/workers/loc.api/helpers')
+const FILTER_CONDITIONS = require(
+  'bfx-report/workers/loc.api/helpers/filter.conditions'
+)
 
 const { serializeVal } = require('./serialization')
 const SQL_OPERATORS = require('./sql.operators')
@@ -57,32 +57,48 @@ const _getCompareOperator = (
     : SQL_OPERATORS.EQ
 }
 
+const _getKeyAndQueryValKey = (name, isPrefixed) => {
+  const key = `$${name}`
+  const queryValKey = isPrefixed ? key : name
+
+  return { key, queryValKey }
+}
+
 const _getKeysAndValuesForWhereQuery = (
   filter,
   origFieldName,
   isArr,
-  alias
+  alias,
+  isPrefixed
 ) => {
   const _alias = alias && typeof alias === 'string'
     ? `${alias}_`
     : ''
 
   if (!isArr) {
-    const key = `$${_alias}${origFieldName}`
+    const name = `${_alias}${origFieldName}`
+    const {
+      key,
+      queryValKey
+    } = _getKeyAndQueryValKey(name, isPrefixed)
     const val = serializeVal(filter[origFieldName])
     const subValues = val === null
       ? {}
-      : { [key]: val }
+      : { [queryValKey]: val }
 
     return { key, subValues }
   }
 
   const subValues = {}
   const preKey = filter[origFieldName].map((item, j) => {
-    const subKey = `$${_alias}${origFieldName}_${j}`
-    subValues[subKey] = serializeVal(item)
+    const name = `${_alias}${origFieldName}_${j}`
+    const {
+      key,
+      queryValKey
+    } = _getKeyAndQueryValKey(name, isPrefixed)
+    subValues[queryValKey] = serializeVal(item)
 
-    return subKey
+    return key
   }).join(', ')
 
   const key = `(${preKey})`
@@ -162,11 +178,16 @@ const _getCompareOpAndKey = (
   subValues,
   fieldName,
   origFieldName,
-  fieldsNamesToDisableCaseSensitivity
+  fieldsNamesToDisableCaseSensitivity,
+  isPrefixed
 ) => {
+  const queryValKey = isPrefixed
+    ? key
+    : key.replace(/^[$]/, '')
+
   if (
     compareOperator === SQL_OPERATORS.EQ &&
-    subValues[key] === null
+    subValues[queryValKey] === null
   ) {
     return {
       compareOperator: SQL_OPERATORS.IS_NULL,
@@ -175,7 +196,7 @@ const _getCompareOpAndKey = (
   }
   if (
     compareOperator === SQL_OPERATORS.NE &&
-    subValues[key] === null
+    subValues[queryValKey] === null
   ) {
     return {
       compareOperator: SQL_OPERATORS.IS_NOT_NULL,
@@ -185,7 +206,7 @@ const _getCompareOpAndKey = (
   if (compareOperator === SQL_OPERATORS.LIKE) {
     return {
       compareOperator,
-      key: ` ${key} ${SQL_OPERATORS.ESCAPE} "\\"`
+      key: ` ${key} ${SQL_OPERATORS.ESCAPE} '\\'`
     }
   }
 
@@ -223,6 +244,7 @@ const _getWhereQueryAndValues = (
   isArr = false,
   fieldsNamesToDisableCaseSensitivity,
   alias,
+  isPrefixed,
   condName = ''
 ) => {
   const _alias = alias && typeof alias === 'string'
@@ -258,7 +280,8 @@ const _getWhereQueryAndValues = (
     _filter,
     _fieldNameWithCondName,
     isArr,
-    alias
+    alias,
+    isPrefixed
   )
   const {
     compareOperator,
@@ -269,7 +292,8 @@ const _getWhereQueryAndValues = (
     subValues,
     _fieldName,
     origFieldName,
-    fieldsNamesToDisableCaseSensitivity
+    fieldsNamesToDisableCaseSensitivity,
+    isPrefixed
   )
 
   return {
@@ -345,10 +369,15 @@ const _getFieldsNamesToDisableCaseSensitivity = (
 
 module.exports = (
   filter = {},
-  isNotSetWhereClause,
-  requestedFilter,
-  alias
+  opts = {}
 ) => {
+  const {
+    isPrefixed,
+    isNotSetWhereClause,
+    requestedFilter,
+    alias
+  } = { ...opts }
+
   let values = {}
 
   const isOrOp = _isOrOp(filter)
@@ -410,6 +439,7 @@ module.exports = (
               isCondArr,
               fieldsNamesToDisableCaseSensitivity,
               alias,
+              isPrefixed,
               currCond
             )
 
@@ -431,7 +461,8 @@ module.exports = (
         accum,
         isArr,
         fieldsNamesToDisableCaseSensitivity,
-        alias
+        alias,
+        isPrefixed
       )
 
       values = { ...values, ...subValues }

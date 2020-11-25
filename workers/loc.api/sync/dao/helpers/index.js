@@ -2,12 +2,12 @@
 
 const {
   mixUserIdToArrData,
-  convertDataType,
   mapObjBySchema,
   isContainedSameMts
 } = require('./utils')
 const {
   serializeVal,
+  serializeObj,
   deserializeVal
 } = require('./serialization')
 const getWhereQuery = require('./get-where-query')
@@ -27,13 +27,22 @@ const getTableCreationQuery = require('./get-table-creation-query')
 const getTriggerCreationQuery = require('./get-trigger-creation-query')
 const getTimeframeFilter = require('./get-timeframe-filter')
 const getTimeframeQuery = require('./get-timeframe-query')
+const getTablesNamesQuery = require('./get-tables-names-query')
+const {
+  normalizeUserData,
+  getUsersIds,
+  fillSubUsers,
+  getSubUsersQuery,
+  getUsersQuery
+} = require('./users')
+const manageTransaction = require('./manage-transaction')
 
 module.exports = {
   mixUserIdToArrData,
-  convertDataType,
   mapObjBySchema,
   isContainedSameMts,
   serializeVal,
+  serializeObj,
   deserializeVal,
   getWhereQuery,
   getLimitQuery,
@@ -51,5 +60,12 @@ module.exports = {
   getTableCreationQuery,
   getTriggerCreationQuery,
   getTimeframeFilter,
-  getTimeframeQuery
+  getTimeframeQuery,
+  getTablesNamesQuery,
+  normalizeUserData,
+  getUsersIds,
+  fillSubUsers,
+  getSubUsersQuery,
+  getUsersQuery,
+  manageTransaction
 }
