@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 18
+const SUPPORTED_DB_VERSION = 19
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -102,7 +102,21 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mts', 'currency'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'wallet', 'currency', 'mts'],
+        ['user_id', 'wallet', 'mts'],
+        ['user_id', 'currency', 'mts'],
+        ['user_id', '_isMarginFundingPayment', 'mts'],
+        ['user_id', '_isAffiliateRebate', 'mts'],
+        ['user_id', '_isStakingPayments', 'mts'],
+        ['user_id', '_category', 'mts'],
+        ['user_id', 'mts'],
+        ['currency', 'mts'],
+        ['user_id', 'subUserId', 'mts',
+          'WHERE subUserId IS NOT NULL'],
+        ['subUserId', 'mts', '_id',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -136,7 +150,17 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'symbol', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsCreate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsCreate'],
+        ['user_id', 'orderID', 'mtsCreate'],
+        ['user_id', 'execAmount', 'mtsCreate'],
+        ['user_id', 'execPrice', 'mtsCreate'],
+        ['user_id', 'mtsCreate'],
+        ['user_id', 'subUserId', 'mtsCreate',
+          'WHERE subUserId IS NOT NULL'],
+        ['subUserId', 'orderID',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -167,7 +191,12 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsCreate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsCreate'],
+        ['user_id', 'mtsCreate'],
+        ['user_id', 'subUserId', 'mtsCreate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -195,7 +224,11 @@ const _models = new Map([
       _symbol: 'VARCHAR(255)',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', '_symbol'],
-      [INDEX_FIELD_NAME]: ['mts', '_symbol']
+      [INDEX_FIELD_NAME]: [
+        ['_symbol', 'mts'],
+        ['amount', 'mts'],
+        ['mts']
+      ]
     }
   ],
   [
@@ -226,7 +259,14 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsUpdate'],
+        ['user_id', 'type', 'mtsUpdate'],
+        ['user_id', 'amount', 'mtsUpdate'],
+        ['user_id', 'mtsUpdate'],
+        ['user_id', 'subUserId', 'mtsUpdate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -260,7 +300,15 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsUpdated', 'currency'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'status', 'mtsStarted'],
+        ['user_id', 'status', 'mtsUpdated'],
+        ['user_id', 'currency', 'mtsUpdated'],
+        ['user_id', 'amount', 'mtsUpdated'],
+        ['user_id', 'mtsUpdated'],
+        ['user_id', 'subUserId', 'mtsUpdated',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -299,7 +347,14 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsUpdate'],
+        ['user_id', 'amount', 'mtsUpdate'],
+        ['user_id', 'status', 'mtsUpdate'],
+        ['user_id', 'mtsUpdate'],
+        ['user_id', 'subUserId', 'mtsUpdate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -339,7 +394,14 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsUpdate'],
+        ['user_id', 'amount', 'mtsUpdate'],
+        ['user_id', 'status', 'mtsUpdate'],
+        ['user_id', 'mtsUpdate'],
+        ['user_id', 'subUserId', 'mtsUpdate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -380,7 +442,14 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsUpdate'],
+        ['user_id', 'amount', 'mtsUpdate'],
+        ['user_id', 'status', 'mtsUpdate'],
+        ['user_id', 'mtsUpdate'],
+        ['user_id', 'subUserId', 'mtsUpdate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -418,7 +487,16 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'symbol', 'mtsUpdate'],
+        ['user_id', 'basePrice', 'mtsUpdate'],
+        ['user_id', 'mtsUpdate', 'mtsCreate'],
+        ['user_id', 'mtsUpdate'],
+        ['user_id', 'subUserId', 'mtsUpdate',
+          'WHERE subUserId IS NOT NULL'],
+        ['subUserId', 'id',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -457,7 +535,12 @@ const _models = new Map([
 
       // The API returns a lot of data with the same values,
       // that cause unique indexes are not included
-      [INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'mtsUpdate'],
+        ['user_id', 'symbol', 'mtsUpdate'],
+        ['user_id', 'subUserId', 'mtsUpdate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -484,7 +567,13 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: ['time'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'ip', 'time'],
+        ['user_id', 'id', 'time'],
+        ['user_id', 'time'],
+        ['user_id', 'subUserId', 'time',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -511,7 +600,13 @@ const _models = new Map([
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['mtsCreate', 'log', 'user_id'],
-      [INDEX_FIELD_NAME]: ['mtsCreate'],
+      [INDEX_FIELD_NAME]: [
+        ['user_id', 'ip', 'mtsCreate'],
+        ['user_id', 'userAgent', 'mtsCreate'],
+        ['user_id', 'mtsCreate'],
+        ['user_id', 'subUserId', 'mtsCreate',
+          'WHERE subUserId IS NOT NULL']
+      ],
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
@@ -536,7 +631,12 @@ const _models = new Map([
       ask: 'DECIMAL(22,12)',
       mtsUpdate: 'BIGINT',
 
-      [UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol']
+      [UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+      [INDEX_FIELD_NAME]: [
+        ['symbol', 'bid', 'mtsUpdate'],
+        ['symbol', 'ask', 'mtsUpdate'],
+        ['symbol', 'mtsUpdate']
+      ]
     }
   ],
   [
@@ -555,7 +655,12 @@ const _models = new Map([
       _type: 'VARCHAR(255)',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['timestamp', 'key', '_type'],
-      [INDEX_FIELD_NAME]: ['timestamp', 'key']
+      [INDEX_FIELD_NAME]: [
+        ['key', '_type', 'timestamp'],
+        ['key', 'price', 'timestamp'],
+        ['key', 'priceSpot', 'timestamp'],
+        ['key', 'timestamp']
+      ]
     }
   ],
   [
@@ -626,7 +731,11 @@ const _models = new Map([
       _timeframe: 'VARCHAR(255)',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['_symbol', '_timeframe', 'mts'],
-      [INDEX_FIELD_NAME]: ['mts', '_symbol']
+      [INDEX_FIELD_NAME]: [
+        ['_timeframe', 'mts'],
+        ['_symbol', 'mts'],
+        ['close', 'mts']
+      ]
     }
   ],
   [
