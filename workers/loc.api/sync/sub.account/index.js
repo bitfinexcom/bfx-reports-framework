@@ -65,7 +65,8 @@ class SubAccount {
             'password'
           ],
           isDecryptedApiKeys: true,
-          isReturnedPassword: true
+          isReturnedPassword: true,
+          withoutWorkerThreads: true
         }
       )
 
@@ -100,7 +101,8 @@ class SubAccount {
             isReturnedFullUserData: true,
             isNotSetSession: true,
             isSubAccount: true,
-            isNotInTrans: true
+            isNotInTrans: true,
+            withoutWorkerThreads: true
           }
         )
       const { _id, email, token } = subAccountUser
@@ -156,7 +158,8 @@ class SubAccount {
                 'username'
               ],
               isDecryptedApiKeys: true,
-              isNotInTrans: true
+              isNotInTrans: true,
+              withoutWorkerThreads: true
             }
           )
           : { apiKey, apiSecret }
@@ -193,7 +196,8 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
-              masterUserId: masterUser.id
+              masterUserId: masterUser.id,
+              withoutWorkerThreads: true
             }
           )
 
@@ -204,7 +208,8 @@ class SubAccount {
           {
             masterUserId: _id,
             subUserId: subUser._id
-          }
+          },
+          { withoutWorkerThreads: true }
         )
 
         if (
@@ -223,7 +228,7 @@ class SubAccount {
         isSubAccount: true,
         token
       }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   async recoverPassword (args) {
@@ -253,7 +258,8 @@ class SubAccount {
           args,
           {
             isReturnedUser: true,
-            isNotInTrans: true
+            isNotInTrans: true,
+            withoutWorkerThreads: true
           }
         )
       const {
@@ -293,7 +299,8 @@ class SubAccount {
             {
               isReturnedUser: true,
               isNotInTrans: true,
-              isSubUser: true
+              isSubUser: true,
+              withoutWorkerThreads: true
             }
           )
         const isNotExistInDb = subUsers.every((subUser) => {
@@ -312,7 +319,7 @@ class SubAccount {
         isSubAccount,
         token
       }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   async updateSubAccount (args) {
@@ -340,7 +347,8 @@ class SubAccount {
           {
             isReturnedUser: true,
             isNotInTrans: true,
-            isNotSetSession: true
+            isNotSetSession: true,
+            withoutWorkerThreads: true
           }
         )
 
@@ -416,7 +424,8 @@ class SubAccount {
                 'username'
               ],
               isDecryptedApiKeys: true,
-              isNotInTrans: true
+              isNotInTrans: true,
+              withoutWorkerThreads: true
             }
           )
           : { apiKey, apiSecret }
@@ -463,7 +472,8 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
-              masterUserId: masterUser.id
+              masterUserId: masterUser.id,
+              withoutWorkerThreads: true
             }
           )
 
@@ -472,7 +482,8 @@ class SubAccount {
           {
             masterUserId: _id,
             subUserId: subUser._id
-          }
+          },
+          { withoutWorkerThreads: true }
         )
 
         processedSubUsers.push(subUser)
@@ -496,7 +507,8 @@ class SubAccount {
             $in: {
               _id: removingSubUsers.map(({ _id }) => _id)
             }
-          }
+          },
+          { withoutWorkerThreads: true }
         )
 
         if (
@@ -513,7 +525,8 @@ class SubAccount {
         await this.dao.updateCollBy(
           this.TABLES_NAMES.LEDGERS,
           { user_id: _id },
-          { _isBalanceRecalced: null }
+          { _isBalanceRecalced: null },
+          { withoutWorkerThreads: true }
         )
       }
 
@@ -527,7 +540,7 @@ class SubAccount {
         isSubAccount: true,
         token
       }
-    })
+    }, { withoutWorkerThreads: true })
 
     await this.dao.updateRecordOf(
       this.TABLES_NAMES.SCHEDULER,

@@ -8,12 +8,13 @@ const {
   ObjectMappingError
 } = require('../../../errors')
 
-const { deserializeVal } = require('./serialization')
-
 const mixUserIdToArrData = (
   auth,
   data = []
 ) => {
+  const isArray = Array.isArray(data)
+  const _data = isArray ? data : [data]
+
   if (auth) {
     const { _id, subUser } = { ...auth }
     const { _id: subUserId } = { ...subUser }
@@ -22,42 +23,22 @@ const mixUserIdToArrData = (
       throw new AuthError()
     }
 
-    const params = Number.isInteger(subUserId)
-      ? { subUserId }
-      : {}
-
-    return data.map((item) => {
-      return {
-        ...item,
-        ...params,
-        user_id: _id
+    for (const obj of _data) {
+      if (
+        !obj ||
+        typeof obj !== 'object'
+      ) {
+        continue
       }
-    })
+      if (Number.isInteger(subUserId)) {
+        obj.subUserId = subUserId
+      }
+
+      obj.user_id = _id
+    }
   }
 
-  return data
-}
-
-const convertDataType = (
-  arr = [],
-  boolFields
-) => {
-  arr.forEach(obj => {
-    Object.keys(obj).forEach(key => {
-      if (
-        obj &&
-        typeof obj === 'object'
-      ) {
-        obj[key] = deserializeVal(
-          obj[key],
-          key,
-          boolFields
-        )
-      }
-    })
-  })
-
-  return arr
+  return isArray ? _data : _data[0]
 }
 
 const mapObjBySchema = (obj, schema = {}) => {
@@ -116,7 +97,6 @@ const isContainedSameMts = (
 
 module.exports = {
   mixUserIdToArrData,
-  convertDataType,
   mapObjBySchema,
   isContainedSameMts
 }

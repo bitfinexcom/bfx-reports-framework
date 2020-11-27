@@ -20,8 +20,7 @@ const {
   startEnvironment
 } = require('./helpers/helpers.boot')
 const {
-  connToSQLite,
-  closeSQLite,
+  emptyDB,
   delay
 } = require('./helpers/helpers.core')
 const {
@@ -38,7 +37,6 @@ let wrkReportServiceApi = null
 let processorQueue = null
 let aggregatorQueue = null
 let mockRESTv2Srv = null
-let db = null
 
 const basePath = '/api'
 const tempDirPath = path.join(__dirname, '..', 'workers/loc.api/queue/temp')
@@ -75,22 +73,19 @@ describe('API filter', () => {
 
     await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
-    const env = await startEnvironment(false, false, 1, {
-      dbDriver: 'sqlite'
-    })
+    const env = await startEnvironment(false, false, 1)
 
     wrkReportServiceApi = env.wrksReportServiceApi[0]
     processorQueue = wrkReportServiceApi.lokue_processor.q
     aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
 
-    db = await connToSQLite()
+    await emptyDB()
   })
 
   after(async function () {
     this.timeout(5000)
 
     await stopEnvironment()
-    await closeSQLite(db)
     await rmDB(dbDirPath)
     await rmAllFiles(tempDirPath, ['README.md'])
 

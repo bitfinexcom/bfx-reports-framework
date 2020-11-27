@@ -172,6 +172,10 @@ class DataInserter extends EventEmitter {
 
     await this._afterAllInserts()
 
+    if (typeof this.dao.optimize === 'function') {
+      await this.dao.optimize()
+    }
+
     if (this._isInterrupted) {
       return
     }

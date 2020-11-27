@@ -2,23 +2,9 @@
 
 const {
   tryParseJSON
-} = require('../../../helpers')
+} = require('../../../../helpers/utils')
 
-const serializeVal = (val) => {
-  if (typeof val === 'boolean') {
-    return +val
-  }
-  if (
-    val &&
-    typeof val === 'object'
-  ) {
-    return JSON.stringify(val)
-  }
-
-  return val
-}
-
-const deserializeVal = (
+module.exports = (
   val,
   key,
   boolFields = [
@@ -51,9 +37,4 @@ const deserializeVal = (
   }
 
   return val
-}
-
-module.exports = {
-  serializeVal,
-  deserializeVal
 }

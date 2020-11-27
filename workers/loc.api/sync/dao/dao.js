@@ -15,13 +15,11 @@ class DAO {
     db,
     TABLES_NAMES,
     syncSchema,
-    prepareResponse,
     dbMigratorFactory
   ) {
     this.db = db
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
-    this.prepareResponse = prepareResponse
     this.dbMigratorFactory = dbMigratorFactory
   }
 

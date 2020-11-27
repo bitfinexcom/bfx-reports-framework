@@ -16,8 +16,11 @@ const argv = require('yargs')
     type: 'boolean'
   })
   .option('dbDriver', {
-    choices: ['sqlite'],
+    choices: ['better-sqlite'],
     type: 'string'
+  })
+  .option('verboseSql', {
+    type: 'boolean'
   })
   .option('wsPort', {
     type: 'number'
@@ -85,6 +88,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       'syncMode',
       'isSchedulerEnabled',
       'dbDriver',
+      'verboseSql',
       'wsPort',
       'secretKey',
       'schedulerRule'
@@ -100,10 +104,18 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     const dbPathAbsolute = path.isAbsolute(argv.dbFolder)
       ? argv.dbFolder
       : path.join(this.ctx.root, argv.dbFolder)
-    const conf = this.conf[this.group]
+    const workerPathAbsolute = path.join(
+      this.ctx.root,
+      'workers/loc.api/sync/dao/sqlite-worker/index.js'
+    )
+    const {
+      syncMode,
+      dbDriver,
+      verboseSql
+    } = this.conf[this.group]
     const facs = []
 
-    if (conf.syncMode) {
+    if (syncMode) {
       facs.push(
         [
           'fac',
@@ -114,10 +126,17 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
         ],
         [
           'fac',
-          `bfx-facs-db-${conf.dbDriver}`,
+          `bfx-facs-db-${dbDriver}`,
           'm0',
           'm0',
-          { name: 'sync', dbPathAbsolute }
+          {
+            name: 'sync',
+            dbPathAbsolute,
+            workerPathAbsolute,
+            verbose: verboseSql,
+            timeout: 20000,
+            busyTimeout: 20000
+          }
         ]
       )
     }

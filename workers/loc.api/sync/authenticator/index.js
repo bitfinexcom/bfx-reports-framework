@@ -57,7 +57,8 @@ class Authenticator {
       isReturnedFullUserData = false,
       isNotSetSession = false,
       isNotInTrans = false,
-      masterUserId
+      masterUserId,
+      withoutWorkerThreads = false
     } = { ...params }
 
     if (
@@ -102,7 +103,7 @@ class Authenticator {
       ? null
       : await this.getUser(
         { email, username, isSubAccount, isSubUser },
-        { isNotInTrans }
+        { isNotInTrans, withoutWorkerThreads }
       )
 
     if (
@@ -138,7 +139,7 @@ class Authenticator {
         passwordHash,
         isNotProtected: serializeVal(isNotProtected)
       },
-      { isNotInTrans }
+      { isNotInTrans, withoutWorkerThreads }
     )
 
     const token = uuidv4()
@@ -183,7 +184,8 @@ class Authenticator {
       isDataFromDb = true,
       isReturnedUser,
       isNotInTrans,
-      isNotSetSession
+      isNotSetSession,
+      withoutWorkerThreads
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -199,7 +201,8 @@ class Authenticator {
         isDecryptedApiKeys: true,
         isFilledSubUsers: true,
         isReturnedPassword: true,
-        isNotInTrans
+        isNotInTrans,
+        withoutWorkerThreads
       }
     )
     const {
@@ -242,7 +245,8 @@ class Authenticator {
         ...freshUserData,
         active: serializeVal(freshUserData.active),
         isDataFromDb: serializeVal(freshUserData.isDataFromDb)
-      }
+      },
+      { withoutWorkerThreads }
     )
 
     if (res && res.changes < 1) {
@@ -336,7 +340,8 @@ class Authenticator {
       isDataFromDb = true,
       isReturnedUser = false,
       isNotInTrans = false,
-      isSubUser = false
+      isSubUser = false,
+      withoutWorkerThreads = false
     } = { ...params }
 
     if (
@@ -373,7 +378,8 @@ class Authenticator {
       },
       {
         isFilledSubUsers: true,
-        isNotInTrans
+        isNotInTrans,
+        withoutWorkerThreads
       }
     )
 
@@ -424,7 +430,8 @@ class Authenticator {
         active: serializeVal(freshUserData.active),
         isDataFromDb: serializeVal(freshUserData.isDataFromDb),
         isNotProtected: serializeVal(isNotProtected)
-      }
+      },
+      { withoutWorkerThreads }
     )
 
     if (res && res.changes < 1) {
@@ -485,7 +492,8 @@ class Authenticator {
       isSubUser = false,
       isNotInTrans,
       isAppliedProjectionToSubUser,
-      subUsersProjection
+      subUsersProjection,
+      withoutWorkerThreads
     } = { ...params }
 
     if (
@@ -502,6 +510,7 @@ class Authenticator {
         {
           isNotInTrans,
           isFilledSubUsers,
+          withoutWorkerThreads,
           ...pwdParam
         }
       )
@@ -703,15 +712,19 @@ class Authenticator {
       isSubAccount = false,
       isSubUser = false
     } = { ...data }
-    const { isNotInTrans } = { ...params }
+    const {
+      isNotInTrans,
+      withoutWorkerThreads
+    } = { ...params }
 
     await this.dao.insertElemToDb(
       this.TABLES_NAMES.USERS,
-      data
+      data,
+      { withoutWorkerThreads }
     )
     const user = await this.getUser(
       { email, isSubAccount, isSubUser },
-      { isNotInTrans }
+      { isNotInTrans, withoutWorkerThreads }
     )
 
     if (
@@ -748,19 +761,17 @@ class Authenticator {
       }
     )
 
-    await this.dao.executeQueriesInTrans(async () => {
-      const res = await this.dao.removeElemsFromDb(
-        this.TABLES_NAMES.USERS,
-        null,
-        { _id, email: emailFromDb }
-      )
+    const res = await this.dao.removeElemsFromDb(
+      this.TABLES_NAMES.USERS,
+      null,
+      { _id, email: emailFromDb }
+    )
 
-      if (res && res.changes < 1) {
-        throw new UserRemovingError()
-      }
+    if (res && res.changes < 1) {
+      throw new UserRemovingError()
+    }
 
-      this.removeUserSessionByToken(token)
-    })
+    this.removeUserSessionByToken(token)
 
     return true
   }

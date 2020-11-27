@@ -6,7 +6,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "better-npm-run": "^0.1.1",
-    "bfx-facs-db-sqlite": "git+https://github.com:bitfinexcom/bfx-facs-db-sqlite.git",
+    "better-sqlite3": "7.1.1",
+    "bfx-facs-db-better-sqlite": "git+https://github.com/bitfinexcom/bfx-facs-db-better-sqlite.git",
     "bfx-facs-scheduler": "git+https://github.com:bitfinexcom/bfx-facs-scheduler.git",
     "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
     "bfx-svc-boot-js": "https://github.com/bitfinexcom/bfx-svc-boot-js.git",
@@ -16,7 +17,6 @@
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "scrypt-js": "^3.0.0",
-    "sqlite3": "5.0.0",
     "uuid": "^8.0.0",
     "yargs": "^13.2.4"
   },
