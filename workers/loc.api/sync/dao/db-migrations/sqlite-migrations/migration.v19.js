@@ -167,6 +167,8 @@ class MigrationV19 extends AbstractMigration {
       `CREATE INDEX statusMessages_key_timestamp
         ON statusMessages(key, timestamp)`,
 
+      `CREATE INDEX candles__timeframe__symbol_mts
+        ON candles(_timeframe, _symbol, mts)`,
       `CREATE INDEX candles__timeframe_mts
         ON candles(_timeframe, mts)`,
       `CREATE INDEX candles__symbol_mts
@@ -254,6 +256,7 @@ class MigrationV19 extends AbstractMigration {
 
       'DROP INDEX statusMessages_key_timestamp',
 
+      'DROP INDEX candles__timeframe__symbol_mts',
       'DROP INDEX candles__timeframe_mts',
       'DROP INDEX candles__symbol_mts',
       'DROP INDEX candles_close_mts',

@@ -714,6 +714,7 @@ const _models = new Map([
 
       [UNIQUE_INDEX_FIELD_NAME]: ['_symbol', '_timeframe', 'mts'],
       [INDEX_FIELD_NAME]: [
+        ['_timeframe', '_symbol', 'mts'],
         ['_timeframe', 'mts'],
         ['_symbol', 'mts'],
         ['close', 'mts']
