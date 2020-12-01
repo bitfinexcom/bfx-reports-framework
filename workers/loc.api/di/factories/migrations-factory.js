@@ -11,6 +11,9 @@ module.exports = (ctx) => {
   const { dbDriver } = ctx.container.get(
     TYPES.CONF
   )
+  const migrationsType = dbDriver === 'better-sqlite'
+    ? 'sqlite'
+    : dbDriver
   const logger = ctx.container.get(
     TYPES.Logger
   )
@@ -36,7 +39,7 @@ module.exports = (ctx) => {
         }
 
         const Migration = require(
-          `../../sync/dao/db-migrations/${dbDriver}-migrations/migration.v${ver}`
+          `../../sync/dao/db-migrations/${migrationsType}-migrations/migration.v${ver}`
         )
 
         return new Migration(ver, ...deps)

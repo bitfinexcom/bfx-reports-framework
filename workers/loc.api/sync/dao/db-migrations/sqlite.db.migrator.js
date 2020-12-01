@@ -12,9 +12,6 @@ const DbMigrator = require('./db.migrator')
 const {
   MigrationLaunchingError
 } = require('../../../errors')
-const {
-  getFnArrToRemoveAllTables
-} = require('./helpers')
 
 class SqliteDbMigrator extends DbMigrator {
   /**
@@ -36,21 +33,18 @@ class SqliteDbMigrator extends DbMigrator {
   }
 
   async removeAllTables () {
-    const fnArrToRemoveAllTables = await getFnArrToRemoveAllTables(
-      this.dao,
-      true
-    )
+    await this.dao.disableForeignKeys()
 
-    await this.dao.executeQueriesInTrans(
-      [
-        ...fnArrToRemoveAllTables,
-        () => this.dao.setCurrDbVer(0)
-      ],
-      {
-        beforeTransFn: () => this.dao.disableForeignKeys(),
-        afterTransFn: () => this.dao.enableForeignKeys()
-      }
-    )
+    try {
+      await this.dao.dropAllTables()
+      await this.dao.setCurrDbVer(0)
+    } catch (err) {
+      await this.dao.enableForeignKeys()
+
+      throw err
+    }
+
+    await this.dao.enableForeignKeys()
   }
 }
 

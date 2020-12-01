@@ -44,10 +44,18 @@ const _getIndexQuery = (
     ...fieldsArr
   ]
 
-  return indexFields.map((fields) => (
-    `CREATE${unique} INDEX${condition} ${name}_${fields.join('_')}
-      ON ${name}(${fields.join(', ')})`
-  ))
+  return indexFields.map((fields) => {
+    const _fields = fields.filter((field) => (
+      !field.startsWith('WHERE')
+    ))
+    const where = fields.find((field) => (
+      field.startsWith('WHERE')
+    ))
+    const whereClause = where ? ` ${where}` : ''
+
+    return `CREATE${unique} INDEX${condition} ${name}_${_fields.join('_')}
+      ON ${name}(${_fields.join(', ')}) ${whereClause}`
+  })
 }
 
 const _getIndexQueryFromModel = (

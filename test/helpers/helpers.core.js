@@ -1,6 +1,5 @@
 'use strict'
 
-const SqliteDb = require('sqlite3')
 const container = require('bfx-report/workers/loc.api/di')
 
 const {
@@ -8,33 +7,19 @@ const {
 } = require('../../workers/loc.api/sync/helpers')
 const TYPES = require('../../workers/loc.api/di/types')
 
-const connToSQLite = () => {
-  return new Promise((resolve, reject) => {
-    const db = new SqliteDb.Database(':memory:', async (err) => {
-      if (err) {
-        reject(err)
+const emptyDB = async () => {
+  const { dbDriver } = container.get(TYPES.CONF)
+  const rService = container.get(TYPES.RService)
+  const dao = container.get(TYPES.DAO)
 
-        return
-      }
+  if (dbDriver === 'better-sqlite') {
+    await dao.dropAllTables()
+    await rService._initialize(dao.db)
 
-      await container.get(TYPES.RService)._initialize(db)
-      resolve(db)
-    })
-  })
-}
+    return
+  }
 
-const closeSQLite = (db) => {
-  return new Promise((resolve, reject) => {
-    db.close((err) => {
-      if (err) {
-        reject(err)
-
-        return
-      }
-
-      resolve()
-    })
-  })
+  throw new Error('ERR_DB_DRIVER CONNECT HAS NOT BEEN IMPLEMENTED')
 }
 
 const delay = (mc = 500) => _delay(mc)
@@ -87,8 +72,7 @@ const getRServiceProxy = (
 }
 
 module.exports = {
-  connToSQLite,
-  closeSQLite,
+  emptyDB,
   delay,
   getParamsArrToTestTimeframeGrouping,
   getRServiceProxy
