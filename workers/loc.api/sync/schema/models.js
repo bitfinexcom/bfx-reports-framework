@@ -153,8 +153,6 @@ const _models = new Map([
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsCreate'],
         ['user_id', 'orderID', 'mtsCreate'],
-        ['user_id', 'execAmount', 'mtsCreate'],
-        ['user_id', 'execPrice', 'mtsCreate'],
         ['user_id', 'mtsCreate'],
         ['user_id', 'subUserId', 'mtsCreate',
           'WHERE subUserId IS NOT NULL'],
@@ -226,7 +224,6 @@ const _models = new Map([
       [UNIQUE_INDEX_FIELD_NAME]: ['id', '_symbol'],
       [INDEX_FIELD_NAME]: [
         ['_symbol', 'mts'],
-        ['amount', 'mts'],
         ['mts']
       ]
     }
@@ -262,7 +259,6 @@ const _models = new Map([
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsUpdate'],
         ['user_id', 'type', 'mtsUpdate'],
-        ['user_id', 'amount', 'mtsUpdate'],
         ['user_id', 'mtsUpdate'],
         ['user_id', 'subUserId', 'mtsUpdate',
           'WHERE subUserId IS NOT NULL']
@@ -304,7 +300,6 @@ const _models = new Map([
         ['user_id', 'status', 'mtsStarted'],
         ['user_id', 'status', 'mtsUpdated'],
         ['user_id', 'currency', 'mtsUpdated'],
-        ['user_id', 'amount', 'mtsUpdated'],
         ['user_id', 'mtsUpdated'],
         ['user_id', 'subUserId', 'mtsUpdated',
           'WHERE subUserId IS NOT NULL']
@@ -349,7 +344,6 @@ const _models = new Map([
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsUpdate'],
-        ['user_id', 'amount', 'mtsUpdate'],
         ['user_id', 'status', 'mtsUpdate'],
         ['user_id', 'mtsUpdate'],
         ['user_id', 'subUserId', 'mtsUpdate',
@@ -396,7 +390,6 @@ const _models = new Map([
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsUpdate'],
-        ['user_id', 'amount', 'mtsUpdate'],
         ['user_id', 'status', 'mtsUpdate'],
         ['user_id', 'mtsUpdate'],
         ['user_id', 'subUserId', 'mtsUpdate',
@@ -444,7 +437,6 @@ const _models = new Map([
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsUpdate'],
-        ['user_id', 'amount', 'mtsUpdate'],
         ['user_id', 'status', 'mtsUpdate'],
         ['user_id', 'mtsUpdate'],
         ['user_id', 'subUserId', 'mtsUpdate',
@@ -489,7 +481,6 @@ const _models = new Map([
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsUpdate'],
-        ['user_id', 'basePrice', 'mtsUpdate'],
         ['user_id', 'mtsUpdate', 'mtsCreate'],
         ['user_id', 'mtsUpdate'],
         ['user_id', 'subUserId', 'mtsUpdate',
@@ -568,8 +559,6 @@ const _models = new Map([
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
       [INDEX_FIELD_NAME]: [
-        ['user_id', 'ip', 'time'],
-        ['user_id', 'id', 'time'],
         ['user_id', 'time'],
         ['user_id', 'subUserId', 'time',
           'WHERE subUserId IS NOT NULL']
@@ -601,8 +590,6 @@ const _models = new Map([
 
       [UNIQUE_INDEX_FIELD_NAME]: ['mtsCreate', 'log', 'user_id'],
       [INDEX_FIELD_NAME]: [
-        ['user_id', 'ip', 'mtsCreate'],
-        ['user_id', 'userAgent', 'mtsCreate'],
         ['user_id', 'mtsCreate'],
         ['user_id', 'subUserId', 'mtsCreate',
           'WHERE subUserId IS NOT NULL']
@@ -633,8 +620,6 @@ const _models = new Map([
 
       [UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
       [INDEX_FIELD_NAME]: [
-        ['symbol', 'bid', 'mtsUpdate'],
-        ['symbol', 'ask', 'mtsUpdate'],
         ['symbol', 'mtsUpdate']
       ]
     }
@@ -656,9 +641,6 @@ const _models = new Map([
 
       [UNIQUE_INDEX_FIELD_NAME]: ['timestamp', 'key', '_type'],
       [INDEX_FIELD_NAME]: [
-        ['key', '_type', 'timestamp'],
-        ['key', 'price', 'timestamp'],
-        ['key', 'priceSpot', 'timestamp'],
         ['key', 'timestamp']
       ]
     }

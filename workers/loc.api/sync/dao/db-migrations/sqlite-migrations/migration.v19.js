@@ -54,10 +54,6 @@ class MigrationV19 extends AbstractMigration {
         ON trades(user_id, symbol, mtsCreate)`,
       `CREATE INDEX trades_user_id_orderID_mtsCreate
         ON trades(user_id, orderID, mtsCreate)`,
-      `CREATE INDEX trades_user_id_execAmount_mtsCreate
-        ON trades(user_id, execAmount, mtsCreate)`,
-      `CREATE INDEX trades_user_id_execPrice_mtsCreate
-        ON trades(user_id, execPrice, mtsCreate)`,
       `CREATE INDEX trades_user_id_mtsCreate
         ON trades(user_id, mtsCreate)`,
       `CREATE INDEX trades_user_id_subUserId_mtsCreate
@@ -77,8 +73,6 @@ class MigrationV19 extends AbstractMigration {
 
       `CREATE INDEX publicTrades__symbol_mts
         ON publicTrades(_symbol, mts)`,
-      `CREATE INDEX publicTrades_amount_mts
-        ON publicTrades(amount, mts)`,
       `CREATE INDEX publicTrades_mts
         ON publicTrades(mts)`,
 
@@ -86,8 +80,6 @@ class MigrationV19 extends AbstractMigration {
         ON orders(user_id, symbol, mtsUpdate)`,
       `CREATE INDEX orders_user_id_type_mtsUpdate
         ON orders(user_id, type, mtsUpdate)`,
-      `CREATE INDEX orders_user_id_amount_mtsUpdate
-        ON orders(user_id, amount, mtsUpdate)`,
       `CREATE INDEX orders_user_id_mtsUpdate
         ON orders(user_id, mtsUpdate)`,
       `CREATE INDEX orders_user_id_subUserId_mtsUpdate
@@ -100,8 +92,6 @@ class MigrationV19 extends AbstractMigration {
         ON movements(user_id, status, mtsUpdated)`,
       `CREATE INDEX movements_user_id_currency_mtsUpdated
         ON movements(user_id, currency, mtsUpdated)`,
-      `CREATE INDEX movements_user_id_amount_mtsUpdated
-        ON movements(user_id, amount, mtsUpdated)`,
       `CREATE INDEX movements_user_id_mtsUpdated
         ON movements(user_id, mtsUpdated)`,
       `CREATE INDEX movements_user_id_subUserId_mtsUpdated
@@ -110,8 +100,6 @@ class MigrationV19 extends AbstractMigration {
 
       `CREATE INDEX fundingOfferHistory_user_id_symbol_mtsUpdate
         ON fundingOfferHistory(user_id, symbol, mtsUpdate)`,
-      `CREATE INDEX fundingOfferHistory_user_id_amount_mtsUpdate
-        ON fundingOfferHistory(user_id, amount, mtsUpdate)`,
       `CREATE INDEX fundingOfferHistory_user_id_status_mtsUpdate
         ON fundingOfferHistory(user_id, status, mtsUpdate)`,
       `CREATE INDEX fundingOfferHistory_user_id_mtsUpdate
@@ -122,8 +110,6 @@ class MigrationV19 extends AbstractMigration {
 
       `CREATE INDEX fundingLoanHistory_user_id_symbol_mtsUpdate
         ON fundingLoanHistory(user_id, symbol, mtsUpdate)`,
-      `CREATE INDEX fundingLoanHistory_user_id_amount_mtsUpdate
-        ON fundingLoanHistory(user_id, amount, mtsUpdate)`,
       `CREATE INDEX fundingLoanHistory_user_id_status_mtsUpdate
         ON fundingLoanHistory(user_id, status, mtsUpdate)`,
       `CREATE INDEX fundingLoanHistory_user_id_mtsUpdate
@@ -134,8 +120,6 @@ class MigrationV19 extends AbstractMigration {
 
       `CREATE INDEX fundingCreditHistory_user_id_symbol_mtsUpdate
         ON fundingCreditHistory(user_id, symbol, mtsUpdate)`,
-      `CREATE INDEX fundingCreditHistory_user_id_amount_mtsUpdate
-        ON fundingCreditHistory(user_id, amount, mtsUpdate)`,
       `CREATE INDEX fundingCreditHistory_user_id_status_mtsUpdate
         ON fundingCreditHistory(user_id, status, mtsUpdate)`,
       `CREATE INDEX fundingCreditHistory_user_id_mtsUpdate
@@ -146,8 +130,6 @@ class MigrationV19 extends AbstractMigration {
 
       `CREATE INDEX positionsHistory_user_id_symbol_mtsUpdate
         ON positionsHistory(user_id, symbol, mtsUpdate)`,
-      `CREATE INDEX positionsHistory_user_id_basePrice_mtsUpdate
-        ON positionsHistory(user_id, basePrice, mtsUpdate)`,
       `CREATE INDEX positionsHistory_user_id_mtsUpdate_mtsCreate
         ON positionsHistory(user_id, mtsUpdate, mtsCreate)`,
       `CREATE INDEX positionsHistory_user_id_mtsUpdate
@@ -167,39 +149,21 @@ class MigrationV19 extends AbstractMigration {
         ON positionsSnapshot(user_id, subUserId, mtsUpdate)
         WHERE subUserId IS NOT NULL`,
 
-      `CREATE INDEX logins_user_id_ip_time
-        ON logins(user_id, ip, time)`,
-      `CREATE INDEX logins_user_id_id_time
-        ON logins(user_id, id, time)`,
       `CREATE INDEX logins_user_id_time
         ON logins(user_id, time)`,
       `CREATE INDEX logins_user_id_subUserId_time
         ON logins(user_id, subUserId, time)
         WHERE subUserId IS NOT NULL`,
 
-      `CREATE INDEX changeLogs_user_id_ip_mtsCreate
-        ON changeLogs(user_id, ip, mtsCreate)`,
-      `CREATE INDEX changeLogs_user_id_userAgent_mtsCreate
-        ON changeLogs(user_id, userAgent, mtsCreate)`,
       `CREATE INDEX changeLogs_user_id_mtsCreate
         ON changeLogs(user_id, mtsCreate)`,
       `CREATE INDEX changeLogs_user_id_subUserId_mtsCreate
         ON changeLogs(user_id, subUserId, mtsCreate)
         WHERE subUserId IS NOT NULL`,
 
-      `CREATE INDEX tickersHistory_symbol_bid_mtsUpdate
-        ON tickersHistory(symbol, bid, mtsUpdate)`,
-      `CREATE INDEX tickersHistory_symbol_ask_mtsUpdate
-        ON tickersHistory(symbol, ask, mtsUpdate)`,
       `CREATE INDEX tickersHistory_symbol_mtsUpdate
         ON tickersHistory(symbol, mtsUpdate)`,
 
-      `CREATE INDEX statusMessages_key__type_timestamp
-        ON statusMessages(key, _type, timestamp)`,
-      `CREATE INDEX statusMessages_key_price_timestamp
-        ON statusMessages(key, price, timestamp)`,
-      `CREATE INDEX statusMessages_key_priceSpot_timestamp
-        ON statusMessages(key, priceSpot, timestamp)`,
       `CREATE INDEX statusMessages_key_timestamp
         ON statusMessages(key, timestamp)`,
 
@@ -233,8 +197,6 @@ class MigrationV19 extends AbstractMigration {
 
       'DROP INDEX trades_user_id_symbol_mtsCreate',
       'DROP INDEX trades_user_id_orderID_mtsCreate',
-      'DROP INDEX trades_user_id_execAmount_mtsCreate',
-      'DROP INDEX trades_user_id_execPrice_mtsCreate',
       'DROP INDEX trades_user_id_mtsCreate',
       'DROP INDEX trades_user_id_subUserId_mtsCreate',
       'DROP INDEX trades_subUserId_orderID',
@@ -244,42 +206,35 @@ class MigrationV19 extends AbstractMigration {
       'DROP INDEX fundingTrades_user_id_subUserId_mtsCreate',
 
       'DROP INDEX publicTrades__symbol_mts',
-      'DROP INDEX publicTrades_amount_mts',
       'DROP INDEX publicTrades_mts',
 
       'DROP INDEX orders_user_id_symbol_mtsUpdate',
       'DROP INDEX orders_user_id_type_mtsUpdate',
-      'DROP INDEX orders_user_id_amount_mtsUpdate',
       'DROP INDEX orders_user_id_mtsUpdate',
       'DROP INDEX orders_user_id_subUserId_mtsUpdate',
 
       'DROP INDEX movements_user_id_status_mtsStarted',
       'DROP INDEX movements_user_id_status_mtsUpdated',
       'DROP INDEX movements_user_id_currency_mtsUpdated',
-      'DROP INDEX movements_user_id_amount_mtsUpdated',
       'DROP INDEX movements_user_id_mtsUpdated',
       'DROP INDEX movements_user_id_subUserId_mtsUpdated',
 
       'DROP INDEX fundingOfferHistory_user_id_symbol_mtsUpdate',
-      'DROP INDEX fundingOfferHistory_user_id_amount_mtsUpdate',
       'DROP INDEX fundingOfferHistory_user_id_status_mtsUpdate',
       'DROP INDEX fundingOfferHistory_user_id_mtsUpdate',
       'DROP INDEX fundingOfferHistory_user_id_subUserId_mtsUpdate',
 
       'DROP INDEX fundingLoanHistory_user_id_symbol_mtsUpdate',
-      'DROP INDEX fundingLoanHistory_user_id_amount_mtsUpdate',
       'DROP INDEX fundingLoanHistory_user_id_status_mtsUpdate',
       'DROP INDEX fundingLoanHistory_user_id_mtsUpdate',
       'DROP INDEX fundingLoanHistory_user_id_subUserId_mtsUpdate',
 
       'DROP INDEX fundingCreditHistory_user_id_symbol_mtsUpdate',
-      'DROP INDEX fundingCreditHistory_user_id_amount_mtsUpdate',
       'DROP INDEX fundingCreditHistory_user_id_status_mtsUpdate',
       'DROP INDEX fundingCreditHistory_user_id_mtsUpdate',
       'DROP INDEX fundingCreditHistory_user_id_subUserId_mtsUpdate',
 
       'DROP INDEX positionsHistory_user_id_symbol_mtsUpdate',
-      'DROP INDEX positionsHistory_user_id_basePrice_mtsUpdate',
       'DROP INDEX positionsHistory_user_id_mtsUpdate_mtsCreate',
       'DROP INDEX positionsHistory_user_id_mtsUpdate',
       'DROP INDEX positionsHistory_user_id_subUserId_mtsUpdate',
@@ -289,23 +244,14 @@ class MigrationV19 extends AbstractMigration {
       'DROP INDEX positionsSnapshot_user_id_symbol_mtsUpdate',
       'DROP INDEX positionsSnapshot_user_id_subUserId_mtsUpdate',
 
-      'DROP INDEX logins_user_id_ip_time',
-      'DROP INDEX logins_user_id_id_time',
       'DROP INDEX logins_user_id_time',
       'DROP INDEX logins_user_id_subUserId_time',
 
-      'DROP INDEX changeLogs_user_id_ip_mtsCreate',
-      'DROP INDEX changeLogs_user_id_userAgent_mtsCreate',
       'DROP INDEX changeLogs_user_id_mtsCreate',
       'DROP INDEX changeLogs_user_id_subUserId_mtsCreate',
 
-      'DROP INDEX tickersHistory_symbol_bid_mtsUpdate',
-      'DROP INDEX tickersHistory_symbol_ask_mtsUpdate',
       'DROP INDEX tickersHistory_symbol_mtsUpdate',
 
-      'DROP INDEX statusMessages_key__type_timestamp',
-      'DROP INDEX statusMessages_key_price_timestamp',
-      'DROP INDEX statusMessages_key_priceSpot_timestamp',
       'DROP INDEX statusMessages_key_timestamp',
 
       'DROP INDEX candles__timeframe_mts',
