@@ -1,6 +1,8 @@
 'use strict'
 
-const { pick, omit, orderBy } = require('lodash')
+const { pick, omit } = require('lodash')
+
+const getBackIterable = require('../helpers/get-back-iterable')
 
 const _getDataKeys = (data) => {
   return Object.keys(data)
@@ -34,10 +36,13 @@ const _mergeData = (data) => {
   const _data = pick(data, dataKeys)
   const maxLength = _getMaxLength(_data)
   const res = []
+  const iterator = getBackIterable(res)
 
   for (let i = 0; maxLength > i; i += 1) {
     dataKeys.forEach(key => {
       const { mts, vals } = { ..._data[key][i] }
+      const firstItem = res[0]
+      const lastItem = res[res.length - 1]
 
       if (
         !Number.isInteger(mts) ||
@@ -48,8 +53,19 @@ const _mergeData = (data) => {
         return
       }
       if (
+        res.length !== 0 &&
+        firstItem.mts < mts
+      ) {
+        res.unshift({
+          mts,
+          [key]: { ...vals }
+        })
+
+        return
+      }
+      if (
         res.length === 0 ||
-        res.every(item => mts !== item.mts)
+        lastItem.mts > mts
       ) {
         res.push({
           mts,
@@ -59,18 +75,32 @@ const _mergeData = (data) => {
         return
       }
 
-      res.forEach((item, index) => {
+      for (const [index, item] of iterator.entries()) {
         if (mts === item.mts) {
           res[index] = {
             ...item,
             [key]: { ...vals }
           }
+
+          return
         }
-      })
+        if (
+          res[index + 1] &&
+          res[index + 1].mts < mts &&
+          res[index].mts > mts
+        ) {
+          res.splice(index + 1, 0, {
+            mts,
+            [key]: { ...vals }
+          })
+
+          return
+        }
+      }
     })
   }
 
-  return orderBy(res, ['mts'], ['desc'])
+  return res
 }
 
 const _calcDataItem = (item = []) => {
