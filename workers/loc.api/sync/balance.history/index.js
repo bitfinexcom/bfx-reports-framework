@@ -23,13 +23,15 @@ class BalanceHistory {
     wallets,
     FOREX_SYMBS,
     currencyConverter,
-    SYNC_API_METHODS
+    SYNC_API_METHODS,
+    ALLOWED_COLLS
   ) {
     this.dao = dao
     this.wallets = wallets
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
     this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.ALLOWED_COLLS = ALLOWED_COLLS
   }
 
   _groupWalletsByCurrency (wallets = []) {
@@ -129,13 +131,17 @@ class BalanceHistory {
     const _start = start
       ? mtsMoment
       : start
-    return this.dao.findInCollBy(
-      this.SYNC_API_METHODS.CANDLES,
-      { params: { start: _start, end, timeframe: '1D' } },
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.CANDLES,
       {
-        isPublic: true,
-        schema: { maxLimit: null },
-        isExcludePrivate: false
+        filter: {
+          $eq: { _timeframe: '1D' },
+          $lte: { mts: end },
+          $gte: { mts: _start }
+        },
+        sort: [['mts', -1]],
+        projection: ['mts', 'close', '_symbol']
       }
     )
   }
@@ -389,12 +395,22 @@ class BalanceHistory {
       end
     }
 
-    const firstWallets = await this.wallets.getWallets({
+    const firstWalletsPromise = this.wallets.getWallets({
       auth,
       params: { end: start }
     })
-    const wallets = await this._getWallets(args)
-    const candles = await this._getCandles(args)
+    const walletsPromise = this._getWallets(args)
+    const candlesPromise = this._getCandles(args)
+
+    const [
+      firstWallets,
+      wallets,
+      candles
+    ] = await Promise.all([
+      firstWalletsPromise,
+      walletsPromise,
+      candlesPromise
+    ])
 
     const firstWalletsGroupedByCurrency = this._groupWalletsByCurrency(
       firstWallets
@@ -446,5 +462,6 @@ decorate(inject(TYPES.Wallets), BalanceHistory, 1)
 decorate(inject(TYPES.FOREX_SYMBS), BalanceHistory, 2)
 decorate(inject(TYPES.CurrencyConverter), BalanceHistory, 3)
 decorate(inject(TYPES.SYNC_API_METHODS), BalanceHistory, 4)
+decorate(inject(TYPES.ALLOWED_COLLS), BalanceHistory, 5)
 
 module.exports = BalanceHistory
