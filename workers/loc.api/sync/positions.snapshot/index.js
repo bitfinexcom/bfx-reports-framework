@@ -516,14 +516,23 @@ class PositionsSnapshot {
       tickers: []
     }
 
-    const positionsHistory = await this._getPositionsHistory(
+    const positionsHistoryPromise = this._getPositionsHistory(
       user,
       end
     )
-    const activePositions = await this._getActivePositions(
+    const activePositionsPromise = this._getActivePositions(
       auth,
       end
     )
+
+    const [
+      positionsHistory,
+      activePositions
+    ] = await Promise.all([
+      positionsHistoryPromise,
+      activePositionsPromise
+    ])
+
     const positions = this._mergePositions(
       positionsHistory,
       activePositions
