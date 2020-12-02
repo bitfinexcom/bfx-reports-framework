@@ -8,7 +8,7 @@ class MigrationV9 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'DROP INDEX movements_id_mtsUpdated_user_id',
+      'DROP INDEX IF EXISTS movements_id_mtsUpdated_user_id',
 
       'DELETE FROM movements',
 
@@ -31,7 +31,7 @@ class MigrationV9 extends AbstractMigration {
    */
   down () {
     const sqlArr = [
-      'DROP INDEX movements_id_user_id',
+      'DROP INDEX IF EXISTS movements_id_user_id',
 
       'DELETE FROM movements',
 

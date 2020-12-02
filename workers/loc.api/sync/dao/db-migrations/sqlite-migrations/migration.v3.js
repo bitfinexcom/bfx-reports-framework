@@ -46,31 +46,31 @@ class MigrationV3 extends AbstractMigration {
 
       `CREATE UNIQUE INDEX ledgers_id_mts_user_id
         ON ledgers (id, mts, user_id)`,
-      'DROP INDEX ledgers_id_mts',
+      'DROP INDEX IF EXISTS ledgers_id_mts',
       `CREATE UNIQUE INDEX trades_id_mtsCreate_orderID_fee_user_id
         ON trades(id, mtsCreate, orderID, fee, user_id)`,
-      'DROP INDEX trades_id_mtsCreate_orderID_fee',
+      'DROP INDEX IF EXISTS trades_id_mtsCreate_orderID_fee',
       `CREATE UNIQUE INDEX fundingTrades_id_mtsCreate_offerID_user_id
         ON fundingTrades(id, mtsCreate, offerID, user_id)`,
-      'DROP INDEX fundingTrades_id_mtsCreate_offerID',
+      'DROP INDEX IF EXISTS fundingTrades_id_mtsCreate_offerID',
       `CREATE UNIQUE INDEX orders_id_mtsUpdate_user_id
         ON orders(id, mtsUpdate, user_id)`,
-      'DROP INDEX orders_id_mtsUpdate',
+      'DROP INDEX IF EXISTS orders_id_mtsUpdate',
       `CREATE UNIQUE INDEX movements_id_mtsUpdated_user_id
         ON movements(id, mtsUpdated, user_id)`,
-      'DROP INDEX movements_id_mtsUpdated',
+      'DROP INDEX IF EXISTS movements_id_mtsUpdated',
       `CREATE UNIQUE INDEX fundingOfferHistory_id_mtsUpdate_user_id
         ON fundingOfferHistory(id, mtsUpdate, user_id)`,
-      'DROP INDEX fundingOfferHistory_id_mtsUpdate',
+      'DROP INDEX IF EXISTS fundingOfferHistory_id_mtsUpdate',
       `CREATE UNIQUE INDEX fundingLoanHistory_id_mtsUpdate_user_id
         ON fundingLoanHistory(id, mtsUpdate, user_id)`,
-      'DROP INDEX fundingLoanHistory_id_mtsUpdate',
+      'DROP INDEX IF EXISTS fundingLoanHistory_id_mtsUpdate',
       `CREATE UNIQUE INDEX fundingCreditHistory_id_mtsUpdate_user_id
         ON fundingCreditHistory(id, mtsUpdate, user_id)`,
-      'DROP INDEX fundingCreditHistory_id_mtsUpdate',
+      'DROP INDEX IF EXISTS fundingCreditHistory_id_mtsUpdate',
       `CREATE UNIQUE INDEX positionsHistory_id_mtsUpdate_user_id
         ON positionsHistory(id, mtsUpdate, user_id)`,
-      'DROP INDEX positionsHistory_id_mtsUpdate'
+      'DROP INDEX IF EXISTS positionsHistory_id_mtsUpdate'
     ]
 
     this.addSql(sqlArr)
@@ -104,15 +104,15 @@ class MigrationV3 extends AbstractMigration {
     const sqlArr = [
       'DROP TABLE subAccounts',
 
-      'DROP INDEX ledgers_id_mts_user_id',
-      'DROP INDEX trades_id_mtsCreate_orderID_fee_user_id',
-      'DROP INDEX fundingTrades_id_mtsCreate_offerID_user_id',
-      'DROP INDEX orders_id_mtsUpdate_user_id',
-      'DROP INDEX movements_id_mtsUpdated_user_id',
-      'DROP INDEX fundingOfferHistory_id_mtsUpdate_user_id',
-      'DROP INDEX fundingLoanHistory_id_mtsUpdate_user_id',
-      'DROP INDEX fundingCreditHistory_id_mtsUpdate_user_id',
-      'DROP INDEX positionsHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS ledgers_id_mts_user_id',
+      'DROP INDEX IF EXISTS trades_id_mtsCreate_orderID_fee_user_id',
+      'DROP INDEX IF EXISTS fundingTrades_id_mtsCreate_offerID_user_id',
+      'DROP INDEX IF EXISTS orders_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS movements_id_mtsUpdated_user_id',
+      'DROP INDEX IF EXISTS fundingOfferHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS fundingLoanHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS fundingCreditHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS positionsHistory_id_mtsUpdate_user_id',
 
       ...getSqlArrToModifyColumns(
         'ledgers',

@@ -19,10 +19,10 @@ class MigrationV4 extends AbstractMigration {
 
       `CREATE UNIQUE INDEX candles__symbol__timeframe_mts
         ON candles(_symbol, _timeframe, mts)`,
-      'DROP INDEX candles__symbol_mts',
+      'DROP INDEX IF EXISTS candles__symbol_mts',
       `CREATE UNIQUE INDEX publicСollsСonf_symbol_user_id_confName_timeframe
         ON publicСollsСonf(symbol, user_id, confName, timeframe)`,
-      'DROP INDEX publicСollsСonf_symbol_user_id_confName',
+      'DROP INDEX IF EXISTS publicСollsСonf_symbol_user_id_confName',
 
       `CREATE INDEX publicTrades_mts__symbol
         ON publicTrades(mts, _symbol)`,
@@ -53,11 +53,11 @@ class MigrationV4 extends AbstractMigration {
       'DELETE FROM publicСollsСonf WHERE timeframe != 1D',
       'DELETE FROM candles WHERE _timeframe != 1D',
 
-      'DROP INDEX publicTrades_mts__symbol',
-      'DROP INDEX statusMessages_timestamp_key',
-      'DROP INDEX candles_mts__symbol',
-      'DROP INDEX candles__symbol__timeframe_mts',
-      'DROP INDEX publicСollsСonf_symbol_user_id_confName_timeframe',
+      'DROP INDEX IF EXISTS publicTrades_mts__symbol',
+      'DROP INDEX IF EXISTS statusMessages_timestamp_key',
+      'DROP INDEX IF EXISTS candles_mts__symbol',
+      'DROP INDEX IF EXISTS candles__symbol__timeframe_mts',
+      'DROP INDEX IF EXISTS publicСollsСonf_symbol_user_id_confName_timeframe',
 
       ...getSqlArrToModifyColumns(
         'publicСollsСonf',
