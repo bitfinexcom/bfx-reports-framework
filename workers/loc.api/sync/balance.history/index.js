@@ -267,15 +267,13 @@ class BalanceHistory {
         return accum + balance
       }
 
-      const prise = {
-        ...this._getCandlesClosePrice(
-          candles,
-          mts,
-          timeframe,
-          `t${symb}USD`,
-          currenciesSynonymous
-        )
-      }
+      const prise = this._getCandlesClosePrice(
+        candles,
+        mts,
+        timeframe,
+        `t${symb}USD`,
+        currenciesSynonymous
+      )
 
       if (
         !Number.isFinite(prise) ||
