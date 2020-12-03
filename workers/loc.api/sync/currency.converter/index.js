@@ -45,6 +45,8 @@ class CurrencyConverter {
       CANDLES: 'candles'
     }
     this.candlesTimeframe = '1D'
+    this.candlesSchema = this.syncSchema.getMethodCollMap()
+      .get(this.SYNC_API_METHODS.CANDLES)
 
     this.currenciesUpdatedAt = new Date()
     this.currencies = []
@@ -321,7 +323,8 @@ class CurrencyConverter {
 
     const symbol = this._getPairFromPair(reqSymb)
     const { res } = await getDataFromApi(
-      (space, args) => this.rService._getPublicTrades.bind(this.rService)(args),
+      (space, args) => this.rService._getPublicTrades
+        .bind(this.rService)(args),
       {
         params: {
           symbol,
@@ -345,9 +348,6 @@ class CurrencyConverter {
     reqSymb,
     end
   ) {
-    const candlesSchema = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.CANDLES)
-
     if (
       !reqSymb ||
       !Number.isInteger(end)
@@ -357,13 +357,13 @@ class CurrencyConverter {
 
     const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
-      candlesSchema.name,
+      this.candlesSchema.name,
       {
-        [candlesSchema.symbolFieldName]: symbol,
+        [this.candlesSchema.symbolFieldName]: symbol,
         end,
-        _dateFieldName: [candlesSchema.dateFieldName]
+        _dateFieldName: [this.candlesSchema.dateFieldName]
       },
-      candlesSchema.sort
+      this.candlesSchema.sort
     )
     const { close } = { ...candle }
 
@@ -700,8 +700,7 @@ class CurrencyConverter {
       symbolFieldName,
       dateFieldName,
       timeframeFieldName
-    } = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.CANDLES)
+    } = this.candlesSchema
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
