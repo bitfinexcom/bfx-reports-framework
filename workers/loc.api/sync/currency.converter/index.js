@@ -45,62 +45,79 @@ class CurrencyConverter {
       CANDLES: 'candles'
     }
     this.candlesTimeframe = '1D'
+
+    this.currenciesUpdatedAt = new Date()
+    this.currencies = []
+    this.currenciesSynonymous = new Map()
   }
 
   async getCurrenciesSynonymous () {
-    let currencies = await this.dao.getElemsInCollBy(
+    const mtsDiff = new Date() - this.currenciesUpdatedAt
+
+    if (
+      mtsDiff < (20 * 60 * 1000) &&
+      Array.isArray(this.currencies) &&
+      this.currencies.length > 0
+    ) {
+      return this.currenciesSynonymous
+    }
+
+    this.currencies = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.CURRENCIES
     )
 
     if (
-      !Array.isArray(currencies) ||
-      currencies.length === 0
+      !Array.isArray(this.currencies) ||
+      this.currencies.length === 0
     ) {
       try {
-        currencies = await this.rService._getCurrencies()
+        this.currencies = await this.rService._getCurrencies()
 
         if (
-          !Array.isArray(currencies) ||
-          currencies.length === 0
+          !Array.isArray(this.currencies) ||
+          this.currencies.length === 0
         ) {
-          return new Map()
+          return this.currenciesSynonymous
         }
       } catch (err) {
-        return new Map()
+        return this.currenciesSynonymous
       }
     }
 
-    const synonymous = currencies.reduce((accum, curr) => {
-      const { id, walletFx } = { ...curr }
-      const _walletFx = Array.isArray(walletFx)
-        ? walletFx
-        : tryParseJSON(walletFx)
+    this.currenciesUpdatedAt = new Date()
 
-      if (
-        !id ||
-        typeof id !== 'string' ||
-        !Array.isArray(_walletFx) ||
-        _walletFx.length === 0
-      ) {
+    this.currenciesSynonymous = this.currencies
+      .reduce((accum, curr) => {
+        const { id, walletFx } = { ...curr }
+        const _walletFx = Array.isArray(walletFx)
+          ? walletFx
+          : tryParseJSON(walletFx)
+
+        if (
+          !id ||
+          typeof id !== 'string' ||
+          !Array.isArray(_walletFx) ||
+          _walletFx.length === 0
+        ) {
+          return accum
+        }
+
+        const filteredWalletFx = _walletFx.filter((item) => (
+          Array.isArray(item) &&
+          item.length > 1 &&
+          item[0] &&
+          typeof item[0] === 'string' &&
+          Number.isFinite(item[1])
+        ))
+
+        if (filteredWalletFx.length > 0) {
+          accum.set(id, filteredWalletFx)
+        }
+
         return accum
-      }
+      }, new Map())
 
-      const filteredWalletFx = _walletFx.filter((item) => (
-        Array.isArray(item) &&
-        item.length > 1 &&
-        item[0] &&
-        typeof item[0] === 'string' &&
-        Number.isFinite(item[1])
-      ))
-
-      if (filteredWalletFx.length > 0) {
-        accum.set(id, filteredWalletFx)
-      }
-
-      return accum
-    }, new Map())
-
-    return synonymous
+    return this.currenciesSynonymous
   }
 
   getCurrenciesSynonymousIfEmpty (currenciesSynonymous) {
