@@ -24,6 +24,8 @@ const _getMaxLength = (data) => {
   )
 }
 
+// Applies Object.assign instead of spread operator
+// to increase performance
 const _mergeData = (data) => {
   if (
     !data ||
@@ -40,7 +42,7 @@ const _mergeData = (data) => {
 
   for (let i = 0; maxLength > i; i += 1) {
     dataKeys.forEach(key => {
-      const { mts, vals } = { ..._data[key][i] }
+      const { mts, vals } = Object.assign({}, _data[key][i])
       const firstItem = res[0]
       const lastItem = res[res.length - 1]
 
@@ -58,7 +60,7 @@ const _mergeData = (data) => {
       ) {
         res.unshift({
           mts,
-          [key]: { ...vals }
+          [key]: Object.assign({}, vals)
         })
 
         return
@@ -69,7 +71,7 @@ const _mergeData = (data) => {
       ) {
         res.push({
           mts,
-          [key]: { ...vals }
+          [key]: Object.assign({}, vals)
         })
 
         return
@@ -77,10 +79,9 @@ const _mergeData = (data) => {
 
       for (const [index, item] of iterator.entries()) {
         if (mts === item.mts) {
-          res[index] = {
-            ...item,
-            [key]: { ...vals }
-          }
+          res[index] = Object.assign({}, item, {
+            [key]: Object.assign({}, vals)
+          })
 
           return
         }
@@ -91,7 +92,7 @@ const _mergeData = (data) => {
         ) {
           res.splice(index + 1, 0, {
             mts,
-            [key]: { ...vals }
+            [key]: Object.assign({}, vals)
           })
 
           return
@@ -124,6 +125,8 @@ const _calcDataItem = (item = []) => {
   }, {})
 }
 
+// Applies Object.assign instead of spread operator
+// to increase performance
 const _getReducer = (
   isSubCalc,
   isReverse,
@@ -141,10 +144,12 @@ const _getReducer = (
       return accum
     }
 
-    const data = {
-      mts: item.mts,
-      ...(isSubCalc ? { vals: { ...res } } : res)
-    }
+    const data = isSubCalc
+      ? {
+        mts: item.mts,
+        vals: Object.assign({}, res)
+      }
+      : Object.assign({ mts: item.mts }, res)
 
     if (isReverse) {
       accum.unshift(data)
