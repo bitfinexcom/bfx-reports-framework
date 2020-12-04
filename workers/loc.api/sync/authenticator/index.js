@@ -1,7 +1,6 @@
 'use strict'
 
 const { v4: uuidv4 } = require('uuid')
-const { pick } = require('lodash')
 const {
   decorate,
   injectable,
@@ -18,6 +17,11 @@ const {
   UserRemovingError,
   UserWasPreviouslyStoredInDbError
 } = require('../../errors')
+const {
+  generateSubUserName,
+  pickProps,
+  pickSessionProps
+} = require('./helpers')
 
 class Authenticator {
   constructor (
@@ -93,7 +97,7 @@ class Authenticator {
       throw new AuthError()
     }
 
-    const username = this.generateSubUserName(
+    const username = generateSubUserName(
       { masterUserId, username: uName },
       isSubAccount,
       isSubUser
@@ -221,7 +225,7 @@ class Authenticator {
     } = await this.rService._checkAuthInApi({
       auth: { apiKey, apiSecret }
     })
-    const username = this.generateSubUserName(
+    const username = generateSubUserName(
       { username: uName },
       isSubAccountFromDb
     )
@@ -401,7 +405,7 @@ class Authenticator {
       this.crypto.hashPassword(password)
     ])
 
-    const username = this.generateSubUserName(
+    const username = generateSubUserName(
       { username: uName },
       isSubAccount,
       isSubUser
@@ -526,7 +530,7 @@ class Authenticator {
         password: isReturnedPassword ? password : null
       }
 
-      return this.pickProps(
+      return pickProps(
         user,
         projection,
         {
@@ -554,7 +558,7 @@ class Authenticator {
         throw new AuthError()
       }
 
-      return this.pickProps(
+      return pickProps(
         session,
         projection,
         {
@@ -607,7 +611,7 @@ class Authenticator {
     } = { ...params }
 
     const _user = await this.dao.getUser(filter, params)
-    const user = this.pickProps(
+    const user = pickProps(
       _user,
       projection,
       {
@@ -666,7 +670,7 @@ class Authenticator {
       })
 
     const _users = await this.dao.getUsers(filter, params)
-    const users = this.pickProps(
+    const users = pickProps(
       _users,
       projection,
       {
@@ -785,7 +789,7 @@ class Authenticator {
   getUserSessionByToken (token, isReturnedPassword) {
     const session = this.userSessions.get(token)
 
-    return this.pickSessionProps(session, isReturnedPassword)
+    return pickSessionProps(session, isReturnedPassword)
   }
 
   getUserSessionByEmail (args, isReturnedPassword) {
@@ -801,14 +805,14 @@ class Authenticator {
     })
     const session = Array.isArray(keyVal) ? keyVal[1] : {}
 
-    return this.pickSessionProps(session, isReturnedPassword)
+    return pickSessionProps(session, isReturnedPassword)
   }
 
   getUserSessions () {
     const sessionsMap = [...this.userSessions]
       .map(([token, session]) => [
         token,
-        this.pickSessionProps(session)
+        pickSessionProps(session)
       ])
 
     return new Map(sessionsMap)
@@ -845,95 +849,6 @@ class Authenticator {
     })
 
     return isArray ? res : res[0]
-  }
-
-  generateSubUserName (user, isSubAccount, isSubUser) {
-    const { masterUserId, username: uName } = { ...user }
-    const subAccountNameEnding = isSubAccount
-      ? '-sub-account'
-      : ''
-    const subUserNameEnding = isSubUser
-      ? `-sub-user-${masterUserId}`
-      : ''
-    const username = `${uName}${subAccountNameEnding}${subUserNameEnding}`
-
-    return username
-  }
-
-  pickProps (
-    data,
-    projection,
-    opts
-  ) {
-    if (
-      !Array.isArray(projection) ||
-      projection.length === 0
-    ) {
-      return data
-    }
-
-    const {
-      isAppliedProjectionToSubUser,
-      subUsersProjection = projection
-    } = { ...opts }
-
-    const isArray = Array.isArray(data)
-    const dataArr = isArray ? data : [data]
-
-    const res = dataArr.map((item) => {
-      if (!item || typeof item !== 'object') {
-        return item
-      }
-
-      if (
-        !isAppliedProjectionToSubUser ||
-        !Array.isArray(subUsersProjection) ||
-        subUsersProjection.length === 0 ||
-        !Array.isArray(item.subUsers) ||
-        item.subUsers.length === 0
-      ) {
-        return pick(item, projection)
-      }
-
-      const subUsers = item.subUsers.map((subUser) => {
-        if (!subUser || typeof subUser !== 'object') {
-          return subUser
-        }
-
-        return pick(subUser, subUsersProjection)
-      })
-
-      return pick({ ...item, subUsers }, projection)
-    })
-
-    return isArray ? res : res[0]
-  }
-
-  pickSessionProps (session, isReturnedPassword) {
-    const passwordProp = isReturnedPassword
-      ? ['password']
-      : []
-    const allowedProps = [
-      '_id',
-      'id',
-      'email',
-      'apiKey',
-      'apiSecret',
-      'active',
-      'isDataFromDb',
-      'timezone',
-      'username',
-      'isSubAccount',
-      'isSubUser',
-      'subUsers',
-      'token',
-      ...passwordProp
-    ]
-    const { subUsers: reqSubUsers } = { ...session }
-    const subUsers = this.pickProps(reqSubUsers, allowedProps)
-    const data = { ...session, subUsers }
-
-    return this.pickProps(data, allowedProps)
   }
 }
 
