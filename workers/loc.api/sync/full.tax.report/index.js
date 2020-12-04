@@ -24,6 +24,9 @@ class FullTaxReport {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.fullSnapshotReport = fullSnapshotReport
     this.authenticator = authenticator
+
+    this.movementsModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.MOVEMENTS)
   }
 
   async _getMovements ({
@@ -31,9 +34,6 @@ class FullTaxReport {
     start = 0,
     end = Date.now()
   }) {
-    const movementsModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.MOVEMENTS)
-
     const movements = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.MOVEMENTS,
       {
@@ -44,7 +44,7 @@ class FullTaxReport {
           user_id: user._id
         },
         sort: [['mtsUpdated', -1]],
-        projection: movementsModel,
+        projection: this.movementsModel,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -141,22 +141,44 @@ class FullTaxReport {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
 
+    const startingFullSnapshotPromise = this.fullSnapshotReport
+      .getFullSnapshotReport({
+        auth,
+        params: { end: start }
+      })
+    const endingFullSnapshotPromise = this.fullSnapshotReport
+      .getFullSnapshotReport({
+        auth,
+        params: { end }
+      })
+    const movements = await this._getMovements({
+      user,
+      start,
+      end
+    })
+    const movementsTotalAmountPromise = this._calcMovementsTotalAmount(
+      movements
+    )
+
+    const [
+      startingFullSnapshot,
+      endingFullSnapshot,
+      movementsTotalAmount
+    ] = await Promise.all([
+      startingFullSnapshotPromise,
+      endingFullSnapshotPromise,
+      movementsTotalAmountPromise
+    ])
     const {
       positionsSnapshot: startingPositionsSnapshot,
       walletsTotalBalanceUsd: startingWalletsTotalBalanceUsd,
       positionsTotalPlUsd: startingPositionsTotalPlUsd
-    } = await this.fullSnapshotReport.getFullSnapshotReport({
-      auth,
-      params: { end: start }
-    })
+    } = startingFullSnapshot
     const {
       positionsSnapshot: endingPositionsSnapshot,
       walletsTotalBalanceUsd: endingWalletsTotalBalanceUsd,
       positionsTotalPlUsd: endingPositionsTotalPlUsd
-    } = await this.fullSnapshotReport.getFullSnapshotReport({
-      auth,
-      params: { end }
-    })
+    } = endingFullSnapshot
 
     const startingPeriodBalances = this._getPeriodBalances(
       startingWalletsTotalBalanceUsd,
@@ -165,15 +187,6 @@ class FullTaxReport {
     const endingPeriodBalances = this._getPeriodBalances(
       endingWalletsTotalBalanceUsd,
       endingPositionsTotalPlUsd
-    )
-
-    const movements = await this._getMovements({
-      user,
-      start,
-      end
-    })
-    const movementsTotalAmount = this._calcMovementsTotalAmount(
-      movements
     )
 
     const {
