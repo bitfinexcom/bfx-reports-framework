@@ -414,25 +414,25 @@ class CurrencyConverter {
     const _getPrice = this._getPriceMethod(collName)
 
     if (isRequiredConvFromForex) {
-      const btcPriseIn = await _getPrice(
+      const btcPriceIn = await _getPrice(
         `tBTC${item[symbolFieldName]}`,
         end
       )
-      const btcPriseOut = await _getPrice(
+      const btcPriceOut = await _getPrice(
         `tBTC${convertTo}`,
         end
       )
 
       if (
-        !btcPriseIn ||
-        !btcPriseOut ||
-        !Number.isFinite(btcPriseIn) ||
-        !Number.isFinite(btcPriseOut)
+        !btcPriceIn ||
+        !btcPriceOut ||
+        !Number.isFinite(btcPriceIn) ||
+        !Number.isFinite(btcPriceOut)
       ) {
         return null
       }
 
-      return btcPriseOut / btcPriseIn
+      return btcPriceOut / btcPriceIn
     }
 
     const price = await _getPrice(
@@ -605,27 +605,27 @@ class CurrencyConverter {
     )
 
     if (_isForexSymb) {
-      const btcPriseIn = this._findCandlesPrice(
+      const btcPriceIn = this._findCandlesPrice(
         candles,
         `tBTC${firstSymb}`,
         end
       )
-      const btcPriseOut = this._findCandlesPrice(
+      const btcPriceOut = this._findCandlesPrice(
         candles,
         `tBTC${lastSymb}`,
         end
       )
 
       if (
-        !btcPriseIn ||
-        !btcPriseOut ||
-        !Number.isFinite(btcPriseIn) ||
-        !Number.isFinite(btcPriseOut)
+        !btcPriceIn ||
+        !btcPriceOut ||
+        !Number.isFinite(btcPriceIn) ||
+        !Number.isFinite(btcPriceOut)
       ) {
         return null
       }
 
-      return btcPriseOut / btcPriseIn
+      return btcPriceOut / btcPriceIn
     }
 
     return this._findCandlesPrice(
@@ -655,27 +655,27 @@ class CurrencyConverter {
     )
 
     if (_isForexSymb) {
-      const btcPriseIn = this._findPublicTradesPrice(
+      const btcPriceIn = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${firstSymb}`,
         end
       )
-      const btcPriseOut = this._findPublicTradesPrice(
+      const btcPriceOut = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${lastSymb}`,
         end
       )
 
       if (
-        !btcPriseIn ||
-        !btcPriseOut ||
-        !Number.isFinite(btcPriseIn) ||
-        !Number.isFinite(btcPriseOut)
+        !btcPriceIn ||
+        !btcPriceOut ||
+        !Number.isFinite(btcPriceIn) ||
+        !Number.isFinite(btcPriceOut)
       ) {
         return null
       }
 
-      return btcPriseOut / btcPriseIn
+      return btcPriceOut / btcPriceIn
     }
 
     return this._findPublicTradesPrice(
