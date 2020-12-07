@@ -8,16 +8,16 @@ class MigrationV10 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'DROP INDEX ledgers_id_mts_user_id',
-      'DROP INDEX trades_id_mtsCreate_orderID_fee_user_id',
-      'DROP INDEX fundingTrades_id_mtsCreate_offerID_user_id',
-      'DROP INDEX publicTrades_id_mts__symbol',
-      'DROP INDEX orders_id_mtsUpdate_user_id',
-      'DROP INDEX fundingOfferHistory_id_mtsUpdate_user_id',
-      'DROP INDEX fundingLoanHistory_id_mtsUpdate_user_id',
-      'DROP INDEX fundingCreditHistory_id_mtsUpdate_user_id',
-      'DROP INDEX positionsHistory_id_mtsUpdate_user_id',
-      'DROP INDEX logins_id_time_user_id',
+      'DROP INDEX IF EXISTS ledgers_id_mts_user_id',
+      'DROP INDEX IF EXISTS trades_id_mtsCreate_orderID_fee_user_id',
+      'DROP INDEX IF EXISTS fundingTrades_id_mtsCreate_offerID_user_id',
+      'DROP INDEX IF EXISTS publicTrades_id_mts__symbol',
+      'DROP INDEX IF EXISTS orders_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS fundingOfferHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS fundingLoanHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS fundingCreditHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS positionsHistory_id_mtsUpdate_user_id',
+      'DROP INDEX IF EXISTS logins_id_time_user_id',
 
       'DELETE FROM ledgers',
       'DELETE FROM trades',
@@ -60,16 +60,16 @@ class MigrationV10 extends AbstractMigration {
    */
   down () {
     const sqlArr = [
-      'DROP INDEX ledgers_id_user_id',
-      'DROP INDEX trades_id_symbol_user_id',
-      'DROP INDEX fundingTrades_id_user_id',
-      'DROP INDEX publicTrades_id__symbol',
-      'DROP INDEX orders_id_user_id',
-      'DROP INDEX fundingOfferHistory_id_user_id',
-      'DROP INDEX fundingLoanHistory_id_user_id',
-      'DROP INDEX fundingCreditHistory_id_user_id',
-      'DROP INDEX positionsHistory_id_user_id',
-      'DROP INDEX logins_id_user_id',
+      'DROP INDEX IF EXISTS ledgers_id_user_id',
+      'DROP INDEX IF EXISTS trades_id_symbol_user_id',
+      'DROP INDEX IF EXISTS fundingTrades_id_user_id',
+      'DROP INDEX IF EXISTS publicTrades_id__symbol',
+      'DROP INDEX IF EXISTS orders_id_user_id',
+      'DROP INDEX IF EXISTS fundingOfferHistory_id_user_id',
+      'DROP INDEX IF EXISTS fundingLoanHistory_id_user_id',
+      'DROP INDEX IF EXISTS fundingCreditHistory_id_user_id',
+      'DROP INDEX IF EXISTS positionsHistory_id_user_id',
+      'DROP INDEX IF EXISTS logins_id_user_id',
 
       'DELETE FROM ledgers',
       'DELETE FROM trades',

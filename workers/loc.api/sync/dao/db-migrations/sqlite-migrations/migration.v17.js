@@ -9,7 +9,7 @@ class MigrationV17 extends AbstractMigration {
   up () {
     const sqlArr = [
       `UPDATE ledgers SET _category = 22
-        WHERE description LIKE "Position PL @% settlement (trade) on wallet margin"`
+        WHERE description LIKE 'Position PL @% settlement (trade) on wallet margin'`
     ]
 
     this.addSql(sqlArr)
@@ -21,7 +21,7 @@ class MigrationV17 extends AbstractMigration {
   down () {
     const sqlArr = [
       `UPDATE ledgers SET _category = null
-        WHERE description LIKE "Position PL @% settlement (trade) on wallet margin"`
+        WHERE description LIKE 'Position PL @% settlement (trade) on wallet margin'`
     ]
 
     this.addSql(sqlArr)
