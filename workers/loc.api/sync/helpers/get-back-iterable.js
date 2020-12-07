@@ -2,7 +2,7 @@
 
 module.exports = (array) => {
   return {
-    [Symbol.iterator] () {
+    [Symbol.iterator] (areEntriesReturned) {
       return {
         index: array.length,
         next () {
@@ -10,9 +10,18 @@ module.exports = (array) => {
 
           return {
             done: this.index < 0,
-            value: array[this.index]
+            value: areEntriesReturned
+              ? [this.index, array[this.index]]
+              : array[this.index]
           }
         }
+      }
+    },
+    entries () {
+      const iterator = this[Symbol.iterator](true)
+
+      return {
+        [Symbol.iterator] () { return iterator }
       }
     }
   }
