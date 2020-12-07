@@ -22,41 +22,37 @@ class FullSnapshotReport {
       return []
     }
 
-    const walletsWithoutUsdType = walletsSnapshot
-      .filter((wallets) => {
-        const {
-          currency,
-          balance,
-          balanceUsd
-        } = { ...wallets }
-
-        return (
-          currency !== 'USD' &&
-          Number.isFinite(balance) &&
-          Number.isFinite(balanceUsd) &&
-          balance !== 0 &&
-          balanceUsd !== 0
-        )
-      })
-
-    return walletsWithoutUsdType.map((wallets) => {
+    return walletsSnapshot.reduce((accum, wallet) => {
       const {
         type: walletType,
         currency,
         balance,
         balanceUsd
-      } = { ...wallets }
+      } = { ...wallet }
+
+      if (
+        currency !== 'USD' &&
+        Number.isFinite(balance) &&
+        Number.isFinite(balanceUsd) &&
+        balance !== 0 &&
+        balanceUsd !== 0
+      ) {
+        return accum
+      }
+
       const separator = currency.length > 3
         ? ':'
         : ''
       const symbol = `t${currency}${separator}USD`
 
-      return {
+      accum.push({
         walletType,
         symbol,
         amount: balanceUsd / balance
-      }
-    })
+      })
+
+      return accum
+    }, [])
   }
 
   _calcObjFieldInArr (array, fieldName) {
@@ -107,22 +103,40 @@ class FullSnapshotReport {
       }
     }
 
+    const positionsSnapshotAndTickersPromise = this.positionsSnapshot
+      .getPositionsSnapshotAndTickers(_args)
+    const walletsSnapshotPromise = this.wallets
+      .getWalletsConvertedByPublicTrades(_args)
+    const [
+      positionsSnapshotAndTickers,
+      walletsSnapshot
+    ] = await Promise.all([
+      positionsSnapshotAndTickersPromise,
+      walletsSnapshotPromise
+    ])
     const {
       positionsSnapshot,
       tickers: positionsTickers
-    } = await this.positionsSnapshot
-      .getPositionsSnapshotAndTickers(_args)
-    const walletsSnapshot = await this.wallets
-      .getWalletsConvertedByPublicTrades(_args)
-    const walletsTickers = this._getWalletsTickers(
+    } = positionsSnapshotAndTickers
+
+    const walletsTickersPromise = this._getWalletsTickers(
       walletsSnapshot
     )
-    const positionsTotalPlUsd = this._calcPositionsTotalPlUsd(
+    const positionsTotalPlUsdPromise = this._calcPositionsTotalPlUsd(
       positionsSnapshot
     )
-    const walletsTotalBalanceUsd = this._calcWalletsTotalBalanceUsd(
+    const walletsTotalBalanceUsdPromise = this._calcWalletsTotalBalanceUsd(
       walletsSnapshot
     )
+    const [
+      walletsTickers,
+      positionsTotalPlUsd,
+      walletsTotalBalanceUsd
+    ] = await Promise.all([
+      walletsTickersPromise,
+      positionsTotalPlUsdPromise,
+      walletsTotalBalanceUsdPromise
+    ])
 
     return {
       positionsSnapshot,
