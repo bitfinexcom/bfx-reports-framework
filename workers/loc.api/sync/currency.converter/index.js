@@ -45,62 +45,81 @@ class CurrencyConverter {
       CANDLES: 'candles'
     }
     this.candlesTimeframe = '1D'
+    this.candlesSchema = this.syncSchema.getMethodCollMap()
+      .get(this.SYNC_API_METHODS.CANDLES)
+
+    this.currenciesUpdatedAt = new Date()
+    this.currencies = []
+    this.currenciesSynonymous = new Map()
   }
 
   async getCurrenciesSynonymous () {
-    let currencies = await this.dao.getElemsInCollBy(
+    const mtsDiff = new Date() - this.currenciesUpdatedAt
+
+    if (
+      mtsDiff < (20 * 60 * 1000) &&
+      Array.isArray(this.currencies) &&
+      this.currencies.length > 0
+    ) {
+      return this.currenciesSynonymous
+    }
+
+    this.currencies = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.CURRENCIES
     )
 
     if (
-      !Array.isArray(currencies) ||
-      currencies.length === 0
+      !Array.isArray(this.currencies) ||
+      this.currencies.length === 0
     ) {
       try {
-        currencies = await this.rService._getCurrencies()
+        this.currencies = await this.rService._getCurrencies()
 
         if (
-          !Array.isArray(currencies) ||
-          currencies.length === 0
+          !Array.isArray(this.currencies) ||
+          this.currencies.length === 0
         ) {
-          return new Map()
+          return this.currenciesSynonymous
         }
       } catch (err) {
-        return new Map()
+        return this.currenciesSynonymous
       }
     }
 
-    const synonymous = currencies.reduce((accum, curr) => {
-      const { id, walletFx } = { ...curr }
-      const _walletFx = Array.isArray(walletFx)
-        ? walletFx
-        : tryParseJSON(walletFx)
+    this.currenciesUpdatedAt = new Date()
 
-      if (
-        !id ||
-        typeof id !== 'string' ||
-        !Array.isArray(_walletFx) ||
-        _walletFx.length === 0
-      ) {
+    this.currenciesSynonymous = this.currencies
+      .reduce((accum, curr) => {
+        const { id, walletFx } = { ...curr }
+        const _walletFx = Array.isArray(walletFx)
+          ? walletFx
+          : tryParseJSON(walletFx)
+
+        if (
+          !id ||
+          typeof id !== 'string' ||
+          !Array.isArray(_walletFx) ||
+          _walletFx.length === 0
+        ) {
+          return accum
+        }
+
+        const filteredWalletFx = _walletFx.filter((item) => (
+          Array.isArray(item) &&
+          item.length > 1 &&
+          item[0] &&
+          typeof item[0] === 'string' &&
+          Number.isFinite(item[1])
+        ))
+
+        if (filteredWalletFx.length > 0) {
+          accum.set(id, filteredWalletFx)
+        }
+
         return accum
-      }
+      }, new Map())
 
-      const filteredWalletFx = _walletFx.filter((item) => (
-        Array.isArray(item) &&
-        item.length > 1 &&
-        item[0] &&
-        typeof item[0] === 'string' &&
-        Number.isFinite(item[1])
-      ))
-
-      if (filteredWalletFx.length > 0) {
-        accum.set(id, filteredWalletFx)
-      }
-
-      return accum
-    }, new Map())
-
-    return synonymous
+    return this.currenciesSynonymous
   }
 
   getCurrenciesSynonymousIfEmpty (currenciesSynonymous) {
@@ -304,7 +323,8 @@ class CurrencyConverter {
 
     const symbol = this._getPairFromPair(reqSymb)
     const { res } = await getDataFromApi(
-      (space, args) => this.rService._getPublicTrades.bind(this.rService)(args),
+      (space, args) => this.rService._getPublicTrades
+        .bind(this.rService)(args),
       {
         params: {
           symbol,
@@ -328,9 +348,6 @@ class CurrencyConverter {
     reqSymb,
     end
   ) {
-    const candlesSchema = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.CANDLES)
-
     if (
       !reqSymb ||
       !Number.isInteger(end)
@@ -340,13 +357,13 @@ class CurrencyConverter {
 
     const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
-      candlesSchema.name,
+      this.candlesSchema.name,
       {
-        [candlesSchema.symbolFieldName]: symbol,
+        [this.candlesSchema.symbolFieldName]: symbol,
         end,
-        _dateFieldName: [candlesSchema.dateFieldName]
+        _dateFieldName: [this.candlesSchema.dateFieldName]
       },
-      candlesSchema.sort
+      this.candlesSchema.sort
     )
     const { close } = { ...candle }
 
@@ -397,25 +414,25 @@ class CurrencyConverter {
     const _getPrice = this._getPriceMethod(collName)
 
     if (isRequiredConvFromForex) {
-      const btcPriseIn = await _getPrice(
+      const btcPriceIn = await _getPrice(
         `tBTC${item[symbolFieldName]}`,
         end
       )
-      const btcPriseOut = await _getPrice(
+      const btcPriceOut = await _getPrice(
         `tBTC${convertTo}`,
         end
       )
 
       if (
-        !btcPriseIn ||
-        !btcPriseOut ||
-        !Number.isFinite(btcPriseIn) ||
-        !Number.isFinite(btcPriseOut)
+        !btcPriceIn ||
+        !btcPriceOut ||
+        !Number.isFinite(btcPriceIn) ||
+        !Number.isFinite(btcPriceOut)
       ) {
         return null
       }
 
-      return btcPriseOut / btcPriseIn
+      return btcPriceOut / btcPriceIn
     }
 
     const price = await _getPrice(
@@ -588,27 +605,27 @@ class CurrencyConverter {
     )
 
     if (_isForexSymb) {
-      const btcPriseIn = this._findCandlesPrice(
+      const btcPriceIn = this._findCandlesPrice(
         candles,
         `tBTC${firstSymb}`,
         end
       )
-      const btcPriseOut = this._findCandlesPrice(
+      const btcPriceOut = this._findCandlesPrice(
         candles,
         `tBTC${lastSymb}`,
         end
       )
 
       if (
-        !btcPriseIn ||
-        !btcPriseOut ||
-        !Number.isFinite(btcPriseIn) ||
-        !Number.isFinite(btcPriseOut)
+        !btcPriceIn ||
+        !btcPriceOut ||
+        !Number.isFinite(btcPriceIn) ||
+        !Number.isFinite(btcPriceOut)
       ) {
         return null
       }
 
-      return btcPriseOut / btcPriseIn
+      return btcPriceOut / btcPriceIn
     }
 
     return this._findCandlesPrice(
@@ -638,27 +655,27 @@ class CurrencyConverter {
     )
 
     if (_isForexSymb) {
-      const btcPriseIn = this._findPublicTradesPrice(
+      const btcPriceIn = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${firstSymb}`,
         end
       )
-      const btcPriseOut = this._findPublicTradesPrice(
+      const btcPriceOut = this._findPublicTradesPrice(
         publicTrades,
         `tBTC${lastSymb}`,
         end
       )
 
       if (
-        !btcPriseIn ||
-        !btcPriseOut ||
-        !Number.isFinite(btcPriseIn) ||
-        !Number.isFinite(btcPriseOut)
+        !btcPriceIn ||
+        !btcPriceOut ||
+        !Number.isFinite(btcPriceIn) ||
+        !Number.isFinite(btcPriceOut)
       ) {
         return null
       }
 
-      return btcPriseOut / btcPriseIn
+      return btcPriceOut / btcPriceIn
     }
 
     return this._findPublicTradesPrice(
@@ -683,8 +700,7 @@ class CurrencyConverter {
       symbolFieldName,
       dateFieldName,
       timeframeFieldName
-    } = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.CANDLES)
+    } = this.candlesSchema
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
