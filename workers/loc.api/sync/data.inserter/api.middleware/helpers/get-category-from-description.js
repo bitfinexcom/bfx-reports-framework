@@ -66,6 +66,12 @@ const _schema = [
   },
   {
     tester: (d) => (
+      _startsWith(d, 'funding event')
+    ),
+    category: 29
+  },
+  {
+    tester: (d) => (
       _includes(d, 'settlement')
     ),
     category: 31
