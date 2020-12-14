@@ -15,6 +15,8 @@ module.exports = {
   POSITIONS_HISTORY: 'positionsHistory',
   POSITIONS_SNAPSHOT: 'positionsSnapshot',
   SYMBOLS: 'symbols',
+  MAP_SYMBOLS: 'mapSymbols',
+  INACTIVE_CURRENCIES: 'inactiveCurrencies',
   INACTIVE_SYMBOLS: 'inactiveSymbols',
   FUTURES: 'futures',
   CURRENCIES: 'currencies',

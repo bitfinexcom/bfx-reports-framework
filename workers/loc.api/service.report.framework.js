@@ -472,6 +472,8 @@ class FrameworkReportService extends ReportService {
         this._SYNC_API_METHODS.SYMBOLS,
         this._SYNC_API_METHODS.FUTURES,
         this._SYNC_API_METHODS.CURRENCIES,
+        this._SYNC_API_METHODS.MAP_SYMBOLS,
+        this._SYNC_API_METHODS.INACTIVE_CURRENCIES,
         this._SYNC_API_METHODS.INACTIVE_SYMBOLS
       ]
       const promises = methods.map(async (method) => {
@@ -484,6 +486,9 @@ class FrameworkReportService extends ReportService {
         if (method === this._SYNC_API_METHODS.CURRENCIES) {
           return res
         }
+        if (method === this._SYNC_API_METHODS.MAP_SYMBOLS) {
+          return res.map((row) => ([row.key, row.value]))
+        }
 
         const { field } = this._syncSchema.getMethodCollMap()
           .get(method)
@@ -495,6 +500,8 @@ class FrameworkReportService extends ReportService {
         symbols,
         futures,
         currencies,
+        mapSymbols,
+        inactiveCurrencies,
         inactiveSymbols
       ] = await Promise.all(promises)
 
@@ -509,7 +516,13 @@ class FrameworkReportService extends ReportService {
 
       const pairs = [...symbols, ...futures]
 
-      return { pairs, currencies, inactiveSymbols }
+      return {
+        pairs,
+        currencies,
+        mapSymbols,
+        inactiveCurrencies,
+        inactiveSymbols
+      }
     }, 'getSymbols', cb)
   }
 
