@@ -18,6 +18,8 @@ const CANDLES = '_getCandles'
 
 const WALLETS = '_getWallets'
 const SYMBOLS = '_getSymbols'
+const MAP_SYMBOLS = '_getMapSymbols'
+const INACTIVE_CURRENCIES = '_getInactiveCurrencies'
 const INACTIVE_SYMBOLS = '_getInactiveSymbols'
 const FUTURES = '_getFutures'
 const CURRENCIES = '_getCurrencies'
@@ -42,6 +44,8 @@ module.exports = {
 
   WALLETS,
   SYMBOLS,
+  MAP_SYMBOLS,
+  INACTIVE_CURRENCIES,
   INACTIVE_SYMBOLS,
   FUTURES,
   CURRENCIES,

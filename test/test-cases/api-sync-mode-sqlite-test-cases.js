@@ -1169,7 +1169,12 @@ module.exports = (
     assert.lengthOf(res.body.result.pairs, 13)
     assert.lengthOf(res.body.result.currencies, 11)
     assert.lengthOf(res.body.result.inactiveSymbols, 2)
+    assert.lengthOf(res.body.result.mapSymbols, 3)
+    assert.lengthOf(res.body.result.inactiveCurrencies, 2)
 
+    res.body.result.mapSymbols.forEach(item => {
+      assert.lengthOf(item, 2)
+    })
     res.body.result.pairs.forEach(item => {
       assert.isString(item)
     })
