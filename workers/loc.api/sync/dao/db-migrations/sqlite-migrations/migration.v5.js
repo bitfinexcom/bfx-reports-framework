@@ -20,7 +20,7 @@ class MigrationV5 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'DROP INDEX users_apiKey_apiSecret',
+      'DROP INDEX IF EXISTS users_apiKey_apiSecret',
 
       'DELETE FROM users',
 
@@ -53,7 +53,7 @@ class MigrationV5 extends AbstractMigration {
    */
   down () {
     const sqlArr = [
-      'DROP INDEX users_email_username',
+      'DROP INDEX IF EXISTS users_email_username',
 
       'DROP TRIGGER delete_subAccounts_subUsers_from_users',
 

@@ -36,6 +36,8 @@ class Trades {
 
     this.tradesMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.TRADES)
+    this.tradesModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.TRADES)
   }
 
   async _getTrades ({
@@ -53,8 +55,6 @@ class Trades {
     )
       ? { $in: { symbol } }
       : {}
-    const tradesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.TRADES)
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.TRADES,
@@ -66,7 +66,7 @@ class Trades {
           ...symbFilter
         },
         sort: [['mtsCreate', -1]],
-        projection: tradesModel,
+        projection: this.tradesModel,
         exclude: ['user_id'],
         isExcludePrivate: true
       }

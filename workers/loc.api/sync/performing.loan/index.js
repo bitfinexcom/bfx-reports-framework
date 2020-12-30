@@ -30,7 +30,7 @@ class PerformingLoan {
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
 
-    this.tradesMethodColl = this.syncSchema.getMethodCollMap()
+    this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
     this.ledgersModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.LEDGERS)
@@ -386,7 +386,7 @@ class PerformingLoan {
     const {
       dateFieldName: ledgersDateFieldName,
       symbolFieldName: ledgersSymbolFieldName
-    } = this.tradesMethodColl
+    } = this.ledgersMethodColl
 
     const ledgersGroupedByTimeframe = await groupByTimeframe(
       ledgers,

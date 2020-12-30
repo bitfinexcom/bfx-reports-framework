@@ -279,6 +279,30 @@ const _methodCollMap = new Map([
     }
   ],
   [
+    SYNC_API_METHODS.MAP_SYMBOLS,
+    {
+      name: ALLOWED_COLLS.MAP_SYMBOLS,
+      maxLimit: 10000,
+      fields: ['key', 'value'],
+      sort: [['key', 1]],
+      hasNewData: true,
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
+      model: getModelOf(TABLES_NAMES.MAP_SYMBOLS)
+    }
+  ],
+  [
+    SYNC_API_METHODS.INACTIVE_CURRENCIES,
+    {
+      name: ALLOWED_COLLS.INACTIVE_CURRENCIES,
+      maxLimit: 10000,
+      field: 'pairs',
+      sort: [['pairs', 1]],
+      hasNewData: true,
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
+      model: getModelOf(TABLES_NAMES.INACTIVE_CURRENCIES)
+    }
+  ],
+  [
     SYNC_API_METHODS.INACTIVE_SYMBOLS,
     {
       name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
