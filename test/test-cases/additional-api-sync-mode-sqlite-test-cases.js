@@ -679,6 +679,80 @@ module.exports = (
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
 
+  it('it should be successfully performed by the getFullTaxReportCsv method, store csv to local folder', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullTaxReportCsv',
+        params: {
+          end,
+          start
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getFullTaxReportCsv method for starting snapshot, store csv to local folder', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullTaxReportCsv',
+        params: {
+          end,
+          start,
+          isStartSnapshot: true
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getFullTaxReportCsv method for ending snapshot, store csv to local folder', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullTaxReportCsv',
+        params: {
+          end,
+          start,
+          isEndSnapshot: true
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
   it('it should be successfully performed by the getTradedVolumeCsv method', async function () {
     this.timeout(60000)
 
