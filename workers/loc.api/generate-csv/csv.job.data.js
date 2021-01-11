@@ -15,7 +15,8 @@ const {
 const TYPES = require('../di/types')
 
 const {
-  checkParams
+  checkParams,
+  getDateString
 } = require('../helpers')
 
 class CsvJobData extends BaseCsvJobData {
@@ -218,7 +219,8 @@ class CsvJobData extends BaseCsvJobData {
   async getFullSnapshotReportCsvJobData (
     args,
     uId,
-    uInfo
+    uInfo,
+    opts
   ) {
     checkParams(args, 'paramsSchemaForFullSnapshotReportCsv')
 
@@ -231,6 +233,7 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
     const { params } = { ...args }
+    const { chunkCommonFolder } = { ...opts }
     const {
       isStartSnapshot,
       isEndSnapshot
@@ -253,6 +256,7 @@ class CsvJobData extends BaseCsvJobData {
     )
 
     const jobData = {
+      chunkCommonFolder,
       userInfo,
       userId,
       name: 'getFullSnapshotReport',
@@ -339,6 +343,16 @@ class CsvJobData extends BaseCsvJobData {
       isStartSnapshot,
       isEndSnapshot
     } = { ...params }
+    const { username } = { ...uInfo }
+
+    const uName = username ? `${username}_` : ''
+    const startDate = start
+      ? getDateString(start)
+      : getDateString(0)
+    const endDate = end
+      ? getDateString(end)
+      : getDateString()
+    const chunkCommonFolder = `${uName}full-tax-report_FROM_${startDate}_TO_${endDate}`
 
     if (isStartSnapshot || isEndSnapshot) {
       const mts = isStartSnapshot ? start : end
@@ -352,7 +366,8 @@ class CsvJobData extends BaseCsvJobData {
           }
         },
         uId,
-        uInfo
+        uInfo,
+        { chunkCommonFolder }
       )
     }
 
@@ -374,6 +389,7 @@ class CsvJobData extends BaseCsvJobData {
     )
 
     const jobData = {
+      chunkCommonFolder,
       userInfo,
       userId,
       name: 'getFullTaxReport',

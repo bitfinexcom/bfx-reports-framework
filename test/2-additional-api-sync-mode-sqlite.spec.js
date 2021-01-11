@@ -1,7 +1,11 @@
 'use strict'
 
+const { promisify } = require('util')
+const fs = require('fs')
 const path = require('path')
 const request = require('supertest')
+
+const rmdir = promisify(fs.rmdir)
 
 const {
   stopEnvironment
@@ -36,6 +40,7 @@ let mockRESTv2Srv = null
 const basePath = '/api'
 const tempDirPath = path.join(__dirname, '..', 'workers/loc.api/queue/temp')
 const dbDirPath = path.join(__dirname, '..', 'db')
+const csvDirPath = path.join(__dirname, '..', 'csv')
 const date = new Date()
 const end = date.getTime()
 const start = (new Date()).setDate(date.getDate() - 90)
@@ -69,6 +74,7 @@ describe('Additional sync mode API with SQLite', () => {
 
     mockRESTv2Srv = createMockRESTv2SrvWithDate(start, end, 100)
 
+    await rmdir(csvDirPath, { recursive: true })
     await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
     const env = await startEnvironment(false, false, 1)
@@ -86,6 +92,7 @@ describe('Additional sync mode API with SQLite', () => {
     await stopEnvironment()
     await rmDB(dbDirPath)
     await rmAllFiles(tempDirPath, ['README.md'])
+    await rmdir(csvDirPath, { recursive: true })
 
     try {
       await mockRESTv2Srv.close()
