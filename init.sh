@@ -1,9 +1,11 @@
 #!/bin/bash
-export NODE_PATH=src/
-export PUBLIC_URL=/
-export REACT_APP_PLATFORM=localhost
-export REACT_APP_TITLE=Bitfinex Reports
-export REACT_APP_LOGO_PATH=favicon.ico
+
+set -x
+
+ROOT="$PWD"
+frontendFolder="$ROOT/bfx-report-ui"
+expressFolder="$frontendFolder/bfx-report-express"
+dbDriver=better-sqlite
 
 programname=$0
 isDevEnv=0
@@ -18,14 +20,30 @@ function usage {
   exit 1
 }
 
+function installDeps {
+  local path="$PWD"
+
+  if [ $# -ge 1 ]
+  then
+    cd "$1"
+  else
+    exit 1
+  fi
+
+  rm -rf ./node_modules
+  npm i
+
+  cd "$path"
+}
+
 while [ "$1" != "" ]; do
   case $1 in
     -d | --dev )    isDevEnv=1
                     ;;
-    -i | --ip )    shift
+    -i | --ip )     shift
                     ip=$1
                     ;;
-    -u | --url )   shift
+    -u | --url )    shift
                     ip=$1
                     ;;
     -h | --help )   usage
@@ -37,6 +55,11 @@ while [ "$1" != "" ]; do
   shift
 done
 
+if [ "$CI_ENVIRONMENT_NAME" == "" ]
+then
+  export CI_ENVIRONMENT_NAME=development
+fi
+
 if [ $isDevEnv != 0 ]; then
   echo "Developer environment is turned on"
 fi
@@ -45,64 +68,54 @@ if [ $ip != 0 ]; then
   echo "Ip is set to: $ip"
 fi
 
-frontendFolder="$PWD/bfx-report-ui"
-expressFolder="$frontendFolder/bfx-report-express"
-backendFolder="$PWD"
-
-
-cd $frontendFolder
-git stash
-cd $backendFolder
-
-git submodule sync
+git submodule foreach --recursive git clean -fdx
+git submodule foreach --recursive git reset --hard HEAD
+git submodule sync --recursive
 git submodule update --init --recursive
+git config url."https://github.com/".insteadOf git@github.com:
 git pull --recurse-submodules
-git submodule update --remote
-npm i
-
-cd $expressFolder
-git submodule sync
-git submodule update --init --recursive
-git pull --recurse-submodules
-git submodule update --remote
-
-git stash
-cd $frontendFolder
-git submodule sync
-git submodule update --init --recursive
-git pull --recurse-submodules
-git submodule update --remote
-npm i
+git submodule update --remote --recursive
+git config --unset url."https://github.com/".insteadOf
 
 if [ $isDevEnv != 0 ]; then
-	sed -i -e "s/KEY_URL: .*,/KEY_URL: \'https:\/\/test.bitfinex.com\/api\',/g" $frontendFolder/src/var/config.js
+	sed -i -e \
+    "s/KEY_URL: .*,/KEY_URL: \'https:\/\/api.staging.bitfinex.com\/api\',/g" \
+    $frontendFolder/src/config.js
 fi
 
 if [ $ip != 0 ]; then
-	sed -i -e "s/API_URL: .*,/API_URL: \'http:\/\/$ip:31339\/api\',/g" $frontendFolder/src/var/config.js
-  sed -i -e "s/HOME_URL: .*,/HOME_URL: \'http:\/\/$ip:3000\',/g" $frontendFolder/src/var/config.js
+	sed -i -e \
+    "s/API_URL: .*,/API_URL: \'http:\/\/$ip:31339\/api\',/g" \
+    $frontendFolder/src/config.js
+  sed -i -e \
+    "s/WS_ADDRESS: .*,/WS_ADDRESS: \'ws:\/\/$ip:31339\/ws\',/g" \
+    $frontendFolder/src/config.js
+  sed -i -e \
+    "s/HOME_URL: .*,/HOME_URL: \'http:\/\/$ip:3000\',/g" \
+    $frontendFolder/src/config.js
 fi
 
-cp $expressFolder/config/default.json.example $expressFolder/config/default.json
-sed -i -e "s/showSyncMode: .*,/showSyncMode: true,/g" $frontendFolder/src/var/config.js
-sed -i -e "s/showFrameworkMode: .*,/showFrameworkMode: true,/g" $frontendFolder/src/var/config.js
+cp $expressFolder/config/default.json.example \
+  $expressFolder/config/default.json
 
-cd $expressFolder
-npm i
-
-cd $backendFolder
-
-cp .env.example bfx-report-ui/.env
 cp config/schedule.json.example config/schedule.json
 cp config/common.json.example config/common.json
 cp config/service.report.json.example config/service.report.json
 cp config/facs/grc.config.json.example config/facs/grc.config.json
-sed -i -e "s/\"syncMode\": false/\"syncMode\": true/g" $backendFolder/config/service.report.json
+
+sed -i -e \
+  "s/\"syncMode\": false/\"syncMode\": true/g" \
+  $ROOT/config/service.report.json
+sed -i -e \
+  "s/\"dbDriver\": \".*\"/\"dbDriver\": \"$dbDriver\"/g" \
+  $ROOT/config/service.report.json
 
 if [ $isDevEnv != 0 ]; then
-  sed -i -e "s/\"restUrl\": .*,/\"restUrl\": \"https:\/\/test.bitfinex.com\",/g" $backendFolder/config/service.report.json
+  sed -i -e \
+    "s/\"restUrl\": \".*\"/\"restUrl\": \"https:\/\/api.staging.bitfinex.com\"/g" \
+    $ROOT/config/service.report.json
 fi
 
-touch db/lokue_queue_1_aggregator.db.json
-touch db/lokue_queue_1_processor.db.json
-touch db/db-sqlite_sync_m0.db
+installDeps $ROOT
+installDeps $expressFolder
+installDeps $frontendFolder
