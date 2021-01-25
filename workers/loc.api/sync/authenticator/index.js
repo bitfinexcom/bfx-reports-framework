@@ -28,12 +28,14 @@ class Authenticator {
     dao,
     TABLES_NAMES,
     rService,
-    crypto
+    crypto,
+    syncFactory
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.rService = rService
     this.crypto = crypto
+    this.syncFactory = syncFactory
 
     /**
      * It may only work for one grenache worker instance
@@ -312,6 +314,14 @@ class Authenticator {
     )
     const { _id, email: emailFromDb } = { ...user }
 
+    const isSchedulerEnabled = await this.rService
+      .isSchedulerEnabled()
+    await this.dao.updateRecordOf(
+      this.TABLES_NAMES.SCHEDULER,
+      { isEnable: false }
+    )
+    await this.syncFactory().stop()
+
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
@@ -323,6 +333,13 @@ class Authenticator {
     }
 
     this.removeUserSessionByToken(token)
+
+    if (isSchedulerEnabled) {
+      await this.dao.updateRecordOf(
+        this.TABLES_NAMES.SCHEDULER,
+        { isEnable: true }
+      )
+    }
 
     return true
   }
@@ -857,5 +874,6 @@ decorate(inject(TYPES.DAO), Authenticator, 0)
 decorate(inject(TYPES.TABLES_NAMES), Authenticator, 1)
 decorate(inject(TYPES.RService), Authenticator, 2)
 decorate(inject(TYPES.Crypto), Authenticator, 3)
+decorate(inject(TYPES.SyncFactory), Authenticator, 4)
 
 module.exports = Authenticator
