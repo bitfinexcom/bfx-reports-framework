@@ -338,6 +338,12 @@ class FrameworkReportService extends ReportService {
     }, 'syncNow', args, cb)
   }
 
+  stopSyncNow (space, args, cb) {
+    return this._privResponder(() => {
+      return this._sync.stop()
+    }, 'stopSyncNow', args, cb)
+  }
+
   getPublicTradesConf (space, args = {}, cb) {
     return this._privResponder(() => {
       return this._publicСollsСonfAccessors
