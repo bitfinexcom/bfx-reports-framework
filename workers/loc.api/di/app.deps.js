@@ -76,7 +76,8 @@ const SqliteDbMigrator = require(
 const {
   migrationsFactory,
   dbMigratorFactory,
-  dataInserterFactory
+  dataInserterFactory,
+  syncFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -158,6 +159,8 @@ module.exports = ({
     bind(TYPES.Crypto)
       .to(Crypto)
       .inSingletonScope()
+    bind(TYPES.SyncFactory)
+      .toFactory(syncFactory)
     bind(TYPES.Authenticator)
       .to(Authenticator)
       .inSingletonScope()
