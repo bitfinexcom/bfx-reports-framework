@@ -20,6 +20,7 @@ module.exports = {
   RedirectRequestsToApi: Symbol.for('RedirectRequestsToApi'),
   SyncSchema: Symbol.for('SyncSchema'),
   Sync: Symbol.for('Sync'),
+  SyncFactory: Symbol.for('SyncFactory'),
   SyncQueue: Symbol.for('SyncQueue'),
   Progress: Symbol.for('Progress'),
   DB: Symbol.for('DB'),

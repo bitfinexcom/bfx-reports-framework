@@ -997,6 +997,55 @@ module.exports = (
     assert.propertyVal(res.body.result.candlesConf[0], 'start', start)
   })
 
+  it('it should be successfully performed by the stopSyncNow method', async function () {
+    this.timeout(60000)
+
+    const syncNowRes = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'syncNow',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(syncNowRes.body)
+    assert.propertyVal(syncNowRes.body, 'id', 5)
+    assert.isOk(
+      Number.isInteger(syncNowRes.body.result) ||
+      (
+        typeof syncNowRes.body.result === 'string' &&
+        syncNowRes.body.result === 'SYNCHRONIZATION_IS_STARTED'
+      )
+    )
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'stopSyncNow',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isOk(
+      (
+        Number.isInteger(res.body.result) &&
+        res.body.result < 100
+      ) ||
+      (
+        typeof res.body.result === 'string' &&
+        res.body.result === 'SYNCHRONIZATION_HAS_NOT_BEEN_STARTED_TO_INTERRUPT'
+      )
+    )
+  })
+
   it('it should be successfully performed by the syncNow method', async function () {
     this.timeout(60000)
 

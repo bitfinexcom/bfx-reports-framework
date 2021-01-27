@@ -281,7 +281,8 @@ class FrameworkReportService extends ReportService {
         { isEnable: true }
       )
 
-      return this.syncNow()
+      return this._sync
+        .start(true, this._ALLOWED_COLLS.ALL)
     }, 'enableScheduler', args, cb)
   }
 
@@ -327,21 +328,20 @@ class FrameworkReportService extends ReportService {
   }
 
   syncNow (space, args = {}, cb) {
-    const responder = cb
-      ? this._privResponder
-      : this._responder
-    const endingArgs = cb
-      ? [args, cb]
-      : [cb]
-
-    return responder(async () => {
+    return this._privResponder(() => {
       const { params } = { ...args }
       const {
         syncColls = this._ALLOWED_COLLS.ALL
       } = { ...params }
 
       return this._sync.start(true, syncColls)
-    }, 'syncNow', ...endingArgs)
+    }, 'syncNow', args, cb)
+  }
+
+  stopSyncNow (space, args, cb) {
+    return this._privResponder(() => {
+      return this._sync.stop()
+    }, 'stopSyncNow', args, cb)
   }
 
   getPublicTradesConf (space, args = {}, cb) {
