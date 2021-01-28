@@ -29,6 +29,32 @@ class WSEventEmitter {
     )
   }
 
+  emitSyncingStep (
+    handler = () => {}
+  ) {
+    return this.wsTransport.sendToActiveUsers(
+      handler,
+      'emitSyncingStep'
+    )
+  }
+
+  emitSyncingStepToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emitSyncingStep((user, ...args) => {
+      if (
+        !auth ||
+        typeof auth !== 'object' ||
+        user._id !== auth._id
+      ) {
+        return
+      }
+
+      return handler(user, ...args)
+    })
+  }
+
   async emitRedirectingRequestsStatusToApi (
     handler = () => {}
   ) {
