@@ -236,7 +236,7 @@ class DataInserter extends EventEmitter {
     }
 
     await this.wsEventEmitter
-      .emitSyncingStepToOne(() => 'CHECKING_NEW_PUBLIC_DATA')
+      .emitSyncingStep(() => 'CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
     const size = methodCollMap.size
@@ -249,7 +249,7 @@ class DataInserter extends EventEmitter {
         return
       }
 
-      await this.wsEventEmitter.emitSyncingStepToOne(
+      await this.wsEventEmitter.emitSyncingStep(
         () => `SYNCING_${getSyncCollName(method)}`
       )
 
@@ -282,7 +282,10 @@ class DataInserter extends EventEmitter {
     }
 
     await this.wsEventEmitter
-      .emitSyncingStepToOne(() => 'CHECKING_NEW_PRIVATE_DATA')
+      .emitSyncingStepToOne(
+        () => 'CHECKING_NEW_PRIVATE_DATA',
+        auth
+      )
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
@@ -296,7 +299,8 @@ class DataInserter extends EventEmitter {
       }
 
       await this.wsEventEmitter.emitSyncingStepToOne(
-        () => `SYNCING_${getSyncCollName(method)}`
+        () => `SYNCING_${getSyncCollName(method)}`,
+        auth
       )
 
       const { start } = schema
