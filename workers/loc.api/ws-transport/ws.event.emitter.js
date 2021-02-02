@@ -42,7 +42,7 @@ class WSEventEmitter {
     handler = () => {},
     auth = {}
   ) {
-    return this.emitSyncingStep((user, ...args) => {
+    return this.emitSyncingStep(async (user, ...args) => {
       if (
         !auth ||
         typeof auth !== 'object' ||
@@ -51,7 +51,9 @@ class WSEventEmitter {
         return
       }
 
-      return handler(user, ...args)
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
     })
   }
 

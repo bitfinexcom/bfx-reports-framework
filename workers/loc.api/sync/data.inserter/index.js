@@ -174,7 +174,7 @@ class DataInserter extends EventEmitter {
     await this.insertNewPublicDataToDb(progress)
 
     await this.wsEventEmitter
-      .emitSyncingStep(() => 'DB_PREPARATION')
+      .emitSyncingStep('DB_PREPARATION')
     await this._afterAllInserts()
 
     if (typeof this.dao.optimize === 'function') {
@@ -236,7 +236,7 @@ class DataInserter extends EventEmitter {
     }
 
     await this.wsEventEmitter
-      .emitSyncingStep(() => 'CHECKING_NEW_PUBLIC_DATA')
+      .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
     const size = methodCollMap.size
@@ -249,9 +249,8 @@ class DataInserter extends EventEmitter {
         return
       }
 
-      await this.wsEventEmitter.emitSyncingStep(
-        () => `SYNCING_${getSyncCollName(method)}`
-      )
+      await this.wsEventEmitter
+        .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
       await this._updateApiDataArrObjTypeToDb(method, item)
       await this._updateApiDataArrTypeToDb(method, item)
@@ -281,11 +280,10 @@ class DataInserter extends EventEmitter {
       return userProgress
     }
 
-    await this.wsEventEmitter
-      .emitSyncingStepToOne(
-        () => 'CHECKING_NEW_PRIVATE_DATA',
-        auth
-      )
+    await this.wsEventEmitter.emitSyncingStepToOne(
+      'CHECKING_NEW_PRIVATE_DATA',
+      auth
+    )
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
@@ -299,7 +297,7 @@ class DataInserter extends EventEmitter {
       }
 
       await this.wsEventEmitter.emitSyncingStepToOne(
-        () => `SYNCING_${getSyncCollName(method)}`,
+        `SYNCING_${getSyncCollName(method)}`,
         auth
       )
 
