@@ -21,6 +21,7 @@ const {
 const {
   checkParams,
   checkParamsAuth,
+  isNotSyncRequired,
   isEnotfoundError,
   isEaiAgainError,
   collObjToArr,
@@ -220,6 +221,11 @@ class FrameworkReportService extends ReportService {
         this._TABLES_NAMES.SYNC_MODE,
         { isEnable: true }
       )
+
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
       await this._sync.start(true)
 
       return true
@@ -281,8 +287,13 @@ class FrameworkReportService extends ReportService {
         { isEnable: true }
       )
 
-      return this._sync
-        .start(true, this._ALLOWED_COLLS.ALL)
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
+      await this._sync.start(true)
+
+      return true
     }, 'enableScheduler', args, cb)
   }
 
@@ -378,7 +389,13 @@ class FrameworkReportService extends ReportService {
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('publicTradesConf', args)
-      await this._sync.start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
+
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
+      await this._sync
+        .start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
 
       return true
     }, 'editPublicTradesConf', args, cb)
@@ -390,7 +407,13 @@ class FrameworkReportService extends ReportService {
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('tickersHistoryConf', args)
-      await this._sync.start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
+
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
+      await this._sync
+        .start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
 
       return true
     }, 'editTickersHistoryConf', args, cb)
@@ -402,7 +425,13 @@ class FrameworkReportService extends ReportService {
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('statusMessagesConf', args)
-      await this._sync.start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
+
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
+      await this._sync
+        .start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
 
       return true
     }, 'editStatusMessagesConf', args, cb)
@@ -414,7 +443,13 @@ class FrameworkReportService extends ReportService {
 
       await this._publicСollsСonfAccessors
         .editPublicСollsСonf('candlesConf', args)
-      await this._sync.start(true, this._ALLOWED_COLLS.CANDLES)
+
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
+      await this._sync
+        .start(true, this._ALLOWED_COLLS.CANDLES)
 
       return true
     }, 'editCandlesConf', args, cb)
@@ -426,6 +461,11 @@ class FrameworkReportService extends ReportService {
 
       const syncedColls = await this._publicСollsСonfAccessors
         .editAllPublicСollsСonfs(args)
+
+      if (isNotSyncRequired(args)) {
+        return true
+      }
+
       await this._sync.start(true, syncedColls)
 
       return true

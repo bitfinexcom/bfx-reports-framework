@@ -5,7 +5,8 @@ const {
   checkParamsAuth,
   tryParseJSON,
   collObjToArr,
-  getDateString
+  getDateString,
+  isNotSyncRequired
 } = require('./utils')
 const {
   isEnotfoundError,
@@ -23,6 +24,7 @@ module.exports = {
   tryParseJSON,
   collObjToArr,
   getDateString,
+  isNotSyncRequired,
   isEnotfoundError,
   isEaiAgainError,
   isSubAccountApiKeys,
