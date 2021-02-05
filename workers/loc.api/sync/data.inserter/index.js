@@ -258,6 +258,10 @@ class DataInserter extends EventEmitter {
       await this._updateApiDataArrTypeToDb(method, item)
       await this._insertApiDataPublicArrObjTypeToDb(method, item)
 
+      await this.syncCollsManager.setCollAsSynced({
+        collName: method
+      })
+
       count += 1
       progress = Math.round(
         prevProgress + (count / size) * 100 * ((100 - prevProgress) / 100)
@@ -289,6 +293,7 @@ class DataInserter extends EventEmitter {
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
+    const { _id: userId } = { ...auth }
 
     let count = 0
     let progress = 0
@@ -306,10 +311,7 @@ class DataInserter extends EventEmitter {
       const { start } = schema
 
       for (const [symbol, dates] of start) {
-        const {
-          baseStartFrom = 0,
-          baseStartTo
-        } = { ...dates }
+        const { baseStartFrom = 0 } = { ...dates }
         const addApiParams = (
           !symbol ||
           symbol === ALL_SYMBOLS_TO_SYNC ||
@@ -328,19 +330,11 @@ class DataInserter extends EventEmitter {
           addApiParams,
           auth
         )
-
-        if (
-          Number.isInteger(baseStartFrom) &&
-          Number.isInteger(baseStartTo)
-        ) {
-          const { _id } = { ...auth }
-
-          await this.syncCollsManager.setCollAsSynced({
-            collName: method,
-            user_id: _id
-          })
-        }
       }
+
+      await this.syncCollsManager.setCollAsSynced({
+        collName: method, userId
+      })
 
       count += 1
       progress = Math.round(
