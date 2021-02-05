@@ -16,6 +16,31 @@ class SyncCollsManager {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
   }
+
+  _getCompletedCollBy (params = {}) {
+    return this.dao.getElemInCollBy(
+      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+      params
+    )
+  }
+
+  async hasCollBeenSyncedAtLeastOnce (params) {
+    const {
+      userId,
+      collName
+    } = { ...params }
+
+    const completedColl = await this._getCompletedCollBy({
+      user_id: userId,
+      collName
+    })
+
+    return (
+      completedColl &&
+      typeof completedColl === 'object' &&
+      completedColl.collName === collName
+    )
+  }
 }
 
 decorate(injectable(), SyncCollsManager)
