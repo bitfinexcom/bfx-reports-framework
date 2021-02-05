@@ -774,7 +774,7 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
       mts: 'BIGINT',
-      user_id: 'INT NOT NULL',
+      user_id: 'INT',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['collName', 'user_id'],
       [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
