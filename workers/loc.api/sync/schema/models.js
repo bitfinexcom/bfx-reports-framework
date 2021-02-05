@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 21
+const SUPPORTED_DB_VERSION = 22
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -773,6 +773,7 @@ const _models = new Map([
     {
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
+      mts: 'BIGINT',
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['collName', 'user_id'],
