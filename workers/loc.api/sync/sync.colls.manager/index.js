@@ -41,6 +41,23 @@ class SyncCollsManager {
       completedColl.collName === collName
     )
   }
+
+  setCollAsSynced (params) {
+    const {
+      userId,
+      collName
+    } = { ...params }
+
+    return this.dao.insertElemToDb(
+      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
+      {
+        collName,
+        mts: Date.now(),
+        user_id: userId
+      },
+      { isReplacedIfExists: true }
+    )
+  }
 }
 
 decorate(injectable(), SyncCollsManager)

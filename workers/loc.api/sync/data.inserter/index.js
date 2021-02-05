@@ -60,7 +60,8 @@ class DataInserter extends EventEmitter {
     recalcSubAccountLedgersBalancesHook,
     dataChecker,
     syncInterrupter,
-    wsEventEmitter
+    wsEventEmitter,
+    syncCollsManager
   ) {
     super()
 
@@ -77,6 +78,7 @@ class DataInserter extends EventEmitter {
     this.dataChecker = dataChecker
     this.syncInterrupter = syncInterrupter
     this.wsEventEmitter = wsEventEmitter
+    this.syncCollsManager = syncCollsManager
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -333,14 +335,10 @@ class DataInserter extends EventEmitter {
         ) {
           const { _id } = { ...auth }
 
-          await this.dao.insertElemToDb(
-            this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-            {
-              collName: method,
-              user_id: _id
-            },
-            { isReplacedIfExists: true }
-          )
+          await this.syncCollsManager.setCollAsSynced({
+            collName: method,
+            user_id: _id
+          })
         }
       }
 
@@ -842,5 +840,6 @@ decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 decorate(inject(TYPES.DataChecker), DataInserter, 10)
 decorate(inject(TYPES.SyncInterrupter), DataInserter, 11)
 decorate(inject(TYPES.WSEventEmitter), DataInserter, 12)
+decorate(inject(TYPES.SyncCollsManager), DataInserter, 12)
 
 module.exports = DataInserter
