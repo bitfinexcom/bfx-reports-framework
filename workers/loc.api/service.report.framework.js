@@ -496,6 +496,12 @@ class FrameworkReportService extends ReportService {
         return collObjToArr(res, field)
       })
 
+      const res = await Promise.all(promises)
+
+      if (res.some(isEmpty)) {
+        return super.getSymbols(space, args)
+      }
+
       const [
         symbols,
         futures,
@@ -503,16 +509,7 @@ class FrameworkReportService extends ReportService {
         mapSymbols,
         inactiveCurrencies,
         inactiveSymbols
-      ] = await Promise.all(promises)
-
-      if (
-        isEmpty(symbols) &&
-        isEmpty(futures) &&
-        isEmpty(currencies) &&
-        isEmpty(inactiveSymbols)
-      ) {
-        return super.getSymbols(space, args)
-      }
+      ] = res
 
       const pairs = [...symbols, ...futures]
 
