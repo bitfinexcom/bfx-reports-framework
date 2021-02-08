@@ -18,7 +18,7 @@
     "moment": "^2.24.0",
     "scrypt-js": "^3.0.0",
     "uuid": "^8.0.0",
-    "yargs": "^13.2.4"
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
