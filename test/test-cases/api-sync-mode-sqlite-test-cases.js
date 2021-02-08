@@ -350,6 +350,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -369,10 +370,8 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(
-      typeof res.body.result === 'string' ||
-      typeof res.body.result === 'number'
-    )
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
   })
 
   it('it should be successfully performed by the isSchedulerEnabled method', async function () {
@@ -443,6 +442,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -502,6 +502,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -583,6 +584,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -642,6 +644,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -725,6 +728,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -805,6 +809,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -914,6 +919,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
