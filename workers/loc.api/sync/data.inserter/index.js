@@ -27,7 +27,8 @@ const {
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  getMethodArgMap
+  getMethodArgMap,
+  getSyncCollName
 } = require('./helpers')
 const DataInserterHook = require('./hooks/data.inserter.hook')
 const {
@@ -58,7 +59,8 @@ class DataInserter extends EventEmitter {
     convertCurrencyHook,
     recalcSubAccountLedgersBalancesHook,
     dataChecker,
-    syncInterrupter
+    syncInterrupter,
+    wsEventEmitter
   ) {
     super()
 
@@ -74,6 +76,7 @@ class DataInserter extends EventEmitter {
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
     this.dataChecker = dataChecker
     this.syncInterrupter = syncInterrupter
+    this.wsEventEmitter = wsEventEmitter
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -170,6 +173,8 @@ class DataInserter extends EventEmitter {
 
     await this.insertNewPublicDataToDb(progress)
 
+    await this.wsEventEmitter
+      .emitSyncingStep('DB_PREPARATION')
     await this._afterAllInserts()
 
     if (typeof this.dao.optimize === 'function') {
@@ -230,6 +235,8 @@ class DataInserter extends EventEmitter {
       return
     }
 
+    await this.wsEventEmitter
+      .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
     const size = methodCollMap.size
@@ -241,6 +248,9 @@ class DataInserter extends EventEmitter {
       if (this._isInterrupted) {
         return
       }
+
+      await this.wsEventEmitter
+        .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
       await this._updateApiDataArrObjTypeToDb(method, item)
       await this._updateApiDataArrTypeToDb(method, item)
@@ -270,6 +280,10 @@ class DataInserter extends EventEmitter {
       return userProgress
     }
 
+    await this.wsEventEmitter.emitSyncingStepToOne(
+      'CHECKING_NEW_PRIVATE_DATA',
+      auth
+    )
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
@@ -281,6 +295,11 @@ class DataInserter extends EventEmitter {
       if (this._isInterrupted) {
         return userProgress
       }
+
+      await this.wsEventEmitter.emitSyncingStepToOne(
+        `SYNCING_${getSyncCollName(method)}`,
+        auth
+      )
 
       const { start } = schema
 
@@ -822,5 +841,6 @@ decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 8)
 decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 decorate(inject(TYPES.DataChecker), DataInserter, 10)
 decorate(inject(TYPES.SyncInterrupter), DataInserter, 11)
+decorate(inject(TYPES.WSEventEmitter), DataInserter, 12)
 
 module.exports = DataInserter

@@ -265,10 +265,7 @@ class WSTransport {
 
       try {
         if (
-          (
-            typeof handler !== 'function' &&
-            handler === null
-          ) ||
+          handler === null ||
           (
             isEmittedToActiveUsers &&
             !this._isActiveUser(user)
