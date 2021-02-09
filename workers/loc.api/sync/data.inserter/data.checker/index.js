@@ -196,6 +196,7 @@ class DataChecker {
     const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
       .hasCollBeenSyncedAtLeastOnce({
         userId: _id,
+        subUserId,
         collName: method
       })
 

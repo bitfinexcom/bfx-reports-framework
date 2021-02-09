@@ -293,7 +293,8 @@ class DataInserter extends EventEmitter {
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
-    const { _id: userId } = { ...auth }
+    const { _id: userId, subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
 
     let count = 0
     let progress = 0
@@ -333,7 +334,7 @@ class DataInserter extends EventEmitter {
       }
 
       await this.syncCollsManager.setCollAsSynced({
-        collName: method, userId
+        collName: method, userId, subUserId
       })
 
       count += 1
@@ -834,6 +835,6 @@ decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 decorate(inject(TYPES.DataChecker), DataInserter, 10)
 decorate(inject(TYPES.SyncInterrupter), DataInserter, 11)
 decorate(inject(TYPES.WSEventEmitter), DataInserter, 12)
-decorate(inject(TYPES.SyncCollsManager), DataInserter, 12)
+decorate(inject(TYPES.SyncCollsManager), DataInserter, 13)
 
 module.exports = DataInserter

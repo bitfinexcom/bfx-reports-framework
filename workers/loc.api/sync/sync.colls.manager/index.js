@@ -27,12 +27,18 @@ class SyncCollsManager {
   async hasCollBeenSyncedAtLeastOnce (params) {
     const {
       userId,
+      subUserId,
       collName
     } = { ...params }
 
+    const subUserIdFilter = Number.isInteger(subUserId)
+      ? { subUserId }
+      : {}
+
     const completedColl = await this._getCompletedCollBy({
       user_id: userId,
-      collName
+      collName,
+      ...subUserIdFilter
     })
 
     return (
@@ -45,6 +51,7 @@ class SyncCollsManager {
   setCollAsSynced (params) {
     const {
       userId,
+      subUserId,
       collName
     } = { ...params }
 
@@ -53,6 +60,7 @@ class SyncCollsManager {
       {
         collName,
         mts: Date.now(),
+        subUserId,
         user_id: userId
       },
       { isReplacedIfExists: true }
