@@ -772,16 +772,34 @@ const _models = new Map([
     TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
     {
       _id: ID_PRIMARY_KEY,
-      collName: 'VARCHAR(255)',
+      collName: 'VARCHAR(255) NOT NULL',
       mts: 'BIGINT',
+      subUserId: 'INT',
       user_id: 'INT',
 
-      [UNIQUE_INDEX_FIELD_NAME]: ['collName', 'user_id'],
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
+      [UNIQUE_INDEX_FIELD_NAME]: [
+        // It needs to cover public collections
+        ['collName',
+          'WHERE user_id IS NULL'],
+        // It needs to cover private collections
+        ['user_id', 'collName',
+          'WHERE user_id IS NOT NULL AND subUserId IS NULL'],
+        // It needs to cover private collections of sub-account
+        ['user_id', 'subUserId', 'collName',
+          'WHERE user_id IS NOT NULL AND subUserId IS NOT NULL']
+      ],
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
         FOREIGN KEY (user_id)
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
         ON DELETE CASCADE`
+      ]
     }
   ]
 ])
