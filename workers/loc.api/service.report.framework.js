@@ -338,6 +338,13 @@ class FrameworkReportService extends ReportService {
     }, 'getSyncProgress', args, cb)
   }
 
+  haveCollsBeenSyncedAtLeastOnce (space, args, cb) {
+    return this._privResponder(() => {
+      return this._syncCollsManager
+        .haveCollsBeenSyncedAtLeastOnce(args)
+    }, 'haveCollsBeenSyncedAtLeastOnce', args, cb)
+  }
+
   syncNow (space, args = {}, cb) {
     return this._privResponder(() => {
       const { params } = { ...args }

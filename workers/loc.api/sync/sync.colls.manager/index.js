@@ -82,7 +82,6 @@ class SyncCollsManager {
         $isNull: ['user_id']
       }
     })
-    console.log('[completedColls]:'.bgBlue, completedColls)
 
     if (
       !Array.isArray(completedColls) ||
@@ -101,7 +100,6 @@ class SyncCollsManager {
     }
 
     const checkingRes = []
-    const names = []
 
     for (const [method, schema] of this._methodCollMap) {
       const {
@@ -123,7 +121,6 @@ class SyncCollsManager {
         ))
 
         checkingRes.push(isDone)
-        names.push(method)
 
         continue
       }
@@ -142,7 +139,6 @@ class SyncCollsManager {
         ))
 
         checkingRes.push(isDone)
-        names.push(method)
 
         continue
       }
@@ -155,11 +151,8 @@ class SyncCollsManager {
       ))
 
       checkingRes.push(isDone)
-      names.push(method)
     }
 
-    console.log('[checkingRes]:'.bgGreen, checkingRes)
-    console.log('[names]:'.bgGreen, names)
     return checkingRes.every((res) => res)
   }
 

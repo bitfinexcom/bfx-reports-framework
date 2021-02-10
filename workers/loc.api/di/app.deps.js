@@ -119,7 +119,8 @@ module.exports = ({
           ['_positionsAudit', TYPES.PositionsAudit],
           ['_orderTrades', TYPES.OrderTrades],
           ['_authenticator', TYPES.Authenticator],
-          ['_privResponder', TYPES.PrivResponder]
+          ['_privResponder', TYPES.PrivResponder],
+          ['_syncCollsManager', TYPES.SyncCollsManager]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
