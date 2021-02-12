@@ -50,7 +50,50 @@ class MigrationV22 extends AbstractMigration {
         WHERE user_id IS NOT NULL AND subUserId IS NULL`,
       `CREATE UNIQUE INDEX completedOnFirstSyncColls_user_id_subUserId_collName
         ON completedOnFirstSyncColls (user_id, subUserId, collName)
-        WHERE user_id IS NOT NULL AND subUserId IS NOT NULL`
+        WHERE user_id IS NOT NULL AND subUserId IS NOT NULL`,
+
+      // Delete old sub-account entries
+      `DELETE FROM completedOnFirstSyncColls
+        WHERE user_id IN (SELECT _id FROM users WHERE isSubAccount = 1)`,
+
+      // Add fresh sub-account entries
+      `INSERT OR REPLACE INTO completedOnFirstSyncColls
+        (collName, subUserId, user_id)
+        SELECT * FROM (
+          SELECT '_getLedgers' AS collName, subUserId, user_id FROM ledgers UNION
+          SELECT '_getTrades' AS collName, subUserId, user_id FROM trades UNION
+          SELECT '_getFundingTrades' AS collName, subUserId, user_id FROM fundingTrades UNION
+          SELECT '_getOrders' AS collName, subUserId, user_id FROM orders UNION
+          SELECT '_getMovements' AS collName, subUserId, user_id FROM movements UNION
+          SELECT '_getFundingOfferHistory' AS collName, subUserId, user_id FROM fundingOfferHistory UNION
+          SELECT '_getFundingLoanHistory' AS collName, subUserId, user_id FROM fundingLoanHistory UNION
+          SELECT '_getFundingCreditHistory' AS collName, subUserId, user_id FROM fundingCreditHistory UNION
+          SELECT '_getPositionsHistory' AS collName, subUserId, user_id FROM positionsHistory UNION
+          SELECT '_getPositionsSnapshot' AS collName, subUserId, user_id FROM positionsSnapshot UNION
+          SELECT '_getLogins' AS collName, subUserId, user_id FROM logins UNION
+          SELECT '_getChangeLogs' AS collName, subUserId, user_id FROM changeLogs
+        ) WHERE subUserId IS NOT NULL`,
+
+      // Update private collections
+      // Get mts from ledgers or logins to have
+      // an approximate last sync start-up time
+      `UPDATE completedOnFirstSyncColls AS cs SET mts = (
+        SELECT max(mts) FROM (
+          SELECT user_id, mts FROM ledgers
+            UNION SELECT user_id, time AS mts FROM logins
+        ) AS un
+          WHERE un.user_id = cs.user_id
+      )`,
+
+      // Update public collections
+      // Get mts from ledgers or logins to have
+      // an approximate last sync start-up time
+      `UPDATE completedOnFirstSyncColls AS cs SET mts = (
+        SELECT max(mts) FROM (
+          SELECT mts FROM ledgers
+            UNION SELECT time AS mts FROM logins
+        ) 
+      ) WHERE cs.user_id IS NULL`
     ]
 
     this.addSql(sqlArr)
