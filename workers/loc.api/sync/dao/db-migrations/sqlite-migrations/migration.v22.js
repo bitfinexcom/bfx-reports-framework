@@ -74,6 +74,17 @@ class MigrationV22 extends AbstractMigration {
           SELECT '_getChangeLogs' AS collName, subUserId, user_id FROM changeLogs
         ) WHERE subUserId IS NOT NULL`,
 
+      // Add public collections entries
+      `INSERT OR REPLACE INTO completedOnFirstSyncColls
+        (collName)
+        SELECT '_getSymbols' AS collName FROM symbols UNION
+        SELECT '_getMapSymbols' AS collName FROM mapSymbols UNION
+        SELECT '_getInactiveCurrencies' AS collName FROM inactiveCurrencies UNION
+        SELECT '_getInactiveSymbols' AS collName FROM inactiveSymbols UNION
+        SELECT '_getFutures' AS collName FROM futures UNION
+        SELECT '_getCurrencies' AS collName FROM currencies UNION
+        SELECT '_getCandles' AS collName FROM candles`,
+
       // Update private collections
       // Get mts from ledgers or logins to have
       // an approximate last sync start-up time
