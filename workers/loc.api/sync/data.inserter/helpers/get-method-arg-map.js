@@ -25,10 +25,10 @@ module.exports = (
     typeof subUserApiSecret === 'string'
   )
     ? {
-      apiKey: subUserApiKey,
-      apiSecret: subUserApiSecret,
-      session: reqAuth
-    }
+        apiKey: subUserApiKey,
+        apiSecret: subUserApiSecret,
+        session: reqAuth
+      }
     : { apiKey, apiSecret, session: reqAuth }
 
   return {

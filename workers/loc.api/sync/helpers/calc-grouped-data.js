@@ -146,9 +146,9 @@ const _getReducer = (
 
     const data = isSubCalc
       ? {
-        mts: item.mts,
-        vals: Object.assign({}, res)
-      }
+          mts: item.mts,
+          vals: Object.assign({}, res)
+        }
       : Object.assign({ mts: item.mts }, res)
 
     if (isReverse) {

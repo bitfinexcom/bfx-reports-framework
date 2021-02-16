@@ -296,14 +296,14 @@ class DataChecker {
 
     const params = name === this.ALLOWED_COLLS.CANDLES
       ? {
-        section: CANDLES_SECTION,
-        notThrowError: true,
-        notCheckNextPage: true
-      }
+          section: CANDLES_SECTION,
+          notThrowError: true,
+          notCheckNextPage: true
+        }
       : {
-        notThrowError: true,
-        notCheckNextPage: true
-      }
+          notThrowError: true,
+          notCheckNextPage: true
+        }
 
     for (const confs of publicСollsСonf) {
       if (this._isInterrupted) {
