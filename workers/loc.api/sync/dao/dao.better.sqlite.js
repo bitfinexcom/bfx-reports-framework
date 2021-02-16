@@ -213,6 +213,13 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
+  _vacuum () {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.RUN,
+      sql: 'VACUUM'
+    })
+  }
+
   optimize () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
@@ -266,6 +273,7 @@ class BetterSqliteDAO extends DAO {
     await this._createTablesIfNotExists()
     await this._createIndexisIfNotExists()
     await this._createTriggerIfNotExists()
+    await this._vacuum()
     await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
   }
 
