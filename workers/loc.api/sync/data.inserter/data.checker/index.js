@@ -45,7 +45,8 @@ class DataChecker {
     ALLOWED_COLLS,
     FOREX_SYMBS,
     currencyConverter,
-    syncInterrupter
+    syncInterrupter,
+    syncCollsManager
   ) {
     this.rService = rService
     this.dao = dao
@@ -55,6 +56,7 @@ class DataChecker {
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
     this.syncInterrupter = syncInterrupter
+    this.syncCollsManager = syncCollsManager
 
     this._methodCollMap = new Map()
 
@@ -191,15 +193,14 @@ class DataChecker {
       startConf.currStart = lastDateInDb + 1
     }
 
-    const completedColl = await this.dao.getElemInCollBy(
-      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-      {
-        user_id: _id,
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({
+        userId: _id,
+        subUserId,
         collName: method
-      }
-    )
+      })
 
-    if (!isEmpty(completedColl)) {
+    if (hasCollBeenSyncedAtLeastOnce) {
       pushConfigurableDataStartConf(
         schema,
         ALL_SYMBOLS_TO_SYNC,
@@ -714,5 +715,6 @@ decorate(inject(TYPES.ALLOWED_COLLS), DataChecker, 4)
 decorate(inject(TYPES.FOREX_SYMBS), DataChecker, 5)
 decorate(inject(TYPES.CurrencyConverter), DataChecker, 6)
 decorate(inject(TYPES.SyncInterrupter), DataChecker, 7)
+decorate(inject(TYPES.SyncCollsManager), DataChecker, 8)
 
 module.exports = DataChecker

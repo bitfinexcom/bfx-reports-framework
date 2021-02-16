@@ -60,7 +60,8 @@ class DataInserter extends EventEmitter {
     recalcSubAccountLedgersBalancesHook,
     dataChecker,
     syncInterrupter,
-    wsEventEmitter
+    wsEventEmitter,
+    syncCollsManager
   ) {
     super()
 
@@ -77,6 +78,7 @@ class DataInserter extends EventEmitter {
     this.dataChecker = dataChecker
     this.syncInterrupter = syncInterrupter
     this.wsEventEmitter = wsEventEmitter
+    this.syncCollsManager = syncCollsManager
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -256,6 +258,10 @@ class DataInserter extends EventEmitter {
       await this._updateApiDataArrTypeToDb(method, item)
       await this._insertApiDataPublicArrObjTypeToDb(method, item)
 
+      await this.syncCollsManager.setCollAsSynced({
+        collName: method
+      })
+
       count += 1
       progress = Math.round(
         prevProgress + (count / size) * 100 * ((100 - prevProgress) / 100)
@@ -287,6 +293,8 @@ class DataInserter extends EventEmitter {
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
+    const { _id: userId, subUser } = { ...auth }
+    const { _id: subUserId } = { ...subUser }
 
     let count = 0
     let progress = 0
@@ -304,10 +312,7 @@ class DataInserter extends EventEmitter {
       const { start } = schema
 
       for (const [symbol, dates] of start) {
-        const {
-          baseStartFrom = 0,
-          baseStartTo
-        } = { ...dates }
+        const { baseStartFrom = 0 } = { ...dates }
         const addApiParams = (
           !symbol ||
           symbol === ALL_SYMBOLS_TO_SYNC ||
@@ -326,23 +331,11 @@ class DataInserter extends EventEmitter {
           addApiParams,
           auth
         )
-
-        if (
-          Number.isInteger(baseStartFrom) &&
-          Number.isInteger(baseStartTo)
-        ) {
-          const { _id } = { ...auth }
-
-          await this.dao.insertElemToDb(
-            this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-            {
-              collName: method,
-              user_id: _id
-            },
-            { isReplacedIfExists: true }
-          )
-        }
       }
+
+      await this.syncCollsManager.setCollAsSynced({
+        collName: method, userId, subUserId
+      })
 
       count += 1
       progress = Math.round(
@@ -842,5 +835,6 @@ decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
 decorate(inject(TYPES.DataChecker), DataInserter, 10)
 decorate(inject(TYPES.SyncInterrupter), DataInserter, 11)
 decorate(inject(TYPES.WSEventEmitter), DataInserter, 12)
+decorate(inject(TYPES.SyncCollsManager), DataInserter, 13)
 
 module.exports = DataInserter

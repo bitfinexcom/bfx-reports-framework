@@ -26,6 +26,7 @@ const syncSchema = require('../sync/schema')
 const Sync = require('../sync')
 const SyncInterrupter = require('../sync/sync.interrupter')
 const SyncQueue = require('../sync/sync.queue')
+const SyncCollsManager = require('../sync/sync.colls.manager')
 const {
   redirectRequestsToApi,
   FOREX_SYMBS
@@ -118,7 +119,8 @@ module.exports = ({
           ['_positionsAudit', TYPES.PositionsAudit],
           ['_orderTrades', TYPES.OrderTrades],
           ['_authenticator', TYPES.Authenticator],
-          ['_privResponder', TYPES.PrivResponder]
+          ['_privResponder', TYPES.PrivResponder],
+          ['_syncCollsManager', TYPES.SyncCollsManager]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -241,6 +243,9 @@ module.exports = ({
       .to(RecalcSubAccountLedgersBalancesHook)
     bind(TYPES.SyncQueue)
       .to(SyncQueue)
+      .inSingletonScope()
+    bind(TYPES.SyncCollsManager)
+      .to(SyncCollsManager)
       .inSingletonScope()
     bind(TYPES.Sync)
       .to(Sync)

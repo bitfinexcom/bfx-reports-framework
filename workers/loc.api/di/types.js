@@ -54,5 +54,6 @@ module.exports = {
   Crypto: Symbol.for('Crypto'),
   Authenticator: Symbol.for('Authenticator'),
   PrivResponder: Symbol.for('PrivResponder'),
-  SyncInterrupter: Symbol.for('SyncInterrupter')
+  SyncInterrupter: Symbol.for('SyncInterrupter'),
+  SyncCollsManager: Symbol.for('SyncCollsManager')
 }
