@@ -11,6 +11,7 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
+const { every } = require('../helpers/forex-symbs')
 
 const {
   isHidden,
@@ -154,6 +155,115 @@ class SyncCollsManager {
     }
 
     return checkingRes.every((res) => res)
+  }
+
+  _getSchemaNodes (schema) {
+    if (Array.isArray(schema)) {
+      if (schema.length === 0) {
+        return []
+      }
+
+      return schema.map((item) => {
+        if (typeof item === 'string') {
+          return [item, { allowedDiffInMs: null }]
+        }
+        if (
+          Array.isArray(item) &&
+          item[0] &&
+          typeof item[0] === 'string'
+        ) {
+          return [
+            item[0],
+            Number.isInteger(item[1])
+              ? { allowedDiffInMs: item[1] }
+              : item[1]
+          ]
+        }
+
+        return []
+      })
+    }
+
+    return Object.entries(schema)
+  }
+
+  async haveCollsBeenSyncedUpToDate (args) {
+    const { auth, params } = { ...args }
+    const { _id: userId } = auth
+    const {
+      schema,
+      commonAllowedDiffInMs = 2 * 60 * 60 * 1000
+    } = { ...params }
+
+    const completedColls = await this._getCompletedCollsBy({
+      $or: {
+        $eq: { user_id: userId },
+        $isNull: ['user_id']
+      }
+    })
+
+    if (
+      !Array.isArray(completedColls) ||
+      completedColls.length === 0 ||
+      !schema ||
+      typeof schema !== 'object'
+    ) {
+      return false
+    }
+
+    const schemaNodes = this._getSchemaNodes(schema)
+
+    if (schemaNodes.length === 0) {
+      return false
+    }
+
+    const filteredCompletedColls = completedColls
+      .filter((completedColl) => (
+        completedColl &&
+        typeof completedColl === 'object'
+      ))
+
+    for (const node of schemaNodes) {
+      const [collName, props] = node
+      const { allowedDiffInMs } = { ...props }
+      const _allowedDiffInMs = Number.isInteger(allowedDiffInMs)
+        ? allowedDiffInMs
+        : commonAllowedDiffInMs
+
+      if (!Number.isInteger(_allowedDiffInMs)) {
+        return false
+      }
+
+      const completedCollsForCurrNode = filteredCompletedColls
+        .filter((completedColl) => (
+          completedColl.collName === collName
+        ))
+
+      if (completedCollsForCurrNode.length === 0) {
+        return false
+      }
+
+      const isOk = completedCollsForCurrNode
+        .every((completedColl) => (
+          filteredCompletedColls.every(({ _id, mts }) => (
+            (
+              _id &&
+              completedColl._id === _id
+            ) ||
+            (
+              Number.isInteger(mts) &&
+              Number.isInteger(completedColl.mts) &&
+              (completedColl.mts - mts) <= _allowedDiffInMs
+            )
+          ))
+        ))
+
+      if (!isOk) {
+        return false
+      }
+    }
+
+    return true
   }
 
   setCollAsSynced (params) {
