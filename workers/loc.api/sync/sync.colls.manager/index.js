@@ -11,7 +11,6 @@ const {
 } = require('inversify')
 
 const TYPES = require('../../di/types')
-const { every } = require('../helpers/forex-symbs')
 
 const {
   isHidden,
@@ -43,6 +42,36 @@ class SyncCollsManager {
       this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
       { filter }
     )
+  }
+
+  _getSchemaNodes (schema) {
+    if (Array.isArray(schema)) {
+      if (schema.length === 0) {
+        return []
+      }
+
+      return schema.map((item) => {
+        if (typeof item === 'string') {
+          return [item, { allowedDiffInMs: null }]
+        }
+        if (
+          Array.isArray(item) &&
+          item[0] &&
+          typeof item[0] === 'string'
+        ) {
+          return [
+            item[0],
+            Number.isInteger(item[1])
+              ? { allowedDiffInMs: item[1] }
+              : item[1]
+          ]
+        }
+
+        return []
+      })
+    }
+
+    return Object.entries(schema)
   }
 
   async hasCollBeenSyncedAtLeastOnce (params) {
@@ -157,36 +186,6 @@ class SyncCollsManager {
     return checkingRes.every((res) => res)
   }
 
-  _getSchemaNodes (schema) {
-    if (Array.isArray(schema)) {
-      if (schema.length === 0) {
-        return []
-      }
-
-      return schema.map((item) => {
-        if (typeof item === 'string') {
-          return [item, { allowedDiffInMs: null }]
-        }
-        if (
-          Array.isArray(item) &&
-          item[0] &&
-          typeof item[0] === 'string'
-        ) {
-          return [
-            item[0],
-            Number.isInteger(item[1])
-              ? { allowedDiffInMs: item[1] }
-              : item[1]
-          ]
-        }
-
-        return []
-      })
-    }
-
-    return Object.entries(schema)
-  }
-
   async haveCollsBeenSyncedUpToDate (args) {
     const { auth, params } = { ...args }
     const { _id: userId } = auth
@@ -217,15 +216,21 @@ class SyncCollsManager {
       return false
     }
 
-    const filteredCompletedColls = completedColls
+    const completedCollsForAllNodes = completedColls
       .filter((completedColl) => (
         completedColl &&
-        typeof completedColl === 'object'
+        typeof completedColl === 'object' &&
+        schemaNodes.some(([collName]) => (
+          completedColl.collName === collName
+        ))
       ))
 
     for (const node of schemaNodes) {
       const [collName, props] = node
-      const { allowedDiffInMs } = { ...props }
+      const _props = Number.isInteger(props)
+        ? { allowedDiffInMs: props }
+        : props
+      const { allowedDiffInMs } = { ..._props }
       const _allowedDiffInMs = Number.isInteger(allowedDiffInMs)
         ? allowedDiffInMs
         : commonAllowedDiffInMs
@@ -234,7 +239,7 @@ class SyncCollsManager {
         return false
       }
 
-      const completedCollsForCurrNode = filteredCompletedColls
+      const completedCollsForCurrNode = completedCollsForAllNodes
         .filter((completedColl) => (
           completedColl.collName === collName
         ))
@@ -245,7 +250,7 @@ class SyncCollsManager {
 
       const isOk = completedCollsForCurrNode
         .every((completedColl) => (
-          filteredCompletedColls.every(({ _id, mts }) => (
+          completedCollsForAllNodes.every(({ _id, mts }) => (
             (
               _id &&
               completedColl._id === _id
@@ -253,7 +258,7 @@ class SyncCollsManager {
             (
               Number.isInteger(mts) &&
               Number.isInteger(completedColl.mts) &&
-              (completedColl.mts - mts) <= _allowedDiffInMs
+              Math.abs(completedColl.mts - mts) <= _allowedDiffInMs
             )
           ))
         ))
