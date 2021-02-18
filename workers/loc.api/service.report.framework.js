@@ -1147,9 +1147,8 @@ class FrameworkReportService extends ReportService {
    */
   getWallets (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.WALLETS, args)
 
       checkParams(args, 'paramsSchemaForWallets')
 
