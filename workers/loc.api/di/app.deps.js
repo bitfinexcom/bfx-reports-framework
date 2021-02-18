@@ -30,7 +30,12 @@ const Sync = require('../sync')
 const SyncInterrupter = require('../sync/sync.interrupter')
 const SyncQueue = require('../sync/sync.queue')
 const SyncCollsManager = require('../sync/sync.colls.manager')
-const DataConsistencyChecker = require('../sync/data.consistency.checker')
+const Checkers = require(
+  '../sync/data.consistency.checker/checkers'
+)
+const DataConsistencyChecker = require(
+  '../sync/data.consistency.checker'
+)
 const {
   redirectRequestsToApi,
   FOREX_SYMBS
@@ -253,6 +258,9 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SyncCollsManager)
       .to(SyncCollsManager)
+      .inSingletonScope()
+    bind(TYPES.Checkers)
+      .to(Checkers)
       .inSingletonScope()
     bind(TYPES.DataConsistencyChecker)
       .to(DataConsistencyChecker)

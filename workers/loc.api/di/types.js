@@ -57,5 +57,6 @@ module.exports = {
   PrivResponder: Symbol.for('PrivResponder'),
   SyncInterrupter: Symbol.for('SyncInterrupter'),
   SyncCollsManager: Symbol.for('SyncCollsManager'),
+  Checkers: Symbol.for('Checkers'),
   DataConsistencyChecker: Symbol.for('DataConsistencyChecker')
 }

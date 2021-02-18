@@ -10,19 +10,37 @@ const TYPES = require('../../di/types')
 
 class DataConsistencyChecker {
   constructor (
-    SYNC_API_METHODS,
-    syncCollsManager
+    checkers
   ) {
-    this.SYNC_API_METHODS = SYNC_API_METHODS
-    this.syncCollsManager = syncCollsManager
+    this.checkers = checkers
   }
 
   // TODO:
-  async check (checkerName, args) {}
+  async check (checkerName, args) {
+    if (
+      !checkerName ||
+      typeof checkerName !== 'string'
+    ) {
+      throw new Error('ERR_') // TODO:
+    }
+
+    const checker = this.checkers[checkerName]
+
+    if (typeof checker !== 'function') {
+      throw new Error('ERR_') // TODO:
+    }
+
+    const { auth } = { ...args }
+    const check = checker.bind(this.checkers)
+    const isValid = await check(auth)
+
+    if (!isValid) {
+      throw new Error('ERR_') // TODO:
+    }
+  }
 }
 
 decorate(injectable(), DataConsistencyChecker)
-decorate(inject(TYPES.SYNC_API_METHODS), DataConsistencyChecker, 0)
-decorate(inject(TYPES.SyncCollsManager), DataConsistencyChecker, 1)
+decorate(inject(TYPES.Checkers), DataConsistencyChecker, 0)
 
 module.exports = DataConsistencyChecker
