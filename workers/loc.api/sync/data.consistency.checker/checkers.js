@@ -18,8 +18,18 @@ class Checkers {
     this.syncCollsManager = syncCollsManager
   }
 
-  // TODO:
-  [CHECKER_NAMES.WALLETS] (auth) {}
+  [CHECKER_NAMES.WALLETS] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.CANDLES
+          ]
+        }
+      })
+  }
 }
 
 decorate(injectable(), Checkers)
