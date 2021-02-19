@@ -30,6 +30,19 @@ class Checkers {
         }
       })
   }
+
+  [CHECKER_NAMES.BALANCE_HISTORY] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.CANDLES
+          ]
+        }
+      })
+  }
 }
 
 decorate(injectable(), Checkers)
