@@ -2,5 +2,6 @@
 
 module.exports = {
   WALLETS: 'getWallets',
-  BALANCE_HISTORY: 'getBalanceHistory'
+  BALANCE_HISTORY: 'getBalanceHistory',
+  WIN_LOSS: 'getWinLoss'
 }

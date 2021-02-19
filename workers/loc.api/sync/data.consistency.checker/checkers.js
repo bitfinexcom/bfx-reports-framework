@@ -43,6 +43,21 @@ class Checkers {
         }
       })
   }
+
+  [CHECKER_NAMES.WIN_LOSS] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.CANDLES,
+            this.SYNC_API_METHODS.MOVEMENTS,
+            this.SYNC_API_METHODS.POSITIONS_SNAPSHOT
+          ]
+        }
+      })
+  }
 }
 
 decorate(injectable(), Checkers)
