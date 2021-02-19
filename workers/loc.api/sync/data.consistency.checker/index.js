@@ -6,6 +6,10 @@ const {
   inject
 } = require('inversify')
 
+const {
+  DataConsistencyCheckerFindingError
+} = require('../../errors')
+
 const TYPES = require('../../di/types')
 
 class DataConsistencyChecker {
@@ -21,13 +25,13 @@ class DataConsistencyChecker {
       !checkerName ||
       typeof checkerName !== 'string'
     ) {
-      throw new Error('ERR_') // TODO:
+      throw new DataConsistencyCheckerFindingError()
     }
 
     const checker = this.checkers[checkerName]
 
     if (typeof checker !== 'function') {
-      throw new Error('ERR_') // TODO:
+      throw new DataConsistencyCheckerFindingError()
     }
 
     const { auth } = { ...args }
