@@ -159,6 +159,12 @@ class DataConsistencyCheckerFindingError extends BaseError {
   }
 }
 
+class DataConsistencyError extends BaseError {
+  constructor (message = 'ERR_COLLECTIONS_DATA_IS_NOT_CONSISTENT') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -185,5 +191,6 @@ module.exports = {
   DatePropNameError,
   GetPublicDataError,
   SyncedPositionsSnapshotParamsError,
-  DataConsistencyCheckerFindingError
+  DataConsistencyCheckerFindingError,
+  DataConsistencyError
 }

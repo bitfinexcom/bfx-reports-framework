@@ -7,7 +7,8 @@ const {
 } = require('inversify')
 
 const {
-  DataConsistencyCheckerFindingError
+  DataConsistencyCheckerFindingError,
+  DataConsistencyError
 } = require('../../errors')
 
 const TYPES = require('../../di/types')
@@ -19,7 +20,6 @@ class DataConsistencyChecker {
     this.checkers = checkers
   }
 
-  // TODO:
   async check (checkerName, args) {
     if (
       !checkerName ||
@@ -39,7 +39,7 @@ class DataConsistencyChecker {
     const isValid = await check(auth)
 
     if (!isValid) {
-      throw new Error('ERR_') // TODO:
+      throw new DataConsistencyError()
     }
   }
 }
