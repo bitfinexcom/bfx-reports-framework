@@ -4,7 +4,7 @@ const pickProps = require('./pick-props')
 
 module.exports = (session, isReturnedPassword) => {
   const passwordProp = isReturnedPassword
-    ? ['password']
+    ? ['password', 'isNotProtected']
     : []
   const allowedProps = [
     '_id',
