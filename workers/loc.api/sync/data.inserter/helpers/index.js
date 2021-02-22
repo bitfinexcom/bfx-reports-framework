@@ -12,6 +12,7 @@ const {
   getAllowedCollsNames
 } = require('./utils')
 const getMethodArgMap = require('./get-method-arg-map')
+const getSyncCollName = require('./get-sync-coll-name')
 
 module.exports = {
   searchClosePriceAndSumAmount,
@@ -19,5 +20,6 @@ module.exports = {
   normalizeApiData,
   getAuthFromDb,
   getAllowedCollsNames,
-  getMethodArgMap
+  getMethodArgMap,
+  getSyncCollName
 }

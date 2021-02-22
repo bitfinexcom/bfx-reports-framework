@@ -269,9 +269,9 @@ const _getWhereQueryAndValues = (
     : _fieldNameForStartEnd
   const _filter = _isSetCondName
     ? {
-      ...filter,
-      [_fieldNameWithCondName]: filter[condName]
-    }
+        ...filter,
+        [_fieldNameWithCondName]: filter[condName]
+      }
     : { ...filter }
   const {
     key: _key,
@@ -470,7 +470,8 @@ module.exports = (
       return subQuery
     },
     (isNotSetWhereClause || keys.length === 0)
-      ? '' : `${SQL_OPERATORS.WHERE} `
+      ? ''
+      : `${SQL_OPERATORS.WHERE} `
   )
 
   return { where, values }

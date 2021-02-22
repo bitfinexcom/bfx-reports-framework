@@ -62,9 +62,20 @@ const getDateString = (mc) => {
   return new Date(mc).toDateString().split(' ').join('-')
 }
 
+const isNotSyncRequired = (args) => {
+  return (
+    args &&
+    typeof args === 'object' &&
+    args.params &&
+    typeof args.params === 'object' &&
+    args.params.isNotSyncRequired
+  )
+}
+
 module.exports = {
   checkParamsAuth,
   tryParseJSON,
   collObjToArr,
-  getDateString
+  getDateString,
+  isNotSyncRequired
 }

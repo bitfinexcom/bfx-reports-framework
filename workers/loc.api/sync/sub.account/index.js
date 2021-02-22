@@ -62,7 +62,8 @@ class SubAccount {
             'apiSecret',
             'timezone',
             'username',
-            'password'
+            'password',
+            'isNotProtected'
           ],
           isDecryptedApiKeys: true,
           isReturnedPassword: true,
@@ -70,12 +71,17 @@ class SubAccount {
         }
       )
 
-    const _subAccountPassword = (
+    const isSubAccountPwdEntered = (
       subAccountPassword &&
       typeof subAccountPassword === 'string'
     )
+    const _subAccountPassword = isSubAccountPwdEntered
       ? subAccountPassword
       : masterUser.password
+    const isNotProtected = (
+      !isSubAccountPwdEntered &&
+      masterUser.isNotProtected
+    )
 
     if (
       isSubAccountApiKeys(masterUser) ||
@@ -89,7 +95,8 @@ class SubAccount {
     const subAccount = {
       ...masterUser,
       ...getSubAccountAuthFromAuth(masterUser),
-      password: _subAccountPassword
+      password: _subAccountPassword,
+      isNotProtected
     }
 
     return this.dao.executeQueriesInTrans(async () => {
@@ -140,28 +147,28 @@ class SubAccount {
         )
         const auth = isAuthCheckedInDb
           ? await this.authenticator.verifyUser(
-            {
-              auth: {
-                email,
-                password,
-                token
+              {
+                auth: {
+                  email,
+                  password,
+                  token
+                }
+              },
+              {
+                projection: [
+                  '_id',
+                  'id',
+                  'email',
+                  'apiKey',
+                  'apiSecret',
+                  'timezone',
+                  'username'
+                ],
+                isDecryptedApiKeys: true,
+                isNotInTrans: true,
+                withoutWorkerThreads: true
               }
-            },
-            {
-              projection: [
-                '_id',
-                'id',
-                'email',
-                'apiKey',
-                'apiSecret',
-                'timezone',
-                'username'
-              ],
-              isDecryptedApiKeys: true,
-              isNotInTrans: true,
-              withoutWorkerThreads: true
-            }
-          )
+            )
           : { apiKey, apiSecret }
 
         if (
@@ -187,7 +194,8 @@ class SubAccount {
             {
               auth: {
                 ...auth,
-                password: _subAccountPassword
+                password: _subAccountPassword,
+                isNotProtected
               }
             },
             {
@@ -406,28 +414,28 @@ class SubAccount {
         )
         const auth = isAuthCheckedInDb
           ? await this.authenticator.verifyUser(
-            {
-              auth: {
-                email,
-                password,
-                token
+              {
+                auth: {
+                  email,
+                  password,
+                  token
+                }
+              },
+              {
+                projection: [
+                  '_id',
+                  'id',
+                  'email',
+                  'apiKey',
+                  'apiSecret',
+                  'timezone',
+                  'username'
+                ],
+                isDecryptedApiKeys: true,
+                isNotInTrans: true,
+                withoutWorkerThreads: true
               }
-            },
-            {
-              projection: [
-                '_id',
-                'id',
-                'email',
-                'apiKey',
-                'apiSecret',
-                'timezone',
-                'username'
-              ],
-              isDecryptedApiKeys: true,
-              isNotInTrans: true,
-              withoutWorkerThreads: true
-            }
-          )
+            )
           : { apiKey, apiSecret }
 
         const existedSubUser = subUsers.find((subUser) => (

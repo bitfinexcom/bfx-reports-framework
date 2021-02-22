@@ -334,6 +334,26 @@ module.exports = (
     })
   })
 
+  it('it should be successfully performed by the haveCollsBeenSyncedAtLeastOnce method, returns false', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'haveCollsBeenSyncedAtLeastOnce',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isNotOk(res.body.result)
+  })
+
   it('it should be successfully performed by the enableSyncMode method', async function () {
     this.timeout(5000)
 
@@ -350,6 +370,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -369,10 +390,8 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
-    assert.isOk(
-      typeof res.body.result === 'string' ||
-      typeof res.body.result === 'number'
-    )
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
   })
 
   it('it should be successfully performed by the isSchedulerEnabled method', async function () {
@@ -423,6 +442,26 @@ module.exports = (
     }
   })
 
+  it('it should be successfully performed by the haveCollsBeenSyncedAtLeastOnce method, returns true', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'haveCollsBeenSyncedAtLeastOnce',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
+  })
+
   it('it should be successfully performed by the editPublicTradesConf method, where an object is passed', async function () {
     this.timeout(5000)
 
@@ -443,6 +482,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -502,6 +542,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -583,6 +624,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -642,6 +684,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -725,6 +768,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -805,6 +849,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 
@@ -914,6 +959,7 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
   })
 

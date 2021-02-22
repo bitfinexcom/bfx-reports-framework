@@ -29,8 +29,7 @@ const argv = require('yargs')
     type: 'string'
   })
   .option('secretKey', {
-    type: 'string',
-    default: 'secretKey'
+    type: 'string'
   })
   .option('schedulerRule', {
     type: 'string'

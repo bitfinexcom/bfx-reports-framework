@@ -22,6 +22,7 @@ const _methodCollMap = new Map([
       sort: [['mts', -1], ['id', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.LEDGERS)
     }
@@ -36,6 +37,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.TRADES)
     }
@@ -50,6 +52,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.FUNDING_TRADES)
     }
@@ -65,6 +68,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'publicTradesConf',
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
@@ -88,6 +92,7 @@ const _methodCollMap = new Map([
       sort: [['timestamp', -1]],
       hasNewData: true,
       confName: 'statusMessagesConf',
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.STATUS_MESSAGES)
     }
@@ -102,6 +107,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.ORDERS)
     }
@@ -116,6 +122,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdated', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.MOVEMENTS)
     }
@@ -130,6 +137,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
     }
@@ -144,6 +152,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.FUNDING_LOAN_HISTORY)
     }
@@ -158,6 +167,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.FUNDING_CREDIT_HISTORY)
     }
@@ -172,6 +182,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }
@@ -186,6 +197,7 @@ const _methodCollMap = new Map([
       sort: [['mtsUpdate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.POSITIONS_SNAPSHOT)
     }
@@ -200,6 +212,7 @@ const _methodCollMap = new Map([
       sort: [['time', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.LOGINS)
     }
@@ -214,6 +227,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CHANGE_LOGS)
     }
@@ -229,6 +243,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'tickersHistoryConf',
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.TICKERS_HISTORY)
     }
@@ -244,6 +259,7 @@ const _methodCollMap = new Map([
       subQuery: {
         sort: [['mts', -1], ['id', -1]]
       },
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.HIDDEN_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.LEDGERS),
       dataStructureConverter: (accum, {
@@ -274,6 +290,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.SYMBOLS)
     }
@@ -286,6 +303,7 @@ const _methodCollMap = new Map([
       fields: ['key', 'value'],
       sort: [['key', 1]],
       hasNewData: true,
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.MAP_SYMBOLS)
     }
@@ -298,6 +316,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.INACTIVE_CURRENCIES)
     }
@@ -310,6 +329,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
     }
@@ -322,6 +342,7 @@ const _methodCollMap = new Map([
       field: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.FUTURES)
     }
@@ -334,6 +355,7 @@ const _methodCollMap = new Map([
       fields: ['id'],
       sort: [['name', 1]],
       hasNewData: true,
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CURRENCIES)
     }
@@ -350,6 +372,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'candlesConf',
+      isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CANDLES)
     }
