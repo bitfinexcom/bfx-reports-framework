@@ -129,6 +129,38 @@ class Checkers {
         }
       })
   }
+
+  async [CHECKER_NAMES.PERFORMING_LOAN] (auth) {
+    const {
+      _id: userId,
+      subUsers,
+      isSubAccount
+    } = { ...auth }
+
+    if (!isSubAccount) {
+      return this.syncCollsManager
+        .hasCollBeenSyncedAtLeastOnce({
+          userId,
+          collName: this.SYNC_API_METHODS.LEDGERS
+        })
+    }
+
+    for (const subUser of subUsers) {
+      const { _id: subUserId } = { ...subUser }
+      const isValid = await this.syncCollsManager
+        .hasCollBeenSyncedAtLeastOnce({
+          userId,
+          subUserId,
+          collName: this.SYNC_API_METHODS.LEDGERS
+        })
+
+      if (!isValid) {
+        return false
+      }
+    }
+
+    return true
+  }
 }
 
 decorate(injectable(), Checkers)

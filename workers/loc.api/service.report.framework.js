@@ -15,8 +15,7 @@ const {
 
 const ReportService = require('./service.report')
 const {
-  ServerAvailabilityError,
-  DuringSyncMethodAccessError
+  ServerAvailabilityError
 } = require('./errors')
 const {
   checkParams,
@@ -1235,9 +1234,8 @@ class FrameworkReportService extends ReportService {
 
   getPerformingLoan (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.PERFORMING_LOAN, args)
 
       checkParams(args, 'paramsSchemaForPerformingLoanApi')
 
