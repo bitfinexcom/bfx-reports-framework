@@ -1191,9 +1191,8 @@ class FrameworkReportService extends ReportService {
 
   getFullSnapshotReport (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, args)
 
       checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
 

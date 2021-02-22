@@ -72,6 +72,21 @@ class Checkers {
         }
       })
   }
+
+  [CHECKER_NAMES.FULL_SNAPSHOT_REPORT] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.CANDLES,
+            this.SYNC_API_METHODS.POSITIONS_SNAPSHOT,
+            this.SYNC_API_METHODS.POSITIONS_HISTORY
+          ]
+        }
+      })
+  }
 }
 
 decorate(injectable(), Checkers)
