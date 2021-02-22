@@ -160,10 +160,10 @@ class Authenticator {
     const userParam = isReturnedFullUserData
       ? fullUserData
       : {
-        email,
-        isSubAccount: user.isSubAccount,
-        token
-      }
+          email,
+          isSubAccount: user.isSubAccount,
+          token
+        }
 
     if (!isNotSetSession) {
       /**

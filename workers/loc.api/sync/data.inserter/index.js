@@ -389,10 +389,10 @@ class DataInserter extends EventEmitter {
 
         const addApiParams = name === this.ALLOWED_COLLS.CANDLES
           ? {
-            symbol,
-            timeframe,
-            section: CANDLES_SECTION
-          }
+              symbol,
+              timeframe,
+              section: CANDLES_SECTION
+            }
           : { symbol }
 
         await this._insertConfigurableApiData(
