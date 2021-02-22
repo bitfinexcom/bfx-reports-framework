@@ -207,6 +207,12 @@ class DataChecker {
         startConf
       )
 
+      if (!schema.hasNewData) {
+        await this.syncCollsManager.setCollAsSynced({
+          collName: method, userId: _id, subUserId
+        })
+      }
+
       return
     }
 
@@ -428,6 +434,21 @@ class DataChecker {
         timeframe
       )
     }
+
+    if (schema.hasNewData) {
+      return
+    }
+
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({ collName: method })
+
+    if (!hasCollBeenSyncedAtLeastOnce) {
+      return
+    }
+
+    await this.syncCollsManager.setCollAsSynced({
+      collName: method
+    })
   }
 
   async _checkNewCandlesData (
@@ -677,6 +698,21 @@ class DataChecker {
         CANDLES_TIMEFRAME
       )
     }
+
+    if (schema.hasNewData) {
+      return
+    }
+
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({ collName: method })
+
+    if (!hasCollBeenSyncedAtLeastOnce) {
+      return
+    }
+
+    await this.syncCollsManager.setCollAsSynced({
+      collName: method
+    })
   }
 
   _getMethodCollMap () {
