@@ -1180,9 +1180,8 @@ class FrameworkReportService extends ReportService {
 
   getPositionsSnapshot (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.POSITIONS_SNAPSHOT, args)
 
       checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
 
