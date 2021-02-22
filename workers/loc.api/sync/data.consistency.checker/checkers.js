@@ -116,6 +116,19 @@ class Checkers {
         }
       })
   }
+
+  [CHECKER_NAMES.FEES_REPORT] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.TRADES,
+            this.SYNC_API_METHODS.CANDLES
+          ]
+        }
+      })
+  }
 }
 
 decorate(injectable(), Checkers)

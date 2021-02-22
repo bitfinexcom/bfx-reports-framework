@@ -1224,9 +1224,8 @@ class FrameworkReportService extends ReportService {
 
   getFeesReport (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.FEES_REPORT, args)
 
       checkParams(args, 'paramsSchemaForFeesReportApi')
 
