@@ -73,7 +73,7 @@ class DataChecker {
   }
 
   async checkNewData (auth) {
-    const methodCollMap = this._getMethodCollMap()
+    const methodCollMap = this.getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap)
@@ -85,7 +85,7 @@ class DataChecker {
   }
 
   async checkNewPublicData () {
-    const methodCollMap = this._getMethodCollMap()
+    const methodCollMap = this.getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
@@ -260,7 +260,7 @@ class DataChecker {
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
         schema.hasNewData = false
 
-        await this._checkNewCandlesData(method, schema)
+        await this.checkNewCandlesData(method, schema)
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
@@ -451,7 +451,7 @@ class DataChecker {
     })
   }
 
-  async _checkNewCandlesData (
+  async checkNewCandlesData (
     method,
     schema
   ) {
@@ -715,7 +715,7 @@ class DataChecker {
     })
   }
 
-  _getMethodCollMap () {
+  getMethodCollMap () {
     return new Map(this._methodCollMap)
   }
 
