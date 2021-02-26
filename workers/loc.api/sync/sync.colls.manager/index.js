@@ -191,7 +191,7 @@ class SyncCollsManager {
     const { _id: userId } = auth
     const {
       schema,
-      commonAllowedDiffInMs = 2 * 60 * 60 * 1000
+      commonAllowedDiffInMs = 24 * 60 * 60 * 1000
     } = { ...params }
 
     const completedColls = await this._getCompletedCollsBy({
