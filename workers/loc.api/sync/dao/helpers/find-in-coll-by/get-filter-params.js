@@ -10,6 +10,7 @@ const getInsertableArrayObjectsFilter = require(
 const getStatusMessagesFilter = require(
   '../get-status-messages-filter'
 )
+const TABLES_NAMES = require('../../../schema/tables-names')
 
 module.exports = (args, methodColl, opts) => {
   const { auth, params } = { ...args }
@@ -31,10 +32,16 @@ module.exports = (args, methodColl, opts) => {
   }
 
   if (!isPublic) {
-    const { _id } = { ...auth }
+    const { _id, isSubAccount } = { ...auth }
 
     if (!Number.isInteger(_id)) {
       throw new AuthError()
+    }
+    if (
+      methodColl.name === TABLES_NAMES.LEDGERS &&
+      isSubAccount
+    ) {
+      filter._isBalanceRecalced = 1
     }
 
     filter.user_id = _id
