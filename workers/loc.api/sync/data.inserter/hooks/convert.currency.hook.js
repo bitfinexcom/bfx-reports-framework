@@ -55,12 +55,16 @@ class ConvertCurrencyHook extends DataInserterHook {
   /**
    * @override
    */
-  async execute () {
+  async execute (names = []) {
+    const _names = Array.isArray(names)
+      ? names
+      : [names]
     const { syncColls } = this._opts
 
     if (syncColls.every(name => (
       name !== this.ALLOWED_COLLS.ALL &&
-      name !== this.ALLOWED_COLLS.CANDLES
+      name !== this.ALLOWED_COLLS.CANDLES &&
+      name !== this.ALLOWED_COLLS.LEDGERS
     ))) {
       return
     }
@@ -68,6 +72,15 @@ class ConvertCurrencyHook extends DataInserterHook {
     const convSchema = this._getConvSchema()
 
     for (const [collName, schema] of convSchema) {
+      if (_names.length > 0) {
+        const isSkipped = _names.every((name) => (
+          !name ||
+          name !== collName
+        ))
+
+        if (isSkipped) continue
+      }
+
       let count = 0
       let _id = 0
 
