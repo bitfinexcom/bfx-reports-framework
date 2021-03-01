@@ -48,7 +48,7 @@ class WSEventEmitter {
         typeof auth !== 'object' ||
         user._id !== auth._id
       ) {
-        return
+        return { isNotEmitted: true }
       }
 
       return typeof handler === 'function'
