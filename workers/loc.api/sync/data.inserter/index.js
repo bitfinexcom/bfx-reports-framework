@@ -305,12 +305,14 @@ class DataInserter extends EventEmitter {
     const { _id: subUserId } = { ...subUser }
     const isLastSubUser = (
       isSubAccount &&
-      subUsers.every((id) => (
-        [
+      subUsers.every((subUser) => {
+        const { _id } = { ...subUser }
+
+        return [
           ...this._syncedSubUsers,
           subUserId
-        ].some((suId) => id === suId)
-      ))
+        ].some((suId) => _id === suId)
+      })
     )
 
     let count = 0
@@ -357,10 +359,6 @@ class DataInserter extends EventEmitter {
         collName: method, userId, subUserId
       })
 
-      if (isSubAccount) {
-        this._syncedSubUsers.push(subUserId)
-      }
-
       count += 1
       progress = Math.round(
         (((count / size) * 100) / this._auth.size) + userProgress
@@ -369,6 +367,10 @@ class DataInserter extends EventEmitter {
       if (progress < 100) {
         await this.setProgress(progress)
       }
+    }
+
+    if (isSubAccount) {
+      this._syncedSubUsers.push(subUserId)
     }
 
     return progress
