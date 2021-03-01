@@ -259,8 +259,14 @@ class DataChecker {
       }
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
         schema.hasNewData = false
+        schema.start = []
 
-        await this.checkNewCandlesData(method, schema)
+        if (!schema.isSyncDoneForCurrencyConv) {
+          await this.checkNewCandlesData(method, schema)
+
+          schema.isSyncDoneForCurrencyConv = true
+        }
+
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue

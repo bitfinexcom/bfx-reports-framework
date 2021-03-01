@@ -399,6 +399,8 @@ class DataInserter extends EventEmitter {
       collName: this.SYNC_API_METHODS.CANDLES
     })
 
+    candlesSchema.isSyncDoneForCurrencyConv = true
+
     await this.convertCurrencyHook.execute(
       this.ALLOWED_COLLS.LEDGERS
     )
