@@ -387,7 +387,6 @@ class DataInserter extends EventEmitter {
 
     const candlesSchema = this.dataChecker
       .getMethodCollMap().get(this.SYNC_API_METHODS.CANDLES)
-    candlesSchema.hasNewData = false
 
     await this.dataChecker.checkNewCandlesData(
       this.SYNC_API_METHODS.CANDLES,

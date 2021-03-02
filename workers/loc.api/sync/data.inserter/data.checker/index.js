@@ -68,8 +68,7 @@ class DataChecker {
       this._isInterrupted = true
     })
 
-    this._methodCollMap = this.syncSchema
-      .getMethodCollMap(methodCollMap)
+    this.setMethodCollMap(methodCollMap)
   }
 
   async checkNewData (auth) {
@@ -122,7 +121,7 @@ class DataChecker {
       return
     }
 
-    schema.hasNewData = false
+    this._resetSyncSchemaProps(schema)
 
     const args = this._getMethodArgMap(method, { auth, limit: 1 })
     args.params.notThrowError = true
@@ -251,16 +250,11 @@ class DataChecker {
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
         schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
       ) {
-        schema.hasNewData = false
-
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
       }
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        schema.hasNewData = false
-        schema.start = []
-
         if (!schema.isSyncDoneForCurrencyConv) {
           await this.checkNewCandlesData(method, schema)
 
@@ -278,6 +272,8 @@ class DataChecker {
     if (this._isInterrupted) {
       return
     }
+
+    this._resetSyncSchemaProps(schema)
 
     const {
       confName,
@@ -464,6 +460,8 @@ class DataChecker {
     if (this._isInterrupted) {
       return
     }
+
+    this._resetSyncSchemaProps(schema)
 
     const {
       symbolFieldName,
@@ -723,6 +721,16 @@ class DataChecker {
 
   getMethodCollMap () {
     return new Map(this._methodCollMap)
+  }
+
+  setMethodCollMap (methodCollMap) {
+    this._methodCollMap = this.syncSchema
+      .getMethodCollMap(methodCollMap)
+  }
+
+  _resetSyncSchemaProps (schema) {
+    schema.hasNewData = false
+    schema.start = []
   }
 
   _getMethodArgMap (method, opts) {
