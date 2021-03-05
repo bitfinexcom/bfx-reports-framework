@@ -15,8 +15,7 @@ const {
 
 const ReportService = require('./service.report')
 const {
-  ServerAvailabilityError,
-  DuringSyncMethodAccessError
+  ServerAvailabilityError
 } = require('./errors')
 const {
   checkParams,
@@ -1147,9 +1146,8 @@ class FrameworkReportService extends ReportService {
    */
   getWallets (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.WALLETS, args)
 
       checkParams(args, 'paramsSchemaForWallets')
 
@@ -1159,9 +1157,8 @@ class FrameworkReportService extends ReportService {
 
   getBalanceHistory (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.BALANCE_HISTORY, args)
 
       checkParams(args, 'paramsSchemaForBalanceHistoryApi')
 
@@ -1171,9 +1168,8 @@ class FrameworkReportService extends ReportService {
 
   getWinLoss (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.WIN_LOSS, args)
 
       checkParams(args, 'paramsSchemaForWinLossApi')
 
@@ -1183,9 +1179,8 @@ class FrameworkReportService extends ReportService {
 
   getPositionsSnapshot (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.POSITIONS_SNAPSHOT, args)
 
       checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
 
@@ -1195,9 +1190,8 @@ class FrameworkReportService extends ReportService {
 
   getFullSnapshotReport (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, args)
 
       checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
 
@@ -1207,9 +1201,8 @@ class FrameworkReportService extends ReportService {
 
   getFullTaxReport (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.FULL_TAX_REPORT, args)
 
       checkParams(args, 'paramsSchemaForFullTaxReportApi')
 
@@ -1219,9 +1212,8 @@ class FrameworkReportService extends ReportService {
 
   getTradedVolume (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TRADED_VOLUME, args)
 
       checkParams(args, 'paramsSchemaForTradedVolumeApi')
 
@@ -1231,9 +1223,8 @@ class FrameworkReportService extends ReportService {
 
   getFeesReport (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.FEES_REPORT, args)
 
       checkParams(args, 'paramsSchemaForFeesReportApi')
 
@@ -1243,9 +1234,8 @@ class FrameworkReportService extends ReportService {
 
   getPerformingLoan (space, args, cb) {
     return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        throw new DuringSyncMethodAccessError()
-      }
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.PERFORMING_LOAN, args)
 
       checkParams(args, 'paramsSchemaForPerformingLoanApi')
 

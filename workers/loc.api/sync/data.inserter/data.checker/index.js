@@ -68,12 +68,11 @@ class DataChecker {
       this._isInterrupted = true
     })
 
-    this._methodCollMap = this.syncSchema
-      .getMethodCollMap(methodCollMap)
+    this.setMethodCollMap(methodCollMap)
   }
 
   async checkNewData (auth) {
-    const methodCollMap = this._getMethodCollMap()
+    const methodCollMap = this.getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap)
@@ -85,7 +84,7 @@ class DataChecker {
   }
 
   async checkNewPublicData () {
-    const methodCollMap = this._getMethodCollMap()
+    const methodCollMap = this.getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
@@ -122,7 +121,7 @@ class DataChecker {
       return
     }
 
-    schema.hasNewData = false
+    this._resetSyncSchemaProps(schema)
 
     const args = this._getMethodArgMap(method, { auth, limit: 1 })
     args.params.notThrowError = true
@@ -207,6 +206,12 @@ class DataChecker {
         startConf
       )
 
+      if (!schema.hasNewData) {
+        await this.syncCollsManager.setCollAsSynced({
+          collName: method, userId: _id, subUserId
+        })
+      }
+
       return
     }
 
@@ -245,16 +250,17 @@ class DataChecker {
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
         schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
       ) {
-        schema.hasNewData = false
-
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
       }
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        schema.hasNewData = false
+        if (!schema.isSyncDoneForCurrencyConv) {
+          await this.checkNewCandlesData(method, schema)
 
-        await this._checkNewCandlesData(method, schema)
+          schema.isSyncDoneForCurrencyConv = true
+        }
+
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
@@ -266,6 +272,8 @@ class DataChecker {
     if (this._isInterrupted) {
       return
     }
+
+    this._resetSyncSchemaProps(schema)
 
     const {
       confName,
@@ -428,15 +436,32 @@ class DataChecker {
         timeframe
       )
     }
+
+    if (schema.hasNewData) {
+      return
+    }
+
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({ collName: method })
+
+    if (!hasCollBeenSyncedAtLeastOnce) {
+      return
+    }
+
+    await this.syncCollsManager.setCollAsSynced({
+      collName: method
+    })
   }
 
-  async _checkNewCandlesData (
+  async checkNewCandlesData (
     method,
     schema
   ) {
     if (this._isInterrupted) {
       return
     }
+
+    this._resetSyncSchemaProps(schema)
 
     const {
       symbolFieldName,
@@ -677,10 +702,35 @@ class DataChecker {
         CANDLES_TIMEFRAME
       )
     }
+
+    if (schema.hasNewData) {
+      return
+    }
+
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({ collName: method })
+
+    if (!hasCollBeenSyncedAtLeastOnce) {
+      return
+    }
+
+    await this.syncCollsManager.setCollAsSynced({
+      collName: method
+    })
   }
 
-  _getMethodCollMap () {
+  getMethodCollMap () {
     return new Map(this._methodCollMap)
+  }
+
+  setMethodCollMap (methodCollMap) {
+    this._methodCollMap = this.syncSchema
+      .getMethodCollMap(methodCollMap)
+  }
+
+  _resetSyncSchemaProps (schema) {
+    schema.hasNewData = false
+    schema.start = []
   }
 
   _getMethodArgMap (method, opts) {

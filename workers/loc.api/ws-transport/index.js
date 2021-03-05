@@ -278,6 +278,14 @@ class WSTransport {
           ? await handler(user, { ...args, action })
           : handler
 
+        if (
+          res &&
+          typeof res === 'object' &&
+          res.isNotEmitted
+        ) {
+          continue
+        }
+
         this._sendToOne(socket, sid, action, null, res)
       } catch (err) {
         this._sendToOne(socket, sid, action, err)

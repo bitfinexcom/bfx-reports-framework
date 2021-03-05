@@ -372,6 +372,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'candlesConf',
+      isSyncDoneForCurrencyConv: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CANDLES)

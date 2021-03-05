@@ -54,6 +54,7 @@ class DataInserter extends EventEmitter {
     syncSchema,
     TABLES_NAMES,
     ALLOWED_COLLS,
+    SYNC_API_METHODS,
     FOREX_SYMBS,
     authenticator,
     convertCurrencyHook,
@@ -71,6 +72,7 @@ class DataInserter extends EventEmitter {
     this.syncSchema = syncSchema
     this.TABLES_NAMES = TABLES_NAMES
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.SYNC_API_METHODS = SYNC_API_METHODS
     this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
@@ -82,6 +84,7 @@ class DataInserter extends EventEmitter {
 
     this._asyncProgressHandlers = []
     this._auth = null
+    this._syncedSubUsers = []
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
     )
@@ -293,8 +296,24 @@ class DataInserter extends EventEmitter {
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     const size = this._methodCollMap.size
-    const { _id: userId, subUser } = { ...auth }
+    const {
+      _id: userId,
+      subUser,
+      subUsers,
+      isSubAccount
+    } = { ...auth }
     const { _id: subUserId } = { ...subUser }
+    const isLastSubUser = (
+      isSubAccount &&
+      subUsers.every((subUser) => {
+        const { _id } = { ...subUser }
+
+        return [
+          ...this._syncedSubUsers,
+          subUserId
+        ].some((suId) => _id === suId)
+      })
+    )
 
     let count = 0
     let progress = 0
@@ -333,6 +352,9 @@ class DataInserter extends EventEmitter {
         )
       }
 
+      await this._prepareLedgers(method, { isLastSubUser })
+      await this._prepareMovements(method)
+
       await this.syncCollsManager.setCollAsSynced({
         collName: method, userId, subUserId
       })
@@ -347,7 +369,60 @@ class DataInserter extends EventEmitter {
       }
     }
 
+    if (isSubAccount) {
+      this._syncedSubUsers.push(subUserId)
+    }
+
     return progress
+  }
+
+  /* If ledgers are syncing
+    sync candles,
+    convert currency,
+    recalc sub-account */
+  async _prepareLedgers (method, { isLastSubUser }) {
+    if (method !== this.SYNC_API_METHODS.LEDGERS) {
+      return
+    }
+
+    const candlesSchema = this.dataChecker
+      .getMethodCollMap().get(this.SYNC_API_METHODS.CANDLES)
+
+    await this.dataChecker.checkNewCandlesData(
+      this.SYNC_API_METHODS.CANDLES,
+      candlesSchema
+    )
+    await this._insertApiDataPublicArrObjTypeToDb(
+      this.SYNC_API_METHODS.CANDLES,
+      candlesSchema
+    )
+    await this.syncCollsManager.setCollAsSynced({
+      collName: this.SYNC_API_METHODS.CANDLES
+    })
+
+    candlesSchema.isSyncDoneForCurrencyConv = true
+
+    await this.convertCurrencyHook.execute(
+      this.ALLOWED_COLLS.LEDGERS
+    )
+
+    if (!isLastSubUser) {
+      return
+    }
+
+    await this.recalcSubAccountLedgersBalancesHook.execute()
+  }
+
+  /* If movements are syncing
+    convert currency */
+  async _prepareMovements (method) {
+    if (method !== this.SYNC_API_METHODS.MOVEMENTS) {
+      return
+    }
+
+    await this.convertCurrencyHook.execute(
+      this.ALLOWED_COLLS.MOVEMENTS
+    )
   }
 
   _getDataFromApi (methodApi, args, isCheckCall) {
@@ -828,13 +903,14 @@ decorate(inject(TYPES.ApiMiddleware), DataInserter, 2)
 decorate(inject(TYPES.SyncSchema), DataInserter, 3)
 decorate(inject(TYPES.TABLES_NAMES), DataInserter, 4)
 decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 5)
-decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 6)
-decorate(inject(TYPES.Authenticator), DataInserter, 7)
-decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 8)
-decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 9)
-decorate(inject(TYPES.DataChecker), DataInserter, 10)
-decorate(inject(TYPES.SyncInterrupter), DataInserter, 11)
-decorate(inject(TYPES.WSEventEmitter), DataInserter, 12)
-decorate(inject(TYPES.SyncCollsManager), DataInserter, 13)
+decorate(inject(TYPES.SYNC_API_METHODS), DataInserter, 6)
+decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
+decorate(inject(TYPES.Authenticator), DataInserter, 8)
+decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 9)
+decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 10)
+decorate(inject(TYPES.DataChecker), DataInserter, 11)
+decorate(inject(TYPES.SyncInterrupter), DataInserter, 12)
+decorate(inject(TYPES.WSEventEmitter), DataInserter, 13)
+decorate(inject(TYPES.SyncCollsManager), DataInserter, 14)
 
 module.exports = DataInserter

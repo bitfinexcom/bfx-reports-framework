@@ -55,6 +55,9 @@ class PerformingLoan {
     )
       ? { $in: { currency: symbol } }
       : {}
+    const filterToSkipNotRecalcedBalance = user.isSubAccount
+      ? { _isBalanceRecalced: 1 }
+      : {}
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
@@ -64,7 +67,8 @@ class PerformingLoan {
           user_id: user._id,
           $lte: { mts: end },
           $gte: { mts: start },
-          ...symbFilter
+          ...symbFilter,
+          ...filterToSkipNotRecalcedBalance
         },
         sort: [['mts', -1]],
         projection,
