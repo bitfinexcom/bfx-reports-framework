@@ -2426,7 +2426,8 @@ module.exports = (
       'amount',
       'fees',
       'destinationAddress',
-      'transactionId'
+      'transactionId',
+      'note'
     ])
   })
 
@@ -2463,7 +2464,8 @@ module.exports = (
       'amount',
       'fees',
       'destinationAddress',
-      'transactionId'
+      'transactionId',
+      'note'
     ])
   })
 
@@ -2628,7 +2630,8 @@ module.exports = (
       'amount',
       'fees',
       'destinationAddress',
-      'transactionId'
+      'transactionId',
+      'note'
     ])
   })
 
