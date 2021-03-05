@@ -424,7 +424,8 @@ class CsvJobData extends BaseCsvJobData {
           amount: 'AMOUNT',
           fees: 'FEES',
           destinationAddress: 'DESCRIPTION',
-          transactionId: 'TRANSACTION ID'
+          transactionId: 'TRANSACTION ID',
+          note: 'NOTE'
         },
         periodBalances: {
           walletsTotalBalanceUsd: 'WALLETS TOTAL BALANCE USD',
