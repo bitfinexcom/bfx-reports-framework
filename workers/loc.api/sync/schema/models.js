@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 22
+const SUPPORTED_DB_VERSION = 23
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -293,6 +293,7 @@ const _models = new Map([
       fees: 'DECIMAL(22,12)',
       destinationAddress: 'VARCHAR(255)',
       transactionId: 'VARCHAR(255)',
+      note: 'TEXT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
 
