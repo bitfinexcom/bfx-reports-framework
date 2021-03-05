@@ -9,7 +9,10 @@ class MigrationV11 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'ALTER TABLE movements ADD COLUMN note TEXT'
+      'ALTER TABLE movements ADD COLUMN note TEXT',
+      'DELETE FROM movements',
+      `DELETE FROM completedOnFirstSyncColls
+        WHERE collName = '_getMovements'`
     ]
 
     this.addSql(sqlArr)
