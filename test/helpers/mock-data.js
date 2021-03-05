@@ -319,7 +319,7 @@ module.exports = new Map([
         null,
         null,
         '0x754687b3cbee7cdc4b29107e325455c682dfc320ca0c4233c313263a27282760',
-        null
+        'look at this note'
       ],
       [
         10012345,
@@ -343,7 +343,7 @@ module.exports = new Map([
         null,
         null,
         '0x754687b3cbee7cdc4b29107e325455c682dfc320ca0c4233c313263a27282760',
-        null
+        'look at this note'
       ],
       [
         20012345,
@@ -367,7 +367,7 @@ module.exports = new Map([
         null,
         null,
         '0x754687b3cbee7cdc4b29107e325455c682dfc320ca0c4233c313263a27282760',
-        null
+        'look at this note'
       ],
       [
         30012345,
@@ -391,7 +391,7 @@ module.exports = new Map([
         null,
         null,
         '0x754687b3cbee7cdc4b29107e325455c682dfc320ca0c4233c313263a27282760',
-        null
+        'look at this note'
       ],
       [
         40012345,
@@ -415,7 +415,7 @@ module.exports = new Map([
         null,
         null,
         '0x754687b3cbee7cdc4b29107e325455c682dfc320ca0c4233c313263a27282760',
-        null
+        'look at this note'
       ]
     ]
   ]
