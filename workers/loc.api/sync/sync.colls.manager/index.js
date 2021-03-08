@@ -5,18 +5,17 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../di/types')
-
-const {
   isHidden,
   isPublic
 } = require('../schema/utils')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES,
+  TYPES.SyncSchema
+]
 class SyncCollsManager {
   constructor (
     dao,
@@ -291,9 +290,6 @@ class SyncCollsManager {
   }
 }
 
-decorate(injectable(), SyncCollsManager)
-decorate(inject(TYPES.DAO), SyncCollsManager, 0)
-decorate(inject(TYPES.TABLES_NAMES), SyncCollsManager, 1)
-decorate(inject(TYPES.SyncSchema), SyncCollsManager, 2)
+decorateInjectable(SyncCollsManager, depsTypes)
 
 module.exports = SyncCollsManager
