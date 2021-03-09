@@ -2,11 +2,6 @@
 
 const { promisify } = require('util')
 const setImmediatePromise = promisify(setImmediate)
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 const MAIN_DB_WORKER_ACTIONS = require(
   'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
@@ -17,8 +12,6 @@ const {
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
-
-const TYPES = require('../../di/types')
 
 const DAO = require('./dao')
 const {
@@ -64,6 +57,15 @@ const {
   convertData,
   prepareDbResponse
 } = require('./helpers/find-in-coll-by')
+
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DB,
+  TYPES.TABLES_NAMES,
+  TYPES.SyncSchema,
+  TYPES.DbMigratorFactory
+]
 class BetterSqliteDAO extends DAO {
   constructor (...args) {
     super(...args)
@@ -926,10 +928,6 @@ class BetterSqliteDAO extends DAO {
   }
 }
 
-decorate(injectable(), BetterSqliteDAO)
-decorate(inject(TYPES.DB), BetterSqliteDAO, 0)
-decorate(inject(TYPES.TABLES_NAMES), BetterSqliteDAO, 1)
-decorate(inject(TYPES.SyncSchema), BetterSqliteDAO, 2)
-decorate(inject(TYPES.DbMigratorFactory), BetterSqliteDAO, 3)
+decorateInjectable(BetterSqliteDAO, depsTypes)
 
 module.exports = BetterSqliteDAO

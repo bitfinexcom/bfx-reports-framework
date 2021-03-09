@@ -1,13 +1,10 @@
 'use strict'
 
 const {
-  decorate,
-  injectable
-} = require('inversify')
-
-const {
   ImplementationError
 } = require('../../../errors')
+
+const { decorateInjectable } = require('../../../di/utils')
 
 class DataInserterHook {
   constructor () {
@@ -44,6 +41,6 @@ class DataInserterHook {
   async execute () { throw new ImplementationError() }
 }
 
-decorate(injectable(), DataInserterHook)
+decorateInjectable(DataInserterHook)
 
 module.exports = DataInserterHook

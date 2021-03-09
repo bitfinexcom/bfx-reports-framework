@@ -2,17 +2,19 @@
 
 const EventEmitter = require('events')
 const { isEmpty } = require('lodash')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../di/types')
 const {
   tryParseJSON
 } = require('../../helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES,
+  TYPES.WSEventEmitter,
+  TYPES.Logger
+]
 class Progress extends EventEmitter {
   constructor (
     dao,
@@ -70,10 +72,6 @@ class Progress extends EventEmitter {
   }
 }
 
-decorate(injectable(), Progress)
-decorate(inject(TYPES.DAO), Progress, 0)
-decorate(inject(TYPES.TABLES_NAMES), Progress, 1)
-decorate(inject(TYPES.WSEventEmitter), Progress, 2)
-decorate(inject(TYPES.Logger), Progress, 3)
+decorateInjectable(Progress, depsTypes)
 
 module.exports = Progress

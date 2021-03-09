@@ -3,18 +3,22 @@
 const uuid = require('uuid')
 const { omit } = require('lodash')
 const { PeerRPCServer } = require('grenache-nodejs-ws')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../di/types')
 
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
+const { decorateInjectable } = require('../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.CONF,
+  TYPES.RService,
+  TYPES.DAO,
+  TYPES.Link,
+  TYPES.GRC_BFX_OPTS,
+  TYPES.TABLES_NAMES,
+  TYPES.Authenticator
+]
 class WSTransport {
   constructor (
     { wsPort },
@@ -333,13 +337,6 @@ class WSTransport {
   }
 }
 
-decorate(injectable(), WSTransport)
-decorate(inject(TYPES.CONF), WSTransport, 0)
-decorate(inject(TYPES.RService), WSTransport, 1)
-decorate(inject(TYPES.DAO), WSTransport, 2)
-decorate(inject(TYPES.Link), WSTransport, 3)
-decorate(inject(TYPES.GRC_BFX_OPTS), WSTransport, 4)
-decorate(inject(TYPES.TABLES_NAMES), WSTransport, 5)
-decorate(inject(TYPES.Authenticator), WSTransport, 6)
+decorateInjectable(WSTransport, depsTypes)
 
 module.exports = WSTransport

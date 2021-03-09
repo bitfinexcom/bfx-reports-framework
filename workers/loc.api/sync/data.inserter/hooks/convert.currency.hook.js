@@ -1,15 +1,15 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../../di/types')
 const { CONVERT_TO } = require('../const')
 const DataInserterHook = require('./data.inserter.hook')
 
+const { decorateInjectable } = require('../../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.CurrencyConverter,
+  TYPES.ALLOWED_COLLS
+]
 class ConvertCurrencyHook extends DataInserterHook {
   constructor (
     dao,
@@ -139,9 +139,6 @@ class ConvertCurrencyHook extends DataInserterHook {
   }
 }
 
-decorate(injectable(), ConvertCurrencyHook)
-decorate(inject(TYPES.DAO), ConvertCurrencyHook, 0)
-decorate(inject(TYPES.CurrencyConverter), ConvertCurrencyHook, 1)
-decorate(inject(TYPES.ALLOWED_COLLS), ConvertCurrencyHook, 2)
+decorateInjectable(ConvertCurrencyHook, depsTypes)
 
 module.exports = ConvertCurrencyHook

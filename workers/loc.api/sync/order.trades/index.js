@@ -1,13 +1,14 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
+const { decorateInjectable } = require('../../di/utils')
 
-const TYPES = require('../../di/types')
-
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES,
+  TYPES.SubAccountApiData,
+  TYPES.RService,
+  TYPES.SYNC_API_METHODS
+]
 class OrderTrades {
   constructor (
     dao,
@@ -96,11 +97,6 @@ class OrderTrades {
   }
 }
 
-decorate(injectable(), OrderTrades)
-decorate(inject(TYPES.DAO), OrderTrades, 0)
-decorate(inject(TYPES.TABLES_NAMES), OrderTrades, 1)
-decorate(inject(TYPES.SubAccountApiData), OrderTrades, 2)
-decorate(inject(TYPES.RService), OrderTrades, 3)
-decorate(inject(TYPES.SYNC_API_METHODS), OrderTrades, 4)
+decorateInjectable(OrderTrades, depsTypes)
 
 module.exports = OrderTrades

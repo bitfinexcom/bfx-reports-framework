@@ -11,13 +11,7 @@ const {
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../di/types')
 const {
   CANDLES_SECTION,
   ALL_SYMBOLS_TO_SYNC
@@ -46,6 +40,25 @@ const {
 
 const MESS_ERR_UNAUTH = 'ERR_AUTH_UNAUTHORIZED'
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.DAO,
+  TYPES.ApiMiddleware,
+  TYPES.SyncSchema,
+  TYPES.TABLES_NAMES,
+  TYPES.ALLOWED_COLLS,
+  TYPES.SYNC_API_METHODS,
+  TYPES.FOREX_SYMBS,
+  TYPES.Authenticator,
+  TYPES.ConvertCurrencyHook,
+  TYPES.RecalcSubAccountLedgersBalancesHook,
+  TYPES.DataChecker,
+  TYPES.SyncInterrupter,
+  TYPES.WSEventEmitter,
+  TYPES.SyncCollsManager
+]
 class DataInserter extends EventEmitter {
   constructor (
     rService,
@@ -896,21 +909,6 @@ class DataInserter extends EventEmitter {
   }
 }
 
-decorate(injectable(), DataInserter)
-decorate(inject(TYPES.RService), DataInserter, 0)
-decorate(inject(TYPES.DAO), DataInserter, 1)
-decorate(inject(TYPES.ApiMiddleware), DataInserter, 2)
-decorate(inject(TYPES.SyncSchema), DataInserter, 3)
-decorate(inject(TYPES.TABLES_NAMES), DataInserter, 4)
-decorate(inject(TYPES.ALLOWED_COLLS), DataInserter, 5)
-decorate(inject(TYPES.SYNC_API_METHODS), DataInserter, 6)
-decorate(inject(TYPES.FOREX_SYMBS), DataInserter, 7)
-decorate(inject(TYPES.Authenticator), DataInserter, 8)
-decorate(inject(TYPES.ConvertCurrencyHook), DataInserter, 9)
-decorate(inject(TYPES.RecalcSubAccountLedgersBalancesHook), DataInserter, 10)
-decorate(inject(TYPES.DataChecker), DataInserter, 11)
-decorate(inject(TYPES.SyncInterrupter), DataInserter, 12)
-decorate(inject(TYPES.WSEventEmitter), DataInserter, 13)
-decorate(inject(TYPES.SyncCollsManager), DataInserter, 14)
+decorateInjectable(DataInserter, depsTypes)
 
 module.exports = DataInserter

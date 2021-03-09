@@ -1,17 +1,14 @@
 'use strict'
 
 const {
-  decorate,
-  injectable
-} = require('inversify')
-
-const {
   DbMigrationVerCorrectnessError,
   DbVersionTypeError,
   MigrationLaunchingError
 } = require('../../../errors')
 
 const Migration = require('./migration')
+
+const { decorateInjectable } = require('../../../di/utils')
 
 class DbMigrator {
   constructor (
@@ -132,6 +129,6 @@ class DbMigrator {
   }
 }
 
-decorate(injectable(), DbMigrator)
+decorateInjectable(DbMigrator)
 
 module.exports = DbMigrator

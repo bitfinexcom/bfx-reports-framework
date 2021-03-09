@@ -1,14 +1,13 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../di/types')
 const CHECKER_NAMES = require('./checker.names')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.SYNC_API_METHODS,
+  TYPES.SyncCollsManager
+]
 class Checkers {
   constructor (
     SYNC_API_METHODS,
@@ -163,8 +162,6 @@ class Checkers {
   }
 }
 
-decorate(injectable(), Checkers)
-decorate(inject(TYPES.SYNC_API_METHODS), Checkers, 0)
-decorate(inject(TYPES.SyncCollsManager), Checkers, 1)
+decorateInjectable(Checkers, depsTypes)
 
 module.exports = Checkers

@@ -3,15 +3,8 @@
 const crypto = require('crypto')
 const { promisify } = require('util')
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
-
-const TYPES = require('../../di/types')
 
 /**
  * Scrypt was introduced into Node.js in v10.5.0,
@@ -40,6 +33,11 @@ const scrypt = hasScrypt ? promisify(crypto.scrypt) : crypto.scrypt
 const randomBytes = promisify(crypto.randomBytes)
 const pbkdf2 = promisify(crypto.pbkdf2)
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.CONF
+]
 class Crypto {
   constructor (CONF) {
     this.CONF = CONF
@@ -158,7 +156,6 @@ class Crypto {
   }
 }
 
-decorate(injectable(), Crypto)
-decorate(inject(TYPES.CONF), Crypto, 0)
+decorateInjectable(Crypto, depsTypes)
 
 module.exports = Crypto

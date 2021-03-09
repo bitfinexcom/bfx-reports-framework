@@ -2,13 +2,7 @@
 
 const { isEmpty } = require('lodash')
 const moment = require('moment')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   getMtsGroupedByTimeframe,
@@ -17,6 +11,16 @@ const {
 } = require('../helpers')
 const { getTimeframeQuery } = require('../dao/helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.Wallets,
+  TYPES.FOREX_SYMBS,
+  TYPES.CurrencyConverter,
+  TYPES.SYNC_API_METHODS,
+  TYPES.ALLOWED_COLLS
+]
 class BalanceHistory {
   constructor (
     dao,
@@ -454,12 +458,6 @@ class BalanceHistory {
   }
 }
 
-decorate(injectable(), BalanceHistory)
-decorate(inject(TYPES.DAO), BalanceHistory, 0)
-decorate(inject(TYPES.Wallets), BalanceHistory, 1)
-decorate(inject(TYPES.FOREX_SYMBS), BalanceHistory, 2)
-decorate(inject(TYPES.CurrencyConverter), BalanceHistory, 3)
-decorate(inject(TYPES.SYNC_API_METHODS), BalanceHistory, 4)
-decorate(inject(TYPES.ALLOWED_COLLS), BalanceHistory, 5)
+decorateInjectable(BalanceHistory, depsTypes)
 
 module.exports = BalanceHistory
