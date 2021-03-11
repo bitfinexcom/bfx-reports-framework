@@ -1,13 +1,10 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
+const { decorateInjectable } = require('../../di/utils')
 
-const TYPES = require('../../di/types')
-
+const depsTypes = (TYPES) => [
+  TYPES.Trades
+]
 class FeesReport {
   constructor (
     trades
@@ -23,7 +20,6 @@ class FeesReport {
   }
 }
 
-decorate(injectable(), FeesReport)
-decorate(inject(TYPES.Trades), FeesReport, 0)
+decorateInjectable(FeesReport, depsTypes)
 
 module.exports = FeesReport

@@ -3,14 +3,13 @@
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../../di/types')
+const { decorateInjectable } = require('../../../di/utils')
 
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.ApiMiddlewareHandlerAfter
+]
 class ApiMiddleware {
   constructor (
     rService,
@@ -58,8 +57,6 @@ class ApiMiddleware {
   }
 }
 
-decorate(injectable(), ApiMiddleware)
-decorate(inject(TYPES.RService), ApiMiddleware, 0)
-decorate(inject(TYPES.ApiMiddlewareHandlerAfter), ApiMiddleware, 1)
+decorateInjectable(ApiMiddleware, depsTypes)
 
 module.exports = ApiMiddleware

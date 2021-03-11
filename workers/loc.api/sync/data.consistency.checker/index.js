@@ -1,18 +1,15 @@
 'use strict'
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const {
   DataConsistencyCheckerFindingError,
   DataConsistencyError
 } = require('../../errors')
 
-const TYPES = require('../../di/types')
+const { decorateInjectable } = require('../../di/utils')
 
+const depsTypes = (TYPES) => [
+  TYPES.Checkers
+]
 class DataConsistencyChecker {
   constructor (
     checkers
@@ -44,7 +41,6 @@ class DataConsistencyChecker {
   }
 }
 
-decorate(injectable(), DataConsistencyChecker)
-decorate(inject(TYPES.Checkers), DataConsistencyChecker, 0)
+decorateInjectable(DataConsistencyChecker, depsTypes)
 
 module.exports = DataConsistencyChecker

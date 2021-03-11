@@ -1,10 +1,6 @@
 'use strict'
 
 const {
-  decorate,
-  injectable
-} = require('inversify')
-const {
   orderBy,
   isEmpty
 } = require('lodash')
@@ -19,6 +15,8 @@ const {
 const {
   DatePropNameError
 } = require('../../errors')
+
+const { decorateInjectable } = require('../../di/utils')
 
 class SubAccountApiData {
   _hasId (id) {
@@ -322,6 +320,6 @@ class SubAccountApiData {
   }
 }
 
-decorate(injectable(), SubAccountApiData)
+decorateInjectable(SubAccountApiData)
 
 module.exports = SubAccountApiData

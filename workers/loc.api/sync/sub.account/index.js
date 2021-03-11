@@ -1,15 +1,9 @@
 'use strict'
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
-const TYPES = require('../../di/types')
 const {
   isSubAccountApiKeys,
   getSubAccountAuthFromAuth
@@ -20,6 +14,14 @@ const {
   UserRemovingError
 } = require('../../errors')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES,
+  TYPES.Authenticator,
+  TYPES.Sync
+]
 class SubAccount {
   constructor (
     dao,
@@ -560,10 +562,6 @@ class SubAccount {
   }
 }
 
-decorate(injectable(), SubAccount)
-decorate(inject(TYPES.DAO), SubAccount, 0)
-decorate(inject(TYPES.TABLES_NAMES), SubAccount, 1)
-decorate(inject(TYPES.Authenticator), SubAccount, 2)
-decorate(inject(TYPES.Sync), SubAccount, 3)
+decorateInjectable(SubAccount, depsTypes)
 
 module.exports = SubAccount

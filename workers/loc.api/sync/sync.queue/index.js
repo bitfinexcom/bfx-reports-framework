@@ -2,13 +2,7 @@
 
 const EventEmitter = require('events')
 const { isEmpty } = require('lodash')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../di/types')
 const COLLS_TYPES = require('../schema/colls.types')
 
 const {
@@ -25,6 +19,17 @@ const {
   ERROR_JOB_STATE
 } = require('./sync.queue.states')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.TABLES_NAMES,
+  TYPES.ALLOWED_COLLS,
+  TYPES.DAO,
+  TYPES.DataInserterFactory,
+  TYPES.Progress,
+  TYPES.SyncSchema,
+  TYPES.SyncInterrupter
+]
 class SyncQueue extends EventEmitter {
   constructor (
     TABLES_NAMES,
@@ -341,13 +346,6 @@ class SyncQueue extends EventEmitter {
   }
 }
 
-decorate(injectable(), SyncQueue)
-decorate(inject(TYPES.TABLES_NAMES), SyncQueue, 0)
-decorate(inject(TYPES.ALLOWED_COLLS), SyncQueue, 1)
-decorate(inject(TYPES.DAO), SyncQueue, 2)
-decorate(inject(TYPES.DataInserterFactory), SyncQueue, 3)
-decorate(inject(TYPES.Progress), SyncQueue, 4)
-decorate(inject(TYPES.SyncSchema), SyncQueue, 5)
-decorate(inject(TYPES.SyncInterrupter), SyncQueue, 6)
+decorateInjectable(SyncQueue, depsTypes)
 
 module.exports = SyncQueue

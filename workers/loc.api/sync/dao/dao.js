@@ -1,14 +1,11 @@
 'use strict'
 
 const {
-  decorate,
-  injectable
-} = require('inversify')
-
-const {
   DAOInitializationError,
   ImplementationError
 } = require('../../errors')
+
+const { decorateInjectable } = require('../../di/utils')
 
 class DAO {
   constructor (
@@ -141,6 +138,6 @@ class DAO {
   async removeElemsFromDbIfNotInLists () { throw new ImplementationError() }
 }
 
-decorate(injectable(), DAO)
+decorateInjectable(DAO)
 
 module.exports = DAO

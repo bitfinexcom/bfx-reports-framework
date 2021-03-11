@@ -1,13 +1,10 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
+const { decorateInjectable } = require('../di/utils')
 
-const TYPES = require('../di/types')
-
+const depsTypes = (TYPES) => [
+  TYPES.WSTransport
+]
 class WSEventEmitter {
   constructor (wsTransport) {
     this.wsTransport = wsTransport
@@ -67,7 +64,6 @@ class WSEventEmitter {
   }
 }
 
-decorate(injectable(), WSEventEmitter)
-decorate(inject(TYPES.WSTransport), WSEventEmitter, 0)
+decorateInjectable(WSEventEmitter, depsTypes)
 
 module.exports = WSEventEmitter

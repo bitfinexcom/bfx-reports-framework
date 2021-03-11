@@ -2,18 +2,17 @@
 
 const { orderBy } = require('lodash')
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../../di/types')
 const DataInserterHook = require('./data.inserter.hook')
 const {
   SubAccountLedgersBalancesRecalcError
 } = require('../../../errors')
 
+const { decorateInjectable } = require('../../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES
+]
 class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
   constructor (
     dao,
@@ -353,8 +352,6 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
   }
 }
 
-decorate(injectable(), RecalcSubAccountLedgersBalancesHook)
-decorate(inject(TYPES.DAO), RecalcSubAccountLedgersBalancesHook, 0)
-decorate(inject(TYPES.TABLES_NAMES), RecalcSubAccountLedgersBalancesHook, 1)
+decorateInjectable(RecalcSubAccountLedgersBalancesHook, depsTypes)
 
 module.exports = RecalcSubAccountLedgersBalancesHook

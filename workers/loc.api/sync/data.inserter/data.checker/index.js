@@ -10,13 +10,7 @@ const {
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../../di/types')
 const {
   getMethodArgMap
 } = require('../helpers')
@@ -36,6 +30,19 @@ const {
   ALL_SYMBOLS_TO_SYNC
 } = require('../const')
 
+const { decorateInjectable } = require('../../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.DAO,
+  TYPES.SyncSchema,
+  TYPES.TABLES_NAMES,
+  TYPES.ALLOWED_COLLS,
+  TYPES.FOREX_SYMBS,
+  TYPES.CurrencyConverter,
+  TYPES.SyncInterrupter,
+  TYPES.SyncCollsManager
+]
 class DataChecker {
   constructor (
     rService,
@@ -756,15 +763,6 @@ class DataChecker {
   }
 }
 
-decorate(injectable(), DataChecker)
-decorate(inject(TYPES.RService), DataChecker, 0)
-decorate(inject(TYPES.DAO), DataChecker, 1)
-decorate(inject(TYPES.SyncSchema), DataChecker, 2)
-decorate(inject(TYPES.TABLES_NAMES), DataChecker, 3)
-decorate(inject(TYPES.ALLOWED_COLLS), DataChecker, 4)
-decorate(inject(TYPES.FOREX_SYMBS), DataChecker, 5)
-decorate(inject(TYPES.CurrencyConverter), DataChecker, 6)
-decorate(inject(TYPES.SyncInterrupter), DataChecker, 7)
-decorate(inject(TYPES.SyncCollsManager), DataChecker, 8)
+decorateInjectable(DataChecker, depsTypes)
 
 module.exports = DataChecker

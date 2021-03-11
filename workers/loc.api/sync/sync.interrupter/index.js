@@ -1,13 +1,10 @@
 'use strict'
 
-const {
-  decorate,
-  injectable
-} = require('inversify')
-
 const Interrupter = require(
   'bfx-report/workers/loc.api/interrupter'
 )
+
+const { decorateInjectable } = require('../../di/utils')
 
 class SyncInterrupter extends Interrupter {
   constructor () {
@@ -65,6 +62,6 @@ class SyncInterrupter extends Interrupter {
   }
 }
 
-decorate(injectable(), SyncInterrupter)
+decorateInjectable(SyncInterrupter)
 
 module.exports = SyncInterrupter

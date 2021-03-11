@@ -1,9 +1,5 @@
 'use strict'
 
-const {
-  decorate,
-  inject
-} = require('inversify')
 const BaseCsvJobData = require(
   'bfx-report/workers/loc.api/generate-csv/csv.job.data'
 )
@@ -12,13 +8,18 @@ const {
   checkJobAndGetUserData
 } = require('bfx-report/workers/loc.api/helpers')
 
-const TYPES = require('../di/types')
-
 const {
   checkParams,
   getDateString
 } = require('../helpers')
 
+const { decorateInjectable } = require('../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.FullSnapshotReportCsvWriter,
+  TYPES.FullTaxReportCsvWriter
+]
 class CsvJobData extends BaseCsvJobData {
   constructor (
     rService,
@@ -574,8 +575,6 @@ class CsvJobData extends BaseCsvJobData {
   }
 }
 
-decorate(inject(TYPES.RService), CsvJobData, 0)
-decorate(inject(TYPES.FullSnapshotReportCsvWriter), CsvJobData, 1)
-decorate(inject(TYPES.FullTaxReportCsvWriter), CsvJobData, 2)
+decorateInjectable(CsvJobData, depsTypes)
 
 module.exports = CsvJobData

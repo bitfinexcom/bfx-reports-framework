@@ -1,21 +1,26 @@
 'use strict'
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
 
-const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
   getMtsGroupedByTimeframe
 } = require('../helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.ALLOWED_COLLS,
+  TYPES.SyncSchema,
+  TYPES.FOREX_SYMBS,
+  TYPES.CurrencyConverter,
+  TYPES.Authenticator,
+  TYPES.SYNC_API_METHODS
+]
 class Trades {
   constructor (
     dao,
@@ -313,13 +318,6 @@ class Trades {
   }
 }
 
-decorate(injectable(), Trades)
-decorate(inject(TYPES.DAO), Trades, 0)
-decorate(inject(TYPES.ALLOWED_COLLS), Trades, 1)
-decorate(inject(TYPES.SyncSchema), Trades, 2)
-decorate(inject(TYPES.FOREX_SYMBS), Trades, 3)
-decorate(inject(TYPES.CurrencyConverter), Trades, 4)
-decorate(inject(TYPES.Authenticator), Trades, 5)
-decorate(inject(TYPES.SYNC_API_METHODS), Trades, 6)
+decorateInjectable(Trades, depsTypes)
 
 module.exports = Trades

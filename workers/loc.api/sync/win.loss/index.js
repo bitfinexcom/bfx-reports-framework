@@ -1,13 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../di/types')
 const {
   calcGroupedData,
   groupByTimeframe,
@@ -15,6 +9,19 @@ const {
   getStartMtsByTimeframe
 } = require('../helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.SyncSchema,
+  TYPES.ALLOWED_COLLS,
+  TYPES.Wallets,
+  TYPES.BalanceHistory,
+  TYPES.PositionsSnapshot,
+  TYPES.FOREX_SYMBS,
+  TYPES.Authenticator,
+  TYPES.SYNC_API_METHODS
+]
 class WinLoss {
   constructor (
     dao,
@@ -403,15 +410,6 @@ class WinLoss {
   }
 }
 
-decorate(injectable(), WinLoss)
-decorate(inject(TYPES.DAO), WinLoss, 0)
-decorate(inject(TYPES.SyncSchema), WinLoss, 1)
-decorate(inject(TYPES.ALLOWED_COLLS), WinLoss, 2)
-decorate(inject(TYPES.Wallets), WinLoss, 3)
-decorate(inject(TYPES.BalanceHistory), WinLoss, 4)
-decorate(inject(TYPES.PositionsSnapshot), WinLoss, 5)
-decorate(inject(TYPES.FOREX_SYMBS), WinLoss, 6)
-decorate(inject(TYPES.Authenticator), WinLoss, 7)
-decorate(inject(TYPES.SYNC_API_METHODS), WinLoss, 8)
+decorateInjectable(WinLoss, depsTypes)
 
 module.exports = WinLoss

@@ -1,13 +1,11 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
+const { decorateInjectable } = require('../../di/utils')
 
-const TYPES = require('../../di/types')
-
+const depsTypes = (TYPES) => [
+  TYPES.Wallets,
+  TYPES.PositionsSnapshot
+]
 class FullSnapshotReport {
   constructor (
     wallets,
@@ -149,8 +147,6 @@ class FullSnapshotReport {
   }
 }
 
-decorate(injectable(), FullSnapshotReport)
-decorate(inject(TYPES.Wallets), FullSnapshotReport, 0)
-decorate(inject(TYPES.PositionsSnapshot), FullSnapshotReport, 1)
+decorateInjectable(FullSnapshotReport, depsTypes)
 
 module.exports = FullSnapshotReport

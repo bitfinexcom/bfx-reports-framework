@@ -1,19 +1,22 @@
 'use strict'
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../di/types')
-const {
   calcGroupedData,
   groupByTimeframe,
   getStartMtsByTimeframe,
   getBackIterable
 } = require('../helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.ALLOWED_COLLS,
+  TYPES.SyncSchema,
+  TYPES.FOREX_SYMBS,
+  TYPES.Authenticator,
+  TYPES.SYNC_API_METHODS
+]
 class PerformingLoan {
   constructor (
     dao,
@@ -412,12 +415,6 @@ class PerformingLoan {
   }
 }
 
-decorate(injectable(), PerformingLoan)
-decorate(inject(TYPES.DAO), PerformingLoan, 0)
-decorate(inject(TYPES.ALLOWED_COLLS), PerformingLoan, 1)
-decorate(inject(TYPES.SyncSchema), PerformingLoan, 2)
-decorate(inject(TYPES.FOREX_SYMBS), PerformingLoan, 3)
-decorate(inject(TYPES.Authenticator), PerformingLoan, 4)
-decorate(inject(TYPES.SYNC_API_METHODS), PerformingLoan, 5)
+decorateInjectable(PerformingLoan, depsTypes)
 
 module.exports = PerformingLoan

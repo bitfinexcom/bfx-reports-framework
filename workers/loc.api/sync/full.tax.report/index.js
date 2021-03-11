@@ -1,16 +1,18 @@
 'use strict'
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../di/types')
-const {
   isForexSymb
 } = require('../helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.SyncSchema,
+  TYPES.ALLOWED_COLLS,
+  TYPES.FullSnapshotReport,
+  TYPES.Authenticator
+]
 class FullTaxReport {
   constructor (
     dao,
@@ -215,11 +217,6 @@ class FullTaxReport {
   }
 }
 
-decorate(injectable(), FullTaxReport)
-decorate(inject(TYPES.DAO), FullTaxReport, 0)
-decorate(inject(TYPES.SyncSchema), FullTaxReport, 1)
-decorate(inject(TYPES.ALLOWED_COLLS), FullTaxReport, 2)
-decorate(inject(TYPES.FullSnapshotReport), FullTaxReport, 3)
-decorate(inject(TYPES.Authenticator), FullTaxReport, 4)
+decorateInjectable(FullTaxReport, depsTypes)
 
 module.exports = FullTaxReport
