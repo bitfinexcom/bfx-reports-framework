@@ -10,13 +10,7 @@ const {
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
 
-const TYPES = require('../../../di/types')
 const {
   getMethodArgMap
 } = require('../helpers')
@@ -36,6 +30,19 @@ const {
   ALL_SYMBOLS_TO_SYNC
 } = require('../const')
 
+const { decorateInjectable } = require('../../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.DAO,
+  TYPES.SyncSchema,
+  TYPES.TABLES_NAMES,
+  TYPES.ALLOWED_COLLS,
+  TYPES.FOREX_SYMBS,
+  TYPES.CurrencyConverter,
+  TYPES.SyncInterrupter,
+  TYPES.SyncCollsManager
+]
 class DataChecker {
   constructor (
     rService,
@@ -68,12 +75,11 @@ class DataChecker {
       this._isInterrupted = true
     })
 
-    this._methodCollMap = this.syncSchema
-      .getMethodCollMap(methodCollMap)
+    this.setMethodCollMap(methodCollMap)
   }
 
   async checkNewData (auth) {
-    const methodCollMap = this._getMethodCollMap()
+    const methodCollMap = this.getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap)
@@ -85,7 +91,7 @@ class DataChecker {
   }
 
   async checkNewPublicData () {
-    const methodCollMap = this._getMethodCollMap()
+    const methodCollMap = this.getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
@@ -122,7 +128,7 @@ class DataChecker {
       return
     }
 
-    schema.hasNewData = false
+    this._resetSyncSchemaProps(schema)
 
     const args = this._getMethodArgMap(method, { auth, limit: 1 })
     args.params.notThrowError = true
@@ -207,6 +213,12 @@ class DataChecker {
         startConf
       )
 
+      if (!schema.hasNewData) {
+        await this.syncCollsManager.setCollAsSynced({
+          collName: method, userId: _id, subUserId
+        })
+      }
+
       return
     }
 
@@ -245,16 +257,17 @@ class DataChecker {
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
         schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
       ) {
-        schema.hasNewData = false
-
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
       }
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        schema.hasNewData = false
+        if (!schema.isSyncDoneForCurrencyConv) {
+          await this.checkNewCandlesData(method, schema)
 
-        await this._checkNewCandlesData(method, schema)
+          schema.isSyncDoneForCurrencyConv = true
+        }
+
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
@@ -266,6 +279,8 @@ class DataChecker {
     if (this._isInterrupted) {
       return
     }
+
+    this._resetSyncSchemaProps(schema)
 
     const {
       confName,
@@ -428,15 +443,32 @@ class DataChecker {
         timeframe
       )
     }
+
+    if (schema.hasNewData) {
+      return
+    }
+
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({ collName: method })
+
+    if (!hasCollBeenSyncedAtLeastOnce) {
+      return
+    }
+
+    await this.syncCollsManager.setCollAsSynced({
+      collName: method
+    })
   }
 
-  async _checkNewCandlesData (
+  async checkNewCandlesData (
     method,
     schema
   ) {
     if (this._isInterrupted) {
       return
     }
+
+    this._resetSyncSchemaProps(schema)
 
     const {
       symbolFieldName,
@@ -677,10 +709,35 @@ class DataChecker {
         CANDLES_TIMEFRAME
       )
     }
+
+    if (schema.hasNewData) {
+      return
+    }
+
+    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({ collName: method })
+
+    if (!hasCollBeenSyncedAtLeastOnce) {
+      return
+    }
+
+    await this.syncCollsManager.setCollAsSynced({
+      collName: method
+    })
   }
 
-  _getMethodCollMap () {
+  getMethodCollMap () {
     return new Map(this._methodCollMap)
+  }
+
+  setMethodCollMap (methodCollMap) {
+    this._methodCollMap = this.syncSchema
+      .getMethodCollMap(methodCollMap)
+  }
+
+  _resetSyncSchemaProps (schema) {
+    schema.hasNewData = false
+    schema.start = []
   }
 
   _getMethodArgMap (method, opts) {
@@ -706,15 +763,6 @@ class DataChecker {
   }
 }
 
-decorate(injectable(), DataChecker)
-decorate(inject(TYPES.RService), DataChecker, 0)
-decorate(inject(TYPES.DAO), DataChecker, 1)
-decorate(inject(TYPES.SyncSchema), DataChecker, 2)
-decorate(inject(TYPES.TABLES_NAMES), DataChecker, 3)
-decorate(inject(TYPES.ALLOWED_COLLS), DataChecker, 4)
-decorate(inject(TYPES.FOREX_SYMBS), DataChecker, 5)
-decorate(inject(TYPES.CurrencyConverter), DataChecker, 6)
-decorate(inject(TYPES.SyncInterrupter), DataChecker, 7)
-decorate(inject(TYPES.SyncCollsManager), DataChecker, 8)
+decorateInjectable(DataChecker, depsTypes)
 
 module.exports = DataChecker

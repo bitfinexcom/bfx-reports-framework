@@ -7,22 +7,23 @@ const {
   orderBy
 } = require('lodash')
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   prepareResponse
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
-const TYPES = require('../../di/types')
 const {
   GetPublicDataError
 } = require('../../errors')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES,
+  TYPES.Authenticator
+]
 class PublicСollsСonfAccessors {
   constructor (
     dao,
@@ -488,9 +489,6 @@ class PublicСollsСonfAccessors {
   }
 }
 
-decorate(injectable(), PublicСollsСonfAccessors)
-decorate(inject(TYPES.DAO), PublicСollsСonfAccessors, 0)
-decorate(inject(TYPES.TABLES_NAMES), PublicСollsСonfAccessors, 1)
-decorate(inject(TYPES.Authenticator), PublicСollsСonfAccessors, 2)
+decorateInjectable(PublicСollsСonfAccessors, depsTypes)
 
 module.exports = PublicСollsСonfAccessors

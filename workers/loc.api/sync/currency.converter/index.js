@@ -3,11 +3,6 @@
 const moment = require('moment')
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
@@ -22,8 +17,17 @@ const {
   isForexSymb
 } = require('../helpers')
 const { tryParseJSON } = require('../../helpers')
-const TYPES = require('../../di/types')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.DAO,
+  TYPES.SyncSchema,
+  TYPES.FOREX_SYMBS,
+  TYPES.ALLOWED_COLLS,
+  TYPES.SYNC_API_METHODS
+]
 class CurrencyConverter {
   constructor (
     rService,
@@ -914,12 +918,6 @@ class CurrencyConverter {
   }
 }
 
-decorate(injectable(), CurrencyConverter)
-decorate(inject(TYPES.RService), CurrencyConverter, 0)
-decorate(inject(TYPES.DAO), CurrencyConverter, 1)
-decorate(inject(TYPES.SyncSchema), CurrencyConverter, 2)
-decorate(inject(TYPES.FOREX_SYMBS), CurrencyConverter, 3)
-decorate(inject(TYPES.ALLOWED_COLLS), CurrencyConverter, 4)
-decorate(inject(TYPES.SYNC_API_METHODS), CurrencyConverter, 5)
+decorateInjectable(CurrencyConverter, depsTypes)
 
 module.exports = CurrencyConverter

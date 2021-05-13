@@ -153,6 +153,18 @@ class SyncedPositionsSnapshotParamsError extends BaseError {
   }
 }
 
+class DataConsistencyCheckerFindingError extends BaseError {
+  constructor (message = 'ERR_DATA_CONSISTENCY_CHECKER_HAS_NOT_BEEN_FOUND') {
+    super(message)
+  }
+}
+
+class DataConsistencyError extends BaseError {
+  constructor (message = 'ERR_COLLECTIONS_DATA_IS_NOT_CONSISTENT') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -178,5 +190,7 @@ module.exports = {
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
   GetPublicDataError,
-  SyncedPositionsSnapshotParamsError
+  SyncedPositionsSnapshotParamsError,
+  DataConsistencyCheckerFindingError,
+  DataConsistencyError
 }

@@ -1,18 +1,18 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../../di/types')
-
 const DbMigrator = require('./db.migrator')
 const {
   MigrationLaunchingError
 } = require('../../../errors')
 
+const { decorateInjectable } = require('../../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.MigrationsFactory,
+  TYPES.TABLES_NAMES,
+  TYPES.SyncSchema,
+  TYPES.Logger
+]
 class SqliteDbMigrator extends DbMigrator {
   /**
    * @override
@@ -48,10 +48,6 @@ class SqliteDbMigrator extends DbMigrator {
   }
 }
 
-decorate(injectable(), SqliteDbMigrator)
-decorate(inject(TYPES.MigrationsFactory), SqliteDbMigrator, 0)
-decorate(inject(TYPES.TABLES_NAMES), SqliteDbMigrator, 1)
-decorate(inject(TYPES.SyncSchema), SqliteDbMigrator, 2)
-decorate(inject(TYPES.Logger), SqliteDbMigrator, 3)
+decorateInjectable(SqliteDbMigrator, depsTypes)
 
 module.exports = SqliteDbMigrator

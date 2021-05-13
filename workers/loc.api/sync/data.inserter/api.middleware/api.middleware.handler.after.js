@@ -1,12 +1,5 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../../../di/types')
 const SYNC_API_METHODS = require('../../schema/sync.api.methods')
 const {
   addPropsToResIfExist,
@@ -14,6 +7,11 @@ const {
   getCategoryFromDescription
 } = require('./helpers')
 
+const { decorateInjectable } = require('../../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.SearchClosePriceAndSumAmount
+]
 class ApiMiddlewareHandlerAfter {
   constructor (
     searchClosePriceAndSumAmount
@@ -178,7 +176,6 @@ class ApiMiddlewareHandlerAfter {
   }
 }
 
-decorate(injectable(), ApiMiddlewareHandlerAfter)
-decorate(inject(TYPES.SearchClosePriceAndSumAmount), ApiMiddlewareHandlerAfter, 0)
+decorateInjectable(ApiMiddlewareHandlerAfter, depsTypes)
 
 module.exports = ApiMiddlewareHandlerAfter

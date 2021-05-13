@@ -3,21 +3,24 @@
 const { orderBy } = require('lodash')
 
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
-
-const TYPES = require('../../di/types')
 
 const { getTimeframeQuery } = require('../dao/helpers')
 const {
   SyncedPositionsSnapshotParamsError
 } = require('../../errors')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.RService,
+  TYPES.DAO,
+  TYPES.ALLOWED_COLLS,
+  TYPES.SyncSchema,
+  TYPES.CurrencyConverter,
+  TYPES.Authenticator
+]
 class PositionsSnapshot {
   constructor (
     rService,
@@ -636,12 +639,6 @@ class PositionsSnapshot {
   }
 }
 
-decorate(injectable(), PositionsSnapshot)
-decorate(inject(TYPES.RService), PositionsSnapshot, 0)
-decorate(inject(TYPES.DAO), PositionsSnapshot, 1)
-decorate(inject(TYPES.ALLOWED_COLLS), PositionsSnapshot, 2)
-decorate(inject(TYPES.SyncSchema), PositionsSnapshot, 3)
-decorate(inject(TYPES.CurrencyConverter), PositionsSnapshot, 4)
-decorate(inject(TYPES.Authenticator), PositionsSnapshot, 5)
+decorateInjectable(PositionsSnapshot, depsTypes)
 
 module.exports = PositionsSnapshot

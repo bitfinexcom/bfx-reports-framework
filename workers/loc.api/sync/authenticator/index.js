@@ -2,15 +2,9 @@
 
 const { v4: uuidv4 } = require('uuid')
 const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
-const TYPES = require('../../di/types')
 const { serializeVal } = require('../dao/helpers')
 const { isSubAccountApiKeys } = require('../../helpers')
 const {
@@ -23,6 +17,15 @@ const {
   pickSessionProps
 } = require('./helpers')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.DAO,
+  TYPES.TABLES_NAMES,
+  TYPES.RService,
+  TYPES.Crypto,
+  TYPES.SyncFactory
+]
 class Authenticator {
   constructor (
     dao,
@@ -869,11 +872,6 @@ class Authenticator {
   }
 }
 
-decorate(injectable(), Authenticator)
-decorate(inject(TYPES.DAO), Authenticator, 0)
-decorate(inject(TYPES.TABLES_NAMES), Authenticator, 1)
-decorate(inject(TYPES.RService), Authenticator, 2)
-decorate(inject(TYPES.Crypto), Authenticator, 3)
-decorate(inject(TYPES.SyncFactory), Authenticator, 4)
+decorateInjectable(Authenticator, depsTypes)
 
 module.exports = Authenticator

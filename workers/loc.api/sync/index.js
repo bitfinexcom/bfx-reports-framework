@@ -1,14 +1,17 @@
 'use strict'
 
-const {
-  decorate,
-  injectable,
-  inject
-} = require('inversify')
-
-const TYPES = require('../di/types')
 const { CollSyncPermissionError } = require('../errors')
 
+const { decorateInjectable } = require('../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.SyncQueue,
+  TYPES.RService,
+  TYPES.ALLOWED_COLLS,
+  TYPES.Progress,
+  TYPES.RedirectRequestsToApi,
+  TYPES.SyncInterrupter
+]
 class Sync {
   constructor (
     syncQueue,
@@ -124,12 +127,6 @@ class Sync {
   }
 }
 
-decorate(injectable(), Sync)
-decorate(inject(TYPES.SyncQueue), Sync, 0)
-decorate(inject(TYPES.RService), Sync, 1)
-decorate(inject(TYPES.ALLOWED_COLLS), Sync, 2)
-decorate(inject(TYPES.Progress), Sync, 3)
-decorate(inject(TYPES.RedirectRequestsToApi), Sync, 4)
-decorate(inject(TYPES.SyncInterrupter), Sync, 5)
+decorateInjectable(Sync, depsTypes)
 
 module.exports = Sync
