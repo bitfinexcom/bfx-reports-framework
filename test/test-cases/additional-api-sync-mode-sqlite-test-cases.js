@@ -13,6 +13,9 @@ const {
   delay,
   getParamsArrToTestTimeframeGrouping
 } = require('../helpers/helpers.core')
+const {
+  testCsvPathHasCommonFolder
+} = require('../helpers/helpers.tests')
 
 module.exports = (
   agent,
@@ -699,7 +702,12 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
   })
 
   it('it should be successfully performed by the getFullTaxReportCsv method for starting snapshot, store csv to local folder', async function () {
@@ -724,7 +732,12 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
   })
 
   it('it should be successfully performed by the getFullTaxReportCsv method for ending snapshot, store csv to local folder', async function () {
@@ -749,7 +762,12 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
   })
 
   it('it should be successfully performed by the getTradedVolumeCsv method', async function () {
