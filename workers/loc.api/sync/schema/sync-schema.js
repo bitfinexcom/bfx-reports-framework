@@ -227,7 +227,7 @@ const _methodCollMap = new Map([
       sort: [['mtsCreate', -1]],
       hasNewData: false,
       start: [],
-      isSyncRequiredAtLeastOnce: true,
+      isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CHANGE_LOGS)
     }
