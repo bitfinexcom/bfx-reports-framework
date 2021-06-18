@@ -6,7 +6,11 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const { serializeVal } = require('../dao/helpers')
-const { isSubAccountApiKeys } = require('../../helpers')
+const {
+  isSubAccountApiKeys,
+  isEnotfoundError,
+  isEaiAgainError
+} = require('../../helpers')
 const {
   UserRemovingError,
   UserWasPreviouslyStoredInDbError
@@ -222,14 +226,27 @@ class Authenticator {
       apiSecret
     } = { ...user }
 
+    let userData = user
+
+    try {
+      userData = await this.rService._checkAuthInApi({
+        auth: { apiKey, apiSecret }
+      })
+    } catch (err) {
+      if (
+        !isEnotfoundError(err) &&
+        !isEaiAgainError(err)
+      ) {
+        throw err
+      }
+    }
+
     const {
       id,
       timezone,
       username: uName,
       email: emailFromApi
-    } = await this.rService._checkAuthInApi({
-      auth: { apiKey, apiSecret }
-    })
+    } = { ...userData }
     const username = generateSubUserName(
       { username: uName },
       isSubAccountFromDb
