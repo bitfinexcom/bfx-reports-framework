@@ -170,6 +170,7 @@ const paramsSchemaForRiskApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -204,6 +205,7 @@ const paramsSchemaForBalanceHistoryApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -242,6 +244,7 @@ const paramsSchemaForFullTaxReportApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -262,6 +265,7 @@ const paramsSchemaForWinLossApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -282,6 +286,7 @@ const paramsSchemaForTradedVolumeApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -305,6 +310,7 @@ const paramsSchemaForFeesReportApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -328,6 +334,7 @@ const paramsSchemaForPerformingLoanApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
