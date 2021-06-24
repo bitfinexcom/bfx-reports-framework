@@ -26,7 +26,7 @@ const delay = (mc = 500) => _delay(mc)
 
 const getParamsArrToTestTimeframeGrouping = (
   params = {},
-  timeframes = ['day', 'month', 'year']
+  timeframes = ['day', 'week', 'month', 'year']
 ) => {
   return Array(timeframes.length)
     .fill({ ...params })
