@@ -26,7 +26,7 @@
     "grenache-grape": "^0.9.8",
     "mocha": "^6.1.4",
     "chai": "^4.2.0",
-    "nodemon": "^1.18.10",
+    "nodemon": "^2.0.7",
     "supertest": "^4.0.2",
     "standard": "^16.0.3"
   },
