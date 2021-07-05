@@ -42,6 +42,11 @@ module.exports = (
 
       continue
     }
+    if (timeframe === 'week') {
+      currMoment.add(1, 'weeks')
+
+      continue
+    }
     if (timeframe === 'month') {
       currMoment.add(1, 'months')
 

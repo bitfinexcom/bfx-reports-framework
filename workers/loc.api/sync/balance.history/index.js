@@ -165,6 +165,9 @@ class BalanceHistory {
     if (timeframe === 'month') {
       mtsMoment.add(1, 'months')
     }
+    if (timeframe === 'week') {
+      mtsMoment.add(1, 'weeks')
+    }
     if (timeframe === 'year') {
       mtsMoment.add(1, 'years')
     }

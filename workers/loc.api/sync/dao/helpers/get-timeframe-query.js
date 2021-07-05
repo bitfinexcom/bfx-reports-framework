@@ -7,11 +7,12 @@ module.exports = (timeframe, params) => {
   } = { ...params }
 
   const day = timeframe === 'day' ? '-%m-%d' : ''
+  const week = timeframe === 'week' ? '-%W' : ''
   const month = timeframe === 'month' ? '-%m' : ''
   const year = '%Y'
 
   return `strftime(
-    '${year}${month}${day}',
+    '${year}${month}${week}${day}',
     ${propName}/1000,
     'unixepoch'
   ) AS ${alias}`
