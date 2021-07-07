@@ -250,6 +250,9 @@ class WinLoss {
       if (timeframe === 'day') {
         mtsMoment.add(1, 'days')
       }
+      if (timeframe === 'week') {
+        mtsMoment.add(1, 'weeks')
+      }
       if (timeframe === 'month') {
         mtsMoment.add(1, 'months')
       }

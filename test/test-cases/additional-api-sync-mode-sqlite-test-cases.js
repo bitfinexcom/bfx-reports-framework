@@ -13,6 +13,9 @@ const {
   delay,
   getParamsArrToTestTimeframeGrouping
 } = require('../helpers/helpers.core')
+const {
+  testCsvPathHasCommonFolder
+} = require('../helpers/helpers.tests')
 
 module.exports = (
   agent,
@@ -629,6 +632,34 @@ module.exports = (
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
 
+  it('it should be successfully performed by the getFullSnapshotReportCsv method, store csv to local folder', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullSnapshotReportCsv',
+        params: {
+          end
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
+  })
+
   it('it should be successfully performed by the getPositionsSnapshotCsv method', async function () {
     this.timeout(60000)
 
@@ -699,7 +730,12 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
   })
 
   it('it should be successfully performed by the getFullTaxReportCsv method for starting snapshot, store csv to local folder', async function () {
@@ -724,7 +760,12 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
   })
 
   it('it should be successfully performed by the getFullTaxReportCsv method for ending snapshot, store csv to local folder', async function () {
@@ -749,7 +790,12 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingCsv(
+      procPromise,
+      aggrPromise,
+      res,
+      testCsvPathHasCommonFolder
+    )
   })
 
   it('it should be successfully performed by the getTradedVolumeCsv method', async function () {

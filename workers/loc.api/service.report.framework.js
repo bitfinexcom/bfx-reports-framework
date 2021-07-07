@@ -241,14 +241,8 @@ class FrameworkReportService extends ReportService {
           isReturnedUser: true
         }
       )
-      const progress = await this._sync.stop()
 
-      await this._dao.updateRecordOf(
-        this._TABLES_NAMES.SYNC_MODE,
-        { isEnable: false }
-      )
-
-      return progress
+      return true
     }, 'disableSyncMode', cb)
   }
 

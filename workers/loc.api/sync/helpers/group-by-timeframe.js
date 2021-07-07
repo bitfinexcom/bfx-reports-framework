@@ -63,6 +63,14 @@ const _isMonthlyTimeframe = (params) => {
   return _checkTimeframe(params)
 }
 
+const _isWeeklyTimeframe = (params) => {
+  if (params.timeframe !== 'week') {
+    return false
+  }
+
+  return _checkTimeframe(params)
+}
+
 const _isDailyTimeframe = (params) => {
   if (params.timeframe !== 'day') {
     return false
@@ -83,6 +91,7 @@ const _isNotEmptyGroupItem = ({ mts, vals }) => {
 const _isTimeframe = (timeframe) => {
   return (
     timeframe === 'day' ||
+    timeframe === 'week' ||
     timeframe === 'month' ||
     timeframe === 'year'
   )
@@ -205,6 +214,20 @@ module.exports = async (
       continue
     }
     if (_isMonthlyTimeframe(paramsToCheck)) {
+      const groupItem = await _getGroupItem(
+        subRes,
+        timeframe,
+        symbol,
+        dateFieldName,
+        symbolFieldName,
+        calcDataFn
+      )
+
+      _addFragment(res, subRes, groupItem)
+
+      continue
+    }
+    if (_isWeeklyTimeframe(paramsToCheck)) {
       const groupItem = await _getGroupItem(
         subRes,
         timeframe,

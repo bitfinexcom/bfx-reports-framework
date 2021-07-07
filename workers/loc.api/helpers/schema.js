@@ -163,40 +163,6 @@ const paramsSchemaForEditCandlesСonf = {
   }
 }
 
-const paramsSchemaForRiskApi = {
-  type: 'object',
-  properties: {
-    timeframe: {
-      type: 'string',
-      enum: [
-        'day',
-        'month',
-        'year'
-      ]
-    },
-    start: {
-      type: 'integer'
-    },
-    end: {
-      type: 'integer'
-    },
-    skip: {
-      type: 'array',
-      minItems: 1,
-      maxItems: 3,
-      items: {
-        type: 'string',
-        enum: [
-          'trades',
-          'marginTrades',
-          'fundingPayment',
-          'movementFees'
-        ]
-      }
-    }
-  }
-}
-
 const paramsSchemaForBalanceHistoryApi = {
   type: 'object',
   properties: {
@@ -204,6 +170,7 @@ const paramsSchemaForBalanceHistoryApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -238,14 +205,6 @@ const paramsSchemaForFullSnapshotReportApi = {
 const paramsSchemaForFullTaxReportApi = {
   type: 'object',
   properties: {
-    timeframe: {
-      type: 'string',
-      enum: [
-        'day',
-        'month',
-        'year'
-      ]
-    },
     end: {
       type: 'integer'
     },
@@ -262,6 +221,7 @@ const paramsSchemaForWinLossApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -282,6 +242,7 @@ const paramsSchemaForTradedVolumeApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -305,6 +266,7 @@ const paramsSchemaForFeesReportApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -328,6 +290,7 @@ const paramsSchemaForPerformingLoanApi = {
       type: 'string',
       enum: [
         'day',
+        'week',
         'month',
         'year'
       ]
@@ -348,15 +311,6 @@ const {
   timezone,
   dateFormat
 } = { ...paramsSchemaForCsv.properties }
-
-const paramsSchemaForRiskCsv = {
-  type: 'object',
-  properties: {
-    ...cloneDeep(paramsSchemaForRiskApi.properties),
-    timezone,
-    dateFormat
-  }
-}
 
 const paramsSchemaForBalanceHistoryCsv = {
   type: 'object',
@@ -449,7 +403,6 @@ module.exports = {
   paramsSchemaForEditCandlesСonf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
-  paramsSchemaForRiskApi,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
   paramsSchemaForPositionsSnapshotApi,
@@ -459,7 +412,6 @@ module.exports = {
   paramsSchemaForFeesReportApi,
   paramsSchemaForPerformingLoanApi,
   paramsSchemaForCandlesApi,
-  paramsSchemaForRiskCsv,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
   paramsSchemaForPositionsSnapshotCsv,

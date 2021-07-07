@@ -234,26 +234,42 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
     const { params } = { ...args }
-    const { chunkCommonFolder } = { ...opts }
+    const { username } = { ...uInfo }
+
     const {
+      end,
       isStartSnapshot,
       isEndSnapshot
     } = { ...params }
-    const isBaseNameInName = isStartSnapshot || isEndSnapshot
-    const typeName = isStartSnapshot
+    const {
+      isFullTaxReport,
+      chunkCommonFolder: _chunkCommonFolder
+    } = { ...opts }
+    const _typeName = isStartSnapshot
       ? 'START_SNAPSHOT'
       : 'END_SNAPSHOT'
-    const fileName = isBaseNameInName
+    const typeName = (isStartSnapshot || isEndSnapshot)
+      ? _typeName
+      : 'MOMENT'
+    const fileName = isFullTaxReport
       ? `full-tax-report_${typeName}`
-      : 'full-snapshot-report'
+      : `full-snapshot-report_${typeName}`
+
+    const endDate = end
+      ? getDateString(end)
+      : getDateString()
+    const uName = username ? `${username}_` : ''
+    const chunkCommonFolder = (
+      _chunkCommonFolder &&
+      typeof _chunkCommonFolder === 'string'
+    )
+      ? _chunkCommonFolder
+      : `${uName}full-snapshot-report_TO_${endDate}`
 
     const csvArgs = getCsvArgs(
       args,
       null,
-      {
-        isOnMomentInName: !isBaseNameInName,
-        isBaseNameInName
-      }
+      { isBaseNameInName: true }
     )
 
     const jobData = {
@@ -368,7 +384,10 @@ class CsvJobData extends BaseCsvJobData {
         },
         uId,
         uInfo,
-        { chunkCommonFolder }
+        {
+          chunkCommonFolder,
+          isFullTaxReport: true
+        }
       )
     }
 
