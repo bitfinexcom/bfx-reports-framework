@@ -263,7 +263,8 @@ class PositionsSnapshot {
       const {
         symbol,
         basePrice,
-        amount
+        amount,
+        marginFunding
       } = { ...position }
 
       const resPositions = {
@@ -293,7 +294,15 @@ class PositionsSnapshot {
         continue
       }
 
-      const pl = (actualPrice - basePrice) * amount
+      const _marginFunding = Number.isFinite(marginFunding)
+        ? marginFunding
+        : 0
+      const isMarginFundingCrypto = _marginFunding < 0
+      const marginFundingCrypto = isMarginFundingCrypto
+        ? _marginFunding
+        : _marginFunding / actualPrice
+
+      const pl = ((actualPrice - basePrice) * amount) - Math.abs(marginFundingCrypto)
       const plPerc = ((actualPrice / basePrice) - 1) * 100 * Math.sign(amount)
       const {
         plUsd,
