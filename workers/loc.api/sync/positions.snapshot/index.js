@@ -110,32 +110,11 @@ class PositionsSnapshot {
     const isStartExisted = Number.isInteger(start)
     const isEndExisted = Number.isInteger(end)
 
-    const startSqlTimeframe = this._getTimeframeQuery(
-      'startMtsUpdateStr',
-      isStartExisted
-    )
-    const endSqlTimeframe = this._getTimeframeQuery(
-      'endMtsUpdateStr',
-      isEndExisted
-    )
-
-    const startMtsUpdateStr = this._getMtsStr(
-      start,
-      'startMtsUpdateStr'
-    )
-    const endMtsUpdateStr = this._getMtsStr(
-      end,
-      'endMtsUpdateStr'
-    )
-
     const gteFilter = isStartExisted
       ? { $gte: { mtsUpdate: start } }
       : {}
     const lteFilter = isEndExisted
       ? { $lte: { mtsUpdate: end } }
-      : {}
-    const eqFilter = isStartExisted || isEndExisted
-      ? { $eq: { ...startMtsUpdateStr, ...endMtsUpdateStr } }
       : {}
 
     return this.dao.getElemsInCollBy(
@@ -144,15 +123,10 @@ class PositionsSnapshot {
         filter: {
           user_id: user._id,
           ...gteFilter,
-          ...lteFilter,
-          ...eqFilter
+          ...lteFilter
         },
         sort: [['mtsUpdate', -1]],
-        projection: [
-          ...this.positionsSnapshotModel,
-          ...startSqlTimeframe,
-          ...endSqlTimeframe
-        ],
+        projection: this.positionsSnapshotModel,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
