@@ -7,9 +7,6 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const { getTimeframeQuery } = require('../dao/helpers')
-const {
-  SyncedPositionsSnapshotParamsError
-} = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -577,13 +574,6 @@ class PositionsSnapshot {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const emptyRes = []
-
-    if (
-      Number.isInteger(start) &&
-      Number.isInteger(end)
-    ) {
-      throw new SyncedPositionsSnapshotParamsError()
-    }
 
     const syncedPositionsSnapshot = await this._getPositionsSnapshotFromDb(
       user,
