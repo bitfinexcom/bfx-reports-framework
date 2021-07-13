@@ -232,6 +232,7 @@ class PositionsSnapshot {
     } = { ...opts }
     const positionsSnapshot = []
     const tickers = []
+    const actualPrices = new Map()
 
     for (const position of positions) {
       const {
@@ -254,9 +255,14 @@ class PositionsSnapshot {
 
         continue
       }
+      if (!actualPrices.has(symbol)) {
+        const _actualPrice = await this.currencyConverter
+          .getPrice(symbol, end)
 
-      const actualPrice = await this.currencyConverter
-        .getPrice(symbol, end)
+        actualPrices.set(symbol, _actualPrice)
+      }
+
+      const actualPrice = actualPrices.get(symbol)
 
       if (
         !Number.isFinite(actualPrice) ||
@@ -271,12 +277,13 @@ class PositionsSnapshot {
       const _marginFunding = Number.isFinite(marginFunding)
         ? marginFunding
         : 0
-      const isMarginFundingCrypto = _marginFunding < 0
-      const marginFundingCrypto = isMarginFundingCrypto
+      const isMarginFundingConverted = amount > 0
+      const convertedMarginFunding = isMarginFundingConverted
         ? _marginFunding
-        : _marginFunding / actualPrice
+        : _marginFunding * actualPrice
 
-      const pl = ((actualPrice - basePrice) * amount) - Math.abs(marginFundingCrypto)
+      const pl = ((actualPrice - basePrice) * Math.abs(amount)) -
+        Math.abs(convertedMarginFunding)
       const plPerc = ((actualPrice / basePrice) - 1) * 100 * Math.sign(amount)
       const {
         plUsd,
