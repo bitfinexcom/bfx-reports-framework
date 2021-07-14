@@ -159,9 +159,39 @@ class CurrencyConverter {
       return
     }
 
-    return synonymous.map(([symbol, conversion]) => (
-      [`${prefix}${symbol}${lastSymb}`, conversion]
-    ))
+    return synonymous.reduce((accum, [symbol, conversion]) => {
+      const separator = (
+        symbol.length > 3 ||
+        lastSymb.length > 3
+      )
+        ? ':'
+        : ''
+
+      accum.push([
+        `${prefix}${symbol}${separator}${lastSymb}`,
+        conversion
+      ])
+
+      if (
+        symbol.length >= 4 &&
+        /F0$/i.test(symbol)
+      ) {
+        const _symbol = this._getConvertingSymb(symbol)
+        const _separator = (
+          _symbol.length > 3 ||
+          lastSymb.length > 3
+        )
+          ? ':'
+          : ''
+
+        accum.push([
+          `${prefix}${_symbol}${_separator}${lastSymb}`,
+          conversion
+        ])
+      }
+
+      return accum
+    }, [])
   }
 
   async _priceFinder (
