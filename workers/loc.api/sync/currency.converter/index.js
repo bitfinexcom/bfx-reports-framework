@@ -759,11 +759,15 @@ class CurrencyConverter {
   /**
    * if api is not available convert by candles
    */
-  convert (data, convSchema) {
+  async convert (data, convSchema) {
     try {
-      return this.convertByPublicTrades(data, convSchema)
+      const res = await this.convertByPublicTrades(data, convSchema)
+
+      return res
     } catch (err) {
-      return this.convertByCandles(data, convSchema)
+      const res = await this.convertByCandles(data, convSchema)
+
+      return res
     }
   }
 
