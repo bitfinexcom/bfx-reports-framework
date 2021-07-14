@@ -401,13 +401,10 @@ class CurrencyConverter {
       mts
     }
   ) {
-    if (!this._isRequiredConvToForex(convertTo)) {
-      return null
-    }
-
     const end = Number.isInteger(mts)
       ? mts
       : item[dateFieldName]
+    const isRequiredConvToForex = this._isRequiredConvToForex(convertTo)
     const isRequiredConvFromForex = this._isRequiredConvFromForex(
       item,
       {
@@ -437,6 +434,27 @@ class CurrencyConverter {
       }
 
       return btcPriceOut / btcPriceIn
+    }
+    if (!isRequiredConvToForex) {
+      const usdPriceIn = await _getPrice(
+        `t${item[symbolFieldName]}USD`,
+        end
+      )
+      const usdPriceOut = await _getPrice(
+        `t${convertTo}USD`,
+        end
+      )
+
+      if (
+        !usdPriceIn ||
+        !usdPriceOut ||
+        !Number.isFinite(usdPriceIn) ||
+        !Number.isFinite(usdPriceOut)
+      ) {
+        return null
+      }
+
+      return usdPriceIn / usdPriceOut
     }
 
     const price = await _getPrice(
