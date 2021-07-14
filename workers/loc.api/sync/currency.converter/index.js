@@ -770,20 +770,46 @@ class CurrencyConverter {
   /**
    * if api is not available get price from candles
    */
-  getPrice (
+  async getPrice (
     reqSymb,
-    end
+    mts
   ) {
     try {
-      return this._getPublicTradesPrice(
+      const price = await this._getPublicTradesPrice(
         reqSymb,
-        end
+        mts
       )
+
+      return price
     } catch (err) {
-      return this._getCandleClosedPrice(
-        reqSymb,
-        end
+    // Try to get price from DB when bfx api_v2 is not available
+    // Useful when internet is disconnected
+    // Also it covers pairs like tBTCF0:USTF0
+
+      const price = await this._priceFinder(
+        async (symbol) => {
+          const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
+
+          const res = await this._getPrice(
+            this._COLL_NAMES.CANDLES,
+            { symbol: firstSymb },
+            {
+              convertTo: lastSymb,
+              symbolFieldName: 'symbol',
+              mts
+            }
+          )
+
+          return res
+        },
+        reqSymb
       )
+
+      if (Number.isFinite(price)) {
+        return price
+      }
+
+      throw err
     }
   }
 
