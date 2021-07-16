@@ -1,6 +1,7 @@
 'use strict'
 
 const moment = require('moment')
+const { orderBy } = require('lodash')
 
 const {
   calcGroupedData,
@@ -54,22 +55,81 @@ class WinLoss {
     this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl.symbolFieldName
   }
 
-  async _calcPlFromPositionsSnapshots (data = []) {
-    return data.reduce((accum, curr) => {
-      const { plUsd } = { ...curr }
-      const symb = 'USD'
+  _isClosedPosition (positionsHistory, mts, id) {
+    return (
+      positionsHistory &&
+      typeof positionsHistory === 'object' &&
+      positionsHistory.id === id &&
+      positionsHistory.mts === mts
+    )
+  }
 
-      if (!Number.isFinite(plUsd)) {
-        return accum
+  _filterPositionsSnapshots (
+    positionsSnapshots,
+    positionsHistory,
+    mts
+  ) {
+    if (
+      !Array.isArray(positionsSnapshots) ||
+      positionsSnapshots.length === 0
+    ) {
+      return positionsSnapshots
+    }
+
+    const orderedPositions = orderBy(
+      positionsSnapshots,
+      ['mtsUpdate', 'id'],
+      ['desc', 'desc']
+    )
+
+    return orderedPositions.reduce((accum, position) => {
+      if (
+        position &&
+        typeof position === 'object' &&
+        accum.every((item) => item.id !== position.id) &&
+        !this._isClosedPosition(positionsHistory, mts, position.id)
+      ) {
+        accum.push(position)
       }
 
-      return {
-        ...accum,
-        [symb]: Number.isFinite(accum[symb])
-          ? accum[symb] + plUsd
-          : plUsd
-      }
-    }, {})
+      return accum
+    }, [])
+  }
+
+  _calcPlFromPositionsSnapshots (positionsHistory) {
+    return (
+      data = [],
+      args = {}
+    ) => {
+      const { mts, timeframe } = args
+
+      // Need to filter duplicate and closed positions as it can be for
+      // week and month and year timeframe in daily positions snapshots
+      // if daily timeframe no need to filter it
+      const positions = timeframe !== 'day'
+        ? this._filterPositionsSnapshots(
+            data,
+            positionsHistory,
+            mts
+          )
+        : data
+
+      return positions.reduce((accum, curr) => {
+        const { plUsd } = { ...curr }
+        const symb = 'USD'
+
+        if (!Number.isFinite(plUsd)) {
+          return accum
+        }
+
+        return {
+          ...accum,
+          [symb]: Number.isFinite(accum[symb])
+            ? accum[symb] + plUsd
+            : plUsd
+        }
+      }, {})
+    }
   }
 
   _sumMovementsWithPrevRes (
@@ -375,7 +435,7 @@ class WinLoss {
       this.FOREX_SYMBS,
       'mtsUpdate',
       this.positionsSnapshotSymbolFieldName,
-      this._calcPlFromPositionsSnapshots.bind(this)
+      this._calcPlFromPositionsSnapshots(positionsHistoryNormByMts)
     )
 
     const [
