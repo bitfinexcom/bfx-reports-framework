@@ -19,7 +19,8 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.SYNC_API_METHODS,
-  TYPES.Movements
+  TYPES.Movements,
+  TYPES.ALLOWED_COLLS
 ]
 class WinLoss {
   constructor (
@@ -30,7 +31,8 @@ class WinLoss {
     FOREX_SYMBS,
     authenticator,
     SYNC_API_METHODS,
-    movements
+    movements,
+    ALLOWED_COLLS
   ) {
     this.syncSchema = syncSchema
     this.wallets = wallets
@@ -40,7 +42,10 @@ class WinLoss {
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
     this.movements = movements
+    this.ALLOWED_COLLS = ALLOWED_COLLS
 
+    this.positionsHistoryModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
@@ -282,6 +287,20 @@ class WinLoss {
 
     const dailyPositionsSnapshotsPromise = this.positionsSnapshot
       .getSyncedPositionsSnapshot(args)
+    const positionsHistoryPromise = this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.POSITIONS_HISTORY,
+      {
+        filter: {
+          user_id: user._id,
+          $gte: { mtsUpdate: start },
+          $lte: { mtsUpdate: end }
+        },
+        sort: [['mtsUpdate', -1]],
+        projection: this.positionsHistoryModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
 
     const withdrawalsPromise = this.movements.getMovements({
       auth: user,
@@ -309,12 +328,14 @@ class WinLoss {
       withdrawals,
       deposits,
       firstWallets,
-      dailyPositionsSnapshots
+      dailyPositionsSnapshots,
+      positionsHistory
     ] = await Promise.all([
       withdrawalsPromise,
       depositsPromise,
       firstWalletsPromise,
-      dailyPositionsSnapshotsPromise
+      dailyPositionsSnapshotsPromise,
+      positionsHistoryPromise
     ])
 
     const withdrawalsGroupedByTimeframePromise = groupByTimeframe(
