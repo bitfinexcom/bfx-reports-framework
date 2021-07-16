@@ -338,6 +338,21 @@ class WinLoss {
       positionsHistoryPromise
     ])
 
+    const positionsHistoryNormByMts = positionsHistory.map((pos) => {
+      if (
+        pos &&
+        typeof pos === 'object' &&
+        Number.isFinite(pos.mtsUpdate)
+      ) {
+        pos.mts = getStartMtsByTimeframe(
+          pos.mtsUpdate,
+          timeframe
+        )
+      }
+
+      return pos
+    })
+
     const withdrawalsGroupedByTimeframePromise = groupByTimeframe(
       withdrawals,
       { timeframe, start, end },
