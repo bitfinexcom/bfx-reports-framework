@@ -137,9 +137,13 @@ class WinLoss {
 
   _calcMovements (
     data = [],
-    symbolFieldName,
-    symbol = []
+    args = {}
   ) {
+    const {
+      symbolFieldName,
+      symbol = []
+    } = args
+
     return data.reduce((accum, movement = {}) => {
       const { amount, amountUsd } = { ...movement }
       const currSymb = movement[symbolFieldName]
