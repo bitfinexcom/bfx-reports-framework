@@ -57,10 +57,12 @@ class WinLoss {
 
   _isClosedPosition (positionsHistory, mts, id) {
     return (
-      positionsHistory &&
-      typeof positionsHistory === 'object' &&
-      positionsHistory.id === id &&
-      positionsHistory.mts === mts
+      Array.isArray(positionsHistory) &&
+      positionsHistory.length > 0 &&
+      positionsHistory.some((item) => (
+        item.id === id &&
+        item.mts === mts
+      ))
     )
   }
 
