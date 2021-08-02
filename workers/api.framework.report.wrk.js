@@ -152,6 +152,8 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     const conf = this.conf[this.group]
     const wsTransport = this.container.get(TYPES.WSTransport)
     const sync = this.container.get(TYPES.Sync)
+    const TABLES_NAMES = this.container.get(TYPES.TABLES_NAMES)
+    const dao = this.container.get(TYPES.DAO)
 
     await wsTransport.start()
 
@@ -176,6 +178,26 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
     this.scheduler_sync.add(name, () => sync.start(), rule)
     this.scheduler_sync.mem.get(name).rule = rule
+
+    process.on('message', async (mess) => {
+      try {
+        const { state } = { ...mess }
+
+        if (state !== 'clear-all-tables') {
+          return
+        }
+
+        await dao.dropAllTables({
+          exceptions: [TABLES_NAMES.USERS]
+        })
+
+        process.send({ state: 'all-tables-have-been-cleared' })
+      } catch (err) {
+        this.logger.error(err.stack || err)
+
+        process.send({ state: 'all-tables-have-not-been-cleared' })
+      }
+    })
 
     process.send({ state: 'ready:worker' })
   }
