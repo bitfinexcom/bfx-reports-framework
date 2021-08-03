@@ -243,9 +243,19 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  async dropAllTables () {
+  async dropAllTables (opts) {
+    const {
+      exceptions = []
+    } = opts
+
+    const _exceptions = Array.isArray(exceptions)
+      ? exceptions
+      : []
     const tableNames = await this._getTablesNames()
-    const sql = tableNames.map((name) => (
+    const filteredTableNames = tableNames.filter((name) => (
+      !_exceptions.includes(name)
+    ))
+    const sql = filteredTableNames.map((name) => (
       `DROP TABLE IF EXISTS ${name}`
     ))
 
