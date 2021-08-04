@@ -222,6 +222,13 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
+  _walCheckpoint () {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'wal_checkpoint(RESTART)'
+    })
+  }
+
   optimize () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
@@ -259,11 +266,16 @@ class BetterSqliteDAO extends DAO {
       `DROP TABLE IF EXISTS ${name}`
     ))
 
-    return this.query({
+    const res = await this.query({
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
     })
+
+    await this._walCheckpoint()
+    await this._vacuum()
+
+    return res
   }
 
   /**
@@ -285,6 +297,7 @@ class BetterSqliteDAO extends DAO {
     await this._createTablesIfNotExists()
     await this._createIndexisIfNotExists()
     await this._createTriggerIfNotExists()
+    await this._walCheckpoint()
     await this._vacuum()
     await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
   }
