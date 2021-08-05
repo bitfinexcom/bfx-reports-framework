@@ -188,7 +188,10 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
         }
 
         await dao.dropAllTables({
-          exceptions: [TABLES_NAMES.USERS]
+          exceptions: [
+            TABLES_NAMES.USERS,
+            TABLES_NAMES.SUB_ACCOUNTS
+          ]
         })
 
         process.send({ state: 'all-tables-have-been-cleared' })
