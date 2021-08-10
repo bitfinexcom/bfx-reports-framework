@@ -1,5 +1,7 @@
 'use strict'
 
+const { omit } = require('lodash')
+
 const BaseCsvJobData = require(
   'bfx-report/workers/loc.api/generate-csv/csv.job.data'
 )
@@ -378,7 +380,7 @@ class CsvJobData extends BaseCsvJobData {
         {
           ...args,
           params: {
-            ...params,
+            ...omit(params, ['start']),
             end: mts
           }
         },
