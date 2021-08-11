@@ -2,7 +2,9 @@
 
 const {
   BaseError,
-  AuthError
+  AuthError,
+  ConflictError,
+  UnprocessableEntityError
 } = require('bfx-report/workers/loc.api/errors')
 
 class CollSyncPermissionError extends BaseError {
@@ -41,7 +43,7 @@ class UpdateRecordError extends BaseError {
       ? `_OF_${name.toUpperCase()}`
       : ''
 
-    super(`ERR_CAN_NOT_UPDATE_RECORD_OF_${recordName}`)
+    super(`ERR_CAN_NOT_UPDATE_RECORD${recordName}`)
   }
 }
 
@@ -59,18 +61,14 @@ class DAOInitializationError extends BaseError {
 
 class ServerAvailabilityError extends BaseError {
   constructor (restUrl) {
-    super(`The server ${restUrl} is not available`)
+    super(`ERR_SERVER_${restUrl}_IS_NOT_AVAILABLE`)
+
+    this.statusMessage = `The server ${restUrl} is not available`
   }
 }
 
 class ObjectMappingError extends BaseError {
   constructor (message = 'ERR_MAPPING_AN_OBJECT_BY_THE_SCHEMA') {
-    super(message)
-  }
-}
-
-class DuringSyncMethodAccessError extends BaseError {
-  constructor (message = 'ERR_DURING_SYNC_METHOD_IS_NOT_AVAILABLE') {
     super(message)
   }
 }
@@ -100,37 +98,45 @@ class DbVersionTypeError extends BaseError {
 }
 
 class MigrationLaunchingError extends BaseError {
-  constructor (message = 'ERR_DB_MIGRATION_HAS_FAILED') {
+  constructor (message = 'ERR_DB_MIGRATION_HAS_BEEN_FAILED') {
     super(message)
   }
 }
 
 class SubAccountCreatingError extends AuthError {
-  constructor (message = 'ERR_SUB_ACCOUNT_CREATION_HAS_FAILED') {
+  constructor (message = 'ERR_SUB_ACCOUNT_CREATION_HAS_BEEN_FAILED') {
     super(message)
+
+    this.statusMessage = 'Sub account creation has been failed'
   }
 }
 
 class SubAccountUpdatingError extends AuthError {
-  constructor (message = 'ERR_SUB_ACCOUNT_UPDATE_HAS_FAILED') {
+  constructor (message = 'ERR_SUB_ACCOUNT_UPDATE_HAS_BEEN_FAILED') {
     super(message)
+
+    this.statusMessage = 'Sub account update has been failed'
   }
 }
 
 class UserRemovingError extends AuthError {
-  constructor (message = 'ERR_USER_REMOVE_HAS_FAILED') {
+  constructor (message = 'ERR_USER_REMOVE_HAS_BEEN_FAILED') {
     super(message)
+
+    this.statusMessage = 'User remove has been failed'
   }
 }
 
 class UserWasPreviouslyStoredInDbError extends AuthError {
   constructor (message = 'ERR_USER_WAS_PREVIOUSLY_STORED_IN_DB') {
     super(message)
+
+    this.statusMessage = 'User was previously stored in DB'
   }
 }
 
 class SubAccountLedgersBalancesRecalcError extends BaseError {
-  constructor (message = 'ERR_SUB_ACCOUNT_LEDGERS_BALANCES_RECALC_HAS_FAILED') {
+  constructor (message = 'ERR_SUB_ACCOUNT_LEDGERS_BALANCES_RECALC_HAS_BEEN_FAILED') {
     super(message)
   }
 }
@@ -142,14 +148,16 @@ class DatePropNameError extends BaseError {
 }
 
 class GetPublicDataError extends BaseError {
-  constructor (message = 'ERR_GETTING_PUBLIC_DATA_HAS_FAILED') {
+  constructor (message = 'ERR_GETTING_PUBLIC_DATA_HAS_BEEN_FAILED') {
     super(message)
   }
 }
 
-class SyncedPositionsSnapshotParamsError extends BaseError {
+class SyncedPositionsSnapshotParamsError extends UnprocessableEntityError {
   constructor (message = 'ERR_SYNCED_POSITIONS_SNAPSHOT_PARAMS_IS_NOT_CORRECT') {
     super(message)
+
+    this.statusMessage = 'The synced positions snapshot params is not correct'
   }
 }
 
@@ -159,9 +167,11 @@ class DataConsistencyCheckerFindingError extends BaseError {
   }
 }
 
-class DataConsistencyError extends BaseError {
+class DataConsistencyError extends ConflictError {
   constructor (message = 'ERR_COLLECTIONS_DATA_IS_NOT_CONSISTENT') {
     super(message)
+
+    this.statusMessage = 'The db has inconsistent data, please force sync and wait for end and then try again'
   }
 }
 
@@ -177,7 +187,6 @@ module.exports = {
   DAOInitializationError,
   ServerAvailabilityError,
   ObjectMappingError,
-  DuringSyncMethodAccessError,
   CurrencyConversionDataFindingError,
   SqlCorrectnessError,
   DbMigrationVerCorrectnessError,
