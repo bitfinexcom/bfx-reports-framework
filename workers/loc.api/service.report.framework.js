@@ -6,7 +6,7 @@ const {
 } = require('lodash')
 const {
   AuthError,
-  FindMethodError
+  BadRequestError
 } = require('bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
@@ -183,7 +183,7 @@ class FrameworkReportService extends ReportService {
         const _args = omit(args, ['pingMethod'])
 
         if (typeof this[pingMethod] !== 'function') {
-          throw new FindMethodError()
+          throw new BadRequestError()
         }
 
         await this[pingMethod](_args)
