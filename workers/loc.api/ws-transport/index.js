@@ -242,11 +242,24 @@ class WSTransport {
   }
 
   _sendToOne (socket, sid, action, err, result = null) {
-    const res = this.transport.format(
-      [sid, err ? err.message : null, { action, result }]
-    )
+    this.responder(
+      () => {
+        if (err) {
+          throw err
+        }
 
-    socket.send(res)
+        return result
+      },
+      action,
+      {},
+      (err, res) => {
+        const _res = this.transport.format(
+          [sid, err, { ...res, action }]
+        )
+
+        socket.send(_res)
+      }
+    )
   }
 
   async send (
