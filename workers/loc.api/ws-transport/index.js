@@ -151,36 +151,42 @@ class WSTransport {
         const rid = data[0]
         const payload = data[2]
 
-        try {
-          if (
-            !payload ||
-            typeof payload !== 'object' ||
-            payload.method !== 'signIn' ||
-            !payload.auth ||
-            typeof payload.auth !== 'object'
-          ) {
-            return
-          }
-
-          const user = await this.authenticator.signIn(
-            { auth: payload.auth },
-            { isReturnedUser: true }
-          )
-          const {
-            email,
-            isSubAccount,
-            token
-          } = { ...user }
-
-          this._auth.set(sid, user)
-          this.transport.sendReply(socket, rid, null, {
-            email,
-            isSubAccount,
-            token
-          })
-        } catch (err) {
-          this.transport.sendReply(socket, rid, err)
+        if (
+          !payload ||
+          typeof payload !== 'object' ||
+          payload.method !== 'signIn' ||
+          !payload.auth ||
+          typeof payload.auth !== 'object'
+        ) {
+          return
         }
+
+        this.responder(
+          async () => {
+            const user = await this.authenticator.signIn(
+              { auth: payload.auth },
+              { isReturnedUser: true }
+            )
+            const {
+              email,
+              isSubAccount,
+              token
+            } = { ...user }
+
+            this._auth.set(sid, user)
+
+            return {
+              email,
+              isSubAccount,
+              token
+            }
+          },
+          payload.method,
+          payload,
+          (err, res) => {
+            this.transport.sendReply(socket, rid, err, res)
+          }
+        )
       })
     })
 
