@@ -5,7 +5,7 @@ const { omit } = require('lodash')
 const { PeerRPCServer } = require('grenache-nodejs-ws')
 
 const {
-  FindMethodError
+  BadRequestError
 } = require('bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../di/utils')
@@ -17,7 +17,8 @@ const depsTypes = (TYPES) => [
   TYPES.Link,
   TYPES.GRC_BFX_OPTS,
   TYPES.TABLES_NAMES,
-  TYPES.Authenticator
+  TYPES.Authenticator,
+  TYPES.Responder
 ]
 class WSTransport {
   constructor (
@@ -27,7 +28,8 @@ class WSTransport {
     link,
     grcBfxOpts,
     TABLES_NAMES,
-    authenticator
+    authenticator,
+    responder
   ) {
     this.wsPort = wsPort
     this.rService = rService
@@ -36,6 +38,7 @@ class WSTransport {
     this.opts = { ...grcBfxOpts }
     this.TABLES_NAMES = TABLES_NAMES
     this.authenticator = authenticator
+    this.responder = responder
 
     this._active = false
     this._sockets = new Map()
@@ -104,7 +107,12 @@ class WSTransport {
         typeof this.rService[method] !== 'function' ||
         /^_/.test(method)
       ) {
-        reply(new FindMethodError())
+        this.responder(
+          () => new BadRequestError(),
+          method,
+          args,
+          reply
+        )
 
         return
       }
