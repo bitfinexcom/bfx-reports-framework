@@ -25,24 +25,8 @@ module.exports = (
   handler,
   name,
   args,
-  done
+  cb
 ) => {
-  const cb = typeof name === 'function'
-    ? name
-    : args
-  const _done = typeof cb === 'function'
-    ? cb
-    : done
-
-  const _argsFromNameParam = name && typeof name === 'object'
-    ? name
-    : args
-  const _args = (
-    _argsFromNameParam &&
-    typeof _argsFromNameParam === 'object'
-  )
-    ? _argsFromNameParam
-    : {}
   const _name = typeof name === 'string'
     ? `${name} [PROTECTED]`
     : name
@@ -54,12 +38,13 @@ module.exports = (
   const _handler = _getHandler(
     authenticator,
     handler,
-    _args
+    args
   )
 
   return _responder(
     _handler,
     _name,
-    _done
+    args,
+    cb
   )
 }

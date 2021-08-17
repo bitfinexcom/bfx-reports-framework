@@ -826,12 +826,12 @@ describe('API filter', () => {
         .type('json')
         .send(args)
         .expect('Content-Type', /json/)
-        .expect(500)
+        .expect(400)
 
       assert.isObject(res.body)
       assert.isObject(res.body.error)
-      assert.propertyVal(res.body.error, 'code', 500)
-      assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
+      assert.propertyVal(res.body.error, 'code', 400)
+      assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
       assert.propertyVal(res.body, 'id', 5)
     }
   })

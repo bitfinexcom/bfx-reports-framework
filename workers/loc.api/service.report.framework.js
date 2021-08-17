@@ -6,7 +6,7 @@ const {
 } = require('lodash')
 const {
   AuthError,
-  FindMethodError
+  BadRequestError
 } = require('bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
@@ -85,19 +85,19 @@ class FrameworkReportService extends ReportService {
   signUp (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signUp(args)
-    }, 'signUp', cb)
+    }, 'signUp', args, cb)
   }
 
   signIn (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signIn(args)
-    }, 'signIn', cb)
+    }, 'signIn', args, cb)
   }
 
   signOut (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signOut(args)
-    }, 'signOut', cb)
+    }, 'signOut', args, cb)
   }
 
   recoverPassword (space, args, cb) {
@@ -110,7 +110,7 @@ class FrameworkReportService extends ReportService {
       }
 
       return this._authenticator.recoverPassword(args)
-    }, 'recoverPassword', cb)
+    }, 'recoverPassword', args, cb)
   }
 
   verifyUser (space, args, cb) {
@@ -130,7 +130,7 @@ class FrameworkReportService extends ReportService {
           ]
         }
       )
-    }, 'verifyUser', cb)
+    }, 'verifyUser', args, cb)
   }
 
   getUsers (space, args, cb) {
@@ -149,13 +149,13 @@ class FrameworkReportService extends ReportService {
           ]
         }
       )
-    }, 'getUsers', cb)
+    }, 'getUsers', args, cb)
   }
 
   removeUser (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.removeUser(args)
-    }, 'removeUser', cb)
+    }, 'removeUser', args, cb)
   }
 
   createSubAccount (space, args, cb) {
@@ -164,7 +164,7 @@ class FrameworkReportService extends ReportService {
 
       return this._subAccount
         .createSubAccount(args)
-    }, 'createSubAccount', cb)
+    }, 'createSubAccount', args, cb)
   }
 
   updateSubAccount (space, args, cb) {
@@ -173,7 +173,7 @@ class FrameworkReportService extends ReportService {
 
       return this._subAccount
         .updateSubAccount(args)
-    }, 'updateSubAccount', cb)
+    }, 'updateSubAccount', args, cb)
   }
 
   pingApi (space, args, cb) {
@@ -183,7 +183,7 @@ class FrameworkReportService extends ReportService {
         const _args = omit(args, ['pingMethod'])
 
         if (typeof this[pingMethod] !== 'function') {
-          throw new FindMethodError()
+          throw new BadRequestError()
         }
 
         await this[pingMethod](_args)
@@ -204,7 +204,7 @@ class FrameworkReportService extends ReportService {
 
         throw _err
       }
-    }, 'pingApi', cb)
+    }, 'pingApi', args, cb)
   }
 
   enableSyncMode (space, args, cb) {
@@ -228,7 +228,7 @@ class FrameworkReportService extends ReportService {
       await this._sync.start(true)
 
       return true
-    }, 'enableSyncMode', cb)
+    }, 'enableSyncMode', args, cb)
   }
 
   disableSyncMode (space, args, cb) {
@@ -243,7 +243,7 @@ class FrameworkReportService extends ReportService {
       )
 
       return true
-    }, 'disableSyncMode', cb)
+    }, 'disableSyncMode', args, cb)
   }
 
   isSyncModeWithDbData (space, args, cb) {
@@ -253,9 +253,6 @@ class FrameworkReportService extends ReportService {
     const responder = isRequiredUser
       ? this._privResponder
       : this._responder
-    const endingArgs = isRequiredUser
-      ? [args, cb]
-      : [cb]
 
     return responder(async () => {
       const { auth } = { ...args }
@@ -270,7 +267,7 @@ class FrameworkReportService extends ReportService {
         !!firstElem.isEnable &&
         isDataFromDb
       )
-    }, 'isSyncModeWithDbData', ...endingArgs)
+    }, 'isSyncModeWithDbData', args, cb)
   }
 
   enableScheduler (space, args, cb) {
@@ -313,7 +310,7 @@ class FrameworkReportService extends ReportService {
       } catch (err) {
         return false
       }
-    }, 'isSchedulerEnabled', cb)
+    }, 'isSchedulerEnabled', args, cb)
   }
 
   getSyncProgress (space, args, cb) {
@@ -560,7 +557,7 @@ class FrameworkReportService extends ReportService {
         inactiveCurrencies,
         inactiveSymbols
       }
-    }, 'getSymbols', cb)
+    }, 'getSymbols', args, cb)
   }
 
   /**
@@ -623,9 +620,6 @@ class FrameworkReportService extends ReportService {
     const responder = isRequiredUser
       ? this._privResponder
       : this._responder
-    const endingArgs = isRequiredUser
-      ? [args, cb]
-      : [cb]
 
     return responder(async () => {
       return this._positionsAudit
@@ -643,7 +637,7 @@ class FrameworkReportService extends ReportService {
             )
           }
         )
-    }, 'getPositionsAudit', ...endingArgs)
+    }, 'getPositionsAudit', args, cb)
   }
 
   /**
@@ -1246,7 +1240,7 @@ class FrameworkReportService extends ReportService {
         'getMultipleCsvJobData',
         args
       )
-    }, 'getMultipleCsv', cb)
+    }, 'getMultipleCsv', args, cb)
   }
 
   getBalanceHistoryCsv (space, args, cb) {
@@ -1255,7 +1249,7 @@ class FrameworkReportService extends ReportService {
         'getBalanceHistoryCsvJobData',
         args
       )
-    }, 'getBalanceHistoryCsv', cb)
+    }, 'getBalanceHistoryCsv', args, cb)
   }
 
   getWinLossCsv (space, args, cb) {
@@ -1264,7 +1258,7 @@ class FrameworkReportService extends ReportService {
         'getWinLossCsvJobData',
         args
       )
-    }, 'getWinLossCsv', cb)
+    }, 'getWinLossCsv', args, cb)
   }
 
   getPositionsSnapshotCsv (space, args, cb) {
@@ -1273,7 +1267,7 @@ class FrameworkReportService extends ReportService {
         'getPositionsSnapshotCsvJobData',
         args
       )
-    }, 'getPositionsSnapshotCsv', cb)
+    }, 'getPositionsSnapshotCsv', args, cb)
   }
 
   getFullSnapshotReportCsv (space, args, cb) {
@@ -1282,7 +1276,7 @@ class FrameworkReportService extends ReportService {
         'getFullSnapshotReportCsvJobData',
         args
       )
-    }, 'getFullSnapshotReportCsv', cb)
+    }, 'getFullSnapshotReportCsv', args, cb)
   }
 
   getFullTaxReportCsv (space, args, cb) {
@@ -1291,7 +1285,7 @@ class FrameworkReportService extends ReportService {
         'getFullTaxReportCsvJobData',
         args
       )
-    }, 'getFullTaxReportCsv', cb)
+    }, 'getFullTaxReportCsv', args, cb)
   }
 
   getTradedVolumeCsv (space, args, cb) {
@@ -1300,7 +1294,7 @@ class FrameworkReportService extends ReportService {
         'getTradedVolumeCsvJobData',
         args
       )
-    }, 'getTradedVolumeCsv', cb)
+    }, 'getTradedVolumeCsv', args, cb)
   }
 
   getFeesReportCsv (space, args, cb) {
@@ -1309,7 +1303,7 @@ class FrameworkReportService extends ReportService {
         'getFeesReportCsvJobData',
         args
       )
-    }, 'getFeesReportCsv', cb)
+    }, 'getFeesReportCsv', args, cb)
   }
 
   getPerformingLoanCsv (space, args, cb) {
@@ -1318,7 +1312,7 @@ class FrameworkReportService extends ReportService {
         'getPerformingLoanCsvJobData',
         args
       )
-    }, 'getPerformingLoanCsv', cb)
+    }, 'getPerformingLoanCsv', args, cb)
   }
 
   getCandlesCsv (space, args, cb) {
@@ -1330,7 +1324,7 @@ class FrameworkReportService extends ReportService {
       checkParams(args, 'paramsSchemaForCandlesCsv')
 
       return super.getCandlesCsv(space, args)
-    }, 'getCandlesCsv', cb)
+    }, 'getCandlesCsv', args, cb)
   }
 }
 

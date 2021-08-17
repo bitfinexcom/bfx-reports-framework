@@ -197,7 +197,9 @@ module.exports = (
     assert.isObject(res.body.error)
     assert.propertyVal(res.body.error, 'code', 401)
     assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+    assert.propertyVal(res.body.error, 'data', null)
     assert.propertyVal(res.body, 'id', 5)
+    assert.isString(res.body.jsonrpc)
   })
 
   it('it should be successfully performed by the signOut method', async function () {
@@ -2041,12 +2043,19 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(500)
+      .expect(400)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 500)
-    assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.isArray(res.body.error.data)
+    assert.isAbove(res.body.error.data.length, 0)
+
+    res.body.error.data.forEach((item) => {
+      assert.isObject(item)
+    })
+
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
     assert.propertyVal(res.body, 'id', 5)
   })
 
@@ -2232,12 +2241,12 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(500)
+      .expect(400)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 500)
-    assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
     assert.propertyVal(res.body, 'id', 5)
   })
 
@@ -2482,12 +2491,12 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(500)
+      .expect(400)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 500)
-    assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
     assert.propertyVal(res.body, 'id', 5)
   })
 
@@ -2582,11 +2591,11 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(400)
+      .expect(422)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'code', 422)
     assert.propertyVal(res.body.error, 'message', 'A greater limit is needed as to show the data correctly')
     assert.propertyVal(res.body, 'id', 5)
   })
@@ -2720,12 +2729,12 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(500)
+      .expect(400)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 500)
-    assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
     assert.propertyVal(res.body, 'id', 5)
   })
 
@@ -3046,11 +3055,11 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(400)
+      .expect(422)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'code', 422)
     assert.propertyVal(res.body.error, 'message', 'For public trades export please select a time frame smaller than a month')
     assert.propertyVal(res.body, 'id', 5)
   })
@@ -3075,12 +3084,12 @@ module.exports = (
         id: 5
       })
       .expect('Content-Type', /json/)
-      .expect(500)
+      .expect(400)
 
     assert.isObject(res.body)
     assert.isObject(res.body.error)
-    assert.propertyVal(res.body.error, 'code', 500)
-    assert.propertyVal(res.body.error, 'message', 'Internal Server Error')
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
     assert.propertyVal(res.body, 'id', 5)
   })
 
