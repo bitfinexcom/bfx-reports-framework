@@ -5,7 +5,7 @@ const { omit } = require('lodash')
 const { PeerRPCServer } = require('grenache-nodejs-ws')
 
 const {
-  FindMethodError
+  BadRequestError
 } = require('bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../di/utils')
@@ -17,7 +17,8 @@ const depsTypes = (TYPES) => [
   TYPES.Link,
   TYPES.GRC_BFX_OPTS,
   TYPES.TABLES_NAMES,
-  TYPES.Authenticator
+  TYPES.Authenticator,
+  TYPES.Responder
 ]
 class WSTransport {
   constructor (
@@ -27,7 +28,8 @@ class WSTransport {
     link,
     grcBfxOpts,
     TABLES_NAMES,
-    authenticator
+    authenticator,
+    responder
   ) {
     this.wsPort = wsPort
     this.rService = rService
@@ -36,6 +38,7 @@ class WSTransport {
     this.opts = { ...grcBfxOpts }
     this.TABLES_NAMES = TABLES_NAMES
     this.authenticator = authenticator
+    this.responder = responder
 
     this._active = false
     this._sockets = new Map()
@@ -104,7 +107,12 @@ class WSTransport {
         typeof this.rService[method] !== 'function' ||
         /^_/.test(method)
       ) {
-        reply(new FindMethodError())
+        this.responder(
+          () => new BadRequestError(),
+          method,
+          args,
+          reply
+        )
 
         return
       }
@@ -143,36 +151,42 @@ class WSTransport {
         const rid = data[0]
         const payload = data[2]
 
-        try {
-          if (
-            !payload ||
-            typeof payload !== 'object' ||
-            payload.method !== 'signIn' ||
-            !payload.auth ||
-            typeof payload.auth !== 'object'
-          ) {
-            return
-          }
-
-          const user = await this.authenticator.signIn(
-            { auth: payload.auth },
-            { isReturnedUser: true }
-          )
-          const {
-            email,
-            isSubAccount,
-            token
-          } = { ...user }
-
-          this._auth.set(sid, user)
-          this.transport.sendReply(socket, rid, null, {
-            email,
-            isSubAccount,
-            token
-          })
-        } catch (err) {
-          this.transport.sendReply(socket, rid, err)
+        if (
+          !payload ||
+          typeof payload !== 'object' ||
+          payload.method !== 'signIn' ||
+          !payload.auth ||
+          typeof payload.auth !== 'object'
+        ) {
+          return
         }
+
+        this.responder(
+          async () => {
+            const user = await this.authenticator.signIn(
+              { auth: payload.auth },
+              { isReturnedUser: true }
+            )
+            const {
+              email,
+              isSubAccount,
+              token
+            } = { ...user }
+
+            this._auth.set(sid, user)
+
+            return {
+              email,
+              isSubAccount,
+              token
+            }
+          },
+          payload.method,
+          payload,
+          (err, res) => {
+            this.transport.sendReply(socket, rid, err, res)
+          }
+        )
       })
     })
 
@@ -228,11 +242,24 @@ class WSTransport {
   }
 
   _sendToOne (socket, sid, action, err, result = null) {
-    const res = this.transport.format(
-      [sid, err ? err.message : null, { action, result }]
-    )
+    this.responder(
+      () => {
+        if (err) {
+          throw err
+        }
 
-    socket.send(res)
+        return result
+      },
+      action,
+      {},
+      (err, res) => {
+        const _res = this.transport.format(
+          [sid, err, { ...res, action }]
+        )
+
+        socket.send(_res)
+      }
+    )
   }
 
   async send (

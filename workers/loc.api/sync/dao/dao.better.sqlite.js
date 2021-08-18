@@ -250,7 +250,7 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  async dropAllTables (opts) {
+  async dropAllTables (opts = {}) {
     const {
       exceptions = []
     } = opts
