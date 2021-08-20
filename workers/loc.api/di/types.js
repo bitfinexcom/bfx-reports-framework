@@ -58,5 +58,6 @@ module.exports = {
   SyncInterrupter: Symbol.for('SyncInterrupter'),
   SyncCollsManager: Symbol.for('SyncCollsManager'),
   Checkers: Symbol.for('Checkers'),
-  DataConsistencyChecker: Symbol.for('DataConsistencyChecker')
+  DataConsistencyChecker: Symbol.for('DataConsistencyChecker'),
+  TimeAnalysis: Symbol.for('TimeAnalysis')
 }

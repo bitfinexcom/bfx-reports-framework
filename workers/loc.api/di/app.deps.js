@@ -92,6 +92,7 @@ const {
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
 const privResponder = require('../responder')
+const TimeAnalysis = require('../sync/time.analysis')
 
 decorate(injectable(), EventEmitter)
 
@@ -314,5 +315,7 @@ module.exports = ({
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)
       .inSingletonScope()
+    bind(TYPES.TimeAnalysis)
+      .to(TimeAnalysis)
   })
 }
