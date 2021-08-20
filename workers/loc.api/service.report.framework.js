@@ -476,6 +476,13 @@ class FrameworkReportService extends ReportService {
     }, 'editCandlesConf', args, cb)
   }
 
+  getTimeAnalysis (space, args = {}, cb) {
+    return this._privResponder(() => {
+      return this._timeAnalysis
+        .getTimeAnalysis(args)
+    }, 'getTimeAnalysis', args, cb)
+  }
+
   /**
    * @override
    */
