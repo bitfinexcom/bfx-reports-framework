@@ -76,10 +76,51 @@ class TimeAnalysis {
         }
       }
 
-      // TODO: common check up
+      const {
+        dateFieldName,
+        sort
+      } = this._methodCollMap.get(apiMethodName)
+
+      if (
+        !dateFieldName ||
+        typeof dateFieldName !== 'string' ||
+        !Array.isArray(sort) ||
+        sort.length === 0 ||
+        sort.every((item) => (
+          !Array.isArray(item) ||
+          typeof item[0] !== 'string' ||
+          !Number.isInteger(item[1])
+        ))
+      ) {
+        throw new Error('ERR_TABLE_NAME_BEING_PROCESSED_DOES_NOT_SUPPORT_TIME_ANALYSIS')
+      }
+
+      const sortToFetchOldest = this._invertOrder(sort)
+
+      const elem = await this.dao.getElemInCollBy(
+        tableName,
+        { user_id: userId },
+        sortToFetchOldest
+      )
+
+      if (
+        !elem ||
+        typeof elem !== 'object' ||
+        !Number.isInteger(elem[dateFieldName])
+      ) {
+        res[tableName] = null
+
+        continue
+      }
+
+      res[tableName] = elem[dateFieldName]
     }
 
     return res
+  }
+
+  _invertOrder (sort) {
+    return sort.map(([name, order]) => ([name, -order]))
   }
 }
 
