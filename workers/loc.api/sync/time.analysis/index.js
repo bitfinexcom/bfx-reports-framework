@@ -26,6 +26,8 @@ class TimeAnalysis {
     this.syncCollsManager = syncCollsManager
 
     this._methodCollMap = this.syncSchema.getMethodCollMap()
+    this._ANALYZED_TABLE_NAMES_ARR = Object
+      .entries(ANALYZED_TABLE_NAMES)
   }
 
   async getTimeAnalysis (args = {}) {
@@ -40,16 +42,16 @@ class TimeAnalysis {
 
     const res = {}
 
-    for (const collName of ANALYZED_TABLE_NAMES) {
+    for (const [apiMethodName, tableName] of this._ANALYZED_TABLE_NAMES_ARR) {
       if (!isSubAccount) {
         const isValid = await this.syncCollsManager
           .hasCollBeenSyncedAtLeastOnce({
             userId,
-            collName
+            tableName
           })
 
         if (!isValid) {
-          res[collName] = null
+          res[tableName] = null
 
           continue
         }
@@ -62,13 +64,13 @@ class TimeAnalysis {
             .hasCollBeenSyncedAtLeastOnce({
               userId,
               subUserId,
-              collName
+              tableName
             })
         })
         const areAllValid = await Promise.all(areAllValidPromise)
 
         if (areAllValid.some((isValid) => !isValid)) {
-          res[collName] = null
+          res[tableName] = null
 
           continue
         }
