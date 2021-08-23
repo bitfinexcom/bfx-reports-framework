@@ -6,6 +6,9 @@ const {
   ConflictError,
   UnprocessableEntityError
 } = require('bfx-report/workers/loc.api/errors')
+const {
+  getErrorArgs
+} = require('bfx-report/workers/loc.api/errors/helpers')
 
 class CollSyncPermissionError extends BaseError {
   constructor (message = 'ERR_PERMISSION_DENIED_TO_SYNC_SELECTED_COLL') {
@@ -175,6 +178,14 @@ class DataConsistencyError extends ConflictError {
   }
 }
 
+class TimeAnalysisProcessingError extends BaseError {
+  constructor (args) {
+    const _args = getErrorArgs(args, 'ERR_TABLE_NAME_BEING_PROCESSED_DOES_NOT_SUPPORT_TIME_ANALYSIS')
+
+    super(_args)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -201,5 +212,6 @@ module.exports = {
   GetPublicDataError,
   SyncedPositionsSnapshotParamsError,
   DataConsistencyCheckerFindingError,
-  DataConsistencyError
+  DataConsistencyError,
+  TimeAnalysisProcessingError
 }

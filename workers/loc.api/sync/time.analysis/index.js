@@ -2,6 +2,9 @@
 
 const { decorateInjectable } = require('../../di/utils')
 
+const {
+  TimeAnalysisProcessingError
+} = require('../../errors')
 const ANALYZED_TABLE_NAMES = require('./analyzed-table-names')
 
 const depsTypes = (TYPES) => [
@@ -92,7 +95,7 @@ class TimeAnalysis {
           !Number.isInteger(item[1])
         ))
       ) {
-        throw new Error('ERR_TABLE_NAME_BEING_PROCESSED_DOES_NOT_SUPPORT_TIME_ANALYSIS')
+        throw new TimeAnalysisProcessingError()
       }
 
       const sortToFetchOldest = this._invertOrder(sort)
