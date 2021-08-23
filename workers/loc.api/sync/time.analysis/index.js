@@ -59,7 +59,7 @@ class TimeAnalysis {
         const isValid = await this.syncCollsManager
           .hasCollBeenSyncedAtLeastOnce({
             userId,
-            tableName
+            collName: apiMethodName
           })
 
         if (!isValid) {
@@ -76,7 +76,7 @@ class TimeAnalysis {
             .hasCollBeenSyncedAtLeastOnce({
               userId,
               subUserId,
-              tableName
+              collName: apiMethodName
             })
         })
         const areAllValid = await Promise.all(areAllValidPromise)
