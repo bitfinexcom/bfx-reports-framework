@@ -1,6 +1,6 @@
 'use strict'
 
-const SYNC_API_METHODS = require('./sync.api.methods')
+const SYNC_API_METHODS = require('../schema/sync.api.methods')
 const TABLES_NAMES = require('../schema/tables-names')
 
 module.exports = {
