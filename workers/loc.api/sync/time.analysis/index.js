@@ -46,6 +46,15 @@ class TimeAnalysis {
     const res = {}
 
     for (const [apiMethodName, tableName] of this._ANALYZED_TABLE_NAMES_ARR) {
+      const schema = this._methodCollMap.get(apiMethodName)
+
+      if (
+        !schema ||
+        typeof schema !== 'object'
+      ) {
+        throw new TimeAnalysisProcessingError({ data: { tableName } })
+      }
+
       if (!isSubAccount) {
         const isValid = await this.syncCollsManager
           .hasCollBeenSyncedAtLeastOnce({
@@ -95,7 +104,7 @@ class TimeAnalysis {
           !Number.isInteger(item[1])
         ))
       ) {
-        throw new TimeAnalysisProcessingError()
+        throw new TimeAnalysisProcessingError({ data: { tableName } })
       }
 
       const sortToFetchOldest = this._invertOrder(sort)
