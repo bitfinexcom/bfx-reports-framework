@@ -37,98 +37,108 @@ class TimeAnalysis {
     const auth = await this.authenticator
       .verifyRequestUser(args)
 
+    const resPromises = this._ANALYZED_TABLE_NAMES_ARR
+      .map(([apiMethodName, tableName]) => {
+        return this.getTimeAnalysisForOne(
+          auth,
+          apiMethodName,
+          tableName
+        )
+      })
+    const resArr = await Promise.all(resPromises)
+
+    const res = resArr.reduce((accum, curr) => {
+      const { tableName, mts } = curr
+
+      accum[tableName] = mts
+
+      return accum
+    }, {})
+
+    return res
+  }
+
+  async getTimeAnalysisForOne (auth, apiMethodName, tableName) {
     const {
       _id: userId,
       subUsers,
       isSubAccount
     } = auth
 
-    const res = {}
+    const schema = this._methodCollMap.get(apiMethodName)
 
-    for (const [apiMethodName, tableName] of this._ANALYZED_TABLE_NAMES_ARR) {
-      const schema = this._methodCollMap.get(apiMethodName)
-
-      if (
-        !schema ||
-        typeof schema !== 'object'
-      ) {
-        throw new TimeAnalysisProcessingError({ data: { tableName } })
-      }
-
-      if (!isSubAccount) {
-        const isValid = await this.syncCollsManager
-          .hasCollBeenSyncedAtLeastOnce({
-            userId,
-            collName: apiMethodName
-          })
-
-        if (!isValid) {
-          res[tableName] = null
-
-          continue
-        }
-      }
-      if (isSubAccount) {
-        const areAllValidPromise = subUsers.map((subUser) => {
-          const { _id: subUserId } = { ...subUser }
-
-          return this.syncCollsManager
-            .hasCollBeenSyncedAtLeastOnce({
-              userId,
-              subUserId,
-              collName: apiMethodName
-            })
-        })
-        const areAllValid = await Promise.all(areAllValidPromise)
-
-        if (areAllValid.some((isValid) => !isValid)) {
-          res[tableName] = null
-
-          continue
-        }
-      }
-
-      const {
-        dateFieldName,
-        sort
-      } = this._methodCollMap.get(apiMethodName)
-
-      if (
-        !dateFieldName ||
-        typeof dateFieldName !== 'string' ||
-        !Array.isArray(sort) ||
-        sort.length === 0 ||
-        sort.every((item) => (
-          !Array.isArray(item) ||
-          typeof item[0] !== 'string' ||
-          !Number.isInteger(item[1])
-        ))
-      ) {
-        throw new TimeAnalysisProcessingError({ data: { tableName } })
-      }
-
-      const sortToFetchOldest = this._invertOrder(sort)
-
-      const elem = await this.dao.getElemInCollBy(
-        tableName,
-        { user_id: userId },
-        sortToFetchOldest
-      )
-
-      if (
-        !elem ||
-        typeof elem !== 'object' ||
-        !Number.isInteger(elem[dateFieldName])
-      ) {
-        res[tableName] = null
-
-        continue
-      }
-
-      res[tableName] = elem[dateFieldName]
+    if (
+      !schema ||
+      typeof schema !== 'object'
+    ) {
+      throw new TimeAnalysisProcessingError({ data: { tableName } })
     }
 
-    return res
+    if (!isSubAccount) {
+      const isValid = await this.syncCollsManager
+        .hasCollBeenSyncedAtLeastOnce({
+          userId,
+          collName: apiMethodName
+        })
+
+      if (!isValid) {
+        return { tableName, mts: null }
+      }
+    }
+    if (isSubAccount) {
+      const areAllValidPromise = subUsers.map((subUser) => {
+        const { _id: subUserId } = { ...subUser }
+
+        return this.syncCollsManager
+          .hasCollBeenSyncedAtLeastOnce({
+            userId,
+            subUserId,
+            collName: apiMethodName
+          })
+      })
+      const areAllValid = await Promise.all(areAllValidPromise)
+
+      if (areAllValid.some((isValid) => !isValid)) {
+        return { tableName, mts: null }
+      }
+    }
+
+    const {
+      dateFieldName,
+      sort
+    } = schema
+
+    if (
+      !dateFieldName ||
+      typeof dateFieldName !== 'string' ||
+      !Array.isArray(sort) ||
+      sort.length === 0 ||
+      sort.every((item) => (
+        !Array.isArray(item) ||
+        typeof item[0] !== 'string' ||
+        !Number.isInteger(item[1])
+      ))
+    ) {
+      throw new TimeAnalysisProcessingError({ data: { tableName } })
+    }
+
+    const sortToFetchOldest = this._invertOrder(sort)
+
+    const elem = await this.dao.getElemInCollBy(
+      tableName,
+      { user_id: userId },
+      sortToFetchOldest
+    )
+
+    if (
+      !elem ||
+      typeof elem !== 'object' ||
+      !Number.isInteger(elem[dateFieldName])
+    ) {
+      return { tableName, mts: null }
+    }
+
+    return { tableName, mts: elem[dateFieldName] }
   }
 
   _invertOrder (sort) {
