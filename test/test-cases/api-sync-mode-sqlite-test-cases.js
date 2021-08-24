@@ -1165,6 +1165,32 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
+  it('it should be successfully performed by the getTimeAnalysis method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTimeAnalysis',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+
+    const resArr = Object.entries(res.body.result)
+    assert.isAbove(resArr.length, 0)
+    resArr.forEach(([tableName, mts]) => {
+      assert.isString(tableName)
+      assert.isOk(Number.isInteger(mts) || mts === null)
+    })
+  })
+
   it('it should be successfully performed by the getUsersTimeConf method', async function () {
     this.timeout(5000)
 
