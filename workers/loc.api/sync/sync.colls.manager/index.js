@@ -80,17 +80,20 @@ class SyncCollsManager {
       collName
     } = { ...params }
 
+    const userIdFilter = Number.isInteger(userId)
+      ? { user_id: userId }
+      : {}
     const subUserIdFilter = Number.isInteger(subUserId)
       ? { subUserId }
       : {}
 
     const completedColl = await this._getCompletedCollBy({
-      user_id: userId,
       collName,
+      ...userIdFilter,
       ...subUserIdFilter
     })
 
-    return (
+    return !!(
       completedColl &&
       typeof completedColl === 'object' &&
       completedColl.collName === collName
