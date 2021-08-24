@@ -6,6 +6,7 @@ const {
   TimeAnalysisProcessingError
 } = require('../../errors')
 const ANALYZED_TABLE_NAMES = require('./analyzed-table-names')
+const { isPublic } = require('../schema/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.DAO,
@@ -39,7 +40,7 @@ class TimeAnalysis {
 
     const resPromises = this._ANALYZED_TABLE_NAMES_ARR
       .map(([apiMethodName, tableName]) => {
-        return this.getTimeAnalysisForOne(
+        return this._getTimeAnalysisForOne(
           auth,
           apiMethodName,
           tableName
@@ -58,13 +59,12 @@ class TimeAnalysis {
     return res
   }
 
-  async getTimeAnalysisForOne (auth, apiMethodName, tableName) {
-    const {
-      _id: userId,
-      subUsers,
-      isSubAccount
-    } = auth
-
+  async _getTimeAnalysisForOne (
+    auth,
+    apiMethodName,
+    tableName
+  ) {
+    const { _id: userId } = auth
     const schema = this._methodCollMap.get(apiMethodName)
 
     if (
@@ -74,39 +74,21 @@ class TimeAnalysis {
       throw new TimeAnalysisProcessingError({ data: { tableName } })
     }
 
-    if (!isSubAccount) {
-      const isValid = await this.syncCollsManager
-        .hasCollBeenSyncedAtLeastOnce({
-          userId,
-          collName: apiMethodName
-        })
-
-      if (!isValid) {
-        return { tableName, mts: null }
-      }
-    }
-    if (isSubAccount) {
-      const areAllValidPromise = subUsers.map((subUser) => {
-        const { _id: subUserId } = { ...subUser }
-
-        return this.syncCollsManager
-          .hasCollBeenSyncedAtLeastOnce({
-            userId,
-            subUserId,
-            collName: apiMethodName
-          })
-      })
-      const areAllValid = await Promise.all(areAllValidPromise)
-
-      if (areAllValid.some((isValid) => !isValid)) {
-        return { tableName, mts: null }
-      }
-    }
-
     const {
       dateFieldName,
-      sort
+      sort,
+      type
     } = schema
+
+    const hasNotSynced = await this._hasNotCollBeenSyncedAtLeastOnce(
+      auth,
+      apiMethodName,
+      type
+    )
+
+    if (hasNotSynced) {
+      return { tableName, mts: null }
+    }
 
     if (
       !dateFieldName ||
@@ -123,10 +105,12 @@ class TimeAnalysis {
     }
 
     const sortToFetchOldest = this._invertOrder(sort)
-
+    const filter = isPublic(type)
+      ? {}
+      : { user_id: userId }
     const elem = await this.dao.getElemInCollBy(
       tableName,
-      { user_id: userId },
+      filter,
       sortToFetchOldest
     )
 
@@ -139,6 +123,50 @@ class TimeAnalysis {
     }
 
     return { tableName, mts: elem[dateFieldName] }
+  }
+
+  async _hasNotCollBeenSyncedAtLeastOnce (
+    auth,
+    apiMethodName,
+    type
+  ) {
+    const {
+      _id: userId,
+      subUsers,
+      isSubAccount
+    } = auth
+
+    if (isPublic(type)) {
+      const isValid = await this.syncCollsManager
+        .hasCollBeenSyncedAtLeastOnce({
+          collName: apiMethodName
+        })
+
+      return !isValid
+    }
+    if (isSubAccount) {
+      const areAllValidPromise = subUsers.map((subUser) => {
+        const { _id: subUserId } = { ...subUser }
+
+        return this.syncCollsManager
+          .hasCollBeenSyncedAtLeastOnce({
+            userId,
+            subUserId,
+            collName: apiMethodName
+          })
+      })
+      const areAllValid = await Promise.all(areAllValidPromise)
+
+      return areAllValid.every((isValid) => !isValid)
+    }
+
+    const isValid = await this.syncCollsManager
+      .hasCollBeenSyncedAtLeastOnce({
+        userId,
+        collName: apiMethodName
+      })
+
+    return !isValid
   }
 
   _invertOrder (sort) {
