@@ -99,6 +99,12 @@ class WSTransport {
       const _payload = { ...payload }
       const { method = '' } = _payload
       const args = omit(_payload, ['method'])
+      const _reply = (err, res) => {
+        reply(err, {
+          action: method,
+          ...res
+        })
+      }
 
       if (method === 'signIn') {
         return
@@ -111,7 +117,7 @@ class WSTransport {
           () => new BadRequestError(),
           method,
           args,
-          reply
+          _reply
         )
 
         return
@@ -119,7 +125,7 @@ class WSTransport {
 
       const fn = this.rService[method].bind(this.rService)
 
-      fn(null, args, reply)
+      fn(null, args, _reply)
     })
   }
 
@@ -184,7 +190,10 @@ class WSTransport {
           payload.method,
           payload,
           (err, res) => {
-            this.transport.sendReply(socket, rid, err, res)
+            this.transport.sendReply(socket, rid, err, {
+              action: payload.method,
+              ...res
+            })
           }
         )
       })
