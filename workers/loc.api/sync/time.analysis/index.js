@@ -13,7 +13,8 @@ const depsTypes = (TYPES) => [
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
   TYPES.Authenticator,
-  TYPES.SyncCollsManager
+  TYPES.SyncCollsManager,
+  TYPES.PublicСollsСonfAccessors
 ]
 class TimeAnalysis {
   constructor (
@@ -21,13 +22,15 @@ class TimeAnalysis {
     TABLES_NAMES,
     syncSchema,
     authenticator,
-    syncCollsManager
+    syncCollsManager,
+    publicСollsСonfAccessors
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.authenticator = authenticator
     this.syncCollsManager = syncCollsManager
+    this.publicСollsСonfAccessors = publicСollsСonfAccessors
 
     this._methodCollMap = this.syncSchema.getMethodCollMap()
     this._ANALYZED_TABLE_NAMES_ARR = Object
@@ -104,8 +107,38 @@ class TimeAnalysis {
       throw new TimeAnalysisProcessingError({ data: { tableName } })
     }
 
+    const _isPublic = isPublic(type)
+    let publicCollMts = 0
+
+    if (_isPublic) {
+      const confName = `${tableName}Conf`
+      const publicСollsСonf = await this.publicСollsСonfAccessors
+        .getPublicСollsСonf(confName, { auth })
+
+      if (
+        Array.isArray(publicСollsСonf) &&
+        publicСollsСonf.length !== 0
+      ) {
+        publicCollMts = publicСollsСonf.reduce((mts, currConf) => {
+          if (
+            !currConf ||
+            typeof currConf !== 'object' ||
+            !Number.isFinite(currConf.start) ||
+            (mts !== 0 && mts < currConf.start)
+          ) {
+            return mts
+          }
+
+          return currConf.start
+        }, publicCollMts)
+      }
+      if (!publicCollMts) {
+        return { tableName, mts: null }
+      }
+    }
+
     const sortToFetchOldest = this._invertOrder(sort)
-    const filter = isPublic(type)
+    const filter = _isPublic
       ? {}
       : { user_id: userId }
     const elem = await this.dao.getElemInCollBy(
@@ -122,7 +155,9 @@ class TimeAnalysis {
       return { tableName, mts: null }
     }
 
-    return { tableName, mts: elem[dateFieldName] }
+    const mts = Math.max(publicCollMts, elem[dateFieldName])
+
+    return { tableName, mts }
   }
 
   async _hasNotCollBeenSyncedAtLeastOnce (
