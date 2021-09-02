@@ -627,6 +627,8 @@ const _models = new Map([
       customerInfo: 'TEXT', // JSON
       invoices: 'TEXT', // JSON
       merchantName: 'VARCHAR(255)',
+      subUserId: 'INT',
+      user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
       [INDEX_FIELD_NAME]: [
