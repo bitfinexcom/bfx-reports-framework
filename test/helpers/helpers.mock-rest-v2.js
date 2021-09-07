@@ -1,5 +1,6 @@
 'use strict'
 
+const { v4: uuidv4 } = require('uuid')
 const {
   createMockRESTv2SrvWithDate: _createMockRESTv2SrvWithDate,
   getMockDataOpts: getBaseMockDataOpts,
@@ -19,7 +20,8 @@ const setDataTo = (
   {
     date = Date.now(),
     id = 12345,
-    fee = 0.0001
+    fee = 0.0001,
+    strId = uuidv4()
   } = {}
 ) => {
   const _dataItem = _setDataTo(
@@ -28,7 +30,8 @@ const setDataTo = (
     {
       date,
       id,
-      fee
+      fee,
+      strId
     }
   )
   const _date = Math.round(date)
