@@ -61,6 +61,7 @@ const BetterSqliteDAO = require('../sync/dao/dao.better.sqlite')
 const {
   PublicСollsСonfAccessors
 } = require('../sync/colls.accessors')
+const Movements = require('../sync/movements')
 const Wallets = require('../sync/wallets')
 const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
@@ -271,6 +272,8 @@ module.exports = ({
     bind(TYPES.SyncInterrupter)
       .to(SyncInterrupter)
       .inSingletonScope()
+    bind(TYPES.Movements)
+      .to(Movements)
     bind(TYPES.Wallets)
       .to(Wallets)
     bind(TYPES.BalanceHistory)
