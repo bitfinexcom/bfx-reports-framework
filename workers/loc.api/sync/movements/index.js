@@ -78,7 +78,6 @@ class Movements {
       ledgers
     )
     movements.push(...remapedLedgers)
-    console.log('[ledgersMovements]:'.bgRed, movements)
 
     const {
       propNames,
@@ -89,7 +88,6 @@ class Movements {
       propNames,
       orders
     )
-    console.log('[orderedRes]:'.bgRed, orderedRes)
 
     return orderedRes
   }
