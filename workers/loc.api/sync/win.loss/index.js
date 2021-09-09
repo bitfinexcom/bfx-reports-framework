@@ -12,40 +12,35 @@ const {
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.DAO,
   TYPES.SyncSchema,
-  TYPES.ALLOWED_COLLS,
   TYPES.Wallets,
   TYPES.BalanceHistory,
   TYPES.PositionsSnapshot,
   TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
-  TYPES.SYNC_API_METHODS
+  TYPES.SYNC_API_METHODS,
+  TYPES.Movements
 ]
 class WinLoss {
   constructor (
-    dao,
     syncSchema,
-    ALLOWED_COLLS,
     wallets,
     balanceHistory,
     positionsSnapshot,
     FOREX_SYMBS,
     authenticator,
-    SYNC_API_METHODS
+    SYNC_API_METHODS,
+    movements
   ) {
-    this.dao = dao
     this.syncSchema = syncSchema
-    this.ALLOWED_COLLS = ALLOWED_COLLS
     this.wallets = wallets
     this.balanceHistory = balanceHistory
     this.positionsSnapshot = positionsSnapshot
     this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.movements = movements
 
-    this.movementsModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.MOVEMENTS)
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
@@ -306,38 +301,27 @@ class WinLoss {
       params: { end }
     })
 
-    const withdrawalsPromise = this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.MOVEMENTS,
-      {
-        filter: {
-          $not: { status: 'CANCELED' },
-          $lt: { amount: 0 },
-          $gte: { mtsStarted: start },
-          $lte: { mtsStarted: end },
-          user_id: user._id
-        },
-        sort: [['mtsStarted', -1]],
-        projection: this.movementsModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
+    const withdrawalsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      filter: {
+        $not: { status: 'CANCELED' },
+        $lt: { amount: 0 },
+        $gte: { mtsStarted: start },
+        $lte: { mtsStarted: end }
+      },
+      sort: [['mtsStarted', -1]]
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      filter: {
+        $eq: { status: 'COMPLETED' },
+        $gt: { amount: 0 }
       }
-    )
-    const depositsPromise = this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.MOVEMENTS,
-      {
-        filter: {
-          status: 'COMPLETED',
-          $gt: { amount: 0 },
-          $gte: { mtsUpdated: start },
-          $lte: { mtsUpdated: end },
-          user_id: user._id
-        },
-        sort: [['mtsUpdated', -1]],
-        projection: this.movementsModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
-    )
+    })
 
     const [
       withdrawals,
