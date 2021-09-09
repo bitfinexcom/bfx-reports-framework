@@ -132,15 +132,24 @@ class Movements {
         mts,
         currency,
         amount,
-        amountUsd
+        amountUsd,
+        subUserId
       } = ledger
 
       return {
+        id: null,
+        currency,
+        currencyName: currency,
         mtsStarted: mts,
         mtsUpdated: mts,
-        currency,
+        status: null,
         amount,
         amountUsd,
+        fees: null,
+        destinationAddress: '',
+        transactionId: '',
+        note: '',
+        subUserId,
         _isFromLedgers: true
       }
     })
