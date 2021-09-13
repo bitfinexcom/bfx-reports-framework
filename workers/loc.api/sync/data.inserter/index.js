@@ -38,6 +38,8 @@ const {
   AfterAllInsertsHookIsNotHookError
 } = require('../../errors')
 
+const isTestEnv = process.env.NODE_ENV === 'test'
+
 const MESS_ERR_UNAUTH = 'ERR_AUTH_UNAUTHORIZED'
 
 const { decorateInjectable } = require('../../di/utils')
@@ -587,6 +589,7 @@ class DataInserter extends EventEmitter {
 
     let count = 0
     let serialRequestsCount = 0
+    let prevRes = []
 
     while (true) {
       if (this._isInterrupted) {
@@ -645,11 +648,31 @@ class DataInserter extends EventEmitter {
         res = res.filter((item) => _args.params.start <= item[dateFieldName])
         isAllData = true
       }
-
       if (_args.params.limit < (count + res.length)) {
         res.splice(_args.params.limit - count)
         isAllData = true
       }
+      /*
+       * As the test mock server always returns
+       * the same mocked data, here is required
+       * to finish syncing if all data is the same
+       * in the next sync iteration to avoid an infinity loop,
+       * but no need for this checking in non-test env
+       * to reduce loading
+       */
+      if (
+        isTestEnv &&
+        prevRes.length > 0 &&
+        prevRes.every((item, i) => (
+          Object.entries(res[i]).every(([key, val]) => (
+            item[key] = val
+          ))
+        ))
+      ) {
+        isAllData = true
+      }
+
+      prevRes = res
 
       await this.dao.insertElemsToDb(
         collName,

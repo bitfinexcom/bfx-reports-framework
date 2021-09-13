@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 24
+const SUPPORTED_DB_VERSION = 25
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -98,6 +98,7 @@ const _models = new Map([
       _isMarginFundingPayment: 'INT',
       _isAffiliateRebate: 'INT',
       _isStakingPayments: 'INT',
+      _isSubAccountsTransfer: 'INT',
       _isBalanceRecalced: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
@@ -110,6 +111,7 @@ const _models = new Map([
         ['user_id', '_isMarginFundingPayment', 'mts'],
         ['user_id', '_isAffiliateRebate', 'mts'],
         ['user_id', '_isStakingPayments', 'mts'],
+        ['user_id', '_isSubAccountsTransfer', 'mts'],
         ['user_id', '_category', 'mts'],
         ['user_id', 'mts'],
         ['currency', 'mts'],
