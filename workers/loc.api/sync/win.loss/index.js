@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { orderBy } = require('lodash')
 
 const {
   calcGroupedData,
@@ -20,8 +19,7 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.SYNC_API_METHODS,
-  TYPES.Movements,
-  TYPES.ALLOWED_COLLS
+  TYPES.Movements
 ]
 class WinLoss {
   constructor (
@@ -32,8 +30,7 @@ class WinLoss {
     FOREX_SYMBS,
     authenticator,
     SYNC_API_METHODS,
-    movements,
-    ALLOWED_COLLS
+    movements
   ) {
     this.syncSchema = syncSchema
     this.wallets = wallets
@@ -43,95 +40,73 @@ class WinLoss {
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
     this.movements = movements
-    this.ALLOWED_COLLS = ALLOWED_COLLS
 
-    this.positionsHistoryModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
-    this.positionsSnapshotMethodColl = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.POSITIONS_SNAPSHOT)
-    this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl.symbolFieldName
   }
 
-  _isClosedPosition (positionsHistory, mts, id) {
-    return (
-      Array.isArray(positionsHistory) &&
-      positionsHistory.length > 0 &&
-      positionsHistory.some((item) => (
-        item.id === id &&
-        item.mts === mts
-      ))
+  async _getPlFromPositionsSnapshot (args = {}) {
+    const {
+      auth,
+      params: { mts }
+    } = args
+
+    const {
+      start,
+      end
+    } = this._getStartAndEndMtsForDay(mts)
+
+    const dailyPositionsSnapshots = await this.positionsSnapshot
+      .getSyncedPositionsSnapshot({
+        auth,
+        params: { start, end }
+      })
+
+    return this._calcPlFromPositionsSnapshots(
+      dailyPositionsSnapshots
     )
   }
 
-  _filterPositionsSnapshots (
-    positionsSnapshots,
-    positionsHistory,
-    mts
-  ) {
+  _getStartAndEndMtsForDay (mts) {
+    const date = moment.utc(mts)
+    const year = date.year()
+    const day = date.dayOfYear()
+
+    const startDate = moment.utc({ year, day })
+    const endDate = moment(startDate)
+      .add(1, 'day')
+      .subtract(1, 'ms')
+
+    return {
+      start: startDate.valueOf(),
+      end: endDate.valueOf()
+    }
+  }
+
+  _calcPlFromPositionsSnapshots (positions) {
     if (
-      !Array.isArray(positionsSnapshots) ||
-      positionsSnapshots.length === 0
+      !Array.isArray(positions) ||
+      positions.length === 0
     ) {
-      return positionsSnapshots
+      return null
     }
 
-    const orderedPositions = orderBy(
-      positionsSnapshots,
-      ['mtsUpdate', 'id'],
-      ['desc', 'desc']
-    )
+    return positions.reduce((accum, curr) => {
+      const { plUsd } = { ...curr }
+      const symb = 'USD'
 
-    return orderedPositions.reduce((accum, position) => {
-      if (
-        position &&
-        typeof position === 'object' &&
-        accum.every((item) => item.id !== position.id) &&
-        !this._isClosedPosition(positionsHistory, mts, position.id)
-      ) {
-        accum.push(position)
+      if (!Number.isFinite(plUsd)) {
+        return accum
       }
 
-      return accum
-    }, [])
-  }
-
-  _calcPlFromPositionsSnapshots (positionsHistory) {
-    return (
-      data = [],
-      args = {}
-    ) => {
-      const { mts, timeframe } = args
-
-      // Need to filter duplicate and closed positions as it can be for
-      // week and month and year timeframe in daily positions snapshots
-      // if daily timeframe no need to filter it
-      const positions = timeframe !== 'day'
-        ? this._filterPositionsSnapshots(
-            data,
-            positionsHistory,
-            mts
-          )
-        : data
-
-      return positions.reduce((accum, curr) => {
-        const { plUsd } = { ...curr }
-        const symb = 'USD'
-
-        if (!Number.isFinite(plUsd)) {
-          return accum
-        }
-
-        return {
-          ...accum,
-          [symb]: Number.isFinite(accum[symb])
-            ? accum[symb] + plUsd
-            : plUsd
-        }
-      }, {})
-    }
+      return {
+        ...accum,
+        [symb]: Number.isFinite(accum[symb])
+          ? accum[symb] + plUsd
+          : plUsd
+      }
+    }, {})
   }
 
   _sumMovementsWithPrevRes (
@@ -159,16 +134,19 @@ class WinLoss {
   }
 
   _getWinLossByTimeframe (
-    startWalletsVals = {}
+    startWalletsVals = {},
+    startPl = {},
+    endPl = {}
   ) {
     let prevMovementsRes = {}
 
     return ({
       walletsGroupedByTimeframe = {},
       withdrawalsGroupedByTimeframe = {},
-      depositsGroupedByTimeframe = {},
-      plGroupedByTimeframe = {}
-    } = {}) => {
+      depositsGroupedByTimeframe = {}
+    } = {}, i) => {
+      const isLast = i === 0
+
       prevMovementsRes = this._sumMovementsWithPrevRes(
         prevMovementsRes,
         { ...withdrawalsGroupedByTimeframe },
@@ -185,19 +163,23 @@ class WinLoss {
         const movements = Number.isFinite(prevMovementsRes[symb])
           ? prevMovementsRes[symb]
           : 0
-        const pl = Number.isFinite(plGroupedByTimeframe[symb])
-          ? plGroupedByTimeframe[symb]
+        const startPlVal = Number.isFinite(startPl?.[symb])
+          ? startPl[symb]
           : 0
+        const endPlVal = (
+          isLast &&
+          Number.isFinite(endPl?.[symb])
+        )
+          ? endPl[symb]
+          : 0
+        const pl = startPlVal + endPlVal
         const res = (wallet - startWallet - movements) + pl
 
         if (!res) {
-          return { ...accum }
+          return accum
         }
 
-        return {
-          ...accum,
-          [symb]: res
-        }
+        return Object.assign(accum, { [symb]: res })
       }, {})
     }
   }
@@ -347,22 +329,14 @@ class WinLoss {
       params: { end: start }
     })
 
-    const dailyPositionsSnapshotsPromise = this.positionsSnapshot
-      .getSyncedPositionsSnapshot(args)
-    const positionsHistoryPromise = this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.POSITIONS_HISTORY,
-      {
-        filter: {
-          user_id: user._id,
-          $gte: { mtsUpdate: start },
-          $lte: { mtsUpdate: end }
-        },
-        sort: [['mtsUpdate', -1]],
-        projection: this.positionsHistoryModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
-    )
+    const startPlPromise = this._getPlFromPositionsSnapshot({
+      auth,
+      params: { mts: start }
+    })
+    const endPlPromise = this._getPlFromPositionsSnapshot({
+      auth,
+      params: { mts: end }
+    })
 
     const withdrawalsPromise = this.movements.getMovements({
       auth: user,
@@ -390,30 +364,15 @@ class WinLoss {
       withdrawals,
       deposits,
       firstWallets,
-      dailyPositionsSnapshots,
-      positionsHistory
+      startPl,
+      endPl
     ] = await Promise.all([
       withdrawalsPromise,
       depositsPromise,
       firstWalletsPromise,
-      dailyPositionsSnapshotsPromise,
-      positionsHistoryPromise
+      startPlPromise,
+      endPlPromise
     ])
-
-    const positionsHistoryNormByMts = positionsHistory.map((pos) => {
-      if (
-        pos &&
-        typeof pos === 'object' &&
-        Number.isFinite(pos.mtsUpdate)
-      ) {
-        pos.mts = getStartMtsByTimeframe(
-          pos.mtsUpdate,
-          timeframe
-        )
-      }
-
-      return pos
-    })
 
     const withdrawalsGroupedByTimeframePromise = groupByTimeframe(
       withdrawals,
@@ -431,25 +390,15 @@ class WinLoss {
       this.movementsSymbolFieldName,
       this._calcMovements.bind(this)
     )
-    const plGroupedByTimeframePromise = groupByTimeframe(
-      dailyPositionsSnapshots,
-      { timeframe, start, end },
-      this.FOREX_SYMBS,
-      'mtsUpdate',
-      this.positionsSnapshotSymbolFieldName,
-      this._calcPlFromPositionsSnapshots(positionsHistoryNormByMts)
-    )
 
     const [
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
-      walletsGroupedByTimeframe,
-      plGroupedByTimeframe
+      walletsGroupedByTimeframe
     ] = await Promise.all([
       withdrawalsGroupedByTimeframePromise,
       depositsGroupedByTimeframePromise,
-      walletsGroupedByTimeframePromise,
-      plGroupedByTimeframePromise
+      walletsGroupedByTimeframePromise
     ])
 
     const startWallets = this._getStartWallets()
@@ -462,11 +411,14 @@ class WinLoss {
       {
         walletsGroupedByTimeframe,
         withdrawalsGroupedByTimeframe,
-        depositsGroupedByTimeframe,
-        plGroupedByTimeframe
+        depositsGroupedByTimeframe
       },
       false,
-      this._getWinLossByTimeframe(startWalletsInForex),
+      this._getWinLossByTimeframe(
+        startWalletsInForex,
+        startPl,
+        endPl
+      ),
       true
     )
     groupedData.push({
