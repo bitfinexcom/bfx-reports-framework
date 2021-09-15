@@ -73,7 +73,8 @@ class WinLoss {
     const year = date.year()
     const day = date.dayOfYear()
 
-    const startDate = moment.utc({ year, day })
+    const startDate = moment.utc({ year })
+      .dayOfYear(day)
     const endDate = moment(startDate)
       .add(1, 'day')
       .subtract(1, 'ms')
