@@ -665,7 +665,7 @@ class DataInserter extends EventEmitter {
         prevRes.length > 0 &&
         prevRes.every((item, i) => (
           Object.entries(res[i]).every(([key, val]) => (
-            item[key] = val
+            item[key] === val
           ))
         ))
       ) {
