@@ -6,8 +6,6 @@ const {
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
 
-const { getTimeframeQuery } = require('../dao/helpers')
-
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -64,38 +62,6 @@ class PositionsSnapshot {
         isExcludePrivate: true
       }
     )
-  }
-
-  _getTimeframeQuery (alias, isMtsExisted) {
-    const res = getTimeframeQuery(
-      'day',
-      {
-        propName: 'mtsUpdate',
-        alias
-      }
-    )
-
-    return isMtsExisted ? [res] : []
-  }
-
-  _getMtsStr (mts, propName) {
-    if (
-      !Number.isInteger(mts) ||
-      mts === 0
-    ) {
-      return
-    }
-
-    const date = new Date(mts)
-    const year = date.getUTCFullYear()
-    const _month = date.getUTCMonth() + 1
-    const month = _month < 10
-      ? `0${_month}`
-      : _month
-    const day = date.getUTCDate()
-    const mtsStr = `${year}-${month}-${day}`
-
-    return { [propName]: mtsStr }
   }
 
   _getPositionsSnapshotFromDb (
@@ -591,7 +557,7 @@ class PositionsSnapshot {
       positionsSnapshot
     } = await this._getCalculatedPositions(
       syncedPositionsSnapshot,
-      start || end,
+      end ?? start,
       { isNotTickersRequired: true }
     )
 
