@@ -49,13 +49,13 @@ class WinLoss {
   async _getPlFromPositionsSnapshot (args = {}) {
     const {
       auth,
-      params: { mts }
+      params: { mts, isStart, isEnd }
     } = args
 
     const {
       start,
       end
-    } = this._getStartAndEndMtsForDay(mts)
+    } = this._getStartAndEndMtsForDay({ mts, isStart, isEnd })
 
     const dailyPositionsSnapshots = await this.positionsSnapshot
       .getSyncedPositionsSnapshot({
@@ -71,7 +71,9 @@ class WinLoss {
     )
   }
 
-  _getStartAndEndMtsForDay (mts) {
+  _getStartAndEndMtsForDay (params = {}) {
+    const { mts, isStart, isEnd } = params
+
     const date = moment.utc(mts)
     const year = date.year()
     const day = date.dayOfYear()
@@ -83,8 +85,12 @@ class WinLoss {
       .subtract(1, 'ms')
 
     return {
-      start: startDate.valueOf(),
-      end: endDate.valueOf()
+      start: isStart
+        ? mts
+        : startDate.valueOf(),
+      end: isEnd
+        ? mts
+        : endDate.valueOf()
     }
   }
 
@@ -355,11 +361,11 @@ class WinLoss {
 
     const startPlPromise = this._getPlFromPositionsSnapshot({
       auth,
-      params: { mts: start }
+      params: { mts: start, isStart: true }
     })
     const endPlPromise = this._getPlFromPositionsSnapshot({
       auth,
-      params: { mts: end }
+      params: { mts: end, isEnd: true }
     })
 
     const withdrawalsPromise = this.movements.getMovements({
