@@ -652,6 +652,9 @@ class DataInserter extends EventEmitter {
         res.splice(_args.params.limit - count)
         isAllData = true
       }
+
+      const normalizedApiData = normalizeApiData(res, model)
+
       /*
        * As the test mock server always returns
        * the same mocked data, here is required
@@ -663,21 +666,25 @@ class DataInserter extends EventEmitter {
       if (
         isTestEnv &&
         prevRes.length > 0 &&
-        prevRes.every((item, i) => (
-          Object.entries(res[i]).every(([key, val]) => (
-            item[key] === val
+        normalizedApiData.every((item) => (
+          prevRes.some((prevItem) => (
+            Object.keys(item).every((key) => (
+              typeof item?.[key] === 'object'
+                ? JSON.stringify(item[key]) === JSON.stringify(prevItem[key])
+                : item[key] === prevItem[key]
+            ))
           ))
         ))
       ) {
         isAllData = true
       }
 
-      prevRes = res
+      prevRes = normalizedApiData
 
       await this.dao.insertElemsToDb(
         collName,
         sessionAuth,
-        normalizeApiData(res, model),
+        normalizedApiData,
         { isReplacedIfExists: true }
       )
 
