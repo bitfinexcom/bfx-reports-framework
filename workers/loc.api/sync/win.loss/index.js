@@ -62,9 +62,12 @@ class WinLoss {
         auth,
         params: { start, end }
       })
+    const filteredPositions = this._filterPositionsDuplicateBySymb(
+      dailyPositionsSnapshots
+    )
 
     return this._calcPlFromPositionsSnapshots(
-      dailyPositionsSnapshots
+      filteredPositions
     )
   }
 
@@ -83,6 +86,26 @@ class WinLoss {
       start: startDate.valueOf(),
       end: endDate.valueOf()
     }
+  }
+
+  _filterPositionsDuplicateBySymb (positions) {
+    if (
+      !Array.isArray(positions) ||
+      positions.length === 0
+    ) {
+      return positions
+    }
+
+    return positions.reduce((accum, position) => {
+      if (
+        typeof position?.symbol === 'string' &&
+        accum.every((item) => item?.symbol !== position?.symbol)
+      ) {
+        accum.push(position)
+      }
+
+      return accum
+    }, [])
   }
 
   _calcPlFromPositionsSnapshots (positions) {
