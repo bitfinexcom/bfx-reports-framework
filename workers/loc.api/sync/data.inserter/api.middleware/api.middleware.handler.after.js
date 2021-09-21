@@ -78,8 +78,8 @@ class ApiMiddlewareHandlerAfter {
         continue
       }
 
-      const pl = (closePrice - basePrice) * Math.abs(sumAmount)
-      const plPerc = ((closePrice / basePrice) - 1) * 100
+      const pl = (closePrice - basePrice) * sumAmount
+      const plPerc = ((closePrice / basePrice) - 1) * 100 * Math.sign(sumAmount)
 
       res.push({
         ...position,

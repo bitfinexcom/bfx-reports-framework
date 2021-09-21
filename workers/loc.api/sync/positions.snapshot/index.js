@@ -245,9 +245,9 @@ class PositionsSnapshot {
         ? _marginFunding
         : _marginFunding * actualPrice
 
-      const pl = ((actualPrice - basePrice) * Math.abs(amount)) -
+      const pl = ((actualPrice - basePrice) * amount) -
         Math.abs(convertedMarginFunding)
-      const plPerc = ((actualPrice / basePrice) - 1) * 100
+      const plPerc = ((actualPrice / basePrice) - 1) * 100 * Math.sign(amount)
       const {
         plUsd,
         currency
