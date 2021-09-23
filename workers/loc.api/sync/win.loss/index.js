@@ -156,10 +156,7 @@ class WinLoss {
     }, {})
   }
 
-  _getWinLossByTimeframe (
-    startWalletsVals = {},
-    isRealizedProfitExcluded
-  ) {
+  _getWinLossByTimeframe ({ isRealizedProfitExcluded }) {
     let firstWalletsVals = {}
     let firstPLVals = 0
     let prevMovementsRes = 0
@@ -340,8 +337,9 @@ class WinLoss {
       }
     }
 
-    const walletsGroupedByTimeframePromise = this.balanceHistory
-      .getBalanceHistory(
+    const walletsGroupedByTimeframePromise = isRealizedProfitExcluded
+      ? []
+      : this.balanceHistory.getBalanceHistory(
         args,
         true
       )
@@ -363,27 +361,31 @@ class WinLoss {
       }
     )
 
-    const withdrawalsPromise = this.movements.getMovements({
-      auth: user,
-      start,
-      end,
-      filter: {
-        $not: { status: 'CANCELED' },
-        $lt: { amount: 0 },
-        $gte: { mtsStarted: start },
-        $lte: { mtsStarted: end }
-      },
-      sort: [['mtsStarted', -1]]
-    })
-    const depositsPromise = this.movements.getMovements({
-      auth: user,
-      start,
-      end,
-      filter: {
-        $eq: { status: 'COMPLETED' },
-        $gt: { amount: 0 }
-      }
-    })
+    const withdrawalsPromise = isRealizedProfitExcluded
+      ? []
+      : this.movements.getMovements({
+        auth: user,
+        start,
+        end,
+        filter: {
+          $not: { status: 'CANCELED' },
+          $lt: { amount: 0 },
+          $gte: { mtsStarted: start },
+          $lte: { mtsStarted: end }
+        },
+        sort: [['mtsStarted', -1]]
+      })
+    const depositsPromise = isRealizedProfitExcluded
+      ? []
+      : this.movements.getMovements({
+        auth: user,
+        start,
+        end,
+        filter: {
+          $eq: { status: 'COMPLETED' },
+          $gt: { amount: 0 }
+        }
+      })
 
     const [
       withdrawals,
@@ -458,7 +460,7 @@ class WinLoss {
       },
       false,
       this._getWinLossByTimeframe(
-        isRealizedProfitExcluded
+        { isRealizedProfitExcluded }
       ),
       true
     )
