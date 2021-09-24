@@ -6,7 +6,6 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  getDataFromApi,
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
 
@@ -55,6 +54,9 @@ class CurrencyConverter {
     this.currenciesUpdatedAt = new Date()
     this.currencies = []
     this.currenciesSynonymous = new Map()
+
+    this._getPublicTrades = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+      .bind(this.rService)
   }
 
   async getCurrenciesSynonymous () {
@@ -356,19 +358,15 @@ class CurrencyConverter {
     }
 
     const symbol = this._getPairFromPair(reqSymb)
-    const { res } = await getDataFromApi(
-      (space, args) => this.rService._getPublicTrades
-        .bind(this.rService)(args),
-      {
-        params: {
-          symbol,
-          end,
-          limit: 1,
-          notThrowError: true,
-          notCheckNextPage: true
-        }
+    const { res } = await this._getPublicTrades({
+      params: {
+        symbol,
+        end,
+        limit: 1,
+        notThrowError: true,
+        notCheckNextPage: true
       }
-    )
+    })
 
     const publicTrade = Array.isArray(res)
       ? res[0]
