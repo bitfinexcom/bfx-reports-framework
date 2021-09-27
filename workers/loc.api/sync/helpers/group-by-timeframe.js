@@ -1,5 +1,7 @@
 'use strict'
 
+const moment = require('moment')
+
 const getStartMtsByTimeframe = require(
   './get-start-mts-by-timeframe'
 )
@@ -36,6 +38,19 @@ const _checkTimeframe = ({
     first,
     last
   } = _getFirstAndLastDate(data, dateFieldName)
+
+  if (timeframe === 'week') {
+    const date = moment.utc(last)
+    const year = date.year()
+    const weekYear = date.isoWeekYear()
+    console.log('[date]:', date)
+    console.log('[year]:', year)
+    console.log('[weekYear]:', weekYear)
+
+    if (year < weekYear) {
+      return false
+    }
+  }
 
   return (
     (
@@ -123,6 +138,23 @@ const _getGroupItem = async (
     timeframe,
     mts
   }
+
+  // if (_isWeeklyTimeframe({ timeframe })) {
+  //   const date = moment.utc(mts)
+  //   const year = date.year()
+  //   const weekYear = date.isoWeekYear()
+  //   const week = date.isoWeek()
+
+  //   if (
+  //     year === weekYear &&
+  //     week === 1
+  //   ) {
+  //     return {
+  //       mts: null,
+  //       vals: null
+  //     }
+  //   }
+  // }
 
   const vals = await calcDataFn(data, args)
 

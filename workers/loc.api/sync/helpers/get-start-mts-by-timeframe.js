@@ -18,10 +18,20 @@ module.exports = (ts, timeframe = 'year') => {
 
     return momentDate.valueOf()
   }
+  // TODO:
   if (timeframe === 'week') {
-    momentDate.isoWeekYear(weekYear)
-    momentDate.isoWeekday(1)
-    momentDate.isoWeek(week)
+    if (
+      year < weekYear ||
+      week > 1
+    ) {
+      momentDate.isoWeekYear(weekYear)
+      momentDate.isoWeekday(1)
+      momentDate.isoWeek(week)
+    }
+
+    // momentDate.isoWeekYear(weekYear)
+    // momentDate.isoWeekday(1)
+    // momentDate.isoWeek(week)
 
     return momentDate.valueOf()
   }

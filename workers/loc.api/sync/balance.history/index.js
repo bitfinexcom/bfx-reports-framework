@@ -150,6 +150,7 @@ class BalanceHistory {
     )
   }
 
+  // TODO:
   _getCandlesClosePrice (
     candles,
     mts,
@@ -157,7 +158,7 @@ class BalanceHistory {
     symb,
     currenciesSynonymous
   ) {
-    const mtsMoment = moment.utc(mts)
+    let mtsMoment = moment.utc(mts)
 
     if (timeframe === 'day') {
       mtsMoment.add(1, 'days')
@@ -166,7 +167,15 @@ class BalanceHistory {
       mtsMoment.add(1, 'months')
     }
     if (timeframe === 'week') {
-      mtsMoment.add(1, 'weeks')
+      // mtsMoment.add(1, 'weeks')
+      const year = mtsMoment.year()
+      const weekYear = mtsMoment.isoWeekYear()
+      if (year < weekYear) {
+        mtsMoment = moment.utc({ year: weekYear })
+      } else {
+        mtsMoment.add(1, 'weeks')
+        mtsMoment.isoWeekday(1)
+      }
     }
     if (timeframe === 'year') {
       mtsMoment.add(1, 'years')
