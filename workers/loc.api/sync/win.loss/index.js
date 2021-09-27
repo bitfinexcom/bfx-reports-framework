@@ -46,18 +46,83 @@ class WinLoss {
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
   }
 
-  async _getPlFromPositionsSnapshot (args) {
-    const positionsSnapshot = await this.positionsSnapshot
-      .getSyncedPositionsSnapshot(args)
+  async _getPlFromPositionsSnapshot (args = {}) {
+    const {
+      auth,
+      params: { mts, isStart, isEnd }
+    } = args
 
+    const {
+      start,
+      end
+    } = this._getStartAndEndMtsForDay({ mts, isStart, isEnd })
+
+    const dailyPositionsSnapshots = await this.positionsSnapshot
+      .getSyncedPositionsSnapshot({
+        auth,
+        params: { start, end }
+      })
+    const filteredPositions = this._filterPositionsDuplicateBySymb(
+      dailyPositionsSnapshots
+    )
+
+    return this._calcPlFromPositionsSnapshots(
+      filteredPositions
+    )
+  }
+
+  _getStartAndEndMtsForDay (params = {}) {
+    const { mts, isStart, isEnd } = params
+
+    const date = moment.utc(mts)
+    const year = date.year()
+    const day = date.dayOfYear()
+
+    const startDate = moment.utc({ year })
+      .dayOfYear(day)
+    const endDate = moment(startDate)
+      .add(1, 'day')
+      .subtract(1, 'ms')
+
+    return {
+      start: isStart
+        ? mts
+        : startDate.valueOf(),
+      end: isEnd
+        ? mts
+        : endDate.valueOf()
+    }
+  }
+
+  _filterPositionsDuplicateBySymb (positions) {
     if (
-      !Array.isArray(positionsSnapshot) ||
-      positionsSnapshot.length === 0
+      !Array.isArray(positions) ||
+      positions.length === 0
+    ) {
+      return positions
+    }
+
+    return positions.reduce((accum, position) => {
+      if (
+        typeof position?.symbol === 'string' &&
+        accum.every((item) => item?.symbol !== position?.symbol)
+      ) {
+        accum.push(position)
+      }
+
+      return accum
+    }, [])
+  }
+
+  _calcPlFromPositionsSnapshots (positions) {
+    if (
+      !Array.isArray(positions) ||
+      positions.length === 0
     ) {
       return null
     }
 
-    return positionsSnapshot.reduce((accum, curr) => {
+    return positions.reduce((accum, curr) => {
       const { plUsd } = { ...curr }
       const symb = 'USD'
 
@@ -111,8 +176,6 @@ class WinLoss {
       depositsGroupedByTimeframe = {}
     } = {}, i) => {
       const isLast = i === 0
-      const _startPl = { ...startPl }
-      const _endPl = isLast ? { ...endPl } : {}
 
       prevMovementsRes = this._sumMovementsWithPrevRes(
         prevMovementsRes,
@@ -130,32 +193,36 @@ class WinLoss {
         const movements = Number.isFinite(prevMovementsRes[symb])
           ? prevMovementsRes[symb]
           : 0
-        const _startPlVal = Number.isFinite(_startPl[symb])
-          ? _startPl[symb]
+        const startPlVal = Number.isFinite(startPl?.[symb])
+          ? startPl[symb]
           : 0
-        const _endPlVal = Number.isFinite(_endPl[symb])
-          ? _endPl[symb]
+        const endPlVal = (
+          isLast &&
+          Number.isFinite(endPl?.[symb])
+        )
+          ? endPl[symb]
           : 0
-        const res = (wallet - startWallet - movements) +
-          (_startPlVal + _endPlVal)
+        const pl = startPlVal + endPlVal
+        const res = (wallet - startWallet - movements) + pl
 
         if (!res) {
-          return { ...accum }
+          return accum
         }
 
-        return {
-          ...accum,
-          [symb]: res
-        }
+        return Object.assign(accum, { [symb]: res })
       }, {})
     }
   }
 
   _calcMovements (
     data = [],
-    symbolFieldName,
-    symbol = []
+    args = {}
   ) {
+    const {
+      symbolFieldName,
+      symbol = []
+    } = args
+
     return data.reduce((accum, movement = {}) => {
       const { amount, amountUsd } = { ...movement }
       const currSymb = movement[symbolFieldName]
@@ -294,11 +361,11 @@ class WinLoss {
 
     const startPlPromise = this._getPlFromPositionsSnapshot({
       auth,
-      params: { start }
+      params: { mts: start, isStart: true }
     })
     const endPlPromise = this._getPlFromPositionsSnapshot({
       auth,
-      params: { end }
+      params: { mts: end, isEnd: true }
     })
 
     const withdrawalsPromise = this.movements.getMovements({

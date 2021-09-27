@@ -3,8 +3,7 @@
 const {
   BaseError,
   AuthError,
-  ConflictError,
-  UnprocessableEntityError
+  ConflictError
 } = require('bfx-report/workers/loc.api/errors')
 
 class CollSyncPermissionError extends BaseError {
@@ -153,14 +152,6 @@ class GetPublicDataError extends BaseError {
   }
 }
 
-class SyncedPositionsSnapshotParamsError extends UnprocessableEntityError {
-  constructor (message = 'ERR_SYNCED_POSITIONS_SNAPSHOT_PARAMS_IS_NOT_CORRECT') {
-    super(message)
-
-    this.statusMessage = 'The synced positions snapshot params is not correct'
-  }
-}
-
 class DataConsistencyCheckerFindingError extends BaseError {
   constructor (message = 'ERR_DATA_CONSISTENCY_CHECKER_HAS_NOT_BEEN_FOUND') {
     super(message)
@@ -199,7 +190,6 @@ module.exports = {
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
   GetPublicDataError,
-  SyncedPositionsSnapshotParamsError,
   DataConsistencyCheckerFindingError,
   DataConsistencyError
 }

@@ -584,25 +584,14 @@ class DataChecker {
         notCheckNextPage: true,
         symbol
       }
-      const _argsForLastElem = this._getMethodArgMap(method, {}, 1)
-      const argsForLastElem = {
-        ..._argsForLastElem,
-        params: {
-          ..._argsForLastElem.params,
-          ...params
-        }
-      }
-      const _argsForReceivingStart = this._getMethodArgMap(
+      const argsForLastElem = this._getMethodArgMap(
         method,
-        { limit: 1, end: _start }
+        { limit: 1, params }
       )
-      const argsForReceivingStart = {
-        ..._argsForReceivingStart,
-        params: {
-          ..._argsForReceivingStart.params,
-          ...params
-        }
-      }
+      const argsForReceivingStart = this._getMethodArgMap(
+        method,
+        { limit: 1, end: _start, params }
+      )
 
       const filter = {
         [symbolFieldName]: symbol,
