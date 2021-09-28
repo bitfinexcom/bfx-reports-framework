@@ -72,7 +72,7 @@ class BalanceHistory {
     }
   }
 
-  _getWallets ({
+  async _getWallets ({
     auth,
     timeframe,
     start,
@@ -112,7 +112,7 @@ class BalanceHistory {
       }
     }
 
-    return this.dao.findInCollBy(
+    const res = await this.dao.findInCollBy(
       this.SYNC_API_METHODS.WALLETS,
       {
         auth,
@@ -123,6 +123,89 @@ class BalanceHistory {
         schema
       }
     )
+
+    if (timeframe !== 'week') {
+      return res
+    }
+
+    return this._reGroupWeeklyDataGroups(res)
+  }
+
+  /*
+   * There need to re-group weekly data groups
+   * if the weekly timeframe hits on the transition
+   * from one year to another
+   * The reason:
+   *   - the sqlite `strftime` function
+   * https://www.sqlite.org/lang_datefunc.html
+   * https://pubs.opengroup.org/onlinepubs/007908799/xsh/strftime.html
+   * works differently compared MomentJS implementation
+   * with weeks of year https://momentjs.com/docs/#/get-set/iso-week-year
+   *   - for `strftime`, the week is number of the year
+   * (Monday as the first day of the week)
+   * as a decimal number [00,53]
+   * All days in a new year preceding the first Monday
+   * are considered to be in week 0
+   *  - for MomentJS (ISO 8601 week date),
+   * if 31 December is on a Monday, Tuesday, or Wednesday
+   * it is in W01 of the next year
+   * https://en.wikipedia.org/wiki/ISO_week_date#Last_week
+   * https://en.wikipedia.org/wiki/ISO_week_date#First_week
+   *
+   * Take into consideration sqlite peculiarity we can have
+   * wrong and redundant week data groups at the end/start of the year
+   */
+  _reGroupWeeklyDataGroups (data) {
+    let unicGroup = []
+
+    return data.reduce((accum, item, i) => {
+      const isLast = (i + 1) === data.length
+
+      const date = moment.utc(item?.mtsUpdate)
+      const month = date.month()
+      const dates = date.date()
+      const weekday = date.isoWeekday()
+
+      if (
+        (
+          month === 0 &&
+          dates < 7 &&
+          (weekday - dates) > 0
+        ) ||
+        (
+          month === 11 &&
+          dates > 25 &&
+          (dates + 7 - weekday) > 31
+        )
+      ) {
+        if (unicGroup.some((w) => (
+          w?.currency === item?.currency &&
+          w?.wallet === item?.wallet
+        ))) {
+          return accum
+        }
+
+        unicGroup.push(item)
+
+        if (
+          isLast &&
+          unicGroup.length > 0
+        ) {
+          accum.push(...unicGroup)
+          unicGroup = []
+        }
+
+        return accum
+      }
+      if (unicGroup.length > 0) {
+        accum.push(...unicGroup)
+        unicGroup = []
+      }
+
+      accum.push(item)
+
+      return accum
+    }, [])
   }
 
   _getCandles ({
@@ -150,7 +233,6 @@ class BalanceHistory {
     )
   }
 
-  // TODO:
   _getCandlesClosePrice (
     candles,
     mts,
@@ -158,7 +240,7 @@ class BalanceHistory {
     symb,
     currenciesSynonymous
   ) {
-    let mtsMoment = moment.utc(mts)
+    const mtsMoment = moment.utc(mts)
 
     if (timeframe === 'day') {
       mtsMoment.add(1, 'days')
@@ -167,15 +249,8 @@ class BalanceHistory {
       mtsMoment.add(1, 'months')
     }
     if (timeframe === 'week') {
-      // mtsMoment.add(1, 'weeks')
-      const year = mtsMoment.year()
-      const weekYear = mtsMoment.isoWeekYear()
-      if (year < weekYear) {
-        mtsMoment = moment.utc({ year: weekYear })
-      } else {
-        mtsMoment.add(1, 'weeks')
-        mtsMoment.isoWeekday(1)
-      }
+      mtsMoment.add(1, 'weeks')
+      mtsMoment.isoWeekday(1)
     }
     if (timeframe === 'year') {
       mtsMoment.add(1, 'years')

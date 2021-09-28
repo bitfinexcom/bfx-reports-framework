@@ -19,7 +19,7 @@ module.exports = (
   const _end = getStartMtsByTimeframe(end, timeframe)
   const startMoment = moment.utc(_start)
   const endMoment = moment.utc(_end)
-  let currMoment = startMoment.clone()
+  const currMoment = startMoment.clone()
   const res = []
 
   while (true) {
@@ -42,17 +42,9 @@ module.exports = (
 
       continue
     }
-    // TODO:
     if (timeframe === 'week') {
-      // const year = currMoment.year()
-      // const weekYear = currMoment.isoWeekYear()
-      // if (year < weekYear) {
-      //   currMoment = moment.utc({ year: weekYear })
-      // } else {
-      //   currMoment.add(1, 'weeks')
-      //   currMoment.isoWeekday(1)
-      // }
       currMoment.add(1, 'weeks')
+      currMoment.isoWeekday(1)
 
       continue
     }

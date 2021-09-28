@@ -60,8 +60,6 @@ class WinLoss {
       args = {}
     ) => {
       const { mts, timeframe } = args
-      console.log('[---mts---]:', mts, '->', new Date(mts).toISOString())
-      // console.log('[positionsSnapshots]:', positionsSnapshots)
 
       // Need to filter duplicate and closed positions as it can be for
       // week and month and year timeframe in daily positions snapshots
@@ -72,7 +70,6 @@ class WinLoss {
         timeframe,
         mts
       )
-      // console.log('[positions]:', positions)
 
       return positions.reduce((accum, curr) => {
         const { plUsd } = { ...curr }
@@ -182,14 +179,6 @@ class WinLoss {
           depositsGroupedByTimeframe
         )
 
-      console.log('[MTS]:'.bgGreen, arr[i]?.mts, '->', new Date(arr[i]?.mts)?.toISOString())
-      console.log('[isFirst]:', isFirst)
-      console.log('[prevMovementsRes]:', prevMovementsRes)
-      console.log('[firstWalletsVals]:', firstWalletsVals)
-      console.log('[walletsGroupedByTimeframe]:', walletsGroupedByTimeframe)
-      console.log('[firstPLVals]:', firstPLVals)
-      console.log('[plGroupedByTimeframe]:', plGroupedByTimeframe)
-
       const res = this.FOREX_SYMBS.reduce((accum, symb) => {
         const movements = Number.isFinite(prevMovementsRes[symb])
           ? prevMovementsRes[symb]
@@ -220,8 +209,6 @@ class WinLoss {
 
         return Object.assign(accum, { [symb]: res })
       }, {})
-
-      console.log('[RES]:'.bgBlue, res)
 
       return res
     }
@@ -291,22 +278,14 @@ class WinLoss {
       }
 
       const _mts = isFirst ? end : item.mts
-      let mtsMoment = moment.utc(_mts)
+      const mtsMoment = moment.utc(_mts)
 
-      // TODO:
       if (timeframe === 'day') {
         mtsMoment.add(1, 'days')
       }
       if (timeframe === 'week') {
-        const year = mtsMoment.year()
-        const weekYear = mtsMoment.isoWeekYear()
-        if (year < weekYear) {
-          mtsMoment = moment.utc({ year: weekYear })
-        } else {
-          mtsMoment.add(1, 'weeks')
-          mtsMoment.isoWeekday(1)
-        }
-        // mtsMoment.add(1, 'weeks')
+        mtsMoment.add(1, 'weeks')
+        mtsMoment.isoWeekday(1)
       }
       if (timeframe === 'month') {
         mtsMoment.add(1, 'months')
