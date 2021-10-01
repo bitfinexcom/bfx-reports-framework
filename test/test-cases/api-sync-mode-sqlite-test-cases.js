@@ -1782,6 +1782,7 @@ module.exports = (
       'status',
       'customerInfo',
       'invoices',
+      'payment',
       'merchantName'
     ])
   })
