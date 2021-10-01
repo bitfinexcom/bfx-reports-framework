@@ -231,6 +231,9 @@ const paramsSchemaForWinLossApi = {
     },
     end: {
       type: 'integer'
+    },
+    isUnrealizedProfitExcluded: {
+      type: 'boolean'
     }
   }
 }

@@ -153,7 +153,7 @@ class WinLoss {
     }, {})
   }
 
-  _getWinLossByTimeframe ({ isRealizedProfitExcluded }) {
+  _getWinLossByTimeframe ({ isUnrealizedProfitExcluded }) {
     let firstWalletsVals = {}
     let firstPLVals = 0
     let prevMovementsRes = 0
@@ -171,13 +171,11 @@ class WinLoss {
         firstPLVals = plGroupedByTimeframe
       }
 
-      prevMovementsRes = isRealizedProfitExcluded
-        ? {}
-        : this._sumMovementsWithPrevRes(
-          prevMovementsRes,
-          withdrawalsGroupedByTimeframe,
-          depositsGroupedByTimeframe
-        )
+      prevMovementsRes = this._sumMovementsWithPrevRes(
+        prevMovementsRes,
+        withdrawalsGroupedByTimeframe,
+        depositsGroupedByTimeframe
+      )
 
       const res = this.FOREX_SYMBS.reduce((accum, symb) => {
         const movements = Number.isFinite(prevMovementsRes[symb])
@@ -196,10 +194,10 @@ class WinLoss {
           ? plGroupedByTimeframe[symb]
           : 0
 
-        const realized = isRealizedProfitExcluded
+        const realized = (wallets - movements) - firstWallets
+        const unrealized = isUnrealizedProfitExcluded
           ? 0
-          : (wallets - movements) - firstWallets
-        const unrealized = pl - firstPL
+          : pl - firstPL
 
         const res = realized + unrealized
 
@@ -314,7 +312,7 @@ class WinLoss {
       timeframe = 'day',
       start = 0,
       end = Date.now(),
-      isRealizedProfitExcluded
+      isUnrealizedProfitExcluded
     } = { ...params }
     const args = {
       auth,
@@ -325,55 +323,53 @@ class WinLoss {
       }
     }
 
-    const walletsGroupedByTimeframePromise = isRealizedProfitExcluded
-      ? []
-      : this.balanceHistory.getBalanceHistory(
-        args,
-        true
-      )
-
-    const dailyPositionsSnapshotsPromise = this.positionsSnapshot
-      .getSyncedPositionsSnapshot(args)
-    const positionsHistoryPromise = this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.POSITIONS_HISTORY,
-      {
-        filter: {
-          user_id: user._id,
-          $gte: { mtsUpdate: start },
-          $lte: { mtsUpdate: end }
-        },
-        sort: [['mtsUpdate', -1], ['id', -1]],
-        projection: this.positionsHistoryModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
+    const walletsGroupedByTimeframePromise = this.balanceHistory.getBalanceHistory(
+      args,
+      true
     )
 
-    const withdrawalsPromise = isRealizedProfitExcluded
+    const dailyPositionsSnapshotsPromise = isUnrealizedProfitExcluded
       ? []
-      : this.movements.getMovements({
-        auth: user,
-        start,
-        end,
-        filter: {
-          $not: { status: 'CANCELED' },
-          $lt: { amount: 0 },
-          $gte: { mtsStarted: start },
-          $lte: { mtsStarted: end }
-        },
-        sort: [['mtsStarted', -1]]
-      })
-    const depositsPromise = isRealizedProfitExcluded
+      : this.positionsSnapshot
+        .getSyncedPositionsSnapshot(args)
+    const positionsHistoryPromise = isUnrealizedProfitExcluded
       ? []
-      : this.movements.getMovements({
-        auth: user,
-        start,
-        end,
-        filter: {
-          $eq: { status: 'COMPLETED' },
-          $gt: { amount: 0 }
+      : this.dao.getElemsInCollBy(
+        this.ALLOWED_COLLS.POSITIONS_HISTORY,
+        {
+          filter: {
+            user_id: user._id,
+            $gte: { mtsUpdate: start },
+            $lte: { mtsUpdate: end }
+          },
+          sort: [['mtsUpdate', -1], ['id', -1]],
+          projection: this.positionsHistoryModel,
+          exclude: ['user_id'],
+          isExcludePrivate: true
         }
-      })
+      )
+
+    const withdrawalsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      filter: {
+        $not: { status: 'CANCELED' },
+        $lt: { amount: 0 },
+        $gte: { mtsStarted: start },
+        $lte: { mtsStarted: end }
+      },
+      sort: [['mtsStarted', -1]]
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      filter: {
+        $eq: { status: 'COMPLETED' },
+        $gt: { amount: 0 }
+      }
+    })
 
     const [
       withdrawals,
@@ -448,7 +444,7 @@ class WinLoss {
       },
       false,
       this._getWinLossByTimeframe(
-        { isRealizedProfitExcluded }
+        { isUnrealizedProfitExcluded }
       ),
       true
     )
