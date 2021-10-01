@@ -6,7 +6,6 @@ const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  getDataFromApi,
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
 
@@ -55,6 +54,9 @@ class CurrencyConverter {
     this.currenciesUpdatedAt = new Date()
     this.currencies = []
     this.currenciesSynonymous = new Map()
+
+    this._getPublicTrades = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+      .bind(this.rService)
   }
 
   async getCurrenciesSynonymous () {
@@ -356,19 +358,15 @@ class CurrencyConverter {
     }
 
     const symbol = this._getPairFromPair(reqSymb)
-    const { res } = await getDataFromApi(
-      (space, args) => this.rService._getPublicTrades
-        .bind(this.rService)(args),
-      {
-        params: {
-          symbol,
-          end,
-          limit: 1,
-          notThrowError: true,
-          notCheckNextPage: true
-        }
+    const { res } = await this._getPublicTrades({
+      params: {
+        symbol,
+        end,
+        limit: 1,
+        notThrowError: true,
+        notCheckNextPage: true
       }
-    )
+    })
 
     const publicTrade = Array.isArray(res)
       ? res[0]
@@ -804,57 +802,114 @@ class CurrencyConverter {
     )
   }
 
-  /**
-   * if api is not available convert by candles
+  _selectConvertWay (
+    data,
+    convSchema,
+    opts = {}
+  ) {
+    const {
+      shouldTryPublicTradesFirst = false
+    } = opts
+
+    if (shouldTryPublicTradesFirst) {
+      return this.convertByPublicTrades(data, convSchema)
+    }
+
+    return this.convertByCandles(data, convSchema)
+  }
+
+  _selectGettingPriceWay (
+    reqSymb,
+    mts,
+    opts = {}
+  ) {
+    const {
+      shouldTryPublicTradesFirst = false
+    } = opts
+
+    if (shouldTryPublicTradesFirst) {
+      return this._getPublicTradesPrice(
+        reqSymb,
+        mts
+      )
+    }
+
+    return this._priceFinder(
+      async (symbol) => {
+        const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
+
+        const res = await this._getPrice(
+          this._COLL_NAMES.CANDLES,
+          { symbol: firstSymb },
+          {
+            convertTo: lastSymb,
+            symbolFieldName: 'symbol',
+            mts
+          }
+        )
+
+        return res
+      },
+      reqSymb
+    )
+  }
+
+  /*
+   * If api is not available convert by bypass way
    */
-  async convert (data, convSchema) {
+  async convert (
+    data,
+    convSchema,
+    opts = {}
+  ) {
+    const {
+      shouldTryPublicTradesFirst = false
+    } = opts
+
     try {
-      const res = await this.convertByPublicTrades(data, convSchema)
+      const res = await this._selectConvertWay(
+        data,
+        convSchema,
+        { shouldTryPublicTradesFirst }
+      )
 
       return res
     } catch (err) {
-      const res = await this.convertByCandles(data, convSchema)
+      const res = await this._selectConvertWay(
+        data,
+        convSchema,
+        { shouldTryPublicTradesFirst: !shouldTryPublicTradesFirst }
+      )
 
       return res
     }
   }
 
-  /**
-   * if api is not available get price from candles
+  /*
+   * If api is not available get price from bypass way
    */
   async getPrice (
     reqSymb,
-    mts
+    mts,
+    opts = {}
   ) {
+    const {
+      shouldTryPublicTradesFirst = false
+    } = opts
+
     try {
-      const price = await this._getPublicTradesPrice(
+      const price = await this._selectGettingPriceWay(
         reqSymb,
-        mts
+        mts,
+        { shouldTryPublicTradesFirst }
       )
 
       return price
     } catch (err) {
-    // Try to get price from DB when bfx api_v2 is not available
-    // Useful when internet is disconnected
-    // Also it covers pairs like tBTCF0:USTF0
-
-      const price = await this._priceFinder(
-        async (symbol) => {
-          const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
-
-          const res = await this._getPrice(
-            this._COLL_NAMES.CANDLES,
-            { symbol: firstSymb },
-            {
-              convertTo: lastSymb,
-              symbolFieldName: 'symbol',
-              mts
-            }
-          )
-
-          return res
-        },
-        reqSymb
+      const price = await this._selectGettingPriceWay(
+        reqSymb,
+        mts,
+        { shouldTryPublicTradesFirst: !shouldTryPublicTradesFirst }
       )
 
       if (Number.isFinite(price)) {

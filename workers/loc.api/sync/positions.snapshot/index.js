@@ -68,7 +68,7 @@ class PositionsSnapshot {
     user,
     params
   ) {
-    const { start, end } = { ...params }
+    const { start, end, sort } = { ...params }
 
     const isStartExisted = Number.isInteger(start)
     const isEndExisted = Number.isInteger(end)
@@ -79,6 +79,12 @@ class PositionsSnapshot {
     const lteFilter = isEndExisted
       ? { $lte: { mtsUpdate: end } }
       : {}
+    const _sort = (
+      Array.isArray(sort) &&
+      sort.length > 0
+    )
+      ? sort
+      : [['mtsUpdate', -1], ['id', -1]]
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.POSITIONS_SNAPSHOT,
@@ -88,7 +94,7 @@ class PositionsSnapshot {
           ...gteFilter,
           ...lteFilter
         },
-        sort: [['mtsUpdate', -1]],
+        sort: _sort,
         projection: this.positionsSnapshotModel,
         exclude: ['user_id'],
         isExcludePrivate: true
@@ -202,8 +208,11 @@ class PositionsSnapshot {
         symbol,
         basePrice,
         amount,
-        marginFunding
+        marginFunding,
+        mtsUpdate
       } = { ...position }
+      const mts = end ?? mtsUpdate
+      const priceCacheKey = `${symbol}-${mts}`
 
       const resPositions = {
         ...position,
@@ -218,14 +227,14 @@ class PositionsSnapshot {
 
         continue
       }
-      if (!actualPrices.has(symbol)) {
+      if (!actualPrices.has(priceCacheKey)) {
         const _actualPrice = await this.currencyConverter
-          .getPrice(symbol, end)
+          .getPrice(symbol, mts)
 
-        actualPrices.set(symbol, _actualPrice)
+        actualPrices.set(priceCacheKey, _actualPrice)
       }
 
-      const actualPrice = actualPrices.get(symbol)
+      const actualPrice = actualPrices.get(priceCacheKey)
 
       if (
         !Number.isFinite(actualPrice) ||
@@ -557,7 +566,7 @@ class PositionsSnapshot {
       positionsSnapshot
     } = await this._getCalculatedPositions(
       syncedPositionsSnapshot,
-      end ?? start,
+      null,
       { isNotTickersRequired: true }
     )
 

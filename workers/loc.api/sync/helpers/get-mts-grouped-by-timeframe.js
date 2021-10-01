@@ -44,6 +44,7 @@ module.exports = (
     }
     if (timeframe === 'week') {
       currMoment.add(1, 'weeks')
+      currMoment.isoWeekday(1)
 
       continue
     }
