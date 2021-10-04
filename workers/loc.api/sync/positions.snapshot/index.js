@@ -5,6 +5,10 @@ const { orderBy } = require('lodash')
 const {
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
+const {
+  groupByTimeframe,
+  getStartMtsByTimeframe
+} = require('../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -12,6 +16,8 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.DAO,
   TYPES.ALLOWED_COLLS,
+  TYPES.SYNC_API_METHODS,
+  TYPES.FOREX_SYMBS,
   TYPES.SyncSchema,
   TYPES.CurrencyConverter,
   TYPES.Authenticator
@@ -21,6 +27,8 @@ class PositionsSnapshot {
     rService,
     dao,
     ALLOWED_COLLS,
+    SYNC_API_METHODS,
+    FOREX_SYMBS,
     syncSchema,
     currencyConverter,
     authenticator
@@ -28,20 +36,19 @@ class PositionsSnapshot {
     this.rService = rService
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.FOREX_SYMBS = FOREX_SYMBS
     this.syncSchema = syncSchema
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
 
-    this.positionsHistoryObjModel = this.syncSchema.getModelsMap()
+    this.positionsHistoryModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
-    this.positionsSnapshotObjModel = this.syncSchema.getModelsMap()
+    this.positionsSnapshotModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
-    this.positionsHistoryModel = Object.keys(
-      this.positionsHistoryObjModel
-    )
-    this.positionsSnapshotModel = Object.keys(
-      this.positionsSnapshotObjModel
-    )
+    this.positionsSnapshotMethodColl = this.syncSchema.getMethodCollMap()
+      .get(this.SYNC_API_METHODS.POSITIONS_SNAPSHOT)
+    this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl.symbolFieldName
   }
 
   _getPositionsHistory (
@@ -535,6 +542,150 @@ class PositionsSnapshot {
       positionsSnapshot,
       tickers
     }
+  }
+
+  _calcPlFromPositionsSnapshots (positionsHistory) {
+    return (
+      positionsSnapshots = [],
+      args = {}
+    ) => {
+      const { mts, timeframe } = args
+
+      // Need to filter duplicate and closed positions as it can be for
+      // week and month and year timeframe in daily positions snapshots
+      // if daily timeframe no need to filter it
+      const positions = this._filterPositionsSnapshots(
+        positionsSnapshots,
+        positionsHistory,
+        timeframe,
+        mts
+      )
+
+      return positions.reduce((accum, curr) => {
+        const { plUsd } = { ...curr }
+        const symb = 'USD'
+
+        if (!Number.isFinite(plUsd)) {
+          return accum
+        }
+
+        return {
+          ...accum,
+          [symb]: Number.isFinite(accum[symb])
+            ? accum[symb] + plUsd
+            : plUsd
+        }
+      }, {})
+    }
+  }
+
+  _filterPositionsSnapshots (
+    positionsSnapshots,
+    positionsHistory,
+    timeframe,
+    mts
+  ) {
+    if (
+      !Array.isArray(positionsSnapshots) ||
+      positionsSnapshots.length === 0
+    ) {
+      return positionsSnapshots
+    }
+
+    return positionsSnapshots.reduce((accum, position) => {
+      if (
+        Number.isFinite(position?.id) &&
+        accum.every((item) => item?.id !== position?.id) &&
+        (
+          timeframe === 'day' ||
+          !this._isClosedPosition(positionsHistory, mts, position?.id)
+        )
+      ) {
+        accum.push(position)
+      }
+
+      return accum
+    }, [])
+  }
+
+  _isClosedPosition (positionsHistory, mts, id) {
+    return (
+      Array.isArray(positionsHistory) &&
+      positionsHistory.length > 0 &&
+      positionsHistory.some((item) => (
+        item.id === id &&
+        item.mts === mts
+      ))
+    )
+  }
+
+  async getPLSnapshot ({
+    auth = {},
+    params = {}
+  } = {}) {
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now()
+    } = params ?? {}
+    const args = {
+      auth: user,
+      params: {
+        timeframe,
+        start,
+        end
+      }
+    }
+
+    const dailyPositionsSnapshotsPromise = this
+      .getSyncedPositionsSnapshot(args)
+    const positionsHistoryPromise = this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.POSITIONS_HISTORY,
+      {
+        filter: {
+          user_id: user._id,
+          $gte: { mtsUpdate: start },
+          $lte: { mtsUpdate: end }
+        },
+        sort: [['mtsUpdate', -1], ['id', -1]],
+        projection: this.positionsHistoryModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+
+    const [
+      dailyPositionsSnapshots,
+      positionsHistory
+    ] = await Promise.all([
+      dailyPositionsSnapshotsPromise,
+      positionsHistoryPromise
+    ])
+
+    const positionsHistoryNormByMts = positionsHistory.map((pos) => {
+      if (Number.isFinite(pos?.mtsUpdate)) {
+        pos.mts = getStartMtsByTimeframe(
+          pos.mtsUpdate,
+          timeframe
+        )
+      }
+
+      return pos
+    })
+
+    const plGroupedByTimeframePromise = await groupByTimeframe(
+      dailyPositionsSnapshots,
+      { timeframe, start, end },
+      this.FOREX_SYMBS,
+      'mtsUpdate',
+      this.positionsSnapshotSymbolFieldName,
+      this._calcPlFromPositionsSnapshots(positionsHistoryNormByMts)
+    )
+
+    return plGroupedByTimeframePromise
   }
 
   async getSyncedPositionsSnapshot (args) {
