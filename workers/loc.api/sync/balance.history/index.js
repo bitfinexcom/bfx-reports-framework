@@ -280,7 +280,6 @@ class BalanceHistory {
     return price
   }
 
-  // TODO:
   _getWalletsByTimeframe (
     firstWallets,
     candles,
@@ -292,12 +291,13 @@ class BalanceHistory {
     return ({
       walletsGroupedByTimeframe = {},
       mtsGroupedByTimeframe: { mts } = {},
-      plGroupedByTimeframe = {} // TODO:
+      plGroupedByTimeframe = {}
     } = {}) => {
       const isReturnedPrevRes = (
         isEmpty(walletsGroupedByTimeframe) &&
         !isEmpty(prevRes)
       )
+
       const walletsArr = isReturnedPrevRes
         ? Object.entries(prevRes)
         : Object.entries(walletsGroupedByTimeframe)
@@ -317,7 +317,7 @@ class BalanceHistory {
           )
 
         if (!_isForexSymb && !Number.isFinite(price)) {
-          return { ...accum }
+          return accum
         }
 
         const _balance = _isForexSymb
@@ -328,28 +328,32 @@ class BalanceHistory {
           : 'USD'
 
         if (!Number.isFinite(_balance)) {
-          return { ...accum }
+          return accum
         }
 
-        return {
-          ...accum,
-          [symb]: (Number.isFinite(accum[symb]))
-            ? accum[symb] + _balance
-            : _balance
-        }
+        const val = (Number.isFinite(accum[symb]))
+          ? accum[symb] + _balance
+          : _balance
+
+        return Object.assign(accum, { [symb]: val })
       }, {})
 
       if (!isReturnedPrevRes) {
         prevRes = { ...walletsGroupedByTimeframe }
       }
 
-      return this._convertForexToUsd(
+      const usdPL = Number.isFinite(plGroupedByTimeframe?.USD)
+        ? plGroupedByTimeframe.USD
+        : 0
+      const usdRes = this._convertForexToUsd(
         res,
         candles,
         mts,
         timeframe,
         currenciesSynonymous
       )
+
+      return { USD: usdRes + usdPL }
     }
   }
 
@@ -363,7 +367,7 @@ class BalanceHistory {
     const dataArr = Object.entries(obj)
 
     if (dataArr.length === 0) {
-      return {}
+      return 0
     }
 
     const resInUsd = dataArr.reduce((accum, [symb, balance]) => {
@@ -389,7 +393,7 @@ class BalanceHistory {
       return accum + balance * price
     }, 0)
 
-    return { USD: resInUsd }
+    return resInUsd
   }
 
   async _getWalletsGroupedByOneTimeframe (
