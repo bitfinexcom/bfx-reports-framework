@@ -19,7 +19,9 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.CurrencyConverter,
   TYPES.SYNC_API_METHODS,
-  TYPES.ALLOWED_COLLS
+  TYPES.ALLOWED_COLLS,
+  TYPES.Authenticator,
+  TYPES.PositionsSnapshot
 ]
 class BalanceHistory {
   constructor (
@@ -28,7 +30,9 @@ class BalanceHistory {
     FOREX_SYMBS,
     currencyConverter,
     SYNC_API_METHODS,
-    ALLOWED_COLLS
+    ALLOWED_COLLS,
+    authenticator,
+    positionsSnapshot
   ) {
     this.dao = dao
     this.wallets = wallets
@@ -36,6 +40,8 @@ class BalanceHistory {
     this.currencyConverter = currencyConverter
     this.SYNC_API_METHODS = SYNC_API_METHODS
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.authenticator = authenticator
+    this.positionsSnapshot = positionsSnapshot
   }
 
   _groupWalletsByCurrency (wallets = []) {
@@ -72,12 +78,17 @@ class BalanceHistory {
     }
   }
 
-  async _getWallets ({
-    auth,
-    timeframe,
-    start,
-    end
-  }) {
+  async _getWallets (args = {}) {
+    const {
+      auth,
+      params
+    } = args ?? {}
+    const {
+      start = 0,
+      end = Date.now(),
+      timeframe = 'day'
+    } = params ?? {}
+
     const sqlTimeframe = getTimeframeQuery(timeframe)
     const schema = {
       groupResBy: ['wallet', 'currency', 'timeframe'],
@@ -208,10 +219,12 @@ class BalanceHistory {
     }, [])
   }
 
-  _getCandles ({
-    start = 0,
-    end = Date.now()
-  }) {
+  _getCandles (args = {}) {
+    const {
+      start = 0,
+      end = Date.now()
+    } = args?.params ?? {}
+
     const mtsMoment = moment.utc(start)
       .add(-1, 'days')
       .valueOf()
@@ -275,16 +288,16 @@ class BalanceHistory {
   ) {
     let prevRes = { ...firstWallets }
 
-    return (
-      {
-        walletsGroupedByTimeframe = {},
-        mtsGroupedByTimeframe: { mts } = {}
-      } = {}
-    ) => {
+    return ({
+      walletsGroupedByTimeframe = {},
+      mtsGroupedByTimeframe: { mts } = {},
+      plGroupedByTimeframe = {}
+    } = {}) => {
       const isReturnedPrevRes = (
         isEmpty(walletsGroupedByTimeframe) &&
         !isEmpty(prevRes)
       )
+
       const walletsArr = isReturnedPrevRes
         ? Object.entries(prevRes)
         : Object.entries(walletsGroupedByTimeframe)
@@ -304,7 +317,7 @@ class BalanceHistory {
           )
 
         if (!_isForexSymb && !Number.isFinite(price)) {
-          return { ...accum }
+          return accum
         }
 
         const _balance = _isForexSymb
@@ -315,28 +328,32 @@ class BalanceHistory {
           : 'USD'
 
         if (!Number.isFinite(_balance)) {
-          return { ...accum }
+          return accum
         }
 
-        return {
-          ...accum,
-          [symb]: (Number.isFinite(accum[symb]))
-            ? accum[symb] + _balance
-            : _balance
-        }
+        const val = (Number.isFinite(accum[symb]))
+          ? accum[symb] + _balance
+          : _balance
+
+        return Object.assign(accum, { [symb]: val })
       }, {})
 
       if (!isReturnedPrevRes) {
         prevRes = { ...walletsGroupedByTimeframe }
       }
 
-      return this._convertForexToUsd(
+      const usdPL = Number.isFinite(plGroupedByTimeframe?.USD)
+        ? plGroupedByTimeframe.USD
+        : 0
+      const usdRes = this._convertForexToUsd(
         res,
         candles,
         mts,
         timeframe,
         currenciesSynonymous
       )
+
+      return { USD: usdRes + usdPL }
     }
   }
 
@@ -350,7 +367,7 @@ class BalanceHistory {
     const dataArr = Object.entries(obj)
 
     if (dataArr.length === 0) {
-      return {}
+      return 0
     }
 
     const resInUsd = dataArr.reduce((accum, [symb, balance]) => {
@@ -376,7 +393,7 @@ class BalanceHistory {
       return accum + balance * price
     }, 0)
 
-    return { USD: resInUsd }
+    return resInUsd
   }
 
   async _getWalletsGroupedByOneTimeframe (
@@ -450,23 +467,28 @@ class BalanceHistory {
       return firstWalletsMts
     }
 
-    const { params } = { ...args }
-    const { start = 0 } = { ...params }
+    const { start = 0 } = args?.params ?? {}
 
     return start
   }
 
   async getBalanceHistory (
     {
-      auth = {},
-      params: {
-        timeframe = 'day',
-        start = 0,
-        end = Date.now()
-      } = {}
+      auth: _auth = {},
+      params = {}
     } = {},
     isSubCalc = false
   ) {
+    const auth = await this.authenticator
+      .verifyRequestUser({ auth: _auth })
+
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now(),
+      isUnrealizedProfitExcluded
+    } = params ?? {}
+
     if (Number.isInteger(timeframe)) {
       return this._getWalletsGroupedByOneTimeframe(
         {
@@ -479,10 +501,16 @@ class BalanceHistory {
 
     const args = {
       auth,
-      timeframe,
-      start,
-      end
+      params: {
+        timeframe,
+        start,
+        end
+      }
     }
+
+    const plGroupedByTimeframePromise = isUnrealizedProfitExcluded
+      ? []
+      : this.positionsSnapshot.getPLSnapshot(args)
 
     const firstWalletsPromise = this.wallets.getWallets({
       auth,
@@ -494,11 +522,13 @@ class BalanceHistory {
     const [
       firstWallets,
       wallets,
-      candles
+      candles,
+      plGroupedByTimeframe
     ] = await Promise.all([
       firstWalletsPromise,
       walletsPromise,
-      candlesPromise
+      candlesPromise,
+      plGroupedByTimeframePromise
     ])
 
     const firstWalletsGroupedByCurrency = this._groupWalletsByCurrency(
@@ -529,7 +559,8 @@ class BalanceHistory {
     const res = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
-        mtsGroupedByTimeframe
+        mtsGroupedByTimeframe,
+        plGroupedByTimeframe
       },
       isSubCalc,
       this._getWalletsByTimeframe(
