@@ -1,5 +1,6 @@
 'use strict'
 
+const { pipeline } = require('stream')
 const { stringify } = require('csv')
 
 const {
@@ -8,6 +9,8 @@ const {
 const {
   getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
+
+const nope = () => {}
 
 module.exports = (rService) => async (
   wStream,
@@ -37,7 +40,7 @@ module.exports = (rService) => async (
       { columns: ['mess'] }
     )
 
-    stringifier.pipe(wStream)
+    pipeline(stringifier, wStream, nope)
     write([{ mess: jobData }], stringifier)
     queue.emit('progress', 100)
     stringifier.end()
@@ -45,7 +48,7 @@ module.exports = (rService) => async (
     return
   }
 
-  wStream.setMaxListeners(20)
+  wStream.setMaxListeners(50)
 
   const timestampsStringifier = stringify({
     header: true,
@@ -98,20 +101,26 @@ module.exports = (rService) => async (
     columns: columnsCsv.totalResult
   })
 
-  timestampsStringifier.pipe(wStream)
-  startingPositionsSnapshotNameStringifier.pipe(wStream)
-  startingPositionsSnapshotStringifier.pipe(wStream)
-  endingPositionsSnapshotNameStringifier.pipe(wStream)
-  endingPositionsSnapshotStringifier.pipe(wStream)
-  finalStateNameStringifier.pipe(wStream)
-  startingPeriodBalancesNameStringifier.pipe(wStream)
-  startingPeriodBalancesStringifier.pipe(wStream)
-  movementsNameStringifier.pipe(wStream)
-  movementsStringifier.pipe(wStream)
-  movementsTotalAmountStringifier.pipe(wStream)
-  endingPeriodBalancesNameStringifier.pipe(wStream)
-  endingPeriodBalancesStringifier.pipe(wStream)
-  totalResultStringifier.pipe(wStream)
+  const rStreamArr = [
+    timestampsStringifier,
+    startingPositionsSnapshotNameStringifier,
+    startingPositionsSnapshotStringifier,
+    endingPositionsSnapshotNameStringifier,
+    endingPositionsSnapshotStringifier,
+    finalStateNameStringifier,
+    startingPeriodBalancesNameStringifier,
+    startingPeriodBalancesStringifier,
+    movementsNameStringifier,
+    movementsStringifier,
+    movementsTotalAmountStringifier,
+    endingPeriodBalancesNameStringifier,
+    endingPeriodBalancesStringifier,
+    totalResultStringifier
+  ]
+
+  rStreamArr.forEach((rStream) => {
+    pipeline(rStream, wStream, nope)
+  })
 
   const res = await getDataFromApi(
     rService[name].bind(rService),
