@@ -1362,6 +1362,15 @@ class FrameworkReportService extends ReportService {
       return super.getCandlesCsv(space, args)
     }, 'getCandlesCsv', args, cb)
   }
+
+  getWinLossVSAccountBalanceCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getWinLossVSAccountBalanceCsvJobData',
+        args
+      )
+    }, 'getWinLossVSAccountBalanceCsv', args, cb)
+  }
 }
 
 module.exports = FrameworkReportService

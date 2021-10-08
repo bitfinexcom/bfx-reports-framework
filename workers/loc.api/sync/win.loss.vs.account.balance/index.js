@@ -68,7 +68,7 @@ class WinLossVSAccountBalance {
     }
 
     // TODO:
-    return [{ mts: start, USD: 0 }]
+    return [{ mts: start, USD: 0, perc: 0 }]
   }
 }
 

@@ -354,6 +354,15 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
+const paramsSchemaForWinLossVSAccountBalanceCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForWinLossVSAccountBalanceApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 const paramsSchemaForPositionsSnapshotCsv = {
   type: 'object',
   properties: {
@@ -439,6 +448,7 @@ module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
+  paramsSchemaForWinLossVSAccountBalanceCsv,
   paramsSchemaForPositionsSnapshotCsv,
   paramsSchemaForFullSnapshotReportCsv,
   paramsSchemaForFullTaxReportCsv,
