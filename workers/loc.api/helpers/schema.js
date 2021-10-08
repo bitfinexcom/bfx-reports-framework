@@ -238,6 +238,27 @@ const paramsSchemaForWinLossApi = {
   }
 }
 
+const paramsSchemaForWinLossVSAccountBalanceApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'week',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const paramsSchemaForTradedVolumeApi = {
   type: 'object',
   properties: {
@@ -408,6 +429,7 @@ module.exports = {
   paramsSchemaForUpdateSubAccount,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
+  paramsSchemaForWinLossVSAccountBalanceApi,
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,

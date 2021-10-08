@@ -44,6 +44,7 @@ class WinLossVSAccountBalance {
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
   }
 
+  // TODO:
   async getWinLossVSAccountBalance (_args = {}) {
     const {
       auth = {},
@@ -65,6 +66,9 @@ class WinLossVSAccountBalance {
         end
       }
     }
+
+    // TODO:
+    return [{ mts: start, USD: 0 }]
   }
 }
 

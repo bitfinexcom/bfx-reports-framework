@@ -133,7 +133,8 @@ module.exports = ({
           ['_authenticator', TYPES.Authenticator],
           ['_privResponder', TYPES.PrivResponder],
           ['_syncCollsManager', TYPES.SyncCollsManager],
-          ['_dataConsistencyChecker', TYPES.DataConsistencyChecker]
+          ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
+          ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)

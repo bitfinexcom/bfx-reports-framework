@@ -1255,6 +1255,18 @@ class FrameworkReportService extends ReportService {
     }, 'getPerformingLoan', args, cb)
   }
 
+  getWinLossVSAccountBalance (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.WIN_LOSS, args)
+
+      checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceApi')
+
+      return this._winLossVSAccountBalance
+        .getWinLossVSAccountBalance(args)
+    }, 'getWinLossVSAccountBalance', args, cb)
+  }
+
   /**
    * @override
    */
