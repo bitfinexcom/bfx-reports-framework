@@ -1,6 +1,6 @@
 'use strict'
 
-const { orderBy } = require('lodash')
+const { orderBy, merge } = require('lodash')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -33,15 +33,40 @@ class Movements {
       auth = {},
       start = 0,
       end = Date.now(),
-      filter,
+      filter: _filter,
       sort = [['mtsUpdated', -1]],
       projection = this.movementsModel,
       exclude = ['user_id'],
-      isExcludePrivate = true
-    } = params
+      isExcludePrivate = true,
+      isWithdrawals = false,
+      isDeposits = false
+    } = params ?? {}
 
     const user = await this.authenticator
       .verifyRequestUser({ auth })
+
+    const withdrawalsFilter = isWithdrawals
+      ? {
+          $not: { status: 'CANCELED' },
+          $lt: { amount: 0 },
+          $gte: { mtsStarted: start },
+          $lte: { mtsStarted: end }
+        }
+      : {}
+    const depositsFilter = isDeposits
+      ? {
+          $eq: { status: 'COMPLETED' },
+          $gt: { amount: 0 },
+          $gte: { mtsUpdated: start },
+          $lte: { mtsUpdated: end }
+        }
+      : {}
+    const filter = merge(
+      {},
+      withdrawalsFilter,
+      depositsFilter,
+      _filter
+    )
 
     const movementsPromise = this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.MOVEMENTS,
@@ -63,7 +88,9 @@ class Movements {
       auth: user,
       start,
       end,
-      sort: ledgersOrder
+      sort: ledgersOrder,
+      isWithdrawals,
+      isDeposits
     })
 
     const [
@@ -101,12 +128,27 @@ class Movements {
       auth = {},
       start = 0,
       end = Date.now(),
-      filter,
+      filter: _filter,
       sort = [['mts', -1], ['id', -1]],
       projection = this.ledgersModel,
       exclude = ['user_id'],
-      isExcludePrivate = true
-    } = params
+      isExcludePrivate = true,
+      isWithdrawals = false,
+      isDeposits = false
+    } = params ?? {}
+
+    const withdrawalsFilter = isWithdrawals
+      ? { $lt: { amount: 0 } }
+      : {}
+    const depositsFilter = isDeposits
+      ? { $gt: { amount: 0 } }
+      : {}
+    const filter = merge(
+      {},
+      withdrawalsFilter,
+      depositsFilter,
+      _filter
+    )
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
