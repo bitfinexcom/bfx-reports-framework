@@ -132,7 +132,7 @@ class WinLossVSAccountBalance {
         return { perc: 0 }
       }
 
-      const perc = winLoss / firstWallets
+      const perc = (winLoss / firstWallets) * 100
 
       return { perc }
     }
