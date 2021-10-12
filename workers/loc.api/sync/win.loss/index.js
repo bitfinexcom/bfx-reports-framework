@@ -218,12 +218,11 @@ class WinLoss {
     }, [])
   }
 
-  async getWinLoss ({
-    auth = {},
-    params = {}
-  } = {}) {
-    const user = await this.authenticator
-      .verifyRequestUser({ auth })
+  async getDataToCalcWinLoss (args = {}) {
+    const {
+      auth = {},
+      params = {}
+    } = args ?? {}
 
     const {
       timeframe = 'day',
@@ -231,14 +230,6 @@ class WinLoss {
       end = Date.now(),
       isUnrealizedProfitExcluded
     } = params ?? {}
-    const args = {
-      auth: user,
-      params: {
-        timeframe,
-        start,
-        end
-      }
-    }
 
     const plGroupedByTimeframePromise = isUnrealizedProfitExcluded
       ? []
@@ -255,14 +246,14 @@ class WinLoss {
       true
     )
     const withdrawalsPromise = this.movements.getMovements({
-      auth: user,
+      auth,
       start,
       end,
       sort: [['mtsStarted', -1]],
       isWithdrawals: true
     })
     const depositsPromise = this.movements.getMovements({
-      auth: user,
+      auth,
       start,
       end,
       sort: [['mtsUpdated', -1]],
@@ -305,6 +296,45 @@ class WinLoss {
       walletsGroupedByTimeframePromise,
       plGroupedByTimeframePromise
     ])
+
+    return {
+      withdrawalsGroupedByTimeframe,
+      depositsGroupedByTimeframe,
+      walletsGroupedByTimeframe,
+      plGroupedByTimeframe
+    }
+  }
+
+  async getWinLoss (_args = {}) {
+    const {
+      auth = {},
+      params = {}
+    } = _args ?? {}
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now(),
+      isUnrealizedProfitExcluded
+    } = params ?? {}
+    const args = {
+      auth: user,
+      params: {
+        timeframe,
+        start,
+        end,
+        isUnrealizedProfitExcluded
+      }
+    }
+
+    const {
+      walletsGroupedByTimeframe,
+      withdrawalsGroupedByTimeframe,
+      depositsGroupedByTimeframe,
+      plGroupedByTimeframe
+    } = await this.getDataToCalcWinLoss(args)
 
     const groupedData = await calcGroupedData(
       {
