@@ -258,22 +258,15 @@ class WinLoss {
       auth: user,
       start,
       end,
-      filter: {
-        $not: { status: 'CANCELED' },
-        $lt: { amount: 0 },
-        $gte: { mtsStarted: start },
-        $lte: { mtsStarted: end }
-      },
-      sort: [['mtsStarted', -1]]
+      sort: [['mtsStarted', -1]],
+      isWithdrawals: true
     })
     const depositsPromise = this.movements.getMovements({
       auth: user,
       start,
       end,
-      filter: {
-        $eq: { status: 'COMPLETED' },
-        $gt: { amount: 0 }
-      }
+      sort: [['mtsUpdated', -1]],
+      isDeposits: true
     })
 
     const [
