@@ -46,7 +46,7 @@ class WinLoss {
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
   }
 
-  _sumMovementsWithPrevRes (
+  sumMovementsWithPrevRes (
     prevMovementsRes,
     withdrawalsGroupedByTimeframe,
     depositsGroupedByTimefram
@@ -88,7 +88,7 @@ class WinLoss {
         firstPLVals = plGroupedByTimeframe
       }
 
-      prevMovementsRes = this._sumMovementsWithPrevRes(
+      prevMovementsRes = this.sumMovementsWithPrevRes(
         prevMovementsRes,
         withdrawalsGroupedByTimeframe,
         depositsGroupedByTimeframe
