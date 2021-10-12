@@ -1,50 +1,24 @@
 'use strict'
 
 const {
-  getStartMtsByTimeframe,
-  calcGroupedData,
-  groupByTimeframe,
-  isForexSymb
+  calcGroupedData
 } = require('../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.DAO,
-  TYPES.SyncSchema,
-  TYPES.BalanceHistory,
-  TYPES.PositionsSnapshot,
-  TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
-  TYPES.SYNC_API_METHODS,
-  TYPES.Movements
+  TYPES.WinLoss
 ]
 class WinLossVSAccountBalance {
   constructor (
-    dao,
-    syncSchema,
-    balanceHistory,
-    positionsSnapshot,
-    FOREX_SYMBS,
     authenticator,
-    SYNC_API_METHODS,
-    movements
+    winLoss
   ) {
-    this.dao = dao
-    this.syncSchema = syncSchema
-    this.balanceHistory = balanceHistory
-    this.positionsSnapshot = positionsSnapshot
-    this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
-    this.SYNC_API_METHODS = SYNC_API_METHODS
-    this.movements = movements
-
-    this.movementsMethodColl = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.MOVEMENTS)
-    this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
+    this.winLoss = winLoss
   }
 
-  // TODO:
   async getWinLossVSAccountBalance (_args = {}) {
     const {
       auth = {},
@@ -56,19 +30,59 @@ class WinLossVSAccountBalance {
     const {
       timeframe = 'day',
       start = 0,
-      end = Date.now()
+      end = Date.now(),
+      isUnrealizedProfitExcluded
     } = params ?? {}
     const args = {
       auth: user,
       params: {
         timeframe,
         start,
-        end
+        end,
+        isUnrealizedProfitExcluded
       }
     }
 
-    // TODO:
-    return [{ mts: start, USD: 0, perc: 0 }]
+    const {
+      walletsGroupedByTimeframe,
+      withdrawalsGroupedByTimeframe,
+      depositsGroupedByTimeframe,
+      plGroupedByTimeframe
+    } = await this.winLoss.getDataToCalcWinLoss(args)
+
+    const groupedData = await calcGroupedData(
+      {
+        walletsGroupedByTimeframe,
+        withdrawalsGroupedByTimeframe,
+        depositsGroupedByTimeframe,
+        plGroupedByTimeframe
+      },
+      false,
+      this._getWinLossByTimeframe(
+        { isUnrealizedProfitExcluded }
+      ),
+      true
+    )
+    groupedData.push({
+      mts: start,
+      USD: 0
+    })
+    const res = this.winLoss.shiftMtsToNextTimeframe(
+      groupedData,
+      { timeframe, end }
+    )
+
+    return res
+  }
+
+  // TODO:
+  _getWinLossByTimeframe ({ isUnrealizedProfitExcluded }) {
+    return ({
+      walletsGroupedByTimeframe = {},
+      withdrawalsGroupedByTimeframe = {},
+      depositsGroupedByTimeframe = {},
+      plGroupedByTimeframe = {}
+    } = {}, i, arr) => {}
   }
 }
 
