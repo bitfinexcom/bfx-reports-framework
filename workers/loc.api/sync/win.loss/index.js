@@ -166,7 +166,7 @@ class WinLoss {
     }, {})
   }
 
-  _shiftMtsToNextTimeframe (
+  shiftMtsToNextTimeframe (
     groupedData,
     {
       timeframe,
@@ -323,7 +323,7 @@ class WinLoss {
       mts: start,
       USD: 0
     })
-    const res = this._shiftMtsToNextTimeframe(
+    const res = this.shiftMtsToNextTimeframe(
       groupedData,
       { timeframe, end }
     )
