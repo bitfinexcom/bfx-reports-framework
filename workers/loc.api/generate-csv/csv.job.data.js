@@ -624,7 +624,6 @@ class CsvJobData extends BaseCsvJobData {
       args: csvArgs,
       propNameForPagination: null,
       columnsCsv: {
-        USD: 'USD',
         perc: 'PERCENT',
         mts: 'DATE'
       },
