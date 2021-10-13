@@ -51,23 +51,20 @@ class WinLoss {
     withdrawalsGroupedByTimeframe,
     depositsGroupedByTimefram
   ) {
-    return this.FOREX_SYMBS.reduce((accum, symb) => {
-      const prevMovement = Number.isFinite(prevMovementsRes?.[symb])
-        ? prevMovementsRes[symb]
-        : 0
-      const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe?.[symb])
-        ? withdrawalsGroupedByTimeframe[symb]
-        : 0
-      const deposits = Number.isFinite(depositsGroupedByTimefram?.[symb])
-        ? depositsGroupedByTimefram[symb]
-        : 0
-      const res = prevMovement + withdrawals + deposits
+    const symb = 'USD'
 
-      return {
-        ...accum,
-        [symb]: res
-      }
-    }, {})
+    const prevMovement = Number.isFinite(prevMovementsRes?.[symb])
+      ? prevMovementsRes[symb]
+      : 0
+    const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe?.[symb])
+      ? withdrawalsGroupedByTimeframe[symb]
+      : 0
+    const deposits = Number.isFinite(depositsGroupedByTimefram?.[symb])
+      ? depositsGroupedByTimefram[symb]
+      : 0
+    const res = prevMovement + withdrawals + deposits
+
+    return { [symb]: res }
   }
 
   _getWinLossByTimeframe ({ isUnrealizedProfitExcluded }) {
