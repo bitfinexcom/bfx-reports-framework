@@ -81,6 +81,7 @@ class WinLoss {
       depositsGroupedByTimeframe = {},
       plGroupedByTimeframe = {}
     } = {}, i, arr) => {
+      const symb = 'USD'
       const isFirst = (i + 1) === arr.length
 
       if (isFirst) {
@@ -94,38 +95,34 @@ class WinLoss {
         depositsGroupedByTimeframe
       )
 
-      const res = this.FOREX_SYMBS.reduce((accum, symb) => {
-        const movements = Number.isFinite(prevMovementsRes[symb])
-          ? prevMovementsRes[symb]
-          : 0
-        const firstWallets = Number.isFinite(firstWalletsVals[symb])
-          ? firstWalletsVals[symb]
-          : 0
-        const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
-          ? walletsGroupedByTimeframe[symb]
-          : 0
-        const firstPL = Number.isFinite(firstPLVals[symb])
-          ? firstPLVals[symb]
-          : 0
-        const pl = Number.isFinite(plGroupedByTimeframe[symb])
-          ? plGroupedByTimeframe[symb]
-          : 0
+      const movements = Number.isFinite(prevMovementsRes[symb])
+        ? prevMovementsRes[symb]
+        : 0
+      const firstWallets = Number.isFinite(firstWalletsVals[symb])
+        ? firstWalletsVals[symb]
+        : 0
+      const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
+        ? walletsGroupedByTimeframe[symb]
+        : 0
+      const firstPL = Number.isFinite(firstPLVals[symb])
+        ? firstPLVals[symb]
+        : 0
+      const pl = Number.isFinite(plGroupedByTimeframe[symb])
+        ? plGroupedByTimeframe[symb]
+        : 0
 
-        const realized = (wallets - movements) - firstWallets
-        const unrealized = isUnrealizedProfitExcluded
-          ? 0
-          : pl - firstPL
+      const realized = (wallets - movements) - firstWallets
+      const unrealized = isUnrealizedProfitExcluded
+        ? 0
+        : pl - firstPL
 
-        const res = realized + unrealized
+      const res = realized + unrealized
 
-        if (!res) {
-          return Object.assign(accum, { [symb]: 0 })
-        }
+      if (!Number.isFinite(res)) {
+        return { [symb]: 0 }
+      }
 
-        return Object.assign(accum, { [symb]: res })
-      }, {})
-
-      return res
+      return { [symb]: res }
     }
   }
 
