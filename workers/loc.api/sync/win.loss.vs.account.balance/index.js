@@ -65,7 +65,7 @@ class WinLossVSAccountBalance {
     )
     groupedData.push({
       mts: start,
-      USD: 0
+      perc: 0
     })
     const res = this.winLoss.shiftMtsToNextTimeframe(
       groupedData,
