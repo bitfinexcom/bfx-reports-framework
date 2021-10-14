@@ -14,69 +14,36 @@ const { decorateInjectable } = require('../../di/utils')
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.SyncSchema,
-  TYPES.ALLOWED_COLLS,
-  TYPES.Wallets,
   TYPES.BalanceHistory,
   TYPES.PositionsSnapshot,
   TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
-  TYPES.SYNC_API_METHODS
+  TYPES.SYNC_API_METHODS,
+  TYPES.Movements
 ]
 class WinLoss {
   constructor (
     dao,
     syncSchema,
-    ALLOWED_COLLS,
-    wallets,
     balanceHistory,
     positionsSnapshot,
     FOREX_SYMBS,
     authenticator,
-    SYNC_API_METHODS
+    SYNC_API_METHODS,
+    movements
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
-    this.ALLOWED_COLLS = ALLOWED_COLLS
-    this.wallets = wallets
     this.balanceHistory = balanceHistory
     this.positionsSnapshot = positionsSnapshot
     this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.movements = movements
 
-    this.movementsModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.MOVEMENTS)
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
-  }
-
-  async _getPlFromPositionsSnapshot (args) {
-    const positionsSnapshot = await this.positionsSnapshot
-      .getSyncedPositionsSnapshot(args)
-
-    if (
-      !Array.isArray(positionsSnapshot) ||
-      positionsSnapshot.length === 0
-    ) {
-      return null
-    }
-
-    return positionsSnapshot.reduce((accum, curr) => {
-      const { plUsd } = { ...curr }
-      const symb = 'USD'
-
-      if (!Number.isFinite(plUsd)) {
-        return accum
-      }
-
-      return {
-        ...accum,
-        [symb]: Number.isFinite(accum[symb])
-          ? accum[symb] + plUsd
-          : plUsd
-      }
-    }, {})
   }
 
   _sumMovementsWithPrevRes (
@@ -85,13 +52,13 @@ class WinLoss {
     depositsGroupedByTimefram
   ) {
     return this.FOREX_SYMBS.reduce((accum, symb) => {
-      const prevMovement = Number.isFinite(prevMovementsRes[symb])
+      const prevMovement = Number.isFinite(prevMovementsRes?.[symb])
         ? prevMovementsRes[symb]
         : 0
-      const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe[symb])
+      const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe?.[symb])
         ? withdrawalsGroupedByTimeframe[symb]
         : 0
-      const deposits = Number.isFinite(depositsGroupedByTimefram[symb])
+      const deposits = Number.isFinite(depositsGroupedByTimefram?.[symb])
         ? depositsGroupedByTimefram[symb]
         : 0
       const res = prevMovement + withdrawals + deposits
@@ -103,64 +70,74 @@ class WinLoss {
     }, {})
   }
 
-  _getWinLossByTimeframe (
-    startWalletsVals = {},
-    startPl = {},
-    endPl = {}
-  ) {
-    let prevMovementsRes = {}
+  _getWinLossByTimeframe ({ isUnrealizedProfitExcluded }) {
+    let firstWalletsVals = {}
+    let firstPLVals = 0
+    let prevMovementsRes = 0
 
     return ({
       walletsGroupedByTimeframe = {},
       withdrawalsGroupedByTimeframe = {},
-      depositsGroupedByTimeframe = {}
-    } = {}, i) => {
-      const isLast = i === 0
-      const _startPl = { ...startPl }
-      const _endPl = isLast ? { ...endPl } : {}
+      depositsGroupedByTimeframe = {},
+      plGroupedByTimeframe = {}
+    } = {}, i, arr) => {
+      const isFirst = (i + 1) === arr.length
+
+      if (isFirst) {
+        firstWalletsVals = walletsGroupedByTimeframe
+        firstPLVals = plGroupedByTimeframe
+      }
 
       prevMovementsRes = this._sumMovementsWithPrevRes(
         prevMovementsRes,
-        { ...withdrawalsGroupedByTimeframe },
-        { ...depositsGroupedByTimeframe }
+        withdrawalsGroupedByTimeframe,
+        depositsGroupedByTimeframe
       )
 
-      return this.FOREX_SYMBS.reduce((accum, symb) => {
-        const startWallet = Number.isFinite(startWalletsVals[symb])
-          ? startWalletsVals[symb]
-          : 0
-        const wallet = Number.isFinite(walletsGroupedByTimeframe[symb])
-          ? walletsGroupedByTimeframe[symb]
-          : 0
+      const res = this.FOREX_SYMBS.reduce((accum, symb) => {
         const movements = Number.isFinite(prevMovementsRes[symb])
           ? prevMovementsRes[symb]
           : 0
-        const _startPlVal = Number.isFinite(_startPl[symb])
-          ? _startPl[symb]
+        const firstWallets = Number.isFinite(firstWalletsVals[symb])
+          ? firstWalletsVals[symb]
           : 0
-        const _endPlVal = Number.isFinite(_endPl[symb])
-          ? _endPl[symb]
+        const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
+          ? walletsGroupedByTimeframe[symb]
           : 0
-        const res = (wallet - startWallet - movements) +
-          (_startPlVal + _endPlVal)
+        const firstPL = Number.isFinite(firstPLVals[symb])
+          ? firstPLVals[symb]
+          : 0
+        const pl = Number.isFinite(plGroupedByTimeframe[symb])
+          ? plGroupedByTimeframe[symb]
+          : 0
+
+        const realized = (wallets - movements) - firstWallets
+        const unrealized = isUnrealizedProfitExcluded
+          ? 0
+          : pl - firstPL
+
+        const res = realized + unrealized
 
         if (!res) {
-          return { ...accum }
+          return Object.assign(accum, { [symb]: 0 })
         }
 
-        return {
-          ...accum,
-          [symb]: res
-        }
+        return Object.assign(accum, { [symb]: res })
       }, {})
+
+      return res
     }
   }
 
   _calcMovements (
     data = [],
-    symbolFieldName,
-    symbol = []
+    args = {}
   ) {
+    const {
+      symbolFieldName,
+      symbol = []
+    } = args
+
     return data.reduce((accum, movement = {}) => {
       const { amount, amountUsd } = { ...movement }
       const currSymb = movement[symbolFieldName]
@@ -189,69 +166,41 @@ class WinLoss {
     }, {})
   }
 
-  _getStartWallets () {
-    return this.FOREX_SYMBS.reduce((accum, symb) => {
-      return {
-        ...accum,
-        [symb]: 0
-      }
-    }, {})
-  }
-
-  _calcFirstWallets (
-    data = [],
-    startWallets = {}
-  ) {
-    return data.reduce((accum, movement = {}) => {
-      const { balance, balanceUsd, currency } = { ...movement }
-      const _isForexSymb = isForexSymb(currency, this.FOREX_SYMBS)
-      const _isNotUsedBalanceUsdField = (
-        _isForexSymb &&
-        !Number.isFinite(balanceUsd)
-      )
-      const _balance = _isNotUsedBalanceUsdField
-        ? balance
-        : balanceUsd
-      const symb = _isNotUsedBalanceUsdField
-        ? currency
-        : 'USD'
-
-      if (!Number.isFinite(_balance)) {
-        return { ...accum }
-      }
-
-      return {
-        ...accum,
-        [symb]: (Number.isFinite(accum[symb]))
-          ? accum[symb] + _balance
-          : _balance
-      }
-    }, startWallets)
-  }
-
   _shiftMtsToNextTimeframe (
     groupedData,
-    timeframe
+    {
+      timeframe,
+      end
+    }
   ) {
-    return groupedData.map((item, i) => {
+    return groupedData.reduce((accum, item, i) => {
+      // If end mts is not exactly start of day (2020-04-22T15:15:15.000Z)
+      // no need to skip item as it's the next timeframe
+      const isFirst = i === 0
+      // Here would be { mts: start, USD: 0 }
+      const isLast = i === (groupedData.length - 1)
+
       if (
-        i === (groupedData.length - 1) ||
-        i === 0
+        isFirst &&
+        getStartMtsByTimeframe(end, timeframe) === end
       ) {
-        return { ...item }
+        return accum
+      }
+      if (isLast) {
+        accum.push(item)
+
+        return accum
       }
 
-      const normalizedMtsByTimeframe = getStartMtsByTimeframe(
-        item.mts,
-        timeframe
-      )
-      const mtsMoment = moment.utc(normalizedMtsByTimeframe)
+      const _mts = isFirst ? end : item.mts
+      const mtsMoment = moment.utc(_mts)
 
       if (timeframe === 'day') {
         mtsMoment.add(1, 'days')
       }
       if (timeframe === 'week') {
         mtsMoment.add(1, 'weeks')
+        mtsMoment.isoWeekday(1)
       }
       if (timeframe === 'month') {
         mtsMoment.add(1, 'months')
@@ -262,8 +211,11 @@ class WinLoss {
 
       const mts = mtsMoment.valueOf()
 
-      return { ...item, mts }
-    })
+      item.mts = mts
+      accum.push(item)
+
+      return accum
+    }, [])
   }
 
   async getWinLoss ({
@@ -276,10 +228,11 @@ class WinLoss {
     const {
       timeframe = 'day',
       start = 0,
-      end = Date.now()
-    } = { ...params }
+      end = Date.now(),
+      isUnrealizedProfitExcluded
+    } = params ?? {}
     const args = {
-      auth,
+      auth: user,
       params: {
         timeframe,
         start,
@@ -287,70 +240,41 @@ class WinLoss {
       }
     }
 
-    const walletsGroupedByTimeframePromise = this.balanceHistory
-      .getBalanceHistory(
-        args,
-        true
-      )
-    const firstWalletsPromise = this.wallets.getWallets({
-      auth,
-      params: { end: start }
-    })
+    const plGroupedByTimeframePromise = isUnrealizedProfitExcluded
+      ? []
+      : this.positionsSnapshot.getPLSnapshot(args)
 
-    const startPlPromise = this._getPlFromPositionsSnapshot({
-      auth,
-      params: { start }
-    })
-    const endPlPromise = this._getPlFromPositionsSnapshot({
-      auth,
-      params: { end }
-    })
-
-    const withdrawalsPromise = this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.MOVEMENTS,
+    const walletsGroupedByTimeframePromise = this.balanceHistory.getBalanceHistory(
       {
-        filter: {
-          $not: { status: 'CANCELED' },
-          $lt: { amount: 0 },
-          $gte: { mtsStarted: start },
-          $lte: { mtsStarted: end },
-          user_id: user._id
-        },
-        sort: [['mtsStarted', -1]],
-        projection: this.movementsModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
+        ...args,
+        params: {
+          ...args?.params,
+          isUnrealizedProfitExcluded: true
+        }
+      },
+      true
     )
-    const depositsPromise = this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.MOVEMENTS,
-      {
-        filter: {
-          status: 'COMPLETED',
-          $gt: { amount: 0 },
-          $gte: { mtsUpdated: start },
-          $lte: { mtsUpdated: end },
-          user_id: user._id
-        },
-        sort: [['mtsUpdated', -1]],
-        projection: this.movementsModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
-    )
+    const withdrawalsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      sort: [['mtsStarted', -1]],
+      isWithdrawals: true
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      sort: [['mtsUpdated', -1]],
+      isDeposits: true
+    })
 
     const [
       withdrawals,
-      deposits,
-      firstWallets,
-      startPl,
-      endPl
+      deposits
     ] = await Promise.all([
       withdrawalsPromise,
-      depositsPromise,
-      firstWalletsPromise,
-      startPlPromise,
-      endPlPromise
+      depositsPromise
     ])
 
     const withdrawalsGroupedByTimeframePromise = groupByTimeframe(
@@ -373,30 +297,25 @@ class WinLoss {
     const [
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
-      walletsGroupedByTimeframe
+      walletsGroupedByTimeframe,
+      plGroupedByTimeframe
     ] = await Promise.all([
       withdrawalsGroupedByTimeframePromise,
       depositsGroupedByTimeframePromise,
-      walletsGroupedByTimeframePromise
+      walletsGroupedByTimeframePromise,
+      plGroupedByTimeframePromise
     ])
-
-    const startWallets = this._getStartWallets()
-    const startWalletsInForex = this._calcFirstWallets(
-      firstWallets,
-      startWallets
-    )
 
     const groupedData = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
         withdrawalsGroupedByTimeframe,
-        depositsGroupedByTimeframe
+        depositsGroupedByTimeframe,
+        plGroupedByTimeframe
       },
       false,
       this._getWinLossByTimeframe(
-        startWalletsInForex,
-        startPl,
-        endPl
+        { isUnrealizedProfitExcluded }
       ),
       true
     )
@@ -406,7 +325,7 @@ class WinLoss {
     })
     const res = this._shiftMtsToNextTimeframe(
       groupedData,
-      timeframe
+      { timeframe, end }
     )
 
     return res

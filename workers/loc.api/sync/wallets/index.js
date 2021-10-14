@@ -111,7 +111,8 @@ class Wallets {
 
     return this.currencyConverter.convert(
       wallets,
-      convSchema
+      convSchema,
+      { shouldTryPublicTradesFirst: true }
     )
   }
 }

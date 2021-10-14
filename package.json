@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "better-npm-run": "^0.1.1",
-    "better-sqlite3": "7.4.1",
+    "better-sqlite3": "7.4.3",
     "bfx-facs-db-better-sqlite": "git+https://github.com/bitfinexcom/bfx-facs-db-better-sqlite.git",
     "bfx-facs-scheduler": "git+https://github.com:bitfinexcom/bfx-facs-scheduler.git",
     "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",

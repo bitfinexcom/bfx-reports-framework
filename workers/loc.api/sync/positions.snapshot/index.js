@@ -5,11 +5,10 @@ const { orderBy } = require('lodash')
 const {
   splitSymbolPairs
 } = require('bfx-report/workers/loc.api/helpers')
-
-const { getTimeframeQuery } = require('../dao/helpers')
 const {
-  SyncedPositionsSnapshotParamsError
-} = require('../../errors')
+  groupByTimeframe,
+  getStartMtsByTimeframe
+} = require('../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -17,6 +16,8 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.DAO,
   TYPES.ALLOWED_COLLS,
+  TYPES.SYNC_API_METHODS,
+  TYPES.FOREX_SYMBS,
   TYPES.SyncSchema,
   TYPES.CurrencyConverter,
   TYPES.Authenticator
@@ -26,6 +27,8 @@ class PositionsSnapshot {
     rService,
     dao,
     ALLOWED_COLLS,
+    SYNC_API_METHODS,
+    FOREX_SYMBS,
     syncSchema,
     currencyConverter,
     authenticator
@@ -33,20 +36,19 @@ class PositionsSnapshot {
     this.rService = rService
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.FOREX_SYMBS = FOREX_SYMBS
     this.syncSchema = syncSchema
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
 
-    this.positionsHistoryObjModel = this.syncSchema.getModelsMap()
+    this.positionsHistoryModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
-    this.positionsSnapshotObjModel = this.syncSchema.getModelsMap()
+    this.positionsSnapshotModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
-    this.positionsHistoryModel = Object.keys(
-      this.positionsHistoryObjModel
-    )
-    this.positionsSnapshotModel = Object.keys(
-      this.positionsSnapshotObjModel
-    )
+    this.positionsSnapshotMethodColl = this.syncSchema.getMethodCollMap()
+      .get(this.SYNC_API_METHODS.POSITIONS_SNAPSHOT)
+    this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl.symbolFieldName
   }
 
   _getPositionsHistory (
@@ -69,64 +71,14 @@ class PositionsSnapshot {
     )
   }
 
-  _getTimeframeQuery (alias, isMtsExisted) {
-    const res = getTimeframeQuery(
-      'day',
-      {
-        propName: 'mtsUpdate',
-        alias
-      }
-    )
-
-    return isMtsExisted ? [res] : []
-  }
-
-  _getMtsStr (mts, propName) {
-    if (
-      !Number.isInteger(mts) ||
-      mts === 0
-    ) {
-      return
-    }
-
-    const date = new Date(mts)
-    const year = date.getUTCFullYear()
-    const _month = date.getUTCMonth() + 1
-    const month = _month < 10
-      ? `0${_month}`
-      : _month
-    const day = date.getUTCDate()
-    const mtsStr = `${year}-${month}-${day}`
-
-    return { [propName]: mtsStr }
-  }
-
   _getPositionsSnapshotFromDb (
     user,
     params
   ) {
-    const { start, end } = { ...params }
+    const { start, end, sort } = { ...params }
 
     const isStartExisted = Number.isInteger(start)
     const isEndExisted = Number.isInteger(end)
-
-    const startSqlTimeframe = this._getTimeframeQuery(
-      'startMtsUpdateStr',
-      isStartExisted
-    )
-    const endSqlTimeframe = this._getTimeframeQuery(
-      'endMtsUpdateStr',
-      isEndExisted
-    )
-
-    const startMtsUpdateStr = this._getMtsStr(
-      start,
-      'startMtsUpdateStr'
-    )
-    const endMtsUpdateStr = this._getMtsStr(
-      end,
-      'endMtsUpdateStr'
-    )
 
     const gteFilter = isStartExisted
       ? { $gte: { mtsUpdate: start } }
@@ -134,9 +86,12 @@ class PositionsSnapshot {
     const lteFilter = isEndExisted
       ? { $lte: { mtsUpdate: end } }
       : {}
-    const eqFilter = isStartExisted || isEndExisted
-      ? { $eq: { ...startMtsUpdateStr, ...endMtsUpdateStr } }
-      : {}
+    const _sort = (
+      Array.isArray(sort) &&
+      sort.length > 0
+    )
+      ? sort
+      : [['mtsUpdate', -1], ['id', -1]]
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.POSITIONS_SNAPSHOT,
@@ -144,15 +99,10 @@ class PositionsSnapshot {
         filter: {
           user_id: user._id,
           ...gteFilter,
-          ...lteFilter,
-          ...eqFilter
+          ...lteFilter
         },
-        sort: [['mtsUpdate', -1]],
-        projection: [
-          ...this.positionsSnapshotModel,
-          ...startSqlTimeframe,
-          ...endSqlTimeframe
-        ],
+        sort: _sort,
+        projection: this.positionsSnapshotModel,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -258,13 +208,18 @@ class PositionsSnapshot {
     } = { ...opts }
     const positionsSnapshot = []
     const tickers = []
+    const actualPrices = new Map()
 
     for (const position of positions) {
       const {
         symbol,
         basePrice,
-        amount
+        amount,
+        marginFunding,
+        mtsUpdate
       } = { ...position }
+      const mts = end ?? mtsUpdate
+      const priceCacheKey = `${symbol}-${mts}`
 
       const resPositions = {
         ...position,
@@ -279,9 +234,14 @@ class PositionsSnapshot {
 
         continue
       }
+      if (!actualPrices.has(priceCacheKey)) {
+        const _actualPrice = await this.currencyConverter
+          .getPrice(symbol, mts)
 
-      const actualPrice = await this.currencyConverter
-        .getPrice(symbol, end)
+        actualPrices.set(priceCacheKey, _actualPrice)
+      }
+
+      const actualPrice = actualPrices.get(priceCacheKey)
 
       if (
         !Number.isFinite(actualPrice) ||
@@ -293,7 +253,16 @@ class PositionsSnapshot {
         continue
       }
 
-      const pl = (actualPrice - basePrice) * amount
+      const _marginFunding = Number.isFinite(marginFunding)
+        ? marginFunding
+        : 0
+      const isMarginFundingConverted = amount > 0
+      const convertedMarginFunding = isMarginFundingConverted
+        ? _marginFunding
+        : _marginFunding * actualPrice
+
+      const pl = ((actualPrice - basePrice) * amount) -
+        Math.abs(convertedMarginFunding)
       const plPerc = ((actualPrice / basePrice) - 1) * 100 * Math.sign(amount)
       const {
         plUsd,
@@ -575,6 +544,150 @@ class PositionsSnapshot {
     }
   }
 
+  _calcPlFromPositionsSnapshots (positionsHistory) {
+    return (
+      positionsSnapshots = [],
+      args = {}
+    ) => {
+      const { mts, timeframe } = args
+
+      // Need to filter duplicate and closed positions as it can be for
+      // week and month and year timeframe in daily positions snapshots
+      // if daily timeframe no need to filter it
+      const positions = this._filterPositionsSnapshots(
+        positionsSnapshots,
+        positionsHistory,
+        timeframe,
+        mts
+      )
+
+      return positions.reduce((accum, curr) => {
+        const { plUsd } = { ...curr }
+        const symb = 'USD'
+
+        if (!Number.isFinite(plUsd)) {
+          return accum
+        }
+
+        return {
+          ...accum,
+          [symb]: Number.isFinite(accum[symb])
+            ? accum[symb] + plUsd
+            : plUsd
+        }
+      }, {})
+    }
+  }
+
+  _filterPositionsSnapshots (
+    positionsSnapshots,
+    positionsHistory,
+    timeframe,
+    mts
+  ) {
+    if (
+      !Array.isArray(positionsSnapshots) ||
+      positionsSnapshots.length === 0
+    ) {
+      return positionsSnapshots
+    }
+
+    return positionsSnapshots.reduce((accum, position) => {
+      if (
+        Number.isFinite(position?.id) &&
+        accum.every((item) => item?.id !== position?.id) &&
+        (
+          timeframe === 'day' ||
+          !this._isClosedPosition(positionsHistory, mts, position?.id)
+        )
+      ) {
+        accum.push(position)
+      }
+
+      return accum
+    }, [])
+  }
+
+  _isClosedPosition (positionsHistory, mts, id) {
+    return (
+      Array.isArray(positionsHistory) &&
+      positionsHistory.length > 0 &&
+      positionsHistory.some((item) => (
+        item.id === id &&
+        item.mts === mts
+      ))
+    )
+  }
+
+  async getPLSnapshot ({
+    auth = {},
+    params = {}
+  } = {}) {
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now()
+    } = params ?? {}
+    const args = {
+      auth: user,
+      params: {
+        timeframe,
+        start,
+        end
+      }
+    }
+
+    const dailyPositionsSnapshotsPromise = this
+      .getSyncedPositionsSnapshot(args)
+    const positionsHistoryPromise = this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.POSITIONS_HISTORY,
+      {
+        filter: {
+          user_id: user._id,
+          $gte: { mtsUpdate: start },
+          $lte: { mtsUpdate: end }
+        },
+        sort: [['mtsUpdate', -1], ['id', -1]],
+        projection: this.positionsHistoryModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+
+    const [
+      dailyPositionsSnapshots,
+      positionsHistory
+    ] = await Promise.all([
+      dailyPositionsSnapshotsPromise,
+      positionsHistoryPromise
+    ])
+
+    const positionsHistoryNormByMts = positionsHistory.map((pos) => {
+      if (Number.isFinite(pos?.mtsUpdate)) {
+        pos.mts = getStartMtsByTimeframe(
+          pos.mtsUpdate,
+          timeframe
+        )
+      }
+
+      return pos
+    })
+
+    const plGroupedByTimeframePromise = await groupByTimeframe(
+      dailyPositionsSnapshots,
+      { timeframe, start, end },
+      this.FOREX_SYMBS,
+      'mtsUpdate',
+      this.positionsSnapshotSymbolFieldName,
+      this._calcPlFromPositionsSnapshots(positionsHistoryNormByMts)
+    )
+
+    return plGroupedByTimeframePromise
+  }
+
   async getSyncedPositionsSnapshot (args) {
     const {
       auth = {},
@@ -587,13 +700,6 @@ class PositionsSnapshot {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const emptyRes = []
-
-    if (
-      Number.isInteger(start) &&
-      Number.isInteger(end)
-    ) {
-      throw new SyncedPositionsSnapshotParamsError()
-    }
 
     const syncedPositionsSnapshot = await this._getPositionsSnapshotFromDb(
       user,
@@ -611,7 +717,7 @@ class PositionsSnapshot {
       positionsSnapshot
     } = await this._getCalculatedPositions(
       syncedPositionsSnapshot,
-      start || end,
+      null,
       { isNotTickersRequired: true }
     )
 

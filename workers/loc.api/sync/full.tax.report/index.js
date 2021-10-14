@@ -8,27 +8,21 @@ const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.DAO,
-  TYPES.SyncSchema,
-  TYPES.ALLOWED_COLLS,
   TYPES.FullSnapshotReport,
-  TYPES.Authenticator
+  TYPES.Authenticator,
+  TYPES.Movements
 ]
 class FullTaxReport {
   constructor (
     dao,
-    syncSchema,
-    ALLOWED_COLLS,
     fullSnapshotReport,
-    authenticator
+    authenticator,
+    movements
   ) {
     this.dao = dao
-    this.syncSchema = syncSchema
-    this.ALLOWED_COLLS = ALLOWED_COLLS
     this.fullSnapshotReport = fullSnapshotReport
     this.authenticator = authenticator
-
-    this.movementsModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.MOVEMENTS)
+    this.movements = movements
   }
 
   async _getMovements ({
@@ -36,25 +30,14 @@ class FullTaxReport {
     start = 0,
     end = Date.now()
   }) {
-    const movements = await this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.MOVEMENTS,
-      {
-        filter: {
-          $eq: { status: 'COMPLETED' },
-          $gte: { mtsUpdated: start },
-          $lte: { mtsUpdated: end },
-          user_id: user._id
-        },
-        sort: [['mtsUpdated', -1]],
-        projection: this.movementsModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
+    return this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      filter: {
+        $eq: { status: 'COMPLETED' }
       }
-    )
-
-    return Array.isArray(movements)
-      ? movements
-      : []
+    })
   }
 
   _calcMovementsTotalAmount (movements) {

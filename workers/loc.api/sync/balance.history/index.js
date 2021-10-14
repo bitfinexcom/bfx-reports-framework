@@ -19,7 +19,9 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.CurrencyConverter,
   TYPES.SYNC_API_METHODS,
-  TYPES.ALLOWED_COLLS
+  TYPES.ALLOWED_COLLS,
+  TYPES.Authenticator,
+  TYPES.PositionsSnapshot
 ]
 class BalanceHistory {
   constructor (
@@ -28,7 +30,9 @@ class BalanceHistory {
     FOREX_SYMBS,
     currencyConverter,
     SYNC_API_METHODS,
-    ALLOWED_COLLS
+    ALLOWED_COLLS,
+    authenticator,
+    positionsSnapshot
   ) {
     this.dao = dao
     this.wallets = wallets
@@ -36,6 +40,8 @@ class BalanceHistory {
     this.currencyConverter = currencyConverter
     this.SYNC_API_METHODS = SYNC_API_METHODS
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.authenticator = authenticator
+    this.positionsSnapshot = positionsSnapshot
   }
 
   _groupWalletsByCurrency (wallets = []) {
@@ -72,12 +78,17 @@ class BalanceHistory {
     }
   }
 
-  _getWallets ({
-    auth,
-    timeframe,
-    start,
-    end
-  }) {
+  async _getWallets (args = {}) {
+    const {
+      auth,
+      params
+    } = args ?? {}
+    const {
+      start = 0,
+      end = Date.now(),
+      timeframe = 'day'
+    } = params ?? {}
+
     const sqlTimeframe = getTimeframeQuery(timeframe)
     const schema = {
       groupResBy: ['wallet', 'currency', 'timeframe'],
@@ -112,7 +123,7 @@ class BalanceHistory {
       }
     }
 
-    return this.dao.findInCollBy(
+    const res = await this.dao.findInCollBy(
       this.SYNC_API_METHODS.WALLETS,
       {
         auth,
@@ -123,12 +134,97 @@ class BalanceHistory {
         schema
       }
     )
+
+    if (timeframe !== 'week') {
+      return res
+    }
+
+    return this._reGroupWeeklyDataGroups(res)
   }
 
-  _getCandles ({
-    start = 0,
-    end = Date.now()
-  }) {
+  /*
+   * There need to re-group weekly data groups
+   * if the weekly timeframe hits on the transition
+   * from one year to another
+   * The reason:
+   *   - the sqlite `strftime` function
+   * https://www.sqlite.org/lang_datefunc.html
+   * https://pubs.opengroup.org/onlinepubs/007908799/xsh/strftime.html
+   * works differently compared MomentJS implementation
+   * with weeks of year https://momentjs.com/docs/#/get-set/iso-week-year
+   *   - for `strftime`, the week is number of the year
+   * (Monday as the first day of the week)
+   * as a decimal number [00,53]
+   * All days in a new year preceding the first Monday
+   * are considered to be in week 0
+   *  - for MomentJS (ISO 8601 week date),
+   * if 31 December is on a Monday, Tuesday, or Wednesday
+   * it is in W01 of the next year
+   * https://en.wikipedia.org/wiki/ISO_week_date#Last_week
+   * https://en.wikipedia.org/wiki/ISO_week_date#First_week
+   *
+   * Take into consideration sqlite peculiarity we can have
+   * wrong and redundant week data groups at the end/start of the year
+   */
+  _reGroupWeeklyDataGroups (data) {
+    let unicGroup = []
+
+    return data.reduce((accum, item, i) => {
+      const isLast = (i + 1) === data.length
+
+      const date = moment.utc(item?.mtsUpdate)
+      const month = date.month()
+      const dates = date.date()
+      const weekday = date.isoWeekday()
+
+      if (
+        (
+          month === 0 &&
+          dates < 7 &&
+          (weekday - dates) > 0
+        ) ||
+        (
+          month === 11 &&
+          dates > 25 &&
+          (dates + 7 - weekday) > 31
+        )
+      ) {
+        if (unicGroup.some((w) => (
+          w?.currency === item?.currency &&
+          w?.wallet === item?.wallet
+        ))) {
+          return accum
+        }
+
+        unicGroup.push(item)
+
+        if (
+          isLast &&
+          unicGroup.length > 0
+        ) {
+          accum.push(...unicGroup)
+          unicGroup = []
+        }
+
+        return accum
+      }
+      if (unicGroup.length > 0) {
+        accum.push(...unicGroup)
+        unicGroup = []
+      }
+
+      accum.push(item)
+
+      return accum
+    }, [])
+  }
+
+  _getCandles (args = {}) {
+    const {
+      start = 0,
+      end = Date.now()
+    } = args?.params ?? {}
+
     const mtsMoment = moment.utc(start)
       .add(-1, 'days')
       .valueOf()
@@ -167,6 +263,7 @@ class BalanceHistory {
     }
     if (timeframe === 'week') {
       mtsMoment.add(1, 'weeks')
+      mtsMoment.isoWeekday(1)
     }
     if (timeframe === 'year') {
       mtsMoment.add(1, 'years')
@@ -191,16 +288,16 @@ class BalanceHistory {
   ) {
     let prevRes = { ...firstWallets }
 
-    return (
-      {
-        walletsGroupedByTimeframe = {},
-        mtsGroupedByTimeframe: { mts } = {}
-      } = {}
-    ) => {
+    return ({
+      walletsGroupedByTimeframe = {},
+      mtsGroupedByTimeframe: { mts } = {},
+      plGroupedByTimeframe = {}
+    } = {}) => {
       const isReturnedPrevRes = (
         isEmpty(walletsGroupedByTimeframe) &&
         !isEmpty(prevRes)
       )
+
       const walletsArr = isReturnedPrevRes
         ? Object.entries(prevRes)
         : Object.entries(walletsGroupedByTimeframe)
@@ -220,7 +317,7 @@ class BalanceHistory {
           )
 
         if (!_isForexSymb && !Number.isFinite(price)) {
-          return { ...accum }
+          return accum
         }
 
         const _balance = _isForexSymb
@@ -231,28 +328,32 @@ class BalanceHistory {
           : 'USD'
 
         if (!Number.isFinite(_balance)) {
-          return { ...accum }
+          return accum
         }
 
-        return {
-          ...accum,
-          [symb]: (Number.isFinite(accum[symb]))
-            ? accum[symb] + _balance
-            : _balance
-        }
+        const val = (Number.isFinite(accum[symb]))
+          ? accum[symb] + _balance
+          : _balance
+
+        return Object.assign(accum, { [symb]: val })
       }, {})
 
       if (!isReturnedPrevRes) {
         prevRes = { ...walletsGroupedByTimeframe }
       }
 
-      return this._convertForexToUsd(
+      const usdPL = Number.isFinite(plGroupedByTimeframe?.USD)
+        ? plGroupedByTimeframe.USD
+        : 0
+      const usdRes = this._convertForexToUsd(
         res,
         candles,
         mts,
         timeframe,
         currenciesSynonymous
       )
+
+      return { USD: usdRes + usdPL }
     }
   }
 
@@ -266,7 +367,7 @@ class BalanceHistory {
     const dataArr = Object.entries(obj)
 
     if (dataArr.length === 0) {
-      return {}
+      return 0
     }
 
     const resInUsd = dataArr.reduce((accum, [symb, balance]) => {
@@ -292,7 +393,7 @@ class BalanceHistory {
       return accum + balance * price
     }, 0)
 
-    return { USD: resInUsd }
+    return resInUsd
   }
 
   async _getWalletsGroupedByOneTimeframe (
@@ -366,23 +467,28 @@ class BalanceHistory {
       return firstWalletsMts
     }
 
-    const { params } = { ...args }
-    const { start = 0 } = { ...params }
+    const { start = 0 } = args?.params ?? {}
 
     return start
   }
 
   async getBalanceHistory (
     {
-      auth = {},
-      params: {
-        timeframe = 'day',
-        start = 0,
-        end = Date.now()
-      } = {}
+      auth: _auth = {},
+      params = {}
     } = {},
     isSubCalc = false
   ) {
+    const auth = await this.authenticator
+      .verifyRequestUser({ auth: _auth })
+
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now(),
+      isUnrealizedProfitExcluded
+    } = params ?? {}
+
     if (Number.isInteger(timeframe)) {
       return this._getWalletsGroupedByOneTimeframe(
         {
@@ -395,10 +501,16 @@ class BalanceHistory {
 
     const args = {
       auth,
-      timeframe,
-      start,
-      end
+      params: {
+        timeframe,
+        start,
+        end
+      }
     }
+
+    const plGroupedByTimeframePromise = isUnrealizedProfitExcluded
+      ? []
+      : this.positionsSnapshot.getPLSnapshot(args)
 
     const firstWalletsPromise = this.wallets.getWallets({
       auth,
@@ -410,11 +522,13 @@ class BalanceHistory {
     const [
       firstWallets,
       wallets,
-      candles
+      candles,
+      plGroupedByTimeframe
     ] = await Promise.all([
       firstWalletsPromise,
       walletsPromise,
-      candlesPromise
+      candlesPromise,
+      plGroupedByTimeframePromise
     ])
 
     const firstWalletsGroupedByCurrency = this._groupWalletsByCurrency(
@@ -445,7 +559,8 @@ class BalanceHistory {
     const res = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
-        mtsGroupedByTimeframe
+        mtsGroupedByTimeframe,
+        plGroupedByTimeframe
       },
       isSubCalc,
       this._getWalletsByTimeframe(

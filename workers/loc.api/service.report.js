@@ -19,6 +19,10 @@ class ReportService extends BaseReportService {
     return super.getLedgers(null, args)
   }
 
+  [SYNC_API_METHODS.PAY_INVOICE_LIST] (args) {
+    return super.getPayInvoiceList(null, args)
+  }
+
   [SYNC_API_METHODS.TRADES] (args) {
     return super.getTrades(null, args)
   }

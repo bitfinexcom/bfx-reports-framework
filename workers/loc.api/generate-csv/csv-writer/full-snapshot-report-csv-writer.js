@@ -1,5 +1,6 @@
 'use strict'
 
+const { pipeline } = require('stream')
 const { stringify } = require('csv')
 
 const {
@@ -8,6 +9,8 @@ const {
 const {
   getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
+
+const nope = () => {}
 
 module.exports = (rService) => async (
   wStream,
@@ -36,7 +39,7 @@ module.exports = (rService) => async (
       { columns: ['mess'] }
     )
 
-    stringifier.pipe(wStream)
+    pipeline(stringifier, wStream, nope)
     write([{ mess: jobData }], stringifier)
     queue.emit('progress', 100)
     stringifier.end()
@@ -44,7 +47,7 @@ module.exports = (rService) => async (
     return
   }
 
-  wStream.setMaxListeners(20)
+  wStream.setMaxListeners(50)
 
   const timestampsStringifier = stringify({
     header: true,
@@ -87,17 +90,23 @@ module.exports = (rService) => async (
     columns: columnsCsv.walletsTickers
   })
 
-  timestampsStringifier.pipe(wStream)
-  posNameStringifier.pipe(wStream)
-  posStringifier.pipe(wStream)
-  positionsTotalPlUsdStringifier.pipe(wStream)
-  walletsNameStringifier.pipe(wStream)
-  walletsStringifier.pipe(wStream)
-  walletsTotalBalanceUsdStringifier.pipe(wStream)
-  positionsTickersNameStringifier.pipe(wStream)
-  positionsTickersStringifier.pipe(wStream)
-  walletsTickersNameStringifier.pipe(wStream)
-  walletsTickersStringifier.pipe(wStream)
+  const rStreamArr = [
+    timestampsStringifier,
+    posNameStringifier,
+    posStringifier,
+    positionsTotalPlUsdStringifier,
+    walletsNameStringifier,
+    walletsStringifier,
+    walletsTotalBalanceUsdStringifier,
+    positionsTickersNameStringifier,
+    positionsTickersStringifier,
+    walletsTickersNameStringifier,
+    walletsTickersStringifier
+  ]
+
+  rStreamArr.forEach((rStream) => {
+    pipeline(rStream, wStream, nope)
+  })
 
   const res = await getDataFromApi(
     rService[name].bind(rService),

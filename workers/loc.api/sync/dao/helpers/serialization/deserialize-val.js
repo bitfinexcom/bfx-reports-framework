@@ -15,7 +15,8 @@ module.exports = (
     'maker',
     '_isMarginFundingPayment',
     '_isAffiliateRebate',
-    '_isStakingPayments'
+    '_isStakingPayments',
+    '_isSubAccountsTransfer'
   ]
 ) => {
   if (

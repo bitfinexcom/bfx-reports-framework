@@ -127,6 +127,10 @@ class ApiMiddlewareHandlerAfter {
             {
               fieldName: '_category',
               handler: getCategoryFromDescription
+            },
+            {
+              fieldName: '_isSubAccountsTransfer',
+              pattern: '^transfer.+sa[(].+[)]'
             }
           ]
         ),
