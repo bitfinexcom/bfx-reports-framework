@@ -72,10 +72,19 @@ const isNotSyncRequired = (args) => {
   )
 }
 
+const sumObjectsNumbers = (propName, objects = []) => {
+  return objects.reduce((accum, curr) => {
+    return Number.isFinite(curr?.[propName])
+      ? accum + curr[propName]
+      : accum
+  }, 0)
+}
+
 module.exports = {
   checkParamsAuth,
   tryParseJSON,
   collObjToArr,
   getDateString,
-  isNotSyncRequired
+  isNotSyncRequired,
+  sumObjectsNumbers
 }

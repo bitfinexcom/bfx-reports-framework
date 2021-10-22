@@ -6,7 +6,8 @@ const {
   tryParseJSON,
   collObjToArr,
   getDateString,
-  isNotSyncRequired
+  isNotSyncRequired,
+  sumObjectsNumbers
 } = require('./utils')
 const {
   isEnotfoundError,
@@ -29,5 +30,6 @@ module.exports = {
   isEaiAgainError,
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
-  getSubAccountAuthFromAuth
+  getSubAccountAuthFromAuth,
+  sumObjectsNumbers
 }
