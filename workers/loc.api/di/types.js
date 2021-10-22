@@ -59,5 +59,6 @@ module.exports = {
   SyncCollsManager: Symbol.for('SyncCollsManager'),
   Checkers: Symbol.for('Checkers'),
   DataConsistencyChecker: Symbol.for('DataConsistencyChecker'),
-  Movements: Symbol.for('Movements')
+  Movements: Symbol.for('Movements'),
+  WinLossVSAccountBalance: Symbol.for('WinLossVSAccountBalance')
 }

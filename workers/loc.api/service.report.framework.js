@@ -1255,6 +1255,18 @@ class FrameworkReportService extends ReportService {
     }, 'getPerformingLoan', args, cb)
   }
 
+  getWinLossVSAccountBalance (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.WIN_LOSS, args)
+
+      checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceApi')
+
+      return this._winLossVSAccountBalance
+        .getWinLossVSAccountBalance(args)
+    }, 'getWinLossVSAccountBalance', args, cb)
+  }
+
   /**
    * @override
    */
@@ -1349,6 +1361,15 @@ class FrameworkReportService extends ReportService {
 
       return super.getCandlesCsv(space, args)
     }, 'getCandlesCsv', args, cb)
+  }
+
+  getWinLossVSAccountBalanceCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getWinLossVSAccountBalanceCsvJobData',
+        args
+      )
+    }, 'getWinLossVSAccountBalanceCsv', args, cb)
   }
 }
 

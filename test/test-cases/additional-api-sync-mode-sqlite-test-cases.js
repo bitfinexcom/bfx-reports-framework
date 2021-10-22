@@ -517,6 +517,38 @@ module.exports = (
     }
   })
 
+  it('it should be successfully performed by the getWinLossVSAccountBalance method', async function () {
+    this.timeout(120000)
+
+    const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getWinLossVSAccountBalance',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      const resItem = res.body.result[0]
+
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'mts',
+        'perc'
+      ])
+    }
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
@@ -862,6 +894,32 @@ module.exports = (
       .send({
         auth,
         method: 'getPerformingLoanCsv',
+        params: {
+          end,
+          start,
+          timeframe: 'day',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getWinLossVSAccountBalanceCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getWinLossVSAccountBalanceCsv',
         params: {
           end,
           start,

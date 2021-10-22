@@ -594,6 +594,46 @@ class CsvJobData extends BaseCsvJobData {
 
     return jobData
   }
+
+  async getWinLossVSAccountBalanceCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getWinLossVSAccountBalance',
+      fileNamesMap: [[
+        'getWinLossVSAccountBalance',
+        'win-loss-vs-account-balance'
+      ]],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        perc: 'PERCENT',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
+  }
 }
 
 decorateInjectable(CsvJobData, depsTypes)
