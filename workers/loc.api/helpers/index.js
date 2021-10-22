@@ -7,7 +7,8 @@ const {
   collObjToArr,
   getDateString,
   isNotSyncRequired,
-  sumObjectsNumbers
+  sumObjectsNumbers,
+  sumAllObjectsNumbers
 } = require('./utils')
 const {
   isEnotfoundError,
@@ -31,5 +32,6 @@ module.exports = {
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth,
-  sumObjectsNumbers
+  sumObjectsNumbers,
+  sumAllObjectsNumbers
 }
