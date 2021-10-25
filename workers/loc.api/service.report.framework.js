@@ -26,7 +26,8 @@ const {
   collObjToArr,
   getAuthFromSubAccountAuth,
   sumObjectsNumbers,
-  sumAllObjectsNumbers
+  sumAllObjectsNumbers,
+  sumArrayVolumes
 } = require('./helpers')
 
 const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
@@ -1073,7 +1074,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getAccountSummary (space, args, cb) {
@@ -1093,7 +1093,8 @@ class FrameworkReportService extends ReportService {
         )
 
       const objRes = {
-        trade_vol_30d: arrRes[0]?.trade_vol_30d ?? [], // TODO: not complete, it should be []
+        trade_vol_30d: sumArrayVolumes(
+          'trade_vol_30d', arrRes),
         fees_trading_30d: sumAllObjectsNumbers(
           'fees_trading_30d', arrRes),
         fees_trading_total_30d: sumObjectsNumbers(

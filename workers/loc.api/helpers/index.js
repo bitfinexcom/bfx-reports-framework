@@ -8,7 +8,8 @@ const {
   getDateString,
   isNotSyncRequired,
   sumObjectsNumbers,
-  sumAllObjectsNumbers
+  sumAllObjectsNumbers,
+  sumArrayVolumes
 } = require('./utils')
 const {
   isEnotfoundError,
@@ -33,5 +34,6 @@ module.exports = {
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth,
   sumObjectsNumbers,
-  sumAllObjectsNumbers
+  sumAllObjectsNumbers,
+  sumArrayVolumes
 }
