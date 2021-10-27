@@ -24,7 +24,10 @@ const {
   isEnotfoundError,
   isEaiAgainError,
   collObjToArr,
-  getAuthFromSubAccountAuth
+  getAuthFromSubAccountAuth,
+  sumObjectsNumbers,
+  sumAllObjectsNumbers,
+  sumArrayVolumes
 } = require('./helpers')
 
 const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
@@ -1075,7 +1078,7 @@ class FrameworkReportService extends ReportService {
    */
   getAccountSummary (space, args, cb) {
     return this._privResponder(async () => {
-      return this._subAccountApiData
+      const arrRes = await this._subAccountApiData
         .getDataForSubAccount(
           async (args) => {
             const res = await super.getAccountSummary(space, args)
@@ -1088,6 +1091,37 @@ class FrameworkReportService extends ReportService {
             isNotPreparedResponse: true
           }
         )
+
+      const objRes = {
+        trade_vol_30d: sumArrayVolumes(
+          'trade_vol_30d', arrRes),
+        fees_trading_30d: sumAllObjectsNumbers(
+          'fees_trading_30d', arrRes),
+        fees_trading_total_30d: sumObjectsNumbers(
+          'fees_trading_total_30d', arrRes),
+        fees_funding_30d: sumAllObjectsNumbers(
+          'fees_funding_30d', arrRes),
+        fees_funding_total_30d: sumObjectsNumbers(
+          'fees_funding_total_30d', arrRes),
+        makerFee: sumObjectsNumbers(
+          'makerFee', arrRes),
+        derivMakerRebate: sumObjectsNumbers(
+          'derivMakerRebate', arrRes),
+        takerFeeToCrypto: sumObjectsNumbers(
+          'takerFeeToCrypto', arrRes),
+        takerFeeToStable: sumObjectsNumbers(
+          'takerFeeToStable', arrRes),
+        takerFeeToFiat: sumObjectsNumbers(
+          'takerFeeToFiat', arrRes),
+        derivTakerFee: sumObjectsNumbers(
+          'derivTakerFee', arrRes),
+        leoLev: sumObjectsNumbers(
+          'leoLev', arrRes),
+        leoAmountAvg: sumObjectsNumbers(
+          'leoAmountAvg', arrRes)
+      }
+
+      return [objRes]
     }, 'getAccountSummary', args, cb)
   }
 
