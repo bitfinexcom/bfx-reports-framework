@@ -46,28 +46,25 @@ class WinLoss {
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
   }
 
-  _sumMovementsWithPrevRes (
+  sumMovementsWithPrevRes (
     prevMovementsRes,
     withdrawalsGroupedByTimeframe,
     depositsGroupedByTimefram
   ) {
-    return this.FOREX_SYMBS.reduce((accum, symb) => {
-      const prevMovement = Number.isFinite(prevMovementsRes?.[symb])
-        ? prevMovementsRes[symb]
-        : 0
-      const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe?.[symb])
-        ? withdrawalsGroupedByTimeframe[symb]
-        : 0
-      const deposits = Number.isFinite(depositsGroupedByTimefram?.[symb])
-        ? depositsGroupedByTimefram[symb]
-        : 0
-      const res = prevMovement + withdrawals + deposits
+    const symb = 'USD'
 
-      return {
-        ...accum,
-        [symb]: res
-      }
-    }, {})
+    const prevMovement = Number.isFinite(prevMovementsRes?.[symb])
+      ? prevMovementsRes[symb]
+      : 0
+    const withdrawals = Number.isFinite(withdrawalsGroupedByTimeframe?.[symb])
+      ? withdrawalsGroupedByTimeframe[symb]
+      : 0
+    const deposits = Number.isFinite(depositsGroupedByTimefram?.[symb])
+      ? depositsGroupedByTimefram[symb]
+      : 0
+    const res = prevMovement + withdrawals + deposits
+
+    return { [symb]: res }
   }
 
   _getWinLossByTimeframe ({ isUnrealizedProfitExcluded }) {
@@ -81,6 +78,7 @@ class WinLoss {
       depositsGroupedByTimeframe = {},
       plGroupedByTimeframe = {}
     } = {}, i, arr) => {
+      const symb = 'USD'
       const isFirst = (i + 1) === arr.length
 
       if (isFirst) {
@@ -88,44 +86,40 @@ class WinLoss {
         firstPLVals = plGroupedByTimeframe
       }
 
-      prevMovementsRes = this._sumMovementsWithPrevRes(
+      prevMovementsRes = this.sumMovementsWithPrevRes(
         prevMovementsRes,
         withdrawalsGroupedByTimeframe,
         depositsGroupedByTimeframe
       )
 
-      const res = this.FOREX_SYMBS.reduce((accum, symb) => {
-        const movements = Number.isFinite(prevMovementsRes[symb])
-          ? prevMovementsRes[symb]
-          : 0
-        const firstWallets = Number.isFinite(firstWalletsVals[symb])
-          ? firstWalletsVals[symb]
-          : 0
-        const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
-          ? walletsGroupedByTimeframe[symb]
-          : 0
-        const firstPL = Number.isFinite(firstPLVals[symb])
-          ? firstPLVals[symb]
-          : 0
-        const pl = Number.isFinite(plGroupedByTimeframe[symb])
-          ? plGroupedByTimeframe[symb]
-          : 0
+      const movements = Number.isFinite(prevMovementsRes[symb])
+        ? prevMovementsRes[symb]
+        : 0
+      const firstWallets = Number.isFinite(firstWalletsVals[symb])
+        ? firstWalletsVals[symb]
+        : 0
+      const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
+        ? walletsGroupedByTimeframe[symb]
+        : 0
+      const firstPL = Number.isFinite(firstPLVals[symb])
+        ? firstPLVals[symb]
+        : 0
+      const pl = Number.isFinite(plGroupedByTimeframe[symb])
+        ? plGroupedByTimeframe[symb]
+        : 0
 
-        const realized = (wallets - movements) - firstWallets
-        const unrealized = isUnrealizedProfitExcluded
-          ? 0
-          : pl - firstPL
+      const realized = (wallets - movements) - firstWallets
+      const unrealized = isUnrealizedProfitExcluded
+        ? 0
+        : pl - firstPL
 
-        const res = realized + unrealized
+      const res = realized + unrealized
 
-        if (!res) {
-          return Object.assign(accum, { [symb]: 0 })
-        }
+      if (!Number.isFinite(res)) {
+        return { [symb]: 0 }
+      }
 
-        return Object.assign(accum, { [symb]: res })
-      }, {})
-
-      return res
+      return { [symb]: res }
     }
   }
 
@@ -166,7 +160,7 @@ class WinLoss {
     }, {})
   }
 
-  _shiftMtsToNextTimeframe (
+  shiftMtsToNextTimeframe (
     groupedData,
     {
       timeframe,
@@ -218,12 +212,11 @@ class WinLoss {
     }, [])
   }
 
-  async getWinLoss ({
-    auth = {},
-    params = {}
-  } = {}) {
-    const user = await this.authenticator
-      .verifyRequestUser({ auth })
+  async getDataToCalcWinLoss (args = {}) {
+    const {
+      auth = {},
+      params = {}
+    } = args ?? {}
 
     const {
       timeframe = 'day',
@@ -231,14 +224,6 @@ class WinLoss {
       end = Date.now(),
       isUnrealizedProfitExcluded
     } = params ?? {}
-    const args = {
-      auth: user,
-      params: {
-        timeframe,
-        start,
-        end
-      }
-    }
 
     const plGroupedByTimeframePromise = isUnrealizedProfitExcluded
       ? []
@@ -255,14 +240,14 @@ class WinLoss {
       true
     )
     const withdrawalsPromise = this.movements.getMovements({
-      auth: user,
+      auth,
       start,
       end,
       sort: [['mtsStarted', -1]],
       isWithdrawals: true
     })
     const depositsPromise = this.movements.getMovements({
-      auth: user,
+      auth,
       start,
       end,
       sort: [['mtsUpdated', -1]],
@@ -306,6 +291,45 @@ class WinLoss {
       plGroupedByTimeframePromise
     ])
 
+    return {
+      withdrawalsGroupedByTimeframe,
+      depositsGroupedByTimeframe,
+      walletsGroupedByTimeframe,
+      plGroupedByTimeframe
+    }
+  }
+
+  async getWinLoss (_args = {}) {
+    const {
+      auth = {},
+      params = {}
+    } = _args ?? {}
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+
+    const {
+      timeframe = 'day',
+      start = 0,
+      end = Date.now(),
+      isUnrealizedProfitExcluded
+    } = params ?? {}
+    const args = {
+      auth: user,
+      params: {
+        timeframe,
+        start,
+        end,
+        isUnrealizedProfitExcluded
+      }
+    }
+
+    const {
+      walletsGroupedByTimeframe,
+      withdrawalsGroupedByTimeframe,
+      depositsGroupedByTimeframe,
+      plGroupedByTimeframe
+    } = await this.getDataToCalcWinLoss(args)
+
     const groupedData = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
@@ -323,7 +347,7 @@ class WinLoss {
       mts: start,
       USD: 0
     })
-    const res = this._shiftMtsToNextTimeframe(
+    const res = this.shiftMtsToNextTimeframe(
       groupedData,
       { timeframe, end }
     )

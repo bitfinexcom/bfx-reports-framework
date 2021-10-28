@@ -62,6 +62,7 @@ const {
   PublicСollsСonfAccessors
 } = require('../sync/colls.accessors')
 const Movements = require('../sync/movements')
+const WinLossVSAccountBalance = require('../sync/win.loss.vs.account.balance')
 const Wallets = require('../sync/wallets')
 const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
@@ -132,7 +133,8 @@ module.exports = ({
           ['_authenticator', TYPES.Authenticator],
           ['_privResponder', TYPES.PrivResponder],
           ['_syncCollsManager', TYPES.SyncCollsManager],
-          ['_dataConsistencyChecker', TYPES.DataConsistencyChecker]
+          ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
+          ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -274,6 +276,8 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.Movements)
       .to(Movements)
+    bind(TYPES.WinLossVSAccountBalance)
+      .to(WinLossVSAccountBalance)
     bind(TYPES.Wallets)
       .to(Wallets)
     bind(TYPES.BalanceHistory)

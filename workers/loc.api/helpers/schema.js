@@ -238,6 +238,27 @@ const paramsSchemaForWinLossApi = {
   }
 }
 
+const paramsSchemaForWinLossVSAccountBalanceApi = {
+  type: 'object',
+  properties: {
+    timeframe: {
+      type: 'string',
+      enum: [
+        'day',
+        'week',
+        'month',
+        'year'
+      ]
+    },
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const paramsSchemaForTradedVolumeApi = {
   type: 'object',
   properties: {
@@ -333,6 +354,15 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
+const paramsSchemaForWinLossVSAccountBalanceCsv = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForWinLossVSAccountBalanceApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 const paramsSchemaForPositionsSnapshotCsv = {
   type: 'object',
   properties: {
@@ -408,6 +438,7 @@ module.exports = {
   paramsSchemaForUpdateSubAccount,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
+  paramsSchemaForWinLossVSAccountBalanceApi,
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
@@ -417,6 +448,7 @@ module.exports = {
   paramsSchemaForCandlesApi,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
+  paramsSchemaForWinLossVSAccountBalanceCsv,
   paramsSchemaForPositionsSnapshotCsv,
   paramsSchemaForFullSnapshotReportCsv,
   paramsSchemaForFullTaxReportCsv,
