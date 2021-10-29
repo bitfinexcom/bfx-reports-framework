@@ -17,7 +17,7 @@
     "lodash": "4.17.21",
     "moment": "2.29.1",
     "scrypt-js": "^3.0.0",
-    "uuid": "^8.0.0",
+    "uuid": "8.3.2",
     "yargs": "17.2.1"
   },
   "devDependencies": {
