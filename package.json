@@ -15,7 +15,7 @@
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "inversify": "6.0.1",
     "lodash": "4.17.21",
-    "moment": "^2.24.0",
+    "moment": "2.29.1",
     "scrypt-js": "^3.0.0",
     "uuid": "^8.0.0",
     "yargs": "17.2.1"
