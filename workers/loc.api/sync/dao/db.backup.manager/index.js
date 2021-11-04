@@ -1,5 +1,9 @@
 'use strict'
 
+// const { promisify } = require('util')
+const { mkdirSync } = require('fs')
+const path = require('path')
+
 const { decorateInjectable } = require('../../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -13,6 +17,17 @@ class DBBackupManager {
   ) {
     this.conf = conf
     this.dao = dao
+
+    this._backupFolder = path.join(
+      this.conf.dbPathAbsolute,
+      'backups'
+    )
+
+    this._makeBackupsFolder()
+  }
+
+  _makeBackupsFolder () {
+    mkdirSync(this._backupFolder, { recursive: true })
   }
 
   // TODO:
