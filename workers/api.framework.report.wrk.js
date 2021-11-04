@@ -100,17 +100,19 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
   init () {
     super.init()
 
-    const dbPathAbsolute = path.isAbsolute(argv.dbFolder)
+    this.conf[this.group].dbPathAbsolute = path.isAbsolute(argv.dbFolder)
       ? argv.dbFolder
       : path.join(this.ctx.root, argv.dbFolder)
     const workerPathAbsolute = path.join(
       this.ctx.root,
       'workers/loc.api/sync/dao/sqlite-worker/index.js'
     )
+
     const {
       syncMode,
       dbDriver,
-      verboseSql
+      verboseSql,
+      dbPathAbsolute
     } = this.conf[this.group]
     const facs = []
 
