@@ -85,6 +85,9 @@ const FullTaxReport = require('../sync/full.tax.report')
 const SqliteDbMigrator = require(
   '../sync/dao/db-migrations/sqlite.db.migrator'
 )
+const DBBackupManager = require(
+  '../sync/dao/db.backup.manager'
+)
 const {
   migrationsFactory,
   dbMigratorFactory,
@@ -188,6 +191,9 @@ module.exports = ({
       .toFactory(migrationsFactory)
     bind(TYPES.SqliteDbMigrator)
       .to(SqliteDbMigrator)
+      .inSingletonScope()
+    bind(TYPES.DBBackupManager)
+      .to(DBBackupManager)
       .inSingletonScope()
     bind(TYPES.DbMigratorFactory)
       .toFactory(dbMigratorFactory)

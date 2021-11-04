@@ -60,5 +60,6 @@ module.exports = {
   Checkers: Symbol.for('Checkers'),
   DataConsistencyChecker: Symbol.for('DataConsistencyChecker'),
   Movements: Symbol.for('Movements'),
-  WinLossVSAccountBalance: Symbol.for('WinLossVSAccountBalance')
+  WinLossVSAccountBalance: Symbol.for('WinLossVSAccountBalance'),
+  DBBackupManager: Symbol.for('DBBackupManager')
 }
