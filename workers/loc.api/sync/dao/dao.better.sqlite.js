@@ -341,6 +341,32 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
+  backupDb (params = {}) {
+    const {
+      filePath = `backup-${new Date().toISOString()}.db`,
+      progressFn,
+      isPaused = false
+    } = params ?? {}
+    return this.db.backup(filePath, {
+      progress ({ totalPages: t, remainingPages: r }) {
+        if (typeof progressFn === 'function') {
+          const progress = Math.round((t - r) / t * 100)
+
+          progressFn(progress)
+        }
+
+        /*
+         * If return 0 backup will be paused
+         * https://github.com/JoshuaWise/better-sqlite3/blob/master/docs/api.md#backupdestination-options---promise
+         */
+        return isPaused ? 0 : 100
+      }
+    })
+  }
+
+  /**
+   * @override
+   */
   async executeQueriesInTrans (
     sql,
     opts = {}

@@ -70,6 +70,11 @@ class DAO {
   /**
    * @abstract
    */
+  async backupDb () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async executeQueriesInTrans () { throw new ImplementationError() }
 
   /**
