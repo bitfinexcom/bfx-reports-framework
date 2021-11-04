@@ -11,7 +11,8 @@ const depsTypes = (TYPES) => [
   TYPES.MigrationsFactory,
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.DBBackupManager
 ]
 class SqliteDbMigrator extends DbMigrator {
   /**

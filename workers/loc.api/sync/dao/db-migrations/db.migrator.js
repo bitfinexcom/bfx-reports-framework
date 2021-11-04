@@ -15,12 +15,14 @@ class DbMigrator {
     migrationsFactory,
     TABLES_NAMES,
     syncSchema,
-    logger
+    logger,
+    dbBackupManager
   ) {
     this.migrationsFactory = migrationsFactory
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.logger = logger
+    this.dbBackupManager = dbBackupManager
   }
 
   setDao (dao) {
@@ -125,6 +127,7 @@ class DbMigrator {
     const isDown = currVer > supportedVer
     const versions = this.range(currVer, supportedVer)
 
+    await this.dbBackupManager.backupDb({ currVer, supportedVer })
     await this.migrate(versions, isDown)
   }
 }

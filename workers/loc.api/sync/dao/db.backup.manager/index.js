@@ -1,6 +1,5 @@
 'use strict'
 
-// const { promisify } = require('util')
 const { mkdirSync } = require('fs')
 const path = require('path')
 
@@ -8,15 +7,18 @@ const { decorateInjectable } = require('../../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.CONF,
-  TYPES.DAO
+  TYPES.DAO,
+  TYPES.SyncSchema
 ]
 class DBBackupManager {
   constructor (
     conf,
-    dao
+    dao,
+    syncSchema
   ) {
     this.conf = conf
     this.dao = dao
+    this.syncSchema = syncSchema
 
     this._backupFolder = path.join(
       this.conf.dbPathAbsolute,
@@ -31,7 +33,12 @@ class DBBackupManager {
   }
 
   // TODO:
-  backupDb () {}
+  async backupDb (params = {}) {
+    const {
+      currVer = await this.dao.getCurrDbVer(),
+      supportedVer = this.syncSchema.SUPPORTED_DB_VERSION
+    } = params ?? {}
+  }
 }
 
 decorateInjectable(DBBackupManager, depsTypes)
