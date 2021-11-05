@@ -28,16 +28,24 @@ class DBBackupManager {
     this._makeBackupsFolder()
   }
 
-  _makeBackupsFolder () {
-    mkdirSync(this._backupFolder, { recursive: true })
-  }
-
   // TODO:
   async backupDb (params = {}) {
     const {
       currVer = await this.dao.getCurrDbVer(),
       supportedVer = this.syncSchema.SUPPORTED_DB_VERSION
     } = params ?? {}
+  }
+
+  _makeBackupsFolder () {
+    mkdirSync(this._backupFolder, { recursive: true })
+  }
+
+  _getBackupFileName (version, mts) {
+    const isoTS = Number.isInteger(mts)
+      ? new Date(mts).toISOString()
+      : new Date().toISOString()
+
+    return `backup-v${version}-${isoTS}.db`
   }
 }
 
