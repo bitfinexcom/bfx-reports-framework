@@ -57,11 +57,12 @@ class DBBackupManager {
     )
     const filteredFiles = files.reduce((accum, dirent) => {
       const { name } = dirent
+      const normalizedName = name.toLowerCase()
 
       if (
         dirent.isFile() &&
-        name.startsWith('backup') &&
-        name.endsWith('.db')
+        normalizedName.startsWith('backup') &&
+        normalizedName.endsWith('.db')
       ) {
         let version = null
         let mts = 0
@@ -70,7 +71,7 @@ class DBBackupManager {
         const chancks = trimmedName.split('_')
 
         for (const chanck of chancks) {
-          const momentDate = moment(chanck, moment.ISO_8601, true)
+          const momentDate = moment(chanck, moment.ISO_8601)
 
           if (/^v\d+$/i.test(chanck)) {
             const trimmedChanck = chanck.replace(/^v/i, '')
