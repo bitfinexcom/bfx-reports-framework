@@ -10,17 +10,20 @@ const { decorateInjectable } = require('../../../di/utils')
 const depsTypes = (TYPES) => [
   TYPES.CONF,
   TYPES.DAO,
-  TYPES.SyncSchema
+  TYPES.SyncSchema,
+  TYPES.Logger
 ]
 class DBBackupManager {
   constructor (
     conf,
     dao,
-    syncSchema
+    syncSchema,
+    logger
   ) {
     this.conf = conf
     this.dao = dao
     this.syncSchema = syncSchema
+    this.logger = logger
 
     this._backupFolder = path.join(
       this.conf.dbPathAbsolute,
@@ -30,12 +33,34 @@ class DBBackupManager {
     this._makeBackupsFolder()
   }
 
-  // TODO:
+  // TODO: Store only two last backup files, need to manage it
   async backupDb (params = {}) {
     const {
       currVer = await this.dao.getCurrDbVer(),
       supportedVer = this.syncSchema.SUPPORTED_DB_VERSION
     } = params ?? {}
+
+    try {
+      this.logger.debug(`[Start v${currVer} DB backup]`)
+
+      const backupFileName = this._getBackupFileName(currVer)
+      const filePath = path.join(this._backupFolder, backupFileName)
+
+      await this.dao.backupDb({
+        filePath,
+        progressFn: (progress) => {
+          this.logger.debug(`[DB backup progress]: ${progress}%`)
+          process.send({ state: 'backup:progress', progress })
+        }
+      })
+
+      this.logger.debug('[DB backup has been created successfully]')
+    } catch (err) {
+      this.logger.debug(`[ERR_DB_BACKUP_V${currVer}_HAS_FAILED]`)
+      this.logger.error(err)
+
+      process.send({ state: 'error:backup' })
+    }
   }
 
   _makeBackupsFolder () {
