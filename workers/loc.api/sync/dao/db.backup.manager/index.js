@@ -116,8 +116,11 @@ class DBBackupManager {
           return accum
         }
 
+        const filePath = path.join(this._backupFolder, name)
+
         accum.push({
           name,
+          filePath,
           version,
           mts
         })
