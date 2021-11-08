@@ -4,7 +4,7 @@ const { mkdirSync } = require('fs')
 const { readdir, rm } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
-const { orderBy } = require('lodash')
+const { orderBy, uniqBy } = require('lodash')
 
 const { decorateInjectable } = require('../../../di/utils')
 
@@ -75,9 +75,10 @@ class DBBackupManager {
   async manageDBBackupFiles () {
     const backupFilesMetadata = await this._getBackupFilesMetadata()
     const excludedFiles = []
+    const removedFiles = []
 
     const promises = backupFilesMetadata
-      .reduce(async (accum, metadata, i) => {
+      .reduce((accum, metadata, i) => {
         const {
           filePath,
           version
@@ -85,24 +86,33 @@ class DBBackupManager {
 
         if (
           i === 0 ||
-          excludedFiles.filter((m) => m.version !== version).length < 2 ||
-          excludedFiles.filter((m) => (
-            m.version === version &&
-            excludedFiles[0]?.version === version
-          )).length < 2
+          (
+            uniqBy(excludedFiles, 'version').filter((m) => (
+              m.version !== version
+            )).length < 2 &&
+            excludedFiles.filter((m) => (
+              m.version === version &&
+              excludedFiles[0]?.version !== m.version
+            )).length < 1 &&
+            excludedFiles.filter((m) => (
+              m.version === version &&
+              excludedFiles[0]?.version === m.version
+            )).length < 2
+          )
         ) {
           excludedFiles.push(metadata)
 
           return accum
         }
 
-        await rm(filePath, { force: true })
-        accum.push(metadata)
+        const promise = rm(filePath, { force: true })
+        accum.push(promise)
+        removedFiles.push(metadata)
 
         return accum
       }, [])
 
-    const removedFiles = await Promise.all(promises)
+    await Promise.all(promises)
 
     return {
       removedFiles,
