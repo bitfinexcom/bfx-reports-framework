@@ -1,7 +1,7 @@
 'use strict'
 
 const { mkdirSync } = require('fs')
-const { readdir } = require('fs/promises')
+const { readdir, rm } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
 const { orderBy } = require('lodash')
@@ -61,6 +61,53 @@ class DBBackupManager {
       this.logger.error(err)
 
       process.send({ state: 'error:backup' })
+    }
+  }
+
+  /*
+   * Store only two last versions of backup files
+   * (e.g. backup_v26_ISO-TIMESTAMP.db and backup_v25_ISO-TIMESTAMP.db)
+   *
+   * and not more than two backup files of the last DB vesion
+   * (e.g. backup_v26_2021-11-05T00:00:00.000Z.db and backup_v26_2021-09-05T00:00:00.000Z.db)
+   * for cases when user wants to store more than one backup file
+   * for current supported DB schema
+   */
+  async manageDBBackupFiles () {
+    const backupFilesMetadata = await this._getBackupFilesMetadata()
+    const excludedFiles = []
+
+    const promises = backupFilesMetadata
+      .reduce(async (accum, metadata, i) => {
+        const {
+          filePath,
+          version
+        } = metadata
+
+        if (
+          i === 0 ||
+          excludedFiles.filter((m) => m.version !== version).length < 2 ||
+          excludedFiles.filter((m) => (
+            m.version === version &&
+            excludedFiles[0]?.version === version
+          )).length < 2
+        ) {
+          excludedFiles.push(metadata)
+
+          return accum
+        }
+
+        await rm(filePath, { force: true })
+        accum.push(metadata)
+
+        return accum
+      }, [])
+
+    const removedFiles = await Promise.all(promises)
+
+    return {
+      removedFiles,
+      excludedFiles
     }
   }
 
