@@ -34,11 +34,9 @@ class DBBackupManager {
     this._makeBackupsFolder()
   }
 
-  // TODO: Store only two last backup files, need to manage it
   async backupDb (params = {}) {
     const {
-      currVer = await this.dao.getCurrDbVer(),
-      supportedVer = this.syncSchema.SUPPORTED_DB_VERSION
+      currVer = await this.dao.getCurrDbVer()
     } = params ?? {}
 
     try {
@@ -54,6 +52,7 @@ class DBBackupManager {
           process.send({ state: 'backup:progress', progress })
         }
       })
+      await this.manageDBBackupFiles()
 
       this.logger.debug('[DB backup has been created successfully]')
     } catch (err) {
