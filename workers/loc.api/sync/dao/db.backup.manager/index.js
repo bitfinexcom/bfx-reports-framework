@@ -4,6 +4,7 @@ const { mkdirSync } = require('fs')
 const { readdir } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
+const { orderBy } = require('lodash')
 
 const { decorateInjectable } = require('../../../di/utils')
 
@@ -125,7 +126,13 @@ class DBBackupManager {
       return accum
     }, [])
 
-    return filteredFiles
+    const orderedFiles = orderBy(
+      filteredFiles,
+      ['version', 'mts'],
+      ['desc', 'desc']
+    )
+
+    return orderedFiles
   }
 }
 
