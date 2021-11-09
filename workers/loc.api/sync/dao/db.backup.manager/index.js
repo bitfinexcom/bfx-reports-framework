@@ -39,6 +39,16 @@ class DBBackupManager {
     const {
       version = this.syncSchema.SUPPORTED_DB_VERSION
     } = params ?? {}
+
+    const backupFilesMetadata = await this._getBackupFilesMetadata()
+    const suitableBackup = backupFilesMetadata.find((m) => (
+      m.version === version
+    ))
+    const { filePath } = suitableBackup ?? {}
+
+    if (!filePath) {
+      return false
+    }
   }
 
   async backupDb (params = {}) {
