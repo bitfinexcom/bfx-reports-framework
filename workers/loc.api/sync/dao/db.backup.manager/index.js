@@ -49,6 +49,8 @@ class DBBackupManager {
     if (!filePath) {
       return false
     }
+
+    await this._rmDb()
   }
 
   async backupDb (params = {}) {
@@ -209,6 +211,34 @@ class DBBackupManager {
     )
 
     return orderedFiles
+  }
+
+  async _rmDb () {
+    const rmPromises = []
+
+    const files = await readdir(
+      this.conf.dbPathAbsolute,
+      { withFileTypes: true }
+    )
+
+    for (const dirent of files) {
+      const { name } = dirent
+      const normalizedName = name.toLowerCase()
+
+      if (
+        !dirent.isFile() ||
+        !normalizedName.endsWith('.db') ||
+        !normalizedName.startsWith('db-sqlite')
+      ) {
+        continue
+      }
+
+      const filePath = path.join(this.conf.dbPathAbsolute, name)
+      const promise = rm(filePath, { force: true })
+      rmPromises.push(promise)
+    }
+
+    await Promise.all(rmPromises)
   }
 }
 
