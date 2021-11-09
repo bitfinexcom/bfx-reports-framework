@@ -34,6 +34,13 @@ class DBBackupManager {
     this._makeBackupsFolder()
   }
 
+  // TODO:
+  async restoreDb (params) {
+    const {
+      version = this.syncSchema.SUPPORTED_DB_VERSION
+    } = params ?? {}
+  }
+
   async backupDb (params = {}) {
     const {
       currVer = await this.dao.getCurrDbVer()

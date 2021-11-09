@@ -22,14 +22,37 @@ class SqliteDbMigrator extends DbMigrator {
     try {
       await super.migrateFromCurrToSupportedVer()
     } catch (err) {
-      if (err instanceof MigrationLaunchingError) {
-        await this.removeAllTables()
-        this.logger.debug('[All tables have been deleted]')
+      if (!(err instanceof MigrationLaunchingError)) {
+        throw err
+      }
 
+      const isDone = await this.dbBackupManager.restoreDb()
+
+      if (isDone) {
         return
       }
 
-      throw err
+      // TODO: Need to collect whole process messaging to single module
+      process.on('message', async (mess) => {
+        try {
+          const { state } = { ...mess }
+
+          if (state !== 'migration:remove-all-tables') {
+            return
+          }
+
+          await this.removeAllTables()
+          this.logger.debug('[All tables have been removed]')
+
+          process.send({ state: 'migration:all-tables-have-been-removed' })
+        } catch (err) {
+          this.logger.error(err)
+
+          process.send({ state: 'migration:all-tables-have-not-been-removed' })
+        }
+      })
+
+      process.send({ state: 'migration:should-all-tables-be-removed' })
     }
   }
 
