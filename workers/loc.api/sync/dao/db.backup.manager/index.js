@@ -36,9 +36,10 @@ class DBBackupManager {
       this.conf.dbPathAbsolute,
       'backups'
     )
+    this._dbFileName = 'db-sqlite_sync_m0.db'
     this._dbDestination = path.join(
       this.conf.dbPathAbsolute,
-      'db-sqlite_sync_m0.db'
+      this._dbFileName
     )
 
     this._makeBackupsFolder()
@@ -252,8 +253,7 @@ class DBBackupManager {
 
       if (
         !dirent.isFile() ||
-        !normalizedName.endsWith('.db') ||
-        !normalizedName.startsWith('db-sqlite')
+        !normalizedName.startsWith(this._dbFileName)
       ) {
         continue
       }
