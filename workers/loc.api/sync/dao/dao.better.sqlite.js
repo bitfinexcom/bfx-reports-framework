@@ -70,10 +70,30 @@ class BetterSqliteDAO extends DAO {
   constructor (...args) {
     super(...args)
 
-    this.asyncQuery = this.db.asyncQuery.bind(this.db)
-    this._initializeWalCheckpointRestart = this.db
-      .initializeWalCheckpointRestart.bind(this.db)
-    this.db = this.db.db
+    const dbFac = this.db
+    this.getConnection = () => dbFac.db
+    this.db = this.getConnection()
+
+    this.startDb = promisify(dbFac.start).bind(dbFac)
+    this.stopDb = promisify(dbFac.stop).bind(dbFac)
+
+    this.asyncQuery = dbFac.asyncQuery.bind(dbFac)
+    this._initializeWalCheckpointRestart = dbFac
+      .initializeWalCheckpointRestart.bind(dbFac)
+  }
+
+  async restartDb (opts = {}) {
+    const { middleware } = opts ?? {}
+
+    await this.stopDb()
+
+    if (typeof middleware === 'function') {
+      await middleware()
+    }
+
+    await this.startDb()
+
+    this.db = this.getConnection()
   }
 
   query (args, opts) {
