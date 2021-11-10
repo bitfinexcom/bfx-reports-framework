@@ -1,7 +1,7 @@
 'use strict'
 
 const { mkdirSync } = require('fs')
-const { readdir, rm } = require('fs/promises')
+const { readdir, rm, copyFile } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
 const { orderBy, uniqBy } = require('lodash')
@@ -12,29 +12,38 @@ const depsTypes = (TYPES) => [
   TYPES.CONF,
   TYPES.DAO,
   TYPES.SyncSchema,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.Sync,
+  TYPES.TABLES_NAMES
 ]
 class DBBackupManager {
   constructor (
     conf,
     dao,
     syncSchema,
-    logger
+    logger,
+    sync,
+    TABLES_NAMES
   ) {
     this.conf = conf
     this.dao = dao
     this.syncSchema = syncSchema
     this.logger = logger
+    this.sync = sync
+    this.TABLES_NAMES = TABLES_NAMES
 
     this._backupFolder = path.join(
       this.conf.dbPathAbsolute,
       'backups'
     )
+    this._dbDestination = path.join(
+      this.conf.dbPathAbsolute,
+      'db-sqlite_sync_m0.db'
+    )
 
     this._makeBackupsFolder()
   }
 
-  // TODO:
   async restoreDb (params) {
     const {
       version = this.syncSchema.SUPPORTED_DB_VERSION
@@ -42,7 +51,7 @@ class DBBackupManager {
 
     const backupFilesMetadata = await this._getBackupFilesMetadata()
     const suitableBackup = backupFilesMetadata.find((m) => (
-      m.version === version
+      m.version <= version
     ))
     const { filePath } = suitableBackup ?? {}
 
@@ -50,7 +59,23 @@ class DBBackupManager {
       return false
     }
 
-    await this._rmDb()
+    await this.dao.updateRecordOf(
+      this.TABLES_NAMES.SCHEDULER,
+      { isEnable: false }
+    )
+    await this.sync.stop()
+
+    await this.dao.restartDb({
+      middleware: async () => {
+        await this._rmDb()
+        await copyFile(filePath, this._dbDestination)
+      }
+    })
+
+    await this.dao.updateRecordOf(
+      this.TABLES_NAMES.SCHEDULER,
+      { isEnable: true }
+    )
   }
 
   async backupDb (params = {}) {
