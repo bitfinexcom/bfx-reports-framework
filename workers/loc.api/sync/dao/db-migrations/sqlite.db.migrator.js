@@ -33,26 +33,41 @@ class SqliteDbMigrator extends DbMigrator {
       }
 
       // TODO: Need to collect whole process messaging to single module
-      process.on('message', async (mess) => {
-        try {
-          const { state } = { ...mess }
+      await new Promise((resolve, reject) => {
+        const handler = async (mess) => {
+          try {
+            const { state } = { ...mess }
 
-          if (state !== 'migration:remove-all-tables') {
-            return
+            if (state === 'migration:dont-remove-all-tables') {
+              resolve()
+
+              return
+            }
+            if (state !== 'migration:remove-all-tables') {
+              return
+            }
+
+            await this.removeAllTables()
+            this.logger.debug('[All tables have been removed]')
+
+            process.send({ state: 'migration:all-tables-have-been-removed' })
+            resolve()
+          } catch (err) {
+            this.logger.error(err)
+
+            process.send({ state: 'migration:all-tables-have-not-been-removed' })
+            reject(err)
           }
-
-          await this.removeAllTables()
-          this.logger.debug('[All tables have been removed]')
-
-          process.send({ state: 'migration:all-tables-have-been-removed' })
-        } catch (err) {
-          this.logger.error(err)
-
-          process.send({ state: 'migration:all-tables-have-not-been-removed' })
         }
-      })
 
-      process.send({ state: 'migration:should-all-tables-be-removed' })
+        process.on('message', handler)
+        setTimeout(() => {
+          process.off('message', handler)
+          process.send({ state: 'migration:all-tables-have-not-been-removed' })
+          resolve()
+        }, 30000).unref()
+        process.send({ state: 'migration:should-all-tables-be-removed' })
+      })
     }
   }
 

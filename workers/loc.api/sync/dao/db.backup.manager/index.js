@@ -77,6 +77,8 @@ class DBBackupManager {
       this.TABLES_NAMES.SCHEDULER,
       { isEnable: true }
     )
+
+    return true
   }
 
   async backupDb (params = {}) {
