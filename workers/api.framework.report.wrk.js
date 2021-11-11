@@ -181,7 +181,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     this.scheduler_sync.mem.get(name).rule = rule
 
     processMessageManager.init()
-    processMessageManager.sendState('ready:worker')
+    processMessageManager.sendState(
+      processMessageManager.PROCESS_MESSAGES.READY_WORKER
+    )
   }
 
   async stopService () {

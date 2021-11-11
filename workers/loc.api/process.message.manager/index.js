@@ -1,10 +1,15 @@
 'use strict'
 
 const {
+  ProcessStateSendingError
+} = require('../errors')
+
+const {
   onMessage,
   sendState
 } = require('./utils')
 const PROCESS_STATES = require('./process.states')
+const PROCESS_MESSAGES = require('./process.messages')
 
 const { decorateInjectable } = require('../di/utils')
 
@@ -33,13 +38,15 @@ class ProcessMessageManager {
     this.TABLES_NAMES = TABLES_NAMES
 
     this.PROCESS_STATES = PROCESS_STATES
-    this.PROCESS_STATES_VALUES = Object.values(PROCESS_STATES)
+    this.PROCESS_MESSAGES = PROCESS_MESSAGES
+    this.SET_PROCESS_STATES = new Set(Object.values(PROCESS_STATES))
+    this.SET_PROCESS_MESSAGES = new Set(Object.values(PROCESS_MESSAGES))
   }
 
   init () {
     onMessage((err, state, data) => {
       if (
-        !this.PROCESS_STATES_VALUES[state] ||
+        !this.SET_PROCESS_STATES.has(state) ||
         typeof this[state] !== 'function'
       ) {
         return
@@ -49,8 +56,14 @@ class ProcessMessageManager {
     }, this.logger)
   }
 
-  sendState (...args) {
-    return sendState(...args)
+  sendState (state, data) {
+    if (!this.SET_PROCESS_MESSAGES.has(state)) {
+      this.logger.error(new ProcessStateSendingError())
+
+      return
+    }
+
+    return sendState(state, data)
   }
 
   onMessage (...args) {
@@ -59,7 +72,7 @@ class ProcessMessageManager {
 
   async [PROCESS_STATES.CLEAR_ALL_TABLES] (err, state, data) {
     if (err) {
-      sendState('all-tables-have-not-been-cleared')
+      sendState(PROCESS_MESSAGES.ALL_TABLE_HAVE_NOT_BEEN_CLEARED)
 
       return
     }
