@@ -1,5 +1,9 @@
 'use strict'
 
+const {
+  ProcessStateSendingError
+} = require('../errors')
+
 const { decorateInjectable } = require('../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -25,6 +29,24 @@ class ProcessMessageManager {
     this.logger = logger
     this.sync = sync
     this.TABLES_NAMES = TABLES_NAMES
+  }
+
+  sendState (state, data) {
+    if (
+      !state ||
+      typeof state !== 'string'
+    ) {
+      throw new ProcessStateSendingError()
+    }
+
+    const payload = (
+      data &&
+      typeof data === 'object'
+    )
+      ? { state, data }
+      : { state }
+
+    process.send(payload)
   }
 }
 
