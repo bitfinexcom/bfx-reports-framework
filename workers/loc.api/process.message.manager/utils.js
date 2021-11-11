@@ -4,31 +4,28 @@ const {
   ProcessStateSendingError
 } = require('../errors')
 
-const onMessage = (params) => {
-  const {
-    messageHandler,
-    errorHandler
-  } = params ?? {}
-
+const onMessage = (messageHandler, logger) => {
   const handler = async (mess) => {
-    try {
-      const {
-        state,
-        data
-      } = mess ?? {}
+    const {
+      state,
+      data
+    } = mess ?? {}
 
-      if (
-        !state ||
-        typeof state !== 'string'
-      ) {
-        return
+    if (
+      !state ||
+      typeof state !== 'string'
+    ) {
+      return
+    }
+
+    try {
+      await messageHandler(null, state, data)
+    } catch (err) {
+      if (logger) {
+        logger.error(err)
       }
 
-      await messageHandler(state, data)
-    } catch (err) {
-      this.logger.error(err)
-
-      errorHandler(err)
+      messageHandler(err, state, data)
     }
   }
 
