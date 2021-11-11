@@ -1,8 +1,9 @@
 'use strict'
 
 const {
-  ProcessStateSendingError
-} = require('../errors')
+  onMessage,
+  sendState
+} = require('./utils')
 
 const { decorateInjectable } = require('../di/utils')
 
@@ -31,22 +32,12 @@ class ProcessMessageManager {
     this.TABLES_NAMES = TABLES_NAMES
   }
 
-  sendState (state, data) {
-    if (
-      !state ||
-      typeof state !== 'string'
-    ) {
-      throw new ProcessStateSendingError()
-    }
+  sendState (...args) {
+    return sendState(...args)
+  }
 
-    const payload = (
-      data &&
-      typeof data === 'object'
-    )
-      ? { state, data }
-      : { state }
-
-    process.send(payload)
+  onMessage (...args) {
+    return onMessage(...args)
   }
 }
 
