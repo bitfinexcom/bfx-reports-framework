@@ -97,6 +97,7 @@ const {
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
 const privResponder = require('../responder')
+const ProcessMessageManager = require('../process.message.manager')
 
 decorate(injectable(), EventEmitter)
 
@@ -162,6 +163,9 @@ module.exports = ({
     bind(TYPES.CHECKER_NAMES).toConstantValue(CHECKER_NAMES)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
+    bind(TYPES.ProcessMessageManager)
+      .to(ProcessMessageManager)
+      .inSingletonScope()
     bind(TYPES.WSTransport)
       .to(WSTransport)
       .inSingletonScope()
