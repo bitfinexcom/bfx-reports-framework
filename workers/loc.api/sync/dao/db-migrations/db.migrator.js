@@ -102,7 +102,9 @@ class DbMigrator {
     }
 
     this.logger.debug('[Migrations completed successfully]')
-    process.send({ state: 'ready:migrations' })
+    this.processMessageManager.sendState(
+      this.processMessageManager.PROCESS_MESSAGES.READY_MIGRATIONS
+    )
   }
 
   /**
