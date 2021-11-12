@@ -1,9 +1,5 @@
 'use strict'
 
-if (typeof process.send !== 'function') {
-  process.send = () => {}
-}
-
 const {
   ProcessStateSendingError
 } = require('../errors')
@@ -29,7 +25,7 @@ const onMessage = (messageHandler, logger) => {
         logger.error(err)
       }
 
-      messageHandler(err, state, data)
+      await messageHandler(err, state, data)
     }
   }
 
@@ -45,6 +41,9 @@ const sendState = (state, data) => {
   ) {
     throw new ProcessStateSendingError()
   }
+  if (typeof process.send !== 'function') {
+    return false
+  }
 
   const payload = (
     data &&
@@ -54,6 +53,8 @@ const sendState = (state, data) => {
     : { state }
 
   process.send(payload)
+
+  return true
 }
 
 module.exports = {
