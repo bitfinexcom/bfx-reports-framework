@@ -14,7 +14,8 @@ const depsTypes = (TYPES) => [
   TYPES.SyncSchema,
   TYPES.Logger,
   TYPES.Sync,
-  TYPES.TABLES_NAMES
+  TYPES.TABLES_NAMES,
+  TYPES.ProcessMessageManager
 ]
 class DBBackupManager {
   constructor (
@@ -23,7 +24,8 @@ class DBBackupManager {
     syncSchema,
     logger,
     sync,
-    TABLES_NAMES
+    TABLES_NAMES,
+    processMessageManager
   ) {
     this.conf = conf
     this.dao = dao
@@ -31,6 +33,7 @@ class DBBackupManager {
     this.logger = logger
     this.sync = sync
     this.TABLES_NAMES = TABLES_NAMES
+    this.processMessageManager = processMessageManager
 
     this._backupFolder = path.join(
       this.conf.dbPathAbsolute,
@@ -96,7 +99,11 @@ class DBBackupManager {
         filePath,
         progressFn: (progress) => {
           this.logger.debug(`[DB backup progress]: ${progress}%`)
-          process.send({ state: 'backup:progress', progress })
+
+          this.processMessageManager.sendState(
+            this.processMessageManager.PROCESS_MESSAGES.BACKUP_PROGRESS,
+            { progress }
+          )
         }
       })
       await this.manageDBBackupFiles()
@@ -106,7 +113,9 @@ class DBBackupManager {
       this.logger.debug(`[ERR_DB_BACKUP_V${currVer}_HAS_FAILED]`)
       this.logger.error(err)
 
-      process.send({ state: 'error:backup' })
+      this.processMessageManager.sendState(
+        this.processMessageManager.PROCESS_MESSAGES.ERROR_BACKUP
+      )
     }
   }
 
