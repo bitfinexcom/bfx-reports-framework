@@ -1,9 +1,5 @@
 'use strict'
 
-if (typeof process.send !== 'function') {
-  process.send = () => {}
-}
-
 const WrkReportServiceApi = require(
   'bfx-report/workers/api.service.report.wrk'
 )

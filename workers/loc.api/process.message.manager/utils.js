@@ -1,5 +1,9 @@
 'use strict'
 
+if (typeof process.send !== 'function') {
+  process.send = () => {}
+}
+
 const {
   ProcessStateSendingError
 } = require('../errors')
