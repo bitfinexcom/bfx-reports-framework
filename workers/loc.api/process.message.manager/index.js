@@ -44,7 +44,7 @@ class ProcessMessageManager {
   }
 
   init () {
-    onMessage((err, state, data) => {
+    onMessage(async (err, state, data) => {
       if (
         !this.SET_PROCESS_STATES.has(state) ||
         typeof this[state] !== 'function'
@@ -52,7 +52,7 @@ class ProcessMessageManager {
         return
       }
 
-      this[state](err, state, data)
+      await this[state](err, state, data)
     }, this.logger)
   }
 
@@ -60,7 +60,7 @@ class ProcessMessageManager {
     if (!this.SET_PROCESS_MESSAGES.has(state)) {
       this.logger.error(new ProcessStateSendingError())
 
-      return
+      return false
     }
 
     return sendState(state, data)
@@ -72,7 +72,7 @@ class ProcessMessageManager {
 
   async [PROCESS_STATES.CLEAR_ALL_TABLES] (err, state, data) {
     if (err) {
-      sendState(PROCESS_MESSAGES.ALL_TABLE_HAVE_NOT_BEEN_CLEARED)
+      this.sendState(PROCESS_MESSAGES.ALL_TABLE_HAVE_NOT_BEEN_CLEARED)
 
       return
     }
@@ -83,6 +83,8 @@ class ProcessMessageManager {
         this.TABLES_NAMES.SUB_ACCOUNTS
       ]
     })
+
+    this.sendState(PROCESS_MESSAGES.ALL_TABLE_HAVE_BEEN_CLEARED)
   }
 }
 
