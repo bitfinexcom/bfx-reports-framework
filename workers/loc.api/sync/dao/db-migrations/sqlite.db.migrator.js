@@ -67,21 +67,6 @@ class SqliteDbMigrator extends DbMigrator {
       throw err
     }
   }
-
-  async removeAllTables () {
-    await this.dao.disableForeignKeys()
-
-    try {
-      await this.dao.dropAllTables()
-      await this.dao.setCurrDbVer(0)
-    } catch (err) {
-      await this.dao.enableForeignKeys()
-
-      throw err
-    }
-
-    await this.dao.enableForeignKeys()
-  }
 }
 
 decorateInjectable(SqliteDbMigrator, depsTypes)
