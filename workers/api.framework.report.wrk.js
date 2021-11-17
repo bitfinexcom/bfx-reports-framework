@@ -176,7 +176,6 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     this.scheduler_sync.add(name, () => sync.start(), rule)
     this.scheduler_sync.mem.get(name).rule = rule
 
-    processMessageManager.init()
     processMessageManager.sendState(
       processMessageManager.PROCESS_MESSAGES.READY_WORKER
     )

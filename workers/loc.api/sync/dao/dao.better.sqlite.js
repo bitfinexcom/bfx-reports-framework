@@ -64,7 +64,8 @@ const depsTypes = (TYPES) => [
   TYPES.DB,
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
-  TYPES.DbMigratorFactory
+  TYPES.DbMigratorFactory,
+  TYPES.ProcessMessageManagerFactory
 ]
 class BetterSqliteDAO extends DAO {
   constructor (...args) {
