@@ -62,5 +62,6 @@ module.exports = {
   Movements: Symbol.for('Movements'),
   WinLossVSAccountBalance: Symbol.for('WinLossVSAccountBalance'),
   DBBackupManager: Symbol.for('DBBackupManager'),
-  ProcessMessageManager: Symbol.for('ProcessMessageManager')
+  ProcessMessageManager: Symbol.for('ProcessMessageManager'),
+  ProcessMessageManagerFactory: Symbol.for('ProcessMessageManagerFactory')
 }

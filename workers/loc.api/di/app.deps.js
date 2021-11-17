@@ -92,7 +92,8 @@ const {
   migrationsFactory,
   dbMigratorFactory,
   dataInserterFactory,
-  syncFactory
+  syncFactory,
+  processMessageManagerFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -185,6 +186,8 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SyncFactory)
       .toFactory(syncFactory)
+    bind(TYPES.ProcessMessageManagerFactory)
+      .toFactory(processMessageManagerFactory)
     bind(TYPES.Authenticator)
       .to(Authenticator)
       .inSingletonScope()
