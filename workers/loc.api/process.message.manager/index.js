@@ -14,27 +14,15 @@ const PROCESS_MESSAGES = require('./process.messages')
 const { decorateInjectable } = require('../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.CONF,
-  TYPES.DAO,
-  TYPES.SyncSchema,
   TYPES.Logger,
-  TYPES.Sync,
   TYPES.TABLES_NAMES
 ]
 class ProcessMessageManager {
   constructor (
-    conf,
-    dao,
-    syncSchema,
     logger,
-    sync,
     TABLES_NAMES
   ) {
-    this.conf = conf
-    this.dao = dao
-    this.syncSchema = syncSchema
     this.logger = logger
-    this.sync = sync
     this.TABLES_NAMES = TABLES_NAMES
 
     this.PROCESS_STATES = PROCESS_STATES
@@ -47,6 +35,10 @@ class ProcessMessageManager {
     )
 
     this._mainHandler = null
+  }
+
+  setDao (dao) {
+    this.dao = dao
   }
 
   init () {
@@ -81,15 +73,21 @@ class ProcessMessageManager {
       throw new ProcessStateSendingError()
     }
 
+    const job = {
+      promise: null,
+      resolve: () => {},
+      reject: () => {}
+    }
+
     const promise = new Promise((resolve, reject) => {
       const queue = this._promisesToWait.get(state)
+      job.resolve = resolve
+      job.reject = reject
 
-      queue.push({
-        promise,
-        resolve,
-        reject
-      })
+      queue.push(job)
     })
+
+    job.promise = promise
 
     return promise
   }
