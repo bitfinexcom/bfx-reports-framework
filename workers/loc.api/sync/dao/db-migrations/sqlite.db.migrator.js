@@ -49,7 +49,8 @@ class SqliteDbMigrator extends DbMigrator {
           this.processMessageManager.PROCESS_STATES.REMOVE_ALL_TABLES
         )
         this.processMessageManager.sendState(
-          this.processMessageManager.PROCESS_MESSAGES.REQUEST_SHOULD_ALL_TABLES_BE_REMOVED
+          this.processMessageManager.PROCESS_MESSAGES.REQUEST_SHOULD_ALL_TABLES_BE_REMOVED,
+          { isNotDbRestored: !isDbRestored }
         )
 
         await rmDbPromise
