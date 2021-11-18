@@ -95,6 +95,10 @@ class DBBackupManager {
       const backupFileName = this._getBackupFileName(currVer)
       const filePath = path.join(this._backupFolder, backupFileName)
 
+      this.processMessageManager.sendState(
+        this.processMessageManager.PROCESS_MESSAGES.BACKUP_STARTED
+      )
+
       await this.dao.backupDb({
         filePath,
         progressFn: (progress) => {
@@ -107,6 +111,10 @@ class DBBackupManager {
         }
       })
       await this.manageDBBackupFiles()
+
+      this.processMessageManager.sendState(
+        this.processMessageManager.PROCESS_MESSAGES.BACKUP_FINISHED
+      )
 
       this.logger.debug('[DB backup has been created successfully]')
     } catch (err) {

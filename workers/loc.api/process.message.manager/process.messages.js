@@ -11,7 +11,9 @@ module.exports = {
   ALL_TABLE_HAVE_BEEN_REMOVED: 'all-tables-have-been-removed',
   ALL_TABLE_HAVE_NOT_BEEN_REMOVED: 'all-tables-have-not-been-removed',
 
+  BACKUP_STARTED: 'backup:started',
   BACKUP_PROGRESS: 'backup:progress',
+  BACKUP_FINISHED: 'backup:finished',
   ERROR_BACKUP: 'error:backup',
 
   REQUEST_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE: 'request:migration-has-failed:what-should-be-done',
