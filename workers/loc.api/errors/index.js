@@ -172,6 +172,12 @@ class ProcessStateSendingError extends BaseError {
   }
 }
 
+class DbRestoringError extends BaseError {
+  constructor (message = 'ERR_DB_HAS_NOT_BEEN_RESTORED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -198,5 +204,6 @@ module.exports = {
   GetPublicDataError,
   DataConsistencyCheckerFindingError,
   DataConsistencyError,
-  ProcessStateSendingError
+  ProcessStateSendingError,
+  DbRestoringError
 }

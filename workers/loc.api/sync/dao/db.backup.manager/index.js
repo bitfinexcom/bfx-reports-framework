@@ -81,6 +81,11 @@ class DBBackupManager {
       { isEnable: true }
     )
 
+    this.logger.debug('[DB has been restored]:', filePath)
+    this.processMessageManager.sendState(
+      this.processMessageManager.PROCESS_MESSAGES.DB_HAS_BEEN_RESTORED
+    )
+
     return true
   }
 

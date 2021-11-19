@@ -1,7 +1,8 @@
 'use strict'
 
 const {
-  ProcessStateSendingError
+  ProcessStateSendingError,
+  DbRestoringError
 } = require('../errors')
 
 const {
@@ -172,6 +173,25 @@ class ProcessMessageManager {
 
     this.logger.debug('[All tables have been removed]')
     this.sendState(PROCESS_MESSAGES.ALL_TABLE_HAVE_BEEN_REMOVED)
+  }
+
+  async [PROCESS_STATES.RESTORE_DB] (err, state, data) {
+    if (err) {
+      this.logger.debug('[DB has not been restored]:', data)
+      this.logger.error(err)
+
+      this.sendState(PROCESS_MESSAGES.DB_HAS_NOT_BEEN_RESTORED)
+
+      return
+    }
+
+    const isDbRestored = await this.dbBackupManager.restoreDb(data)
+
+    if (isDbRestored) {
+      return
+    }
+
+    throw new DbRestoringError()
   }
 }
 
