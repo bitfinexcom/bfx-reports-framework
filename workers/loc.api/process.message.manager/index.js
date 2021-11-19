@@ -25,6 +25,9 @@ class ProcessMessageManager {
     this.logger = logger
     this.TABLES_NAMES = TABLES_NAMES
 
+    this.dao = null
+    this.dbBackupManager = null
+
     this.PROCESS_STATES = PROCESS_STATES
     this.PROCESS_MESSAGES = PROCESS_MESSAGES
     this.SET_PROCESS_STATES = new Set(Object.values(PROCESS_STATES))
@@ -37,8 +40,14 @@ class ProcessMessageManager {
     this._mainHandler = null
   }
 
-  setDao (dao) {
+  setDeps (deps = {}) {
+    const {
+      dao,
+      dbBackupManager
+    } = deps
+
     this.dao = dao
+    this.dbBackupManager = dbBackupManager
   }
 
   init () {

@@ -11,12 +11,18 @@ module.exports = (ctx) => {
     const dao = ctx.container.get(
       TYPES.DAO
     )
+    const dbBackupManager = ctx.container.get(
+      TYPES.DBBackupManager
+    )
 
     if (dbDriver === 'better-sqlite') {
       const processMessageManager = ctx.container.get(
         TYPES.ProcessMessageManager
       )
-      processMessageManager.setDao(dao)
+      processMessageManager.setDeps({
+        dao,
+        dbBackupManager
+      })
 
       return processMessageManager
     }
