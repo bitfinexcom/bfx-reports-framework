@@ -20,5 +20,6 @@ module.exports = {
   DB_HAS_NOT_BEEN_RESTORED: 'db-has-not-been-restored',
 
   REQUEST_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE: 'request:migration-has-failed:what-should-be-done',
-  REQUEST_SHOULD_ALL_TABLES_BE_REMOVED: 'request:should-all-tables-be-removed'
+  REQUEST_SHOULD_ALL_TABLES_BE_REMOVED: 'request:should-all-tables-be-removed',
+  REQUEST_GET_BACKUP_FILES_METADATA: 'request:get-backup-files-metadata'
 }

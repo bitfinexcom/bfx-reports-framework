@@ -193,6 +193,28 @@ class ProcessMessageManager {
 
     throw new DbRestoringError()
   }
+
+  async [PROCESS_STATES.RESPONSE_GET_BACKUP_FILES_METADATA] (err, state, data) {
+    if (err) {
+      this.logger.debug('[Backup files metadata have not been got]')
+      this.logger.error(err)
+
+      this.sendState(
+        PROCESS_MESSAGES.REQUEST_GET_BACKUP_FILES_METADATA,
+        { error: err }
+      )
+
+      return
+    }
+
+    const backupFilesMetadata = await this.dbBackupManager
+      .getBackupFilesMetadata()
+
+    this.sendState(
+      PROCESS_MESSAGES.REQUEST_GET_BACKUP_FILES_METADATA,
+      { backupFilesMetadata }
+    )
+  }
 }
 
 decorateInjectable(ProcessMessageManager, depsTypes)
