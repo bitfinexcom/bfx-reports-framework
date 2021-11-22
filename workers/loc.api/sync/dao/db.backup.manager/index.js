@@ -50,11 +50,13 @@ class DBBackupManager {
 
   async restoreDb (params) {
     const {
-      version = this.syncSchema.SUPPORTED_DB_VERSION
+      version = this.syncSchema.SUPPORTED_DB_VERSION,
+      name
     } = params ?? {}
 
-    const backupFilesMetadata = await this._getBackupFilesMetadata()
+    const backupFilesMetadata = await this.getBackupFilesMetadata()
     const suitableBackup = backupFilesMetadata.find((m) => (
+      (name && m.name === name) ||
       m.version <= version
     ))
     const { filePath } = suitableBackup ?? {}
@@ -142,7 +144,7 @@ class DBBackupManager {
    * for current supported DB schema
    */
   async manageDBBackupFiles () {
-    const backupFilesMetadata = await this._getBackupFilesMetadata()
+    const backupFilesMetadata = await this.getBackupFilesMetadata()
     const excludedFiles = []
     const removedFiles = []
 
@@ -201,7 +203,7 @@ class DBBackupManager {
     return `backup_v${version}_${isoTS}.db`
   }
 
-  async _getBackupFilesMetadata () {
+  async getBackupFilesMetadata () {
     const files = await readdir(
       this._backupFolder,
       { withFileTypes: true }
