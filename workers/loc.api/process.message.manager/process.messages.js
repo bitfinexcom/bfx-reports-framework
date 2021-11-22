@@ -21,5 +21,6 @@ module.exports = {
 
   REQUEST_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE: 'request:migration-has-failed:what-should-be-done',
   REQUEST_SHOULD_ALL_TABLES_BE_REMOVED: 'request:should-all-tables-be-removed',
-  REQUEST_GET_BACKUP_FILES_METADATA: 'request:get-backup-files-metadata'
+
+  RESPONSE_GET_BACKUP_FILES_METADATA: 'response:get-backup-files-metadata'
 }
