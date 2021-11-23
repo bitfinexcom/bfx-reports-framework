@@ -56,8 +56,9 @@ class DBBackupManager {
 
     const backupFilesMetadata = await this.getBackupFilesMetadata()
     const suitableBackup = backupFilesMetadata.find((m) => (
-      (name && m.name === name) ||
-      m.version <= version
+      name
+        ? m.name === name
+        : m.version <= version
     ))
     const { filePath } = suitableBackup ?? {}
 
