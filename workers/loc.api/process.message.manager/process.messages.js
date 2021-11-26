@@ -2,6 +2,7 @@
 
 module.exports = {
   READY_WORKER: 'ready:worker',
+  ERROR_WORKER: 'error:worker', // Uses in bfx-report
 
   READY_MIGRATIONS: 'ready:migrations',
   ERROR_MIGRATIONS: 'error:migrations',
