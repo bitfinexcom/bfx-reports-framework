@@ -60,7 +60,10 @@ class DBBackupManager {
         ? m.name === name
         : m.version <= version
     ))
-    const { filePath } = suitableBackup ?? {}
+    const {
+      filePath,
+      version: restoringVer
+    } = suitableBackup ?? {}
 
     if (!filePath) {
       return false
@@ -86,7 +89,8 @@ class DBBackupManager {
 
     this.logger.debug('[DB has been restored]:', filePath)
     this.processMessageManager.sendState(
-      this.processMessageManager.PROCESS_MESSAGES.DB_HAS_BEEN_RESTORED
+      this.processMessageManager.PROCESS_MESSAGES.DB_HAS_BEEN_RESTORED,
+      { isNotVerSupported: restoringVer !== this.syncSchema.SUPPORTED_DB_VERSION }
     )
 
     return true
