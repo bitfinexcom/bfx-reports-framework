@@ -175,6 +175,19 @@ class ProcessMessageManager {
     this.sendState(PROCESS_MESSAGES.ALL_TABLE_HAVE_BEEN_REMOVED)
   }
 
+  async [PROCESS_STATES.BACKUP_DB] (err, state, data) {
+    if (err) {
+      this.logger.debug('[DB has not been backuped]:', data)
+      this.logger.error(err)
+
+      this.sendState(PROCESS_MESSAGES.ERROR_BACKUP)
+
+      return
+    }
+
+    await this.dbBackupManager.backupDb()
+  }
+
   async [PROCESS_STATES.RESTORE_DB] (err, state, data) {
     if (err) {
       this.logger.debug('[DB has not been restored]:', data)
