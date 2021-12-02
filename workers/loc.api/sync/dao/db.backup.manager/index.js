@@ -201,9 +201,14 @@ class DBBackupManager {
   }
 
   _getBackupFileName (version, mts) {
-    const isoTS = Number.isInteger(mts)
-      ? new Date(mts).toISOString()
-      : new Date().toISOString()
+    const date = Number.isInteger(mts)
+      ? new Date(mts)
+      : new Date()
+
+    // In Win OS, file name can't contain `:` character
+    const isoTS = date
+      .toISOString()
+      .replace(/:/g, '-')
 
     return `backup_v${version}_${isoTS}.db`
   }
@@ -229,7 +234,11 @@ class DBBackupManager {
         const chancks = trimmedName.split('_')
 
         for (const chanck of chancks) {
-          const momentDate = moment(chanck, moment.ISO_8601)
+          const dateFormats = [
+            moment.ISO_8601,
+            'YYYY-MM-DDThh-mm-ss.SSSZ'
+          ]
+          const momentDate = moment(chanck, dateFormats)
 
           if (/^v\d+$/i.test(chanck)) {
             const trimmedChanck = chanck.replace(/^v/i, '')
