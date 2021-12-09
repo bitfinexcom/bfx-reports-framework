@@ -85,15 +85,20 @@ const FullTaxReport = require('../sync/full.tax.report')
 const SqliteDbMigrator = require(
   '../sync/dao/db-migrations/sqlite.db.migrator'
 )
+const DBBackupManager = require(
+  '../sync/dao/db.backup.manager'
+)
 const {
   migrationsFactory,
   dbMigratorFactory,
   dataInserterFactory,
-  syncFactory
+  syncFactory,
+  processMessageManagerFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
 const privResponder = require('../responder')
+const ProcessMessageManager = require('../process.message.manager')
 
 decorate(injectable(), EventEmitter)
 
@@ -159,6 +164,9 @@ module.exports = ({
     bind(TYPES.CHECKER_NAMES).toConstantValue(CHECKER_NAMES)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
+    bind(TYPES.ProcessMessageManager)
+      .to(ProcessMessageManager)
+      .inSingletonScope()
     bind(TYPES.WSTransport)
       .to(WSTransport)
       .inSingletonScope()
@@ -178,6 +186,8 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SyncFactory)
       .toFactory(syncFactory)
+    bind(TYPES.ProcessMessageManagerFactory)
+      .toFactory(processMessageManagerFactory)
     bind(TYPES.Authenticator)
       .to(Authenticator)
       .inSingletonScope()
@@ -188,6 +198,9 @@ module.exports = ({
       .toFactory(migrationsFactory)
     bind(TYPES.SqliteDbMigrator)
       .to(SqliteDbMigrator)
+      .inSingletonScope()
+    bind(TYPES.DBBackupManager)
+      .to(DBBackupManager)
       .inSingletonScope()
     bind(TYPES.DbMigratorFactory)
       .toFactory(dbMigratorFactory)

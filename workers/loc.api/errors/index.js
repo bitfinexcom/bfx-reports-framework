@@ -166,6 +166,18 @@ class DataConsistencyError extends ConflictError {
   }
 }
 
+class ProcessStateSendingError extends BaseError {
+  constructor (message = 'ERR_PROCESS_STATE_SENDING_IS_NOT_CORRECT') {
+    super(message)
+  }
+}
+
+class DbRestoringError extends BaseError {
+  constructor (message = 'ERR_DB_HAS_NOT_BEEN_RESTORED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -191,5 +203,7 @@ module.exports = {
   DatePropNameError,
   GetPublicDataError,
   DataConsistencyCheckerFindingError,
-  DataConsistencyError
+  DataConsistencyError,
+  ProcessStateSendingError,
+  DbRestoringError
 }

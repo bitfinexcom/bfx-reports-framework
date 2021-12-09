@@ -64,16 +64,37 @@ const depsTypes = (TYPES) => [
   TYPES.DB,
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
-  TYPES.DbMigratorFactory
+  TYPES.DbMigratorFactory,
+  TYPES.ProcessMessageManagerFactory
 ]
 class BetterSqliteDAO extends DAO {
   constructor (...args) {
     super(...args)
 
-    this.asyncQuery = this.db.asyncQuery.bind(this.db)
-    this._initializeWalCheckpointRestart = this.db
-      .initializeWalCheckpointRestart.bind(this.db)
-    this.db = this.db.db
+    const dbFac = this.db
+    this.getConnection = () => dbFac.db
+    this.db = this.getConnection()
+
+    this.startDb = promisify(dbFac.start).bind(dbFac)
+    this.stopDb = promisify(dbFac.stop).bind(dbFac)
+
+    this.asyncQuery = dbFac.asyncQuery.bind(dbFac)
+    this._initializeWalCheckpointRestart = dbFac
+      .initializeWalCheckpointRestart.bind(dbFac)
+  }
+
+  async restartDb (opts = {}) {
+    const { middleware } = opts ?? {}
+
+    await this.stopDb()
+
+    if (typeof middleware === 'function') {
+      await middleware()
+    }
+
+    await this.startDb()
+
+    this.db = this.getConnection()
   }
 
   query (args, opts) {
@@ -335,6 +356,32 @@ class BetterSqliteDAO extends DAO {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `user_version = ${version}`
+    })
+  }
+
+  /**
+   * @override
+   */
+  backupDb (params = {}) {
+    const {
+      filePath = `backup-${new Date().toISOString()}.db`,
+      progressFn,
+      isPaused = false
+    } = params ?? {}
+    return this.db.backup(filePath, {
+      progress ({ totalPages: t, remainingPages: r }) {
+        if (typeof progressFn === 'function') {
+          const progress = Math.round((t - r) / t * 100)
+
+          progressFn(progress)
+        }
+
+        /*
+         * If return 0 backup will be paused
+         * https://github.com/JoshuaWise/better-sqlite3/blob/master/docs/api.md#backupdestination-options---promise
+         */
+        return isPaused ? 0 : 100
+      }
     })
   }
 

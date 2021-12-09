@@ -15,12 +15,16 @@ class DbMigrator {
     migrationsFactory,
     TABLES_NAMES,
     syncSchema,
-    logger
+    logger,
+    dbBackupManager,
+    processMessageManager
   ) {
     this.migrationsFactory = migrationsFactory
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.logger = logger
+    this.dbBackupManager = dbBackupManager
+    this.processMessageManager = processMessageManager
   }
 
   setDao (dao) {
@@ -89,14 +93,18 @@ class DbMigrator {
         this.logger.debug(`[ERR_DB_MIGRATION_V${ver}_HAS_FAILED]`)
         this.logger.error(err)
 
-        process.send({ state: 'error:migrations' })
+        this.processMessageManager.sendState(
+          this.processMessageManager.PROCESS_MESSAGES.ERROR_MIGRATIONS
+        )
 
         throw new MigrationLaunchingError()
       }
     }
 
     this.logger.debug('[Migrations completed successfully]')
-    process.send({ state: 'ready:migrations' })
+    this.processMessageManager.sendState(
+      this.processMessageManager.PROCESS_MESSAGES.READY_MIGRATIONS
+    )
   }
 
   /**
@@ -125,6 +133,7 @@ class DbMigrator {
     const isDown = currVer > supportedVer
     const versions = this.range(currVer, supportedVer)
 
+    await this.dbBackupManager.backupDb({ currVer, supportedVer })
     await this.migrate(versions, isDown)
   }
 }

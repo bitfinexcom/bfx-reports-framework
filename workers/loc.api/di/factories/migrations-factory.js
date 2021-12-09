@@ -11,12 +11,16 @@ module.exports = (ctx) => {
   const { dbDriver } = ctx.container.get(
     TYPES.CONF
   )
-  const migrationsType = dbDriver === 'better-sqlite'
-    ? 'sqlite'
-    : dbDriver
   const logger = ctx.container.get(
     TYPES.Logger
   )
+  const processMessageManager = ctx.container.get(
+    TYPES.ProcessMessageManager
+  )
+
+  const migrationsType = dbDriver === 'better-sqlite'
+    ? 'sqlite'
+    : dbDriver
 
   return (migrationsVer = []) => {
     const versions = Array.isArray(migrationsVer)
@@ -45,7 +49,9 @@ module.exports = (ctx) => {
         return new Migration(ver, ...deps)
       } catch (err) {
         logger.debug(err)
-        process.send({ state: 'error:migrations' })
+        processMessageManager.sendState(
+          processMessageManager.PROCESS_MESSAGES.ERROR_MIGRATIONS
+        )
 
         throw new MigrationLaunchingError()
       }

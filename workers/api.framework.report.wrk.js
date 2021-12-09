@@ -1,9 +1,5 @@
 'use strict'
 
-if (typeof process.send !== 'function') {
-  process.send = () => {}
-}
-
 const WrkReportServiceApi = require(
   'bfx-report/workers/api.service.report.wrk'
 )
@@ -100,17 +96,19 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
   init () {
     super.init()
 
-    const dbPathAbsolute = path.isAbsolute(argv.dbFolder)
+    this.conf[this.group].dbPathAbsolute = path.isAbsolute(argv.dbFolder)
       ? argv.dbFolder
       : path.join(this.ctx.root, argv.dbFolder)
     const workerPathAbsolute = path.join(
       this.ctx.root,
       'workers/loc.api/sync/dao/sqlite-worker/index.js'
     )
+
     const {
       syncMode,
       dbDriver,
-      verboseSql
+      verboseSql,
+      dbPathAbsolute
     } = this.conf[this.group]
     const facs = []
 
@@ -152,8 +150,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     const conf = this.conf[this.group]
     const wsTransport = this.container.get(TYPES.WSTransport)
     const sync = this.container.get(TYPES.Sync)
-    const TABLES_NAMES = this.container.get(TYPES.TABLES_NAMES)
-    const dao = this.container.get(TYPES.DAO)
+    const processMessageManager = this.container.get(TYPES.ProcessMessageManager)
 
     await wsTransport.start()
 
@@ -179,30 +176,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     this.scheduler_sync.add(name, () => sync.start(), rule)
     this.scheduler_sync.mem.get(name).rule = rule
 
-    process.on('message', async (mess) => {
-      try {
-        const { state } = { ...mess }
-
-        if (state !== 'clear-all-tables') {
-          return
-        }
-
-        await dao.dropAllTables({
-          exceptions: [
-            TABLES_NAMES.USERS,
-            TABLES_NAMES.SUB_ACCOUNTS
-          ]
-        })
-
-        process.send({ state: 'all-tables-have-been-cleared' })
-      } catch (err) {
-        this.logger.error(err.stack || err)
-
-        process.send({ state: 'all-tables-have-not-been-cleared' })
-      }
-    })
-
-    process.send({ state: 'ready:worker' })
+    processMessageManager.sendState(
+      processMessageManager.PROCESS_MESSAGES.READY_WORKER
+    )
   }
 
   async stopService () {
