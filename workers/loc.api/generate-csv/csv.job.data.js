@@ -73,6 +73,35 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
+  async getLedgersCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    const _jobData = await super.getLedgersCsvJobData(
+      args,
+      uId,
+      uInfo
+    )
+
+    const jobData = {
+      ..._jobData,
+      columnsCsv: this._addColumnsBySchema(
+        _jobData.columnsCsv,
+        {
+          amount: {
+            amountUsd: 'AMOUNT USD'
+          },
+          balance: {
+            balanceUsd: 'BALANCE USD'
+          }
+        }
+      )
+    }
+
+    return jobData
+  }
+
   async getWalletsCsvJobData (
     args,
     uId,
