@@ -11,7 +11,9 @@ const depsTypes = (TYPES) => [
   TYPES.MigrationsFactory,
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.DBBackupManager,
+  TYPES.ProcessMessageManager
 ]
 class SqliteDbMigrator extends DbMigrator {
   /**
@@ -21,30 +23,50 @@ class SqliteDbMigrator extends DbMigrator {
     try {
       await super.migrateFromCurrToSupportedVer()
     } catch (err) {
-      if (err instanceof MigrationLaunchingError) {
-        await this.removeAllTables()
-        this.logger.debug('[All tables have been deleted]')
+      if (!(err instanceof MigrationLaunchingError)) {
+        throw err
+      }
+
+      const responsePromise = this.processMessageManager.addStateToWait(
+        this.processMessageManager.PROCESS_STATES.RESPONSE_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE
+      )
+      this.processMessageManager.sendState(
+        this.processMessageManager.PROCESS_MESSAGES.REQUEST_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE
+      )
+      const {
+        shouldRestore = false,
+        shouldRemove = false
+      } = (await responsePromise) ?? {}
+
+      if (shouldRestore) {
+        const isDbRestored = await this.dbBackupManager.restoreDb()
+
+        if (isDbRestored) {
+          return
+        }
+
+        const rmDbPromise = this.processMessageManager.addStateToWait(
+          this.processMessageManager.PROCESS_STATES.REMOVE_ALL_TABLES
+        )
+        this.processMessageManager.sendState(
+          this.processMessageManager.PROCESS_MESSAGES.REQUEST_SHOULD_ALL_TABLES_BE_REMOVED,
+          { isNotDbRestored: !isDbRestored }
+        )
+
+        await rmDbPromise
+
+        return
+      }
+      if (shouldRemove) {
+        await this.processMessageManager.processState(
+          this.processMessageManager.PROCESS_STATES.REMOVE_ALL_TABLES
+        )
 
         return
       }
 
       throw err
     }
-  }
-
-  async removeAllTables () {
-    await this.dao.disableForeignKeys()
-
-    try {
-      await this.dao.dropAllTables()
-      await this.dao.setCurrDbVer(0)
-    } catch (err) {
-      await this.dao.enableForeignKeys()
-
-      throw err
-    }
-
-    await this.dao.enableForeignKeys()
   }
 }
 

@@ -12,12 +12,14 @@ class DAO {
     db,
     TABLES_NAMES,
     syncSchema,
-    dbMigratorFactory
+    dbMigratorFactory,
+    processMessageManagerFactory
   ) {
     this.db = db
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.dbMigratorFactory = dbMigratorFactory
+    this.processMessageManagerFactory = processMessageManagerFactory
   }
 
   _getModelsMap (params) {
@@ -47,6 +49,7 @@ class DAO {
     }
 
     await this.beforeMigrationHook()
+    this.processMessageManagerFactory().init()
 
     const dbMigrator = this.dbMigratorFactory()
     await dbMigrator.migrateFromCurrToSupportedVer()
@@ -66,6 +69,11 @@ class DAO {
    * @abstract
    */
   async setCurrDbVer () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async backupDb () { throw new ImplementationError() }
 
   /**
    * @abstract

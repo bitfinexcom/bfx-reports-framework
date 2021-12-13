@@ -6,30 +6,7 @@ const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
 
-/**
- * Scrypt was introduced into Node.js in v10.5.0,
- * it can also be used with Node.js v8.5.0...v10.4.1 using the scrypt-js OpenSSL polyfill
- * https://github.com/ricmoo/scrypt-js
- */
-const hasScrypt = !!crypto.scrypt
-
-if (!hasScrypt) {
-  const { scrypt } = require('scrypt-js')
-
-  crypto.scrypt = (password, salt, keylen, options) => {
-    const {
-      N = 16384,
-      r = 8,
-      p = 1
-    } = { ...options }
-    const _password = Buffer.from(password.normalize('NFKC'))
-    const _salt = Buffer.from(salt.normalize('NFKC'))
-
-    return scrypt(_password, _salt, N, r, p, keylen)
-  }
-}
-
-const scrypt = hasScrypt ? promisify(crypto.scrypt) : crypto.scrypt
+const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)
 const pbkdf2 = promisify(crypto.pbkdf2)
 

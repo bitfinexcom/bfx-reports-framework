@@ -29,11 +29,11 @@ class FullSnapshotReport {
       } = { ...wallet }
 
       if (
-        currency !== 'USD' &&
-        Number.isFinite(balance) &&
-        Number.isFinite(balanceUsd) &&
-        balance !== 0 &&
-        balanceUsd !== 0
+        currency === 'USD' ||
+        !Number.isFinite(balance) ||
+        !Number.isFinite(balanceUsd) ||
+        balance === 0 ||
+        balanceUsd === 0
       ) {
         return accum
       }
