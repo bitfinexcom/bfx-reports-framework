@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  grape1:
+    container_name: grape1
+    build:
+      context: .
+      dockerfile: Dockerfile.grenache-grape
+    restart: always
+    networks:
+      - grapes
+    ports:
+      - "30001:30001"
+    environment:
+      GRAPE_DP: "20001"
+      GRAPE_APH: "30001"
+      GRAPE_BN: "20002"
+      GRAPE_BIND: "grape2"
+
+  grape2:
+    container_name: grape2
+    build:
+      context: .
+      dockerfile: Dockerfile.grenache-grape
+    restart: always
+    networks:
+      - grapes
+    ports:
+      - "40001:40001"
+    environment:
+      GRAPE_DP: "20002"
+      GRAPE_APH: "40001"
+      GRAPE_BN: "20001"
+      GRAPE_BIND: "grape1"
+
+networks:
+  grapes:
+    driver: bridge
