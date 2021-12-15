@@ -1,0 +1,16 @@
+.vscode
+**/node_modules
+**/.env
+**/.env.example
+**/.git
+db/*
+config/*.json
+config/facs/*.json
+logs/*.log
+csv
+test
+bfx-report-ui/build
+bfx-report-ui/bfx-report-express/logs/*.log
+bfx-report-ui/bfx-report-express/config/*.json
+*Dockerfile*
+*docker-compose*
