@@ -65,6 +65,25 @@ services:
       SECRET_KEY: ${SECRET_KEY} # Required
       SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
 
+  express:
+    container_name: express
+    build:
+      context: .
+      dockerfile: Dockerfile.express
+    restart: always
+    depends_on:
+      - worker
+      - grape1
+      - grape2
+    networks:
+      - grapes
+    ports:
+      - "127.0.0.1:31339:31339"
+    volumes:
+      - ./logs:/home/node/bfx-report-express/logs
+    environment:
+      <<: *common-variables
+
 networks:
   grapes:
     driver: bridge
