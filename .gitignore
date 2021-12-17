@@ -18,3 +18,4 @@ workers/loc.api/queue/temp/*.csv
 workers/loc.api/queue/temp/*.zip
 bfx-report-ui/.env
 bfx-report-ui/src
+.env
