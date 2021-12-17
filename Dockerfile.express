@@ -1,0 +1,26 @@
+FROM node:14.16.0-alpine
+
+WORKDIR /home/node/bfx-report-express
+
+RUN apk add --no-cache --virtual \
+  .gyp \
+  python3 \
+  make \
+  g++ \
+  git \
+  openssh \
+  bash
+
+COPY bfx-report-ui/bfx-report-express/package*.json \
+  bfx-report-ui/bfx-report-express/.npmrc \
+  ./
+RUN npm i --production --no-audit
+
+COPY ./bfx-report-ui/bfx-report-express/config ./config
+RUN cp config/default.json.example config/default.json
+
+COPY ./bfx-report-ui/bfx-report-express .
+COPY ./scripts/express-entrypoint.sh /usr/local/bin/
+
+ENTRYPOINT ["express-entrypoint.sh"]
+CMD ["index.js"]
