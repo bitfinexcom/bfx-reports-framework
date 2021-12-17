@@ -1,5 +1,11 @@
 version: '3.9'
 
+x-common-variables: &common-variables
+  NODE_ENV: "production"
+  API_PORT: "31339"
+  GRAPE_APH: "30001"
+  GRAPE_HOST: "grape1"
+
 services:
   grape1:
     container_name: grape1
@@ -9,11 +15,9 @@ services:
     restart: always
     networks:
       - grapes
-    ports:
-      - "30001:30001"
     environment:
+      <<: *common-variables
       GRAPE_DP: "20001"
-      GRAPE_APH: "30001"
       GRAPE_BN: "20002"
       GRAPE_BIND: "grape2"
 
@@ -23,16 +27,46 @@ services:
       context: .
       dockerfile: Dockerfile.grenache-grape
     restart: always
+    depends_on:
+      - grape1
     networks:
       - grapes
-    ports:
-      - "40001:40001"
     environment:
+      <<: *common-variables
       GRAPE_DP: "20002"
       GRAPE_APH: "40001"
       GRAPE_BN: "20001"
       GRAPE_BIND: "grape1"
 
+  worker:
+    container_name: worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: always
+    depends_on:
+      - grape1
+      - grape2
+    networks:
+      - grapes
+    volumes:
+      - temp:/home/node/bfx-reports-framework/temp
+      - ./db:/home/node/bfx-reports-framework/db
+      - ./csv:/home/node/bfx-reports-framework/csv
+      - ./logs:/home/node/bfx-reports-framework/logs
+    environment:
+      <<: *common-variables
+      WORKER_API_PORT: "1337"
+      WORKER_WS_PORT: "1455"
+      CSV_FOLDER: "./csv"
+      DB_FOLDER: "./db"
+      LOGS_FOLDER: "./logs"
+      TEMP_FOLDER: "./temp"
+      SECRET_KEY: ${SECRET_KEY} # Required
+      SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
+
 networks:
   grapes:
     driver: bridge
+volumes:
+  temp:
