@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-if [ "$SECRET_KEY" != "" ]; then
+if [ "$SECRET_KEY" == "" ]; then
   printf '%s\n' "'SECRET_KEY' environment variable must be exported" >&2
   exit 1
 fi
