@@ -11,11 +11,18 @@ RUN apk add --no-cache --virtual \
   openssh \
   bash
 
+COPY package*.json .npmrc ./
+RUN npm i --production --no-audit
+
+COPY ./config ./config
+RUN cp config/schedule.json.example config/schedule.json \
+  && cp config/common.json.example config/common.json \
+  && cp config/service.report.json.example config/service.report.json \
+  && cp config/facs/grc.config.json.example config/facs/grc.config.json \
+  && cp config/facs/grc-slack.config.json.example config/facs/grc-slack.config.json
+
 COPY . .
-
-RUN ./scripts/init-worker.sh
-
 COPY ./scripts/worker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["worker-entrypoint.sh"]
-CMD ["bin/grape.js"]
+CMD ["worker.js"]
