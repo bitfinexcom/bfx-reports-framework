@@ -166,6 +166,14 @@ class DataConsistencyError extends ConflictError {
   }
 }
 
+class DataConsistencyWhileSyncingError extends DataConsistencyError {
+  constructor (message = 'ERR_COLLECTIONS_DATA_IS_NOT_CONSISTENT_WHILE_SYNCING') {
+    super(message)
+
+    this.statusMessage = 'This particular endpoints are not available for the selected time frame while DB is being synced'
+  }
+}
+
 class ProcessStateSendingError extends BaseError {
   constructor (message = 'ERR_PROCESS_STATE_SENDING_IS_NOT_CORRECT') {
     super(message)
@@ -204,6 +212,7 @@ module.exports = {
   GetPublicDataError,
   DataConsistencyCheckerFindingError,
   DataConsistencyError,
+  DataConsistencyWhileSyncingError,
   ProcessStateSendingError,
   DbRestoringError
 }

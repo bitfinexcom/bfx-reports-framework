@@ -2,19 +2,23 @@
 
 const {
   DataConsistencyCheckerFindingError,
-  DataConsistencyError
+  DataConsistencyError,
+  DataConsistencyWhileSyncingError
 } = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.Checkers
+  TYPES.Checkers,
+  TYPES.Progress
 ]
 class DataConsistencyChecker {
   constructor (
-    checkers
+    checkers,
+    progress
   ) {
     this.checkers = checkers
+    this.progress = progress
   }
 
   async check (checkerName, args) {
@@ -36,6 +40,13 @@ class DataConsistencyChecker {
     const isValid = await check(auth)
 
     if (!isValid) {
+      const currProgress = await this.progress.getProgress()
+      const isDBSyncing = currProgress < 100
+
+      if (isDBSyncing) {
+        throw new DataConsistencyWhileSyncingError()
+      }
+
       throw new DataConsistencyError()
     }
   }
