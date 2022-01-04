@@ -47,8 +47,7 @@ services:
     depends_on:
       - grape1
       - grape2
-    networks:
-      - grapes
+    network_mode: "service:grape1"
     volumes:
       - temp:/home/node/bfx-reports-framework/temp
       - ./db:/home/node/bfx-reports-framework/db
