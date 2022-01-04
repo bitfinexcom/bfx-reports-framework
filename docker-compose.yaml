@@ -58,10 +58,10 @@ services:
       <<: *common-variables
       WORKER_API_PORT: "1337"
       WORKER_WS_PORT: "1455"
-      CSV_FOLDER: "./csv"
-      DB_FOLDER: "./db"
-      LOGS_FOLDER: "./logs"
-      TEMP_FOLDER: "./temp"
+      TEMP_FOLDER: "/home/node/bfx-reports-framework/temp"
+      DB_FOLDER: "/home/node/bfx-reports-framework/db"
+      CSV_FOLDER: "/home/node/bfx-reports-framework/csv"
+      LOGS_FOLDER: "/home/node/bfx-reports-framework/logs"
       SECRET_KEY: ${SECRET_KEY} # Required
       SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
 
@@ -87,5 +87,6 @@ services:
 networks:
   grapes:
     driver: bridge
+
 volumes:
   temp:
