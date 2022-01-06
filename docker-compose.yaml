@@ -1,7 +1,6 @@
 version: '3.9'
 
 x-common-variables: &common-variables
-  NODE_ENV: "production"
   API_PORT: "31339"
   GRAPE_APH: "30001"
   GRAPE_HOST: "grape1"
@@ -12,7 +11,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.grenache-grape
-    restart: always
+    restart: unless-stopped
     networks:
       - grapes
     environment:
@@ -20,13 +19,14 @@ services:
       GRAPE_DP: "20001"
       GRAPE_BN: "20002"
       GRAPE_BIND: "grape2"
+      NODE_ENV: ${NODE_ENV}
 
   grape2:
     container_name: grape2
     build:
       context: .
       dockerfile: Dockerfile.grenache-grape
-    restart: always
+    restart: unless-stopped
     depends_on:
       - grape1
     networks:
@@ -37,13 +37,14 @@ services:
       GRAPE_APH: "40001"
       GRAPE_BN: "20001"
       GRAPE_BIND: "grape1"
+      NODE_ENV: ${NODE_ENV}
 
   worker:
     container_name: worker
     build:
       context: .
       dockerfile: Dockerfile.worker
-    restart: always
+    restart: unless-stopped
     depends_on:
       - grape1
       - grape2
@@ -63,29 +64,64 @@ services:
       LOGS_FOLDER: "/home/node/bfx-reports-framework/logs"
       SECRET_KEY: ${SECRET_KEY} # Required
       SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
+      NODE_ENV: ${NODE_ENV}
 
   express:
     container_name: express
     build:
       context: .
       dockerfile: Dockerfile.express
-    restart: always
+    restart: unless-stopped
     depends_on:
       - worker
       - grape1
       - grape2
     networks:
       - grapes
+      - front-net
     ports:
-      - "127.0.0.1:31339:31339"
+      - "127.0.0.1:31339:31339" # TODO: would close port
     volumes:
       - ./logs:/home/node/bfx-report-express/logs
     environment:
       <<: *common-variables
+      NODE_ENV: ${NODE_ENV}
+  
+  ui-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui-builder
+    volumes:
+      - front-build:/home/node/bfx-report-ui/front-build
+    environment:
+      FRONT_BUILD_FOLDER: "/home/node/bfx-report-ui/front-build"
+      CI_ENVIRONMENT_NAME: ${UI_ENV} # Non-required
+      NGINX_HOST: ${NGINX_HOST} # Required
+
+  nginx:
+    container_name: nginx
+    image: nginx:1.21.5-alpine
+    restart: unless-stopped
+    depends_on:
+      - express
+      - ui-builder
+    networks:
+      - front-net
+    ports:
+      - "127.0.0.1:80:8080"
+    volumes:
+      - front-build:/var/www/html
+      - ./nginx-templates:/etc/nginx/templates
+    environment:
+      <<: *common-variables
+      NGINX_HOST: ${NGINX_HOST} # Required
 
 networks:
   grapes:
     driver: bridge
+  front-net:
+    driver: bridge
 
 volumes:
   temp:
+  front-build:
