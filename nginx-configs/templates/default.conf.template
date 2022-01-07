@@ -8,10 +8,12 @@ server {
   server_name ${NGINX_HOST};
 
   gzip on;
-  gzip_types text/html application/javascript application/json text/css;
 
   root ${FRONT_BUILD_FOLDER};
   index index.html;
+
+  access_log ${LOGS_FOLDER}/nginx.access.log main_bfx;
+  error_log ${LOGS_FOLDER}/nginx.error.log warn;
 
   location / {
     try_files $uri $uri/ /index.html;

@@ -109,10 +109,13 @@ services:
       - "${NGINX_PORT}:8080"
     volumes:
       - front-build:/var/www/html
-      - ./nginx-templates:/etc/nginx/templates
+      - ./nginx-configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-configs/templates:/etc/nginx/templates
+      - ./logs:/var/log/nginx/bfx-reports-framework
     environment:
       <<: *common-variables
       FRONT_BUILD_FOLDER: "/var/www/html"
+      LOGS_FOLDER: "/var/log/nginx/bfx-reports-framework"
       NGINX_HOST: ${NGINX_HOST} # Required
 
 networks:
