@@ -10,7 +10,7 @@ server {
   gzip on;
   gzip_types text/html application/javascript application/json text/css;
 
-  root /var/www/html;
+  root ${FRONT_BUILD_FOLDER};
   index index.html;
 
   location / {

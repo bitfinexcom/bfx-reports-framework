@@ -114,6 +114,7 @@ services:
       - ./nginx-templates:/etc/nginx/templates
     environment:
       <<: *common-variables
+      FRONT_BUILD_FOLDER: "/var/www/html"
       NGINX_HOST: ${NGINX_HOST} # Required
 
 networks:
