@@ -53,3 +53,5 @@ fi
 rm -rf $frontBuildFolder/*
 cp -f var/www/html/maintenance.html "$frontBuildFolder/index.html"
 mv -f $uiBuildFolder/* $frontBuildFolder
+
+echo "The UI build has been completed successfully"
