@@ -84,7 +84,7 @@ services:
     environment:
       <<: *common-variables
       NODE_ENV: ${NODE_ENV}
-  
+
   ui-builder:
     build:
       context: .
