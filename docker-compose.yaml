@@ -79,8 +79,6 @@ services:
     networks:
       - grapes
       - front-net
-    ports:
-      - "127.0.0.1:31339:31339" # TODO: would close port
     volumes:
       - ./logs:/home/node/bfx-report-express/logs
     environment:
