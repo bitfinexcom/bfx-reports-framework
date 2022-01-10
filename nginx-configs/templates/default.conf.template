@@ -1,3 +1,7 @@
+map ${NGINX_ENV} $is_log_enabled {
+  "development" 1;
+}
+
 upstream backend {
   server express:${API_PORT};
 }
@@ -12,7 +16,7 @@ server {
   root ${FRONT_BUILD_FOLDER};
   index index.html;
 
-  access_log ${LOGS_FOLDER}/nginx.access.log main_bfx;
+  access_log ${LOGS_FOLDER}/nginx.access.log main_bfx if=$is_log_enabled;
   error_log ${LOGS_FOLDER}/nginx.error.log warn;
 
   location / {

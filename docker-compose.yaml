@@ -102,7 +102,6 @@ services:
     restart: unless-stopped
     depends_on:
       - express
-      - ui-builder
     networks:
       - front-net
     ports:
@@ -117,6 +116,7 @@ services:
       FRONT_BUILD_FOLDER: "/var/www/html"
       LOGS_FOLDER: "/var/log/nginx/bfx-reports-framework"
       NGINX_HOST: ${NGINX_HOST} # Required
+      NGINX_ENV: ${NGINX_ENV} # Non-required
 
 networks:
   grapes:
