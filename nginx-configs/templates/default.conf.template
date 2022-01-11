@@ -33,6 +33,23 @@ server {
     add_header Cache-Control "public";
   }
 
+  location /csv {
+    autoindex on;
+    autoindex_format xml;
+    
+    xslt_stylesheet /etc/nginx/autoindex-format.xslt path='$uri';
+
+    try_files $uri/ =404;
+
+    alias ${CSV_FOLDER};
+    expires 30d;
+
+    if ($request_filename ~ "^.*/(.+\.(zip|csv))$") {
+      set $fname $1;
+      add_header Content-Disposition 'attachment; filename="$fname"';
+    }
+  }
+
   location /api {
     proxy_pass http://backend;
 
