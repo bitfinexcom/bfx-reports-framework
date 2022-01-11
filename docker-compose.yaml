@@ -108,11 +108,14 @@ services:
       - "${NGINX_PORT}:8080"
     volumes:
       - front-build:/var/www/html
+      - ./nginx-configs/autoindex-format.xslt:/etc/nginx/autoindex-format.xslt:ro
       - ./nginx-configs/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx-configs/templates:/etc/nginx/templates
       - ./logs:/var/log/nginx/bfx-reports-framework
+      - ./csv:/var/www/csv
     environment:
       <<: *common-variables
+      CSV_FOLDER: "/var/www/csv"
       FRONT_BUILD_FOLDER: "/var/www/html"
       LOGS_FOLDER: "/var/log/nginx/bfx-reports-framework"
       NGINX_HOST: ${NGINX_HOST} # Required
