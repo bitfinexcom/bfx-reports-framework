@@ -2,6 +2,11 @@ map ${NGINX_ENV} $is_log_enabled {
   "development" 1;
 }
 
+map $http_cookie $auth_token {
+  default "";
+  "~*token=(?<token>[^;]+)" "$token";
+}
+
 upstream backend {
   server express:${API_PORT};
 }
@@ -23,6 +28,12 @@ server {
     try_files $uri $uri/ /index.html;
   }
 
+  error_page 401 = @redirectToMain;
+
+  location @redirectToMain {
+    return 302 $scheme://${NGINX_HOST}/;
+  }
+
   location ~* \.(?:map|css|js|jpg|svg|png|ico|woff2|woff|eot|ttf)$ {
     expires 10d;
     add_header Cache-Control "public";
@@ -34,20 +45,33 @@ server {
   }
 
   location /csv {
+    auth_request /api/auth;
+
     autoindex on;
     autoindex_format xml;
-    
     xslt_stylesheet /etc/nginx/autoindex-format.xslt path='$uri';
 
     try_files $uri/ =404;
-
     alias ${CSV_FOLDER};
-    expires 30d;
 
+    if ($arg_token ~ ".+") {
+      add_header Set-Cookie "token=$arg_token; Max-Age=3600; SameSite=strict; HttpOnly";
+    }
     if ($request_filename ~ "^.*/(.+\.(zip|csv))$") {
       set $fname $1;
       add_header Content-Disposition 'attachment; filename="$fname"';
     }
+  }
+
+  location /api/auth {
+    internal;
+    proxy_pass http://backend;
+
+    proxy_http_version 1.1;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header X-Auth-Token $auth_token;
   }
 
   location /api {
