@@ -269,6 +269,10 @@
             </table>
           </div>
         </main>
+
+        <script>
+          window.history.replaceState({}, document.title, window.location.pathname)
+        </script>
       </body>
     </html>
   </xsl:template>
