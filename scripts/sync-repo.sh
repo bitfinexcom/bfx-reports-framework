@@ -4,6 +4,7 @@ set -euxo pipefail
 
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
+COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
 
 programname=$0
@@ -17,14 +18,20 @@ syncExpress=0
 
 function usage {
   echo -e "\
-\n${COLOR_GREEN}Usage: $programname [-a] | [-w] | [-u] | [-e] | [-h]${COLOR_NORMAL}
+\n${COLOR_GREEN}Usage: $programname [options] | [-h]${COLOR_BLUE}
+\nOptions:
   -a    Sync all repositories
   -w    Sync bfx-reports-framework only
   -u    Sync bfx-report-ui only
   -e    Sync bfx-report-express only
   -h    Display help\
-" 1>&2
+${COLOR_NORMAL}" 1>&2
 }
+
+if [ $# == 0 ]; then
+  usage
+  exit 1
+fi
 
 while getopts "awueh" opt; do
   case "${opt}" in
