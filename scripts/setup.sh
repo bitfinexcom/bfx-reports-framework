@@ -52,7 +52,7 @@ ${COLOR_NORMAL}" >&2
     # https://github.com/docker/docker-install
 
     curl -fsSL https://get.docker.com -o scripts/get-docker.sh
-    sudo sh get-docker.sh
+    sudo sh scripts/get-docker.sh
     rm -f scripts/get-docker.sh
   fi
 fi
