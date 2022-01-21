@@ -2,6 +2,9 @@
 
 set -euxo pipefail
 
+SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
+ROOT="$(dirname "$SCRIPTPATH")"
+
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_BLUE="\033[34m"
@@ -51,9 +54,10 @@ ${COLOR_NORMAL}" >&2
     # https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script
     # https://github.com/docker/docker-install
 
-    curl -fsSL https://get.docker.com -o scripts/get-docker.sh
-    sudo sh scripts/get-docker.sh
-    rm -f scripts/get-docker.sh
+    dockerScriptPath="$SCRIPTPATH/get-docker.sh"
+    curl -fsSL https://get.docker.com -o "$dockerScriptPath"
+    sudo sh "$dockerScriptPath"
+    rm -f "$dockerScriptPath"
   fi
 fi
 
