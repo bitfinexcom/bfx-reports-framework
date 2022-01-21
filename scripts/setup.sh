@@ -78,4 +78,14 @@ ${COLOR_NORMAL}" >&2
   fi
 fi
 
+if askUser "\
+The app will be setup from scratch!\n\
+All Log and DB and CSV files will be removed!\n\
+Are you sure?\
+"; then
+  rm -rf "$ROOT/logs"
+  rm -rf "$ROOT/csv"
+  find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
+fi
+
 echo "DONE"
