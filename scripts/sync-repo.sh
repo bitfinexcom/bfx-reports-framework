@@ -2,6 +2,10 @@
 
 set -euxo pipefail
 
+SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
+ROOT="$(dirname "$SCRIPTPATH")"
+CURRDIR="$PWD"
+
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_BLUE="\033[34m"
@@ -52,6 +56,8 @@ while getopts "awueh" opt; do
   esac
 done
 
+cd "$ROOT"
+
 if [ $syncWorker == 1 ] && [ $syncUI == 1 ] && [ $syncExpress == 1 ]; then
   syncAll=1
   syncWorker=0
@@ -73,6 +79,7 @@ if [ $syncAll == 1 ]; then
   git submodule foreach --recursive "git clean -fd; git reset --hard HEAD"
   git submodule update --init --force --recursive
 
+  cd "$CURRDIR"
   exit 0
 fi
 if [ $syncWorker == 1 ]; then
@@ -102,3 +109,5 @@ if [ $syncExpress == 1 ]; then
     fi
 '
 fi
+
+cd "$CURRDIR"
