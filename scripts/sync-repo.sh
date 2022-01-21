@@ -10,6 +10,7 @@ COLOR_NORMAL="\033[39m"
 programname=$0
 uiSubmoduleName=bfx-report-ui
 expressSubmoduleName=bfx-report-express
+branch="${REPO_BRANCH:-"master"}"
 
 syncAll=0
 syncWorker=0
@@ -67,7 +68,7 @@ fi
 
 if [ $syncAll == 1 ]; then
   git clean -fd
-  git reset --hard origin/master
+  git reset --hard "origin/$branch"
 
   git submodule foreach --recursive "git clean -fd; git reset --hard HEAD"
   git submodule update --init --force --recursive
@@ -76,7 +77,7 @@ if [ $syncAll == 1 ]; then
 fi
 if [ $syncWorker == 1 ]; then
   git clean -fd
-  git reset --hard origin/master
+  git reset --hard "origin/$branch"
 fi
 if [ $syncUI == 1 ]; then
   git submodule foreach '
