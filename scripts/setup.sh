@@ -158,4 +158,12 @@ ${COLOR_NORMAL}")
 read -p "$nginxHostQestion " nginxHost
 nginxHost="${nginxHost:-"localhost"}"
 
-echo "DONE"
+if [ ! -f "$ROOT/.env" ]; then
+  cp -f "$ROOT/.env.example" "$ROOT/.env"
+
+  echo -e "\
+\n${COLOR_YELLOW}The '.env' file has been made from '.env.example' template!\
+${COLOR_NORMAL}"
+fi
+
+echo -e "\n${COLOR_GREEN}DONE!${COLOR_NORMAL}\n"
