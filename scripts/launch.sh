@@ -2,6 +2,10 @@
 
 set -euxo pipefail
 
+SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
+ROOT="$(dirname "$SCRIPTPATH")"
+CURRDIR="$PWD"
+
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_BLUE="\033[34m"
@@ -58,6 +62,8 @@ while getopts "agwenudh" opt; do
   esac
 done
 
+cd "$ROOT"
+
 if [ $launchGrapes == 1 ] \
   && [ $launchWorker == 1 ] \
   && [ $launchExpress == 1 ] \
@@ -83,6 +89,7 @@ composeCommonFlags="\
 if [ $launchAll == 1 ]; then
   docker-compose up $composeCommonFlags \
 
+  cd "$CURRDIR"
   exit 0
 fi
 
@@ -120,3 +127,5 @@ if [ $buildUI == 1 ]; then
   docker-compose up $composeCommonFlags \
     ui-builder
 fi
+
+cd "$CURRDIR"
