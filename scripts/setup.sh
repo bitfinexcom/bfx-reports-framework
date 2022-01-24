@@ -151,4 +151,11 @@ ${COLOR_NORMAL}")
 read -p "$nginxPortQestion " nginxPort
 nginxPort=${nginxPort:-80}
 
+nginxHostQestion=$(echo -e "\
+\n${COLOR_BLUE}Enter NGINX host, by default '${COLOR_NORMAL}localhost${COLOR_BLUE}',\
+\nto apply it just push the 'Enter' key\
+${COLOR_NORMAL}")
+read -p "$nginxHostQestion " nginxHost
+nginxHost="${nginxHost:-"localhost"}"
+
 echo "DONE"
