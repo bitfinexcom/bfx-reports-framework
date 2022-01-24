@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
 SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
 ROOT="$(dirname "$SCRIPTPATH")"
@@ -40,6 +40,43 @@ ${COLOR_RED}${noword}${COLOR_BLUE})?${COLOR_NORMAL}\
     echo -e "\
 \n${COLOR_RED}Available answer \
 ${yesword} / ${noword}!${COLOR_NORMAL}\
+" >&2
+
+  done
+}
+
+askUserAboutBranch() {
+  local question="${1:-"\
+Choose syncing repository branch,\
+\nto leave the 'master' branch by default just push the 'Enter' key\
+"}"
+
+  local masterBranch="master"
+  local betaBranch="beta"
+  local masterptrn="^$masterBranch$"
+  local betaptrn="^$betaBranch$"
+
+  local formattedQestion=$(echo -e "\
+\n${COLOR_BLUE}$question \
+(${COLOR_GREEN}${masterBranch}${COLOR_BLUE} / \
+${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
+")
+
+  while true; do
+    read -p "$formattedQestion " answer
+
+    if [[ -z $answer ]] || [[ "$answer" =~ $masterptrn ]]; then
+      echo "$masterBranch"
+      return
+    fi
+    if [[ "$answer" =~ $betaptrn ]]; then
+      echo "$betaBranch"
+      return
+    fi
+
+    echo -e "\
+\n${COLOR_RED}Available answer \
+${masterBranch} / ${betaBranch}!${COLOR_NORMAL}\
 " >&2
 
   done
@@ -108,5 +145,7 @@ $secretKey\
 need to set it into 'SECRET_KEY' environment variable!\
 ${COLOR_NORMAL}"
 fi
+
+repoBranch=$(askUserAboutBranch)
 
 echo "DONE"
