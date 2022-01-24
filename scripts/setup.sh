@@ -166,4 +166,8 @@ if [ ! -f "$ROOT/.env" ]; then
 ${COLOR_NORMAL}"
 fi
 
+if askUser "Should all repository/submodules be synced?"; then
+  source "$ROOT/scripts/sync-repo.sh" "-a"
+fi
+
 echo -e "\n${COLOR_GREEN}DONE!${COLOR_NORMAL}\n"
