@@ -39,25 +39,21 @@ ${COLOR_RED}${noword}${COLOR_BLUE})?${COLOR_NORMAL}\
 
     echo -e "\
 \n${COLOR_RED}Available answer \
-${yesword} / ${noword}!${COLOR_NORMAL}\
+'${yesword}' / '${noword}'!${COLOR_NORMAL}\
 " >&2
 
   done
 }
 
 askUserAboutBranch() {
-  local question="${1:-"\
-Choose syncing repository branch,\
-\nto leave the 'master' branch by default just push the 'Enter' key\
-"}"
-
   local masterBranch="master"
   local betaBranch="beta"
   local masterptrn="^$masterBranch$"
   local betaptrn="^$betaBranch$"
 
   local formattedQestion=$(echo -e "\
-\n${COLOR_BLUE}$question \
+\n${COLOR_BLUE}Choose syncing repository branch, by default '${COLOR_NORMAL}master${COLOR_BLUE}'\
+\nto apply it just push the 'Enter' key \
 (${COLOR_GREEN}${masterBranch}${COLOR_BLUE} / \
 ${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
 ")
@@ -76,7 +72,7 @@ ${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
 
     echo -e "\
 \n${COLOR_RED}Available answer \
-${masterBranch} / ${betaBranch}!${COLOR_NORMAL}\
+'${masterBranch}' / '${betaBranch}'!${COLOR_NORMAL}\
 " >&2
 
   done
@@ -147,5 +143,12 @@ ${COLOR_NORMAL}"
 fi
 
 repoBranch=$(askUserAboutBranch)
+
+nginxPortQestion=$(echo -e "\
+\n${COLOR_BLUE}Enter NGINX port, by default '${COLOR_NORMAL}80${COLOR_BLUE}',\
+\nto apply it just push the 'Enter' key\
+${COLOR_NORMAL}")
+read -p "$nginxPortQestion " nginxPort
+nginxPort=${nginxPort:-80}
 
 echo "DONE"
