@@ -7,6 +7,7 @@ ROOT="$(dirname "$SCRIPTPATH")"
 
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
+COLOR_YELLOW="\033[33m"
 COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
 
@@ -86,6 +87,26 @@ Are you sure?\
   rm -rf "$ROOT/logs"
   rm -rf "$ROOT/csv"
   find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
+fi
+
+secretKey=$({ dd if=/dev/urandom bs=256 count=1 || test $? = 1; } 2>/dev/null | od -A n -t x | tr -d '\n| ')
+size=${#secretKey}
+
+if [ $size != 512 ]; then
+  echo -e "\
+\n${COLOR_RED}The secret key has not been generated!\n
+The default value 'secretKey' will be set to 'SECRET_KEY'.\n
+Please change it setting the corresponding environment variable for security.\
+${COLOR_NORMAL}" >&2
+
+  secretKey="secretKey"
+else
+  echo -e "\
+\n${COLOR_GREEN}A new secret key has been generated successfully:${COLOR_NORMAL}\n\n\
+$secretKey\
+\n\n${COLOR_YELLOW}Warning, don't store secret key value in the '.env' file for production,\n\
+need to set it into 'SECRET_KEY' environment variable!\
+${COLOR_NORMAL}"
 fi
 
 echo "DONE"
