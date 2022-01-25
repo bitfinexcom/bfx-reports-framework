@@ -14,9 +14,42 @@ COLOR_YELLOW="\033[33m"
 COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
 
-# TODO: Need to add '-y arg' to not ask the user questions
+programname=$0
+yesToEverything=0
+
+function usage {
+  echo -e "\
+\n${COLOR_GREEN}Usage: $programname [options] [-d] | [-h]${COLOR_BLUE}
+\nOptions:
+  -y    With this option, all questions are automatically answered with 'Yes'. \
+In this case, the questions themselves will not be displayed
+  -h    Display help\
+${COLOR_NORMAL}" 1>&2
+}
+
+while getopts "yh" opt; do
+  case "${opt}" in
+    y) yesToEverything=1;;
+    h)
+      usage
+      exit 0
+      ;;
+    *)
+      echo -e "\n${COLOR_RED}No reasonable options found!${COLOR_NORMAL}"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+echo "yesToEverything: $yesToEverything"
 
 function askUser {
+  if [ $yesToEverything == 1 ]; then
+    true
+    return
+  fi
+
   local question="${1:-"What should be done"}"
 
   local yesptrn="^[+1yY]"
@@ -56,6 +89,11 @@ function askUserAboutBranch {
   local masterptrn="^$masterBranch$"
   local betaptrn="^$betaBranch$"
 
+  if [ $yesToEverything == 1 ]; then
+    echo "$masterBranch"
+    return
+  fi
+
   local formattedQestion=$(echo -e "\
 \n${COLOR_BLUE}Choose syncing repository branch, by default '${COLOR_NORMAL}master${COLOR_BLUE}'\
 \nto apply it just push the 'Enter' key \
@@ -81,6 +119,21 @@ ${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
 " >&2
 
   done
+}
+
+function readLine {
+  local question="$1"
+  local defaultValue=${2:-""}
+  local value=""
+
+  if [ $yesToEverything == 1 ]; then
+    echo $defaultValue
+    return
+  fi
+
+  read -p "$question " value
+
+  echo ${value:-$defaultValue}
 }
 
 function setConfig {
@@ -163,15 +216,13 @@ nginxPortQestion=$(echo -e "\
 \n${COLOR_BLUE}Enter NGINX port, by default '${COLOR_NORMAL}80${COLOR_BLUE}',\
 \nto apply it just push the 'Enter' key\
 ${COLOR_NORMAL}")
-read -p "$nginxPortQestion " nginxPort
-nginxPort=${nginxPort:-80}
+nginxPort=$(readLine "$nginxPortQestion" 80)
 
 nginxHostQestion=$(echo -e "\
 \n${COLOR_BLUE}Enter NGINX host, by default '${COLOR_NORMAL}localhost${COLOR_BLUE}',\
 \nto apply it just push the 'Enter' key\
 ${COLOR_NORMAL}")
-read -p "$nginxHostQestion " nginxHost
-nginxHost="${nginxHost:-"localhost"}"
+nginxHost=$(readLine "$nginxHostQestion" "localhost")
 
 if [ ! -f "$envFilePath" ]; then
   cp -f "$envExampleFilePath" "$envFilePath"
