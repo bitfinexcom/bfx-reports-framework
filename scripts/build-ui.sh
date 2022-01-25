@@ -7,6 +7,12 @@ if [ -z "${NGINX_HOST:-}" ]; then
   exit 1
 fi
 
+ADDRESS="$NGINX_HOST"
+
+if [ ${NGINX_PORT:-80} != 80 ]; then
+  ADDRESS="$NGINX_HOST:$NGINX_PORT"
+fi
+
 if [ -z "${CI_ENVIRONMENT_NAME:-}" ]; then
   export CI_ENVIRONMENT_NAME=production
 fi
@@ -24,13 +30,13 @@ fi
 rm -rf $uiBuildFolder/bfx-report-express/*
 
 sed -i -e \
-  "s/HOME_URL: .*,/HOME_URL: \'http:\/\/${NGINX_HOST}',/g" \
+  "s/HOME_URL: .*,/HOME_URL: \'http:\/\/${ADDRESS}',/g" \
   $ROOT/src/config.js
 sed -i -e \
-  "s/API_URL: .*,/API_URL: \'http:\/\/${NGINX_HOST}\/api\',/g" \
+  "s/API_URL: .*,/API_URL: \'http:\/\/${ADDRESS}\/api\',/g" \
   $ROOT/src/config.js
 sed -i -e \
-  "s/WS_ADDRESS: .*,/WS_ADDRESS: \'ws:\/\/${NGINX_HOST}\/ws\',/g" \
+  "s/WS_ADDRESS: .*,/WS_ADDRESS: \'ws:\/\/${ADDRESS}\/ws\',/g" \
   $ROOT/src/config.js
 
 sed -i -e \

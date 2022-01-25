@@ -95,6 +95,7 @@ services:
       FRONT_BUILD_FOLDER: "/home/node/bfx-report-ui/front-build"
       CI_ENVIRONMENT_NAME: ${UI_ENV} # Non-required
       NGINX_HOST: ${NGINX_HOST} # Required
+      NGINX_PORT: ${NGINX_PORT} # Non-required
 
   nginx:
     container_name: nginx
@@ -119,6 +120,7 @@ services:
       FRONT_BUILD_FOLDER: "/var/www/html"
       LOGS_FOLDER: "/var/log/nginx/bfx-reports-framework"
       NGINX_HOST: ${NGINX_HOST} # Required
+      NGINX_PORT: ${NGINX_PORT} # Non-required
       NGINX_ENV: ${NGINX_ENV} # Non-required
 
 networks:

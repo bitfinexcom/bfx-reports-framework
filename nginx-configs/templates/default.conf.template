@@ -31,7 +31,7 @@ server {
   error_page 401 = @redirectToMain;
 
   location @redirectToMain {
-    return 302 $scheme://${NGINX_HOST}/;
+    return 302 $scheme://${NGINX_HOST}:${NGINX_PORT}/;
   }
 
   location ~* \.(?:map|css|js|jpg|svg|png|ico|woff2|woff|eot|ttf)$ {
