@@ -5,13 +5,18 @@ set -euo pipefail
 SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
 ROOT="$(dirname "$SCRIPTPATH")"
 
+envFilePath="$ROOT/.env"
+envExampleFilePath="$ROOT/.env.example"
+
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_YELLOW="\033[33m"
 COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
 
-askUser() {
+# TODO: Need to add '-y arg' to not ask the user questions
+
+function askUser {
   local question="${1:-"What should be done"}"
 
   local yesptrn="^[+1yY]"
@@ -45,7 +50,7 @@ ${COLOR_RED}${noword}${COLOR_BLUE})?${COLOR_NORMAL}\
   done
 }
 
-askUserAboutBranch() {
+function askUserAboutBranch {
   local masterBranch="master"
   local betaBranch="beta"
   local masterptrn="^$masterBranch$"
@@ -76,6 +81,16 @@ ${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
 " >&2
 
   done
+}
+
+function setConfig {
+  local filePath="$1"
+  local propName="$2"
+  local value="$3"
+
+  sed -i "s/^$propName.*/$propName=$value/g" "$filePath"
+  grep -q "^$propName" "$filePath" \
+    || echo "$propName=$value" >> "$filePath"
 }
 
 if ! docker --version; then
@@ -158,13 +173,18 @@ ${COLOR_NORMAL}")
 read -p "$nginxHostQestion " nginxHost
 nginxHost="${nginxHost:-"localhost"}"
 
-if [ ! -f "$ROOT/.env" ]; then
-  cp -f "$ROOT/.env.example" "$ROOT/.env"
+if [ ! -f "$envFilePath" ]; then
+  cp -f "$envExampleFilePath" "$envFilePath"
 
   echo -e "\
 \n${COLOR_YELLOW}The '.env' file has been made from '.env.example' template!\
 ${COLOR_NORMAL}"
 fi
+
+setConfig "$envFilePath" "REPO_BRANCH" $repoBranch
+setConfig "$envFilePath" "NGINX_PORT" $nginxPort
+setConfig "$envFilePath" "NGINX_HOST" $nginxHost
+setConfig "$envFilePath" "SECRET_KEY" $secretKey
 
 if askUser "Should all repository/submodules be synced?"; then
   source "$ROOT/scripts/sync-repo.sh" "-a"
