@@ -190,4 +190,12 @@ if askUser "Should all repository/submodules be synced?"; then
   source "$ROOT/scripts/sync-repo.sh" "-a"
 fi
 
+envFile=$(cat "$envFilePath")
+echo -e "\
+\n${COLOR_BLUE}The contents of '.env' file:${COLOR_NORMAL}\
+\n*****************************\
+\n\n${COLOR_YELLOW}$envFile${COLOR_NORMAL}\
+\n\n*****************************\
+"
+
 echo -e "\n${COLOR_GREEN}DONE!${COLOR_NORMAL}\n"
