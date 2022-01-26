@@ -93,38 +93,37 @@ if [ $launchAll == 1 ]; then
   exit 0
 fi
 
-composeCommonFlags="\
-  --no-deps \
-  $composeCommonFlags \
-"
+grapesServices=""
+workerService=""
+expressService=""
 
 if [ $launchGrapes == 1 ]; then
-  docker-compose up $composeCommonFlags \
-    grape1 grape2
+  grapesServices="grape1 grape2"
 fi
 if [ $launchWorker == 1 ]; then
   runningServices=$(docker-compose ps --filter "status=running" --services)
   isGrape1Running=$(echo "$runningServices" | { grep 'grape1' || test $? = 1; } | wc -l)
   isGrape2Running=$(echo "$runningServices" | { grep 'grape2' || test $? = 1; } | wc -l)
-  grapesServices=""
 
   if [ $isGrape1Running == 0 ] && [ $isGrape1Running == 0 ]; then
     grapesServices="grape1 grape2"
   fi
 
-  docker-compose up $composeCommonFlags \
-    $grapesServices worker
+  workerService="worker"
 fi
 if [ $launchExpress == 1 ]; then
-  docker-compose up $composeCommonFlags \
-    express
+  expressService="express"
 fi
+
+docker-compose up $composeCommonFlags \
+  $grapesServices $workerService $expressService
+
 if [ $launchNginx == 1 ]; then
-  docker-compose up $composeCommonFlags \
+  docker-compose up $composeCommonFlags --no-deps \
     nginx
 fi
 if [ $buildUI == 1 ]; then
-  docker-compose up $composeCommonFlags \
+  docker-compose up $composeCommonFlags --no-deps \
     ui-builder
 fi
 
