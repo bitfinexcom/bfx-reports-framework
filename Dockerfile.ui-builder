@@ -11,7 +11,7 @@ RUN apk add --no-cache --virtual \
   openssh \
   bash
 
-COPY ./scripts/static/maintenance.html var/www/html/maintenance.html
+COPY ./scripts/maintenance/index.html var/www/html/maintenance.html
 COPY ./bfx-report-ui/package*.json ./
 RUN npm i --no-audit
 

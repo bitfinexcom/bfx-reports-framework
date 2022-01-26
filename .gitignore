@@ -20,3 +20,4 @@ bfx-report-ui/.env
 bfx-report-ui/src
 .env
 scripts/get-docker.sh
+scripts/maintenance/maintenance.on

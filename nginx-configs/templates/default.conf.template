@@ -25,6 +25,10 @@ server {
   error_log ${LOGS_FOLDER}/nginx.error.log warn;
 
   location / {
+    if (-f ${MAINTENANCE_STATIC_FOLDER}/maintenance.on) {
+      root ${MAINTENANCE_STATIC_FOLDER};
+    }
+  
     try_files $uri $uri/ /index.html;
   }
 
