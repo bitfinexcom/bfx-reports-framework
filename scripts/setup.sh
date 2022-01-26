@@ -187,6 +187,9 @@ Are you sure?\
 "; then
   rm -rf "$ROOT/logs"
   rm -rf "$ROOT/csv"
+  mkdir "$ROOT/logs" 2>/dev/null
+  mkdir "$ROOT/csv" 2>/dev/null
+
   find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
 fi
 
