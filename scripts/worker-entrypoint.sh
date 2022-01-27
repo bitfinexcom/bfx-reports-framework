@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
 if [ -z "${SECRET_KEY:-}" ]; then
   printf '%s\n' "'SECRET_KEY' environment variable must be exported" >&2
