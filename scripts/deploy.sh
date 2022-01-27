@@ -17,8 +17,6 @@ cd "$CURRDIR"
 
 touch "$maintenanceFileFlag"
 
-echo "isNginxRunning: isNginxRunning"
-
 if [ $isNginxRunning == 0 ]; then
   "$ROOT/scripts/launch.sh" "-ad"
 else
