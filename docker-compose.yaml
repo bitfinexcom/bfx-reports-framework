@@ -64,6 +64,7 @@ services:
       LOGS_FOLDER: "/home/node/bfx-reports-framework/logs"
       SECRET_KEY: ${SECRET_KEY} # Required
       SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
+      NGINX_AUTOINDEX: ${NGINX_AUTOINDEX} # Required
       NODE_ENV: ${NODE_ENV}
 
   express:
@@ -124,6 +125,7 @@ services:
       NGINX_HOST: ${NGINX_HOST} # Required
       NGINX_PORT: ${NGINX_PORT} # Non-required
       NGINX_ENV: ${NGINX_ENV} # Non-required
+      NGINX_AUTOINDEX: ${NGINX_AUTOINDEX} # Required
 
 networks:
   grapes:

@@ -51,7 +51,7 @@ server {
   location /csv {
     auth_request /api/auth;
 
-    autoindex on;
+    autoindex ${NGINX_AUTOINDEX};
     autoindex_format xml;
     xslt_stylesheet /etc/nginx/autoindex-format.xslt path='$uri';
 

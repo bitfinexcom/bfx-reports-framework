@@ -6,6 +6,9 @@ if [ -z "${SECRET_KEY:-}" ]; then
   printf '%s\n' "'SECRET_KEY' environment variable must be exported" >&2
   exit 1
 fi
+if [ "${NGINX_AUTOINDEX:-"production"}" = "development" ]; then
+  enableLogDebug=true
+fi
 
 set -- node "$@" \
   "--wtype" "wrk-report-framework-api" \
@@ -22,6 +25,9 @@ set -- node "$@" \
 
 if [ -n "${SCHEDULER_RULE:-}" ]; then
   set -- "$@" "--schedulerRule" "$SCHEDULER_RULE"
+fi
+if [ "${NGINX_AUTOINDEX:-}" = "on" ]; then
+  set -- "$@" "--remoteCsvUrn" "csv/"
 fi
 
 exec "$@"
