@@ -19,7 +19,7 @@ yesToEverything=0
 
 function usage {
   echo -e "\
-\n${COLOR_GREEN}Usage: $programname [options] [-d] | [-h]${COLOR_BLUE}
+\n${COLOR_GREEN}Usage: $programname [options] [-y] | [-h]${COLOR_BLUE}
 \nOptions:
   -y    With this option, all questions are automatically answered with 'Yes'. \
 In this case, the questions themselves will not be displayed
