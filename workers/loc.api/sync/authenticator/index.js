@@ -4,12 +4,13 @@ const { v4: uuidv4 } = require('uuid')
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
+const {
+  isENetError
+} = require('bfx-report/workers/loc.api/helpers')
 
 const { serializeVal } = require('../dao/helpers')
 const {
-  isSubAccountApiKeys,
-  isEnotfoundError,
-  isEaiAgainError
+  isSubAccountApiKeys
 } = require('../../helpers')
 const {
   UserRemovingError,
@@ -233,10 +234,7 @@ class Authenticator {
         auth: { apiKey, apiSecret }
       })
     } catch (err) {
-      if (
-        !isEnotfoundError(err) &&
-        !isEaiAgainError(err)
-      ) {
+      if (!isENetError(err)) {
         throw err
       }
     }

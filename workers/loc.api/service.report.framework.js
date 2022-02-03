@@ -10,7 +10,8 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
-  getDataFromApi
+  getDataFromApi,
+  isENetError
 } = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
@@ -21,8 +22,6 @@ const {
   checkParams,
   checkParamsAuth,
   isNotSyncRequired,
-  isEnotfoundError,
-  isEaiAgainError,
   collObjToArr,
   getAuthFromSubAccountAuth,
   sumObjectsNumbers,
@@ -193,10 +192,8 @@ class FrameworkReportService extends ReportService {
 
         return true
       } catch (err) {
-        const isServerUnavailable = (
-          isEnotfoundError(err) ||
-          isEaiAgainError(err)
-        )
+        const isServerUnavailable = isENetError(err)
+
         const _err = isServerUnavailable
           ? new ServerAvailabilityError(this._conf.restUrl)
           : err
