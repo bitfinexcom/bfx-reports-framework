@@ -26,7 +26,7 @@ const {
   collObjToArr,
   getAuthFromSubAccountAuth,
   sumObjectsNumbers,
-  sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes,
   pickLowerObjectsNumbers
 } = require('./helpers')
@@ -1096,11 +1096,11 @@ class FrameworkReportService extends ReportService {
       const objRes = {
         trade_vol_30d: sumArrayVolumes(
           'trade_vol_30d', arrRes),
-        fees_trading_30d: sumAllObjectsNumbers(
+        fees_trading_30d: pickAllLowerObjectsNumbers(
           'fees_trading_30d', arrRes),
         fees_trading_total_30d: pickLowerObjectsNumbers(
           'fees_trading_total_30d', arrRes),
-        fees_funding_30d: sumAllObjectsNumbers(
+        fees_funding_30d: pickAllLowerObjectsNumbers(
           'fees_funding_30d', arrRes),
         fees_funding_total_30d: pickLowerObjectsNumbers(
           'fees_funding_total_30d', arrRes),
