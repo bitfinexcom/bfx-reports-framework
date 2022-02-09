@@ -10,6 +10,7 @@ const {
   sumObjectsNumbers,
   pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 } = require('./utils')
 const {
@@ -37,5 +38,6 @@ module.exports = {
   sumObjectsNumbers,
   pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 }

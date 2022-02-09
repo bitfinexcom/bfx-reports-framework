@@ -95,6 +95,33 @@ const pickLowerObjectsNumbers = (propName, objects = []) => {
   }, null)
 }
 
+const pickAllLowerObjectsNumbers = (propName, objects = []) => {
+  return objects.reduce((accum, curr) => {
+    if (typeof curr?.[propName] !== 'object') {
+      return accum
+    }
+
+    const entries = Object.entries(curr[propName])
+
+    return entries.reduce((accum, [key, val]) => {
+      if (!Number.isFinite(val)) {
+        return accum
+      }
+      if (!Number.isFinite(accum?.[key])) {
+        accum[key] = val
+
+        return accum
+      }
+
+      accum[key] = val < accum[key]
+        ? val
+        : accum[key]
+
+      return accum
+    }, accum)
+  }, {})
+}
+
 const sumAllObjectsNumbers = (propName, objects = []) => {
   return objects.reduce((accum, curr) => {
     if (typeof curr?.[propName] !== 'object') {
@@ -182,5 +209,6 @@ module.exports = {
   sumObjectsNumbers,
   pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 }
