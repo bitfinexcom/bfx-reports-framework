@@ -129,3 +129,10 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical
 }
+
+output bfx_reports_framework_pub_ip {
+  value       = aws_eip.bfx_reports_framework_eip.public_ip
+}
+output bfx_reports_framework_pub_dns {
+  value       = aws_eip.bfx_reports_framework_eip.public_dns
+}
