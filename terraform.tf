@@ -41,6 +41,10 @@ resource "aws_instance" "bfx_reports_framework_ubuntu" {
   private_ip = "179.16.10.100"
   subnet_id = aws_subnet.bfx_subnet.id
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = {
     Name = "BFXReportsFrameworkInstance"
   }
