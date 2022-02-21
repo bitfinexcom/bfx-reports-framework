@@ -21,3 +21,7 @@ bfx-report-ui/src
 .env
 scripts/get-docker.sh
 scripts/maintenance/maintenance.on
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
