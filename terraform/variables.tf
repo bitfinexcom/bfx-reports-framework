@@ -10,6 +10,12 @@ variable "aws_secret_key" {
   sensitive = true
 }
 
+variable "secret_key" {
+  type = string
+  description = "Bitfinex Reports Framework Secret Key"
+  sensitive = true
+}
+
 variable "aws_region" {
   type = string
   description = "AWS region"
@@ -27,17 +33,46 @@ variable "env" {
   }
 }
 
+variable "nginx_autoindex" {
+  type = string
+  description = "NGINX autoindex"
+  default = "on"
+
+  validation {
+    condition = contains(["on", "off"], var.nginx_autoindex)
+    error_message = "The nginx_autoindex value must be one of the following \"on\" or \"off\"."
+  }
+}
+
+variable "repo_fork" {
+  type = string
+  description = "Repository fork"
+  default = "bitfinexcom"
+}
+
+variable "repo_branch" {
+  type = string
+  description = "Repository branch"
+  default = "master"
+}
+
+
+variable "nginx_port" {
+  type = number
+  description = "NGINX port"
+  default = 80
+}
+
 variable "aws_instance_type" {
   type = string
   description = "AWS instance type"
-  # default = "t2.medium"
-  default = "t2.micro" # TODO:
+  default = "t2.medium"
 }
 
 variable "allowed_ports" {
   type = list(number)
   description = "Allowed ports"
-  default = [80, 443]
+  default = [80, 443, 22]
 }
 
 variable "aws_instance_detailed_mon" {
