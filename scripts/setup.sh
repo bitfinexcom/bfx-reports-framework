@@ -42,8 +42,6 @@ while getopts "yh" opt; do
   esac
 done
 
-echo "yesToEverything: $yesToEverything"
-
 function askUser {
   if [ $yesToEverything == 1 ]; then
     true
