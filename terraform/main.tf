@@ -17,8 +17,17 @@ resource "aws_instance" "bfx_reports_framework_ubuntu" {
   instance_type = var.aws_instance_type
   monitoring = var.aws_instance_detailed_mon
 
+  user_data = templatefile("setup.sh.tpl", {
+    env = var.env
+    nginx_autoindex = var.nginx_autoindex
+    repo_fork = var.repo_fork
+    repo_branch = var.repo_branch
+    nginx_port = var.nginx_port
+    nginx_host = aws_eip.bfx_reports_framework_eip.public_dns
+    secret_key = var.secret_key # TODO: AWS SSM Parameter Store
+  })
+
   vpc_security_group_ids = [aws_security_group.bfx_sec_gr.id]
-  private_ip = cidrhost(aws_subnet.bfx_subnet.cidr_block, 100)
   subnet_id = aws_subnet.bfx_subnet.id
 
   lifecycle {
@@ -31,10 +40,13 @@ resource "aws_instance" "bfx_reports_framework_ubuntu" {
   )
 }
 
+resource "aws_eip_association" "bfx_reports_framework_eip_assoc" {
+  instance_id   = aws_instance.bfx_reports_framework_ubuntu.id
+  allocation_id = aws_eip.bfx_reports_framework_eip.id
+}
+
 resource "aws_eip" "bfx_reports_framework_eip" {
   vpc = true
-  instance = aws_instance.bfx_reports_framework_ubuntu.id
-  associate_with_private_ip = aws_instance.bfx_reports_framework_ubuntu.private_ip
 
   depends_on = [aws_internet_gateway.bfx_gw]
 
@@ -75,6 +87,7 @@ resource "aws_security_group" "bfx_sec_gr" {
 resource "aws_vpc" "bfx_vpc" {
   cidr_block = var.aws_vpc_cidr
   enable_dns_hostnames = true
+  enable_dns_support = true
 
   tags = merge(
     local.common_tags,
