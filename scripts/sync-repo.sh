@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+set -a
+[ -f .env ] && . .env
+set +a
+
 SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
 ROOT="$(dirname "$SCRIPTPATH")"
 CURRDIR="$PWD"
