@@ -13,7 +13,6 @@ maintenanceFileFlag="$ROOT/scripts/maintenance/maintenance.on"
 cd "$ROOT"
 runningServices=$(docker-compose ps --filter "status=running" --services)
 isNginxRunning=$(echo "$runningServices" | { grep 'nginx' || test $? = 1; } | wc -l)
-cd "$CURRDIR"
 
 touch "$maintenanceFileFlag"
 
@@ -24,3 +23,5 @@ else
 fi
 
 rm -rf "$maintenanceFileFlag"
+
+cd "$CURRDIR"
