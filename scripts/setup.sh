@@ -139,9 +139,14 @@ function setConfig {
   local propName="$2"
   local value="$3"
 
-  sed -i "s/^$propName.*/$propName=$value/g" "$filePath"
+  escapedValue=$(echo $value \
+    | sed 's/\//\\\//g' \
+    | sed 's/\+/\\\+/g' \
+    | sed 's/\./\\\./g')
+
+  sed -i "s/^$propName.*/$propName=$escapedValue/g" "$filePath"
   grep -q "^$propName" "$filePath" \
-    || echo "$propName=$value" >> "$filePath"
+    || echo "$propName=$escapedValue" >> "$filePath"
 }
 
 if ! docker --version; then
