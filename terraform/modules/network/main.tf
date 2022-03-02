@@ -28,7 +28,6 @@ module "vpc" {
 
 resource "aws_eip" "nat_eip" {
   vpc = true
-  count = 1
 
   tags = merge(
     var.common_tags,
