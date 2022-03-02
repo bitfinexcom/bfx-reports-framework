@@ -2,12 +2,13 @@
 
 set -euo pipefail
 
-ROOT="/home/ubuntu/bfx-reports-framework" # TODO:
+USER_NAME="ubuntu"
+HOME="/home/$USER_NAME"
+ROOT="$HOME/bfx-reports-framework"
 
 rm -rf "$ROOT"
 mkdir "$ROOT" 2>/dev/null
-chmod 766 "$ROOT"
-cd "$ROOT"
+chown $USER_NAME:$USER_NAME -R "$ROOT"
 
 envFilePath="$ROOT/.env"
 
@@ -36,6 +37,7 @@ function setConfig {
 
 git clone -b $repoBranch https://github.com/$repoFork/bfx-reports-framework.git "$ROOT"
 
+cd "$ROOT"
 "$ROOT/scripts/setup.sh" "-y"
 setConfig "$envFilePath" "NGINX_AUTOINDEX" $nginxAutoindex
 setConfig "$envFilePath" "REPO_BRANCH" $repoBranch
