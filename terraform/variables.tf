@@ -22,6 +22,12 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 
+variable "namespace" {
+  type = string
+  description = "Namespace"
+  default = "BFX"
+}
+
 variable "env" {
   type = string
   description = "Environment"
@@ -83,8 +89,8 @@ variable "aws_instance_detailed_mon" {
 
 variable "aws_vpc_cidr" {
   type = string
-  description = "A /16 CIDR range definition, such as 179.16.0.0/16, that the VPC will use"
-  default = "179.16.0.0/16"
+  description = "A /16 CIDR range definition, such as 10.11.0.0/16, that the VPC will use"
+  default = "10.11.0.0/16"
 }
 
 variable "common_tags" {
