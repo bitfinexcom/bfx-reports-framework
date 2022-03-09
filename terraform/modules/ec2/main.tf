@@ -5,7 +5,7 @@ resource "aws_instance" "ubuntu" {
 
   user_data = var.user_data
 
-  vpc_security_group_ids = [var.sec_gr_pub_id]
+  vpc_security_group_ids = var.sec_gr_ids
   subnet_id = var.subnet_id
   associate_public_ip_address = true
 

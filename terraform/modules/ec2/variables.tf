@@ -20,9 +20,9 @@ variable "user_data" {
   description = "Setup bash script"
 }
 
-variable "sec_gr_pub_id" {
-  type = string
-  description = "AWS security group ID"
+variable "sec_gr_ids" {
+  type = list
+  description = "AWS security group IDs"
 }
 
 variable "subnet_id" {
@@ -33,6 +33,7 @@ variable "subnet_id" {
 variable "key_name" {
   type = string
   description = "AWS SSH key name"
+  default = null
 }
 
 
