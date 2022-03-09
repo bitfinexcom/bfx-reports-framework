@@ -16,14 +16,18 @@ module "network" {
   source = "./modules/network"
   namespace = var.namespace
   vpc_cidr = var.aws_vpc_cidr
-  common_tags = var.common_tags
+  common_tags = local.common_tags
   allowed_ports = var.allowed_ports
 }
 
-resource "aws_instance" "bfx_reports_framework_ubuntu" {
-  ami = data.aws_ami.ubuntu.id
-  instance_type = var.aws_instance_type
-  monitoring = var.aws_instance_detailed_mon
+module "ec2" {
+  source = "./modules/ec2"
+  namespace = var.namespace
+  aws_instance_type = var.aws_instance_type
+  aws_instance_detailed_mon = var.aws_instance_detailed_mon
+  sec_gr_ids = [module.network.sec_gr_pub_id]
+  subnet_id = module.network.vpc.public_subnets[0]
+  # key_name = "" # TODO:
 
   user_data = templatefile("setup.sh.tpl", {
     env = var.env
@@ -35,34 +39,5 @@ resource "aws_instance" "bfx_reports_framework_ubuntu" {
     secret_key = var.secret_key # TODO: AWS SSM Parameter Store
   })
 
-  vpc_security_group_ids = [module.network.sec_gr_pub_id]
-  subnet_id = module.network.vpc.public_subnets[0]
-  associate_public_ip_address = true
-
-  key_name = aws_key_pair.bfx_ssh_key.key_name
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = merge(
-    local.common_tags,
-    { Name = "BFXReportsFrameworkInstance" }
-  )
-}
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  filter {
-    name = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
-
-  filter {
-    name = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"] # Canonical
+  common_tags = local.common_tags
 }
