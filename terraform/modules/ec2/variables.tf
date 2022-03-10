@@ -39,7 +39,7 @@ variable "subnet_id" {
 variable "key_name" {
   type = string
   description = "AWS SSH key name"
-  default = null
+  default = "bfx-ssh-key"
 }
 
 variable "common_tags" {

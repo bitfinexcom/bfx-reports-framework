@@ -34,6 +34,13 @@ variable "update_version" {
   default = "1.0.0"
 }
 
+
+variable "key_name" {
+  type = string
+  description = "AWS SSH key name"
+  default = "bfx-ssh-key"
+}
+
 variable "env" {
   type = string
   description = "Environment"
