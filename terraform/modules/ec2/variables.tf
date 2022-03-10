@@ -42,7 +42,6 @@ variable "key_name" {
   default = null
 }
 
-
 variable "common_tags" {
   type = map
   description = "Common tags"

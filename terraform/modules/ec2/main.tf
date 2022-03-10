@@ -21,6 +21,30 @@ resource "aws_instance" "ubuntu" {
   )
 }
 
+resource "null_resource" "deploy" {
+  triggers = {
+    version = var.update_version
+  }
+
+  connection {
+    type = "ssh"
+    host = aws_instance.ubuntu.public_ip
+    user = "root" # TODO:
+    port = 22
+    private_key = file("${var.key_name}.pem")
+    agent = true
+  }
+
+  # TODO: need to pass home dir from main entrypoint
+  provisioner "remote-exec" {
+    inline = [
+      "/home/ubuntu/bfx-reports-framework/scripts/deploy.sh"
+    ]
+
+    on_failure = continue
+  }
+}
+
 data "aws_ami" "ubuntu" {
   most_recent = true
 
