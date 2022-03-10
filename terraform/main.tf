@@ -28,7 +28,7 @@ module "ec2" {
   sec_gr_ids = [module.network.sec_gr_pub_id]
   subnet_id = module.network.vpc.public_subnets[0]
   update_version = var.update_version
-  # key_name = "" # TODO:
+  key_name = var.key_name
 
   user_data = templatefile("setup.sh.tpl", {
     env = var.env
@@ -41,4 +41,19 @@ module "ec2" {
   })
 
   common_tags = local.common_tags
+}
+
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+}
+
+resource "local_file" "private_key" {
+  filename          = "${var.key_name}.pem"
+  sensitive_content = tls_private_key.key.private_key_pem
+  file_permission   = "0400"
+}
+
+resource "aws_key_pair" "key_pair" {
+  key_name   = var.key_name
+  public_key = tls_private_key.key.public_key_openssh
 }
