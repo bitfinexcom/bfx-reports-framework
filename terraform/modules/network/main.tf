@@ -47,7 +47,6 @@ resource "aws_security_group" "sec_gr_pub" {
       to_port = ingress.value
       protocol = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
-      # cidr_blocks = [var.vpc_cidr]
     }
   }
 
