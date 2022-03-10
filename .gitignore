@@ -25,3 +25,4 @@ scripts/maintenance/maintenance.on
 terraform.tfstate
 terraform.tfstate.backup
 terraform.tfvars
+terraform/bfx-ssh-key.pem
