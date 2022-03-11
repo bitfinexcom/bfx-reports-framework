@@ -38,6 +38,7 @@ function setConfig {
 git clone -b $repoBranch https://github.com/$repoFork/bfx-reports-framework.git "$ROOT"
 
 cd "$ROOT"
+export REPO_BRANCH="$repoBranch"
 "$ROOT/scripts/setup.sh" "-y"
 setConfig "$envFilePath" "NGINX_AUTOINDEX" $nginxAutoindex
 setConfig "$envFilePath" "REPO_BRANCH" $repoBranch

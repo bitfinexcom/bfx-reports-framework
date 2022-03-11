@@ -2,10 +2,6 @@
 
 set -euo pipefail
 
-set -a
-[ -f .env ] && . .env
-set +a
-
 SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
 ROOT="$(dirname "$SCRIPTPATH")"
 CURRDIR="$PWD"
@@ -14,6 +10,12 @@ COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
+
+dotEnvFilePath="$ROOT/.env"
+
+set -a
+[ -f "$dotEnvFilePath" ] && . "$dotEnvFilePath"
+set +a
 
 programname=$0
 uiSubmoduleName=bfx-report-ui

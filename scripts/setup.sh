@@ -88,7 +88,7 @@ function askUserAboutBranch {
   local betaptrn="^$betaBranch$"
 
   if [ $yesToEverything == 1 ]; then
-    echo "$masterBranch"
+    echo "${REPO_BRANCH:-"$masterBranch"}"
     return
   fi
 
