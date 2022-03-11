@@ -42,6 +42,12 @@ variable "key_name" {
   default = "bfx-ssh-key"
 }
 
+variable "private_key" {
+  type = string
+  description = "AWS SSH private key"
+  sensitive = true
+}
+
 variable "common_tags" {
   type = map
   description = "Common tags"

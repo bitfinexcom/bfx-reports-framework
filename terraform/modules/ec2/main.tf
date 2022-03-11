@@ -31,7 +31,7 @@ resource "null_resource" "deploy" {
     host = aws_instance.ubuntu.public_ip
     user = "ubuntu"
     port = 22
-    private_key = file("${var.key_name}.pem")
+    private_key = var.private_key
     agent = true
   }
 
