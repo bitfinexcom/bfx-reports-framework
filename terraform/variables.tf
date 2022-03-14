@@ -10,12 +10,6 @@ variable "aws_secret_key" {
   sensitive = true
 }
 
-variable "secret_key" {
-  type = string
-  description = "Bitfinex Reports Framework Secret Key"
-  sensitive = true
-}
-
 variable "aws_region" {
   type = string
   description = "AWS region"
