@@ -48,6 +48,18 @@ variable "private_key" {
   sensitive = true
 }
 
+variable "user_name" {
+  type = string
+  description = "AWS EC2 user name"
+  default = "ubuntu"
+}
+
+variable "root_dir" {
+  type = string
+  description = "AWS EC2 root dir"
+  default = "project"
+}
+
 variable "common_tags" {
   type = map
   description = "Common tags"

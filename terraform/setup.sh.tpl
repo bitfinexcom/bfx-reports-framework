@@ -2,9 +2,8 @@
 
 set -euo pipefail
 
-USER_NAME="ubuntu"
-HOME="/home/$USER_NAME"
-ROOT="$HOME/bfx-reports-framework"
+USER_NAME="${user_name}"
+ROOT="${root_dir}"
 
 rm -rf "$ROOT"
 mkdir "$ROOT" 2>/dev/null

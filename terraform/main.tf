@@ -10,6 +10,9 @@ locals {
     var.common_tags,
     { Environment = var.env }
   )
+
+  ec2_user_name = "ubuntu"
+  ec2_root_dir = "/home/${local.ec2_user_name}/bfx-reports-framework"
 }
 
 module "network" {
@@ -30,8 +33,12 @@ module "ec2" {
   update_version = var.update_version
   key_name = module.ssh_key.key_name
   private_key = module.ssh_key.private_key
+  user_name = local.ec2_user_name
+  root_dir = local.ec2_root_dir
 
   user_data = templatefile("setup.sh.tpl", {
+    user_name = local.ec2_user_name
+    root_dir = local.ec2_root_dir
     env = var.env
     nginx_autoindex = var.nginx_autoindex
     repo_fork = var.repo_fork

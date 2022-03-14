@@ -29,16 +29,15 @@ resource "null_resource" "deploy" {
   connection {
     type = "ssh"
     host = aws_instance.ubuntu.public_ip
-    user = "ubuntu"
+    user = var.user_name
     port = 22
     private_key = var.private_key
     agent = true
   }
 
-  # TODO: need to pass home dir from main entrypoint
   provisioner "remote-exec" {
     inline = [
-      "sudo /home/ubuntu/bfx-reports-framework/scripts/deploy.sh"
+      "sudo ${var.root_dir}/scripts/deploy.sh"
     ]
 
     on_failure = continue
