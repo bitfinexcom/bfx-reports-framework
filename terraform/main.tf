@@ -38,7 +38,7 @@ module "ec2" {
     repo_branch = var.repo_branch
     nginx_port = var.nginx_port
     nginx_host = module.network.public_dns
-    secret_key = var.secret_key # TODO: AWS SSM Parameter Store
+    secret_key = data.aws_ssm_parameter.secret_key.value
   })
 
   common_tags = local.common_tags
@@ -47,4 +47,30 @@ module "ec2" {
 module "ssh_key" {
   source = "./modules/ssh_key"
   key_name = var.key_name
+}
+
+resource "random_password" "secret_key" {
+  length = 512
+  special = false
+  number = true
+  lower = true
+  upper = false
+}
+
+resource "aws_ssm_parameter" "secret_key" {
+  name = "/${var.env}/encryption/secret_key"
+  description = "Encryption secret key"
+  type = "SecureString"
+  value = random_password.secret_key.result
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.namespace}_SecretKey" }
+  )
+}
+
+data "aws_ssm_parameter" "secret_key" {
+  name = "/${var.env}/encryption/secret_key"
+
+  depends_on = [aws_ssm_parameter.secret_key]
 }
