@@ -11,10 +11,6 @@ resource "aws_instance" "ubuntu" {
 
   key_name = var.key_name
 
-  lifecycle {
-    create_before_destroy = true
-  }
-
   tags = merge(
     var.common_tags,
     { Name = "${var.namespace}_Instance" }
@@ -42,6 +38,26 @@ resource "null_resource" "deploy" {
 
     on_failure = continue
   }
+}
+
+resource "aws_ebs_volume" "ebs-volume-1" {
+  availability_zone = aws_instance.ubuntu.availability_zone
+  size = 10 # TODO: move to var
+  type = "gp3" # TODO: move to var
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.namespace}_Volume" }
+  )
+}
+
+resource "aws_volume_attachment" "ebs-volume-1-attachment" {
+  device_name = var.db_volume_device_name
+  volume_id = aws_ebs_volume.ebs-volume-1.id
+  instance_id = aws_instance.ubuntu.id
+  skip_destroy = false
+  # stop_instance_before_detaching = true
+  # force_detach = true
 }
 
 data "aws_ami" "ubuntu" {

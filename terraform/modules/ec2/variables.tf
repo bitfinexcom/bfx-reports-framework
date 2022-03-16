@@ -60,6 +60,12 @@ variable "root_dir" {
   default = "project"
 }
 
+variable "db_volume_device_name" {
+  type = string
+  description = "DB volume device name"
+  default = "/dev/xvdf"
+}
+
 variable "common_tags" {
   type = map
   description = "Common tags"
