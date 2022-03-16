@@ -12,10 +12,6 @@ const {
   sumArrayVolumes
 } = require('./utils')
 const {
-  isEnotfoundError,
-  isEaiAgainError
-} = require('./api-errors-testers')
-const {
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth
@@ -28,8 +24,6 @@ module.exports = {
   collObjToArr,
   getDateString,
   isNotSyncRequired,
-  isEnotfoundError,
-  isEaiAgainError,
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth,
