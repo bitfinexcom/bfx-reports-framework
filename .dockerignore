@@ -1,0 +1,9 @@
+.vscode
+**/node_modules
+**/.env
+**/.env.example
+**/.git
+test
+bfx-report-ui/build
+*Dockerfile*
+*docker-compose*
