@@ -250,7 +250,7 @@ class WSTransport {
     )
   }
 
-  _sendToOne (socket, sid, action, err, result = null) {
+  _sendToOne (socket, action, err, result = null) {
     this.responder(
       () => {
         if (err) {
@@ -263,7 +263,7 @@ class WSTransport {
       {},
       (err, res) => {
         const _res = this.transport.format(
-          [sid, err, { ...res, action }]
+          [null, err, { ...res, action }]
         )
 
         socket.send(_res)
@@ -326,9 +326,9 @@ class WSTransport {
           continue
         }
 
-        this._sendToOne(socket, sid, action, null, res)
+        this._sendToOne(socket, action, null, res)
       } catch (err) {
-        this._sendToOne(socket, sid, action, err)
+        this._sendToOne(socket, action, err)
       }
     }
 
