@@ -8,7 +8,9 @@ const {
   getDateString,
   isNotSyncRequired,
   sumObjectsNumbers,
+  pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 } = require('./utils')
 const {
@@ -28,6 +30,8 @@ module.exports = {
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth,
   sumObjectsNumbers,
+  pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 }
