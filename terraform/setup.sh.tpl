@@ -4,12 +4,36 @@ set -euo pipefail
 
 USER_NAME="${user_name}"
 ROOT="${root_dir}"
+DB_VOLUME_DEVICE_NAME="${db_volume_device_name}"
+
+dbFolderPath="$ROOT/db"
+envFilePath="$ROOT/.env"
 
 rm -rf "$ROOT"
 mkdir "$ROOT" 2>/dev/null
 chown $USER_NAME:$USER_NAME -R "$ROOT"
 
-envFilePath="$ROOT/.env"
+git clone -b $repoBranch https://github.com/$repoFork/bfx-reports-framework.git "$ROOT"
+
+fsType="cannot"
+
+while [[ "$fsType" = "cannot" ]]; do
+  fsType=$(file -s $DB_VOLUME_DEVICE_NAME | awk '{print $2}')
+
+  if [ "$fsType" = "cannot" ]; then
+    sleep 5
+  fi
+done
+
+if [ "$fsType" = "data" ]; then
+  echo "Creating file system on $DB_VOLUME_DEVICE_NAME"
+  mkfs -t ext4 $DB_VOLUME_DEVICE_NAME
+fi
+
+mkdir "$dbFolderPath" 2>/dev/null
+mount "$DB_VOLUME_DEVICE_NAME" "$dbFolderPath"
+BLK_ID=$(blkid $DB_VOLUME_DEVICE_NAME | cut -f2 -d" ")
+echo "$BLK_ID   $dbFolderPath   ext4   defaults   0   2" | tee --append /etc/fstab
 
 env="${env}"
 nginxAutoindex="${nginx_autoindex}"
@@ -33,8 +57,6 @@ function setConfig {
   grep -q "^$propName" "$filePath" \
     || echo "$propName=$escapedValue" >> "$filePath"
 }
-
-git clone -b $repoBranch https://github.com/$repoFork/bfx-reports-framework.git "$ROOT"
 
 cd "$ROOT"
 export REPO_BRANCH="$repoBranch"

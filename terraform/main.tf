@@ -6,6 +6,7 @@ locals {
 
   ec2_user_name = "ubuntu"
   ec2_root_dir = "/home/${local.ec2_user_name}/bfx-reports-framework"
+  db_volume_device_name = "/dev/xvdf" # TODO: move to var
 }
 
 module "network" {
@@ -28,6 +29,7 @@ module "ec2" {
   private_key = module.ssh_key.private_key
   user_name = local.ec2_user_name
   root_dir = local.ec2_root_dir
+  db_volume_device_name = local.db_volume_device_name
 
   user_data = templatefile("setup.sh.tpl", {
     user_name = local.ec2_user_name
@@ -39,6 +41,7 @@ module "ec2" {
     nginx_port = var.nginx_port
     nginx_host = module.network.public_dns
     secret_key = data.aws_ssm_parameter.secret_key.value
+    db_volume_device_name = local.db_volume_device_name
   })
 
   common_tags = local.common_tags
