@@ -45,6 +45,12 @@ variable "env" {
   }
 }
 
+variable "db_volume_device_name" {
+  type = string
+  description = "DB volume device name"
+  default = "/dev/xvdf"
+}
+
 variable "nginx_autoindex" {
   type = string
   description = "NGINX autoindex"
