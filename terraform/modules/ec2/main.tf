@@ -40,8 +40,9 @@ resource "null_resource" "deploy" {
 
 resource "aws_ebs_volume" "ebs-volume-1" {
   availability_zone = aws_instance.ubuntu.availability_zone
-  size = 10 # TODO: move to var
-  type = "gp3" # TODO: move to var
+  size = var.db_volume_size
+  type = var.db_volume_type
+  encrypted = var.is_db_volume_encrypted
 
   tags = merge(
     var.common_tags,

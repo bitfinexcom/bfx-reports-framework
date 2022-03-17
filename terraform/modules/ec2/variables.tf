@@ -66,6 +66,24 @@ variable "db_volume_device_name" {
   default = "/dev/xvdf"
 }
 
+variable "db_volume_size" {
+  type = number
+  description = "DB volume size in Gb"
+  default = 10
+}
+
+variable "db_volume_type" {
+  type = string
+  description = "DB volume type, see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume#type"
+  default = "gp3"
+}
+
+variable "is_db_volume_encrypted" {
+  type = bool
+  description = "Is DB volume encrypted"
+  default = true
+}
+
 variable "common_tags" {
   type = map
   description = "Common tags"
