@@ -16,6 +16,7 @@ COLOR_NORMAL="\033[39m"
 
 programname=$0
 yesToEverything=0
+isDBFoldedRemoved=1
 
 function usage {
   echo -e "\
@@ -23,13 +24,15 @@ function usage {
 \nOptions:
   -y    With this option, all questions are automatically answered with 'Yes'. \
 In this case, the questions themselves will not be displayed
+  -n    Don't remove files of DBs
   -h    Display help\
 ${COLOR_NORMAL}" 1>&2
 }
 
-while getopts "yh" opt; do
+while getopts "ynh" opt; do
   case "${opt}" in
     y) yesToEverything=1;;
+    n) isDBFoldedRemoved=0;;
     h)
       usage
       exit 0
@@ -193,7 +196,9 @@ Are you sure?\
   mkdir "$ROOT/logs" 2>/dev/null
   mkdir "$ROOT/csv" 2>/dev/null
 
-  find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
+  if [ $isDBFoldedRemoved == 1 ]; then
+    find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
+  fi
 fi
 
 secretKey=$({ dd if=/dev/urandom bs=256 count=1 || test $? = 1; } 2>/dev/null | od -A n -t x | tr -d '\n| ')

@@ -63,7 +63,7 @@ function setConfig {
 
 cd "$ROOT"
 export REPO_BRANCH="$repoBranch"
-"$ROOT/scripts/setup.sh" "-y"
+"$ROOT/scripts/setup.sh" "-yn"
 setConfig "$envFilePath" "NODE_ENV" $env
 setConfig "$envFilePath" "UI_ENV" $env
 setConfig "$envFilePath" "NGINX_ENV" $env

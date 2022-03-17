@@ -123,6 +123,7 @@ Usage: ./scripts/setup.sh [options] [-d] | [-h]
 
 Options:
   -y    With this option, all questions are automatically answered with 'Yes'. In this case, the questions themselves will not be displayed
+  -n    Don't remove files of DBs
   -h    Display help
 ```
 
