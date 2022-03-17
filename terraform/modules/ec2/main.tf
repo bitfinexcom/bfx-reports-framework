@@ -33,10 +33,8 @@ resource "null_resource" "deploy" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo ${var.root_dir}/scripts/deploy.sh"
+      "if [ -f \"${var.root_dir}/READY\" ]; then sudo \"${var.root_dir}/scripts/deploy.sh\"; fi"
     ]
-
-    on_failure = continue
   }
 }
 
@@ -56,8 +54,8 @@ resource "aws_volume_attachment" "ebs-volume-1-attachment" {
   volume_id = aws_ebs_volume.ebs-volume-1.id
   instance_id = aws_instance.ubuntu.id
   skip_destroy = false
-  # stop_instance_before_detaching = true
-  # force_detach = true
+  stop_instance_before_detaching = true
+  force_detach = true
 }
 
 data "aws_ami" "ubuntu" {

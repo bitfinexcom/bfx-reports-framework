@@ -74,3 +74,4 @@ setConfig "$envFilePath" "NGINX_HOST" $nginxHost
 setConfig "$envFilePath" "SECRET_KEY" $secretKey
 
 "$ROOT/scripts/deploy.sh"
+touch "$ROOT/READY"
