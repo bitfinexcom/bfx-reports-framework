@@ -14,6 +14,7 @@ module "network" {
   vpc_cidr = var.aws_vpc_cidr
   common_tags = local.common_tags
   allowed_ports = var.allowed_ports
+  azs = data.aws_availability_zones.available.names
 }
 
 module "ec2" {
@@ -29,6 +30,7 @@ module "ec2" {
   user_name = local.ec2_user_name
   root_dir = local.ec2_root_dir
   db_volume_device_name = var.db_volume_device_name
+  az = data.aws_availability_zones.available.names[0]
 
   user_data = templatefile("setup.sh.tpl", {
     user_name = local.ec2_user_name
@@ -76,3 +78,5 @@ data "aws_ssm_parameter" "secret_key" {
 
   depends_on = [aws_ssm_parameter.secret_key]
 }
+
+data "aws_availability_zones" "available" {}
