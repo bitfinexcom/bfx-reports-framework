@@ -1,3 +1,7 @@
+locals {
+  availability_zone = length(regexall("^[a-z]{2}-", var.az)) > 0 ? var.az : null
+}
+
 resource "aws_instance" "ubuntu" {
   ami = data.aws_ami.ubuntu.id
   instance_type = var.aws_instance_type
@@ -5,6 +9,7 @@ resource "aws_instance" "ubuntu" {
 
   user_data = var.user_data
 
+  availability_zone = local.availability_zone
   vpc_security_group_ids = var.sec_gr_ids
   subnet_id = var.subnet_id
   associate_public_ip_address = true
@@ -39,7 +44,7 @@ resource "null_resource" "deploy" {
 }
 
 resource "aws_ebs_volume" "ebs-volume-1" {
-  availability_zone = aws_instance.ubuntu.availability_zone
+  availability_zone = local.availability_zone
   size = var.db_volume_size
   type = var.db_volume_type
   encrypted = var.is_db_volume_encrypted

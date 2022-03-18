@@ -31,6 +31,12 @@ variable "sec_gr_ids" {
   description = "AWS security group IDs"
 }
 
+variable "az" {
+  type = string
+  description = "Available zone name in the region"
+  default = null
+}
+
 variable "subnet_id" {
   type = string
   description = "AWS subnet ID"
