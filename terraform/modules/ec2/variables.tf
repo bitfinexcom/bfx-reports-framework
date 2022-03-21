@@ -90,6 +90,12 @@ variable "is_db_volume_encrypted" {
   default = true
 }
 
+variable "ssh_connect_script_name" {
+  type = string
+  description = "SSH connect script name"
+  default = "ssh-connect.sh"
+}
+
 variable "common_tags" {
   type = map
   description = "Common tags"

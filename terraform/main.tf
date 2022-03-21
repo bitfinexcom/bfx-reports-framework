@@ -19,6 +19,7 @@ module "network" {
 
 module "ec2" {
   source = "./modules/ec2"
+  ssh_connect_script_name = "worker-connect.sh"
   namespace = var.namespace
   aws_instance_type = var.aws_instance_type
   aws_instance_detailed_mon = var.aws_instance_detailed_mon
