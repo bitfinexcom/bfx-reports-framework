@@ -22,6 +22,20 @@ resource "aws_instance" "ubuntu" {
   )
 }
 
+resource "local_sensitive_file" "private_key" {
+  filename = "${var.ssh_connect_script_name}"
+
+  content = <<EOF
+#!/bin/bash
+
+set -euxo pipefail
+
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.key_name}.pem" ${var.user_name}@${aws_instance.ubuntu.public_dns}
+EOF
+
+  file_permission = "0754"
+}
+
 resource "null_resource" "deploy" {
   triggers = {
     version = var.update_version
