@@ -41,7 +41,7 @@ module "ec2" {
     repo_branch = var.repo_branch
     nginx_port = var.nginx_port
     nginx_host = module.network.public_dns
-    secret_key = data.aws_ssm_parameter.secret_key.value
+    secret_key = module.ssm_param_secret_key.sec_string
     db_volume_device_name = var.db_volume_device_name
   })
 
@@ -53,30 +53,13 @@ module "ssh_key" {
   key_name = var.key_name
 }
 
-resource "random_password" "secret_key" {
+module "ssm_param_secret_key" {
+  source = "./modules/ssm_random_sec_param"
+  namespace = var.namespace
+  env = var.env
+  name = "secret_key"
   length = 512
-  special = false
-  number = true
-  lower = true
-  upper = false
-}
-
-resource "aws_ssm_parameter" "secret_key" {
-  name = "/${var.env}/encryption/secret_key"
-  description = "Encryption secret key"
-  type = "SecureString"
-  value = random_password.secret_key.result
-
-  tags = merge(
-    var.common_tags,
-    { Name = "${var.namespace}_SecretKey" }
-  )
-}
-
-data "aws_ssm_parameter" "secret_key" {
-  name = "/${var.env}/encryption/secret_key"
-
-  depends_on = [aws_ssm_parameter.secret_key]
+  common_tags = local.common_tags
 }
 
 data "aws_availability_zones" "available" {}
