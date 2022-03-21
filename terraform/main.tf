@@ -30,8 +30,11 @@ module "ec2" {
   private_key = module.ssh_key.private_key
   user_name = local.ec2_user_name
   root_dir = local.ec2_root_dir
-  db_volume_device_name = var.db_volume_device_name
   az = data.aws_availability_zones.available.names[0]
+  db_volume_device_name = var.db_volume_device_name
+  db_volume_size = var.db_volume_size
+  db_volume_type = var.db_volume_type
+  is_db_volume_encrypted = var.is_db_volume_encrypted
 
   user_data = templatefile("setup.sh.tpl", {
     user_name = local.ec2_user_name
