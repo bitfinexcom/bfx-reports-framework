@@ -26,5 +26,6 @@ terraform.tfstate
 terraform.tfstate.backup
 terraform.tfvars
 terraform/bfx-ssh-key.pem
+terraform/worker-connect.sh
 .terraform.tfstate.lock.info
 READY
