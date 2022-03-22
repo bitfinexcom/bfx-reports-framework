@@ -69,6 +69,18 @@ variable "is_db_volume_encrypted" {
   default = true
 }
 
+variable "customer_master_key_spec" {
+  type = string
+  description = "Key specs for KMS keys"
+  default = "SYMMETRIC_DEFAULT"
+}
+
+variable "enable_key_rotation" {
+  type = bool
+  description = "Specifies whether key rotation is enabled, AWS KMS supports automatic key rotation only for symmetric KMS keys"
+  default = true
+}
+
 variable "nginx_autoindex" {
   type = string
   description = "NGINX autoindex"

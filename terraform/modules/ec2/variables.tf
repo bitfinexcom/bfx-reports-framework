@@ -90,6 +90,12 @@ variable "is_db_volume_encrypted" {
   default = true
 }
 
+variable "kms_key_arn" {
+  type = string
+  description = "Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume"
+  default = null
+}
+
 variable "ssh_connect_script_name" {
   type = string
   description = "SSH connect script name"

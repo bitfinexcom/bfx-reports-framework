@@ -35,6 +35,7 @@ module "ec2" {
   db_volume_size = var.db_volume_size
   db_volume_type = var.db_volume_type
   is_db_volume_encrypted = var.is_db_volume_encrypted
+  kms_key_arn = module.kms_key.kms_key_arn
 
   user_data = templatefile("setup.sh.tpl", {
     user_name = local.ec2_user_name
@@ -55,6 +56,17 @@ module "ec2" {
 module "ssh_key" {
   source = "./modules/ssh_key"
   key_name = var.key_name
+}
+
+module "kms_key" {
+  source = "./modules/kms_key"
+  namespace = var.namespace
+  customer_master_key_spec = var.customer_master_key_spec
+  # AWS KMS supports automatic key rotation only for symmetric KMS keys
+  # https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html
+  enable_key_rotation = var.enable_key_rotation
+
+  common_tags = local.common_tags
 }
 
 module "ssm_param_secret_key" {

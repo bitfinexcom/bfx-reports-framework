@@ -57,12 +57,12 @@ resource "null_resource" "deploy" {
   }
 }
 
-resource "aws_ebs_volume" "ebs-volume-1" {
+resource "aws_ebs_volume" "ebs_volume_1" {
   availability_zone = local.availability_zone
   size = var.db_volume_size
   type = var.db_volume_type
   encrypted = var.is_db_volume_encrypted
-  kms_key_id = var.is_db_volume_encrypted ? aws_kms_key.kms_key.arn : null
+  kms_key_id = var.is_db_volume_encrypted ? var.kms_key_arn : null
 
   tags = merge(
     var.common_tags,
@@ -70,9 +70,9 @@ resource "aws_ebs_volume" "ebs-volume-1" {
   )
 }
 
-resource "aws_volume_attachment" "ebs-volume-1-attachment" {
+resource "aws_volume_attachment" "ebs_volume_1_attachment" {
   device_name = var.db_volume_device_name
-  volume_id = aws_ebs_volume.ebs-volume-1.id
+  volume_id = aws_ebs_volume.ebs_volume_1.id
   instance_id = aws_instance.ubuntu.id
   skip_destroy = false
   stop_instance_before_detaching = true
@@ -93,97 +93,4 @@ data "aws_ami" "ubuntu" {
   }
 
   owners = ["099720109477"] # Canonical
-}
-
-
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_policy_document" "kms_key" {
-  statement {
-    sid = "1"
-
-    principals {
-      type = "AWS"
-      identifiers = [
-        data.aws_caller_identity.current.arn
-      ]
-    }
-
-    actions = [
-      "kms:CreateGrant",
-      "kms:Decrypt",
-      "kms:Describe*",
-      "kms:Encrypt",
-      "kms:GenerateDataKey*",
-      "kms:ReEncrypt*"
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
-
-  statement {
-
-    principals {
-      type = "AWS"
-      identifiers = [
-        data.aws_caller_identity.current.arn
-      ]
-    }
-
-    actions = [
-      "kms:CreateGrant",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-    condition {
-      test     = "Bool"
-      variable = "kms:GrantIsForAWSResource"
-
-      values = [
-        true
-      ]
-    }
-  }
-
-  statement {
-
-    principals {
-      type = "AWS"
-      identifiers = [
-        data.aws_caller_identity.current.arn
-      ]
-    }
-
-    actions = [
-      "kms:Create*",
-      "kms:Describe*",
-      "kms:Enable*",
-      "kms:List*",
-      "kms:Put*",
-      "kms:Update*",
-      "kms:Revoke*",
-      "kms:Disable*",
-      "kms:Get*",
-      "kms:Delete*",
-      "kms:ScheduleKeyDeletion",
-      "kms:CancelKeyDeletion"
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
-}
-
-# TODO: need to move to separate module
-resource "aws_kms_key" "kms_key" {
-  description = "General KMS key used for all resources in account"
-  enable_key_rotation = true
-  is_enabled = true
-  policy = data.aws_iam_policy_document.kms_key.json
 }
