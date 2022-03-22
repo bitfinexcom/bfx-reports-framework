@@ -3,6 +3,11 @@ variable "namespace" {
   default = "Custom"
 }
 
+variable "user_arn" {
+  type = string
+  description = "Amazon Resource Name (ARN) of the current caller"
+}
+
 variable "customer_master_key_spec" {
   type = string
   description = "Key specs for KMS keys"

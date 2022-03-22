@@ -65,6 +65,7 @@ module "kms_key" {
   # AWS KMS supports automatic key rotation only for symmetric KMS keys
   # https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html
   enable_key_rotation = var.enable_key_rotation
+  user_arn = data.aws_caller_identity.current.arn
 
   common_tags = local.common_tags
 }
@@ -79,3 +80,4 @@ module "ssm_param_secret_key" {
 }
 
 data "aws_availability_zones" "available" {}
+data "aws_caller_identity" "current" {}

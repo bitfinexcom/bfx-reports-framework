@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "kms_key" {
     principals {
       type = "AWS"
       identifiers = [
-        data.aws_caller_identity.current.arn
+        var.user_arn
       ]
     }
 
@@ -43,7 +43,7 @@ data "aws_iam_policy_document" "kms_key" {
     principals {
       type = "AWS"
       identifiers = [
-        data.aws_caller_identity.current.arn
+        var.user_arn
       ]
     }
 
@@ -70,7 +70,7 @@ data "aws_iam_policy_document" "kms_key" {
     principals {
       type = "AWS"
       identifiers = [
-        data.aws_caller_identity.current.arn
+        var.user_arn
       ]
     }
 
@@ -94,6 +94,3 @@ data "aws_iam_policy_document" "kms_key" {
     ]
   }
 }
-
-# TODO: move to upper main.tf
-data "aws_caller_identity" "current" {}
