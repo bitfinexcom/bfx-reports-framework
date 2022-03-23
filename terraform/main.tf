@@ -36,6 +36,7 @@ module "ec2" {
   db_volume_type = var.db_volume_type
   is_db_volume_encrypted = var.is_db_volume_encrypted
   kms_key_arn = module.kms_key.kms_key_arn
+  secret_key = module.ssm_param_secret_key.sec_string
 
   user_data = templatefile("setup.sh.tpl", {
     user_name = local.ec2_user_name
@@ -46,7 +47,6 @@ module "ec2" {
     repo_branch = var.repo_branch
     nginx_port = var.nginx_port
     nginx_host = module.network.public_dns
-    secret_key = module.ssm_param_secret_key.sec_string
     db_volume_device_name = var.db_volume_device_name
   })
 

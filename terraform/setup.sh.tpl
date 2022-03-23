@@ -15,7 +15,6 @@ repoFork="${repo_fork}"
 repoBranch="${repo_branch}"
 nginxPort="${nginx_port}"
 nginxHost="${nginx_host}"
-secretKey="${secret_key}"
 
 rm -rf "$ROOT"
 mkdir -p "$ROOT" 2>/dev/null
@@ -71,7 +70,6 @@ setConfig "$envFilePath" "NGINX_AUTOINDEX" $nginxAutoindex
 setConfig "$envFilePath" "REPO_BRANCH" $repoBranch
 setConfig "$envFilePath" "NGINX_PORT" $nginxPort
 setConfig "$envFilePath" "NGINX_HOST" $nginxHost
-setConfig "$envFilePath" "SECRET_KEY" $secretKey
+setConfig "$envFilePath" "SECRET_KEY" ""
 
-"$ROOT/scripts/deploy.sh"
 touch "$ROOT/READY"
