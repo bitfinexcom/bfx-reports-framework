@@ -1,5 +1,6 @@
 locals {
   availability_zone = length(regexall("^[a-z]{2}-", var.az)) > 0 ? var.az : null
+  secret_key = nonsensitive(var.secret_key)
 }
 
 resource "aws_instance" "ubuntu" {
@@ -52,7 +53,10 @@ resource "null_resource" "deploy" {
 
   provisioner "remote-exec" {
     inline = [
-      "if [ -f \"${var.root_dir}/READY\" ]; then sudo \"${var.root_dir}/scripts/deploy.sh\"; fi"
+      "echo \"Waiting for cloud-init...\"",
+      "cloud-init status --wait > /dev/null 2>&1",
+      "if [ -f \"${var.root_dir}/READY\" ]; then sudo \"${var.root_dir}/scripts/deploy.sh\" SECRET_KEY=${local.secret_key}; fi",
+      "if ! [ -f \"${var.root_dir}/READY\" ]; then echo \"The bash setup script has not been finished successfully!\"; fi"
     ]
   }
 }

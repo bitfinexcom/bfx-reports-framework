@@ -26,6 +26,12 @@ variable "user_data" {
   description = "Setup bash script"
 }
 
+variable "secret_key" {
+  type = string
+  description = "User Secret Key for encription"
+  sensitive = true
+}
+
 variable "sec_gr_ids" {
   type = list
   description = "AWS security group IDs"
