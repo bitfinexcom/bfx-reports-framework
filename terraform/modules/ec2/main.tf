@@ -39,7 +39,7 @@ EOF
 
 resource "null_resource" "deploy" {
   triggers = {
-    version = "${var.update_version}_${uuid()}"
+    version = "${var.update_version}_${timestamp()}"
   }
 
   connection {
