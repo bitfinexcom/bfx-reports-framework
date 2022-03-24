@@ -15,6 +15,11 @@ variable "aws_instance_type" {
   default = "t2.medium"
 }
 
+variable "aws_eip_id" {
+  type = string
+  description = "AWS EIP ID"
+}
+
 variable "aws_instance_detailed_mon" {
   type = bool
   description = "AWS instance detailed monitoring"

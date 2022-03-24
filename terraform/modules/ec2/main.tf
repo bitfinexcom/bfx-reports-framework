@@ -13,7 +13,6 @@ resource "aws_instance" "ubuntu" {
   availability_zone = local.availability_zone
   vpc_security_group_ids = var.sec_gr_ids
   subnet_id = var.subnet_id
-  associate_public_ip_address = true
 
   key_name = var.key_name
 
@@ -44,7 +43,7 @@ resource "null_resource" "deploy" {
 
   connection {
     type = "ssh"
-    host = aws_instance.ubuntu.public_ip
+    host = aws_eip_association.eip_assoc.public_ip
     user = var.user_name
     port = 22
     private_key = var.private_key
@@ -81,6 +80,11 @@ resource "aws_volume_attachment" "ebs_volume_1_attachment" {
   skip_destroy = false
   stop_instance_before_detaching = true
   force_detach = true
+}
+
+resource "aws_eip_association" "eip_assoc" {
+  instance_id = aws_instance.ubuntu.id
+  allocation_id = var.aws_eip_id
 }
 
 data "aws_ami" "ubuntu" {
