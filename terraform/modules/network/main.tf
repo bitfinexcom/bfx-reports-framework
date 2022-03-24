@@ -34,6 +34,15 @@ resource "aws_eip" "nat_eip" {
   )
 }
 
+resource "aws_eip" "instance" {
+  vpc = true
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.namespace}_Instance_EIP" }
+  )
+}
+
 resource "aws_security_group" "sec_gr_pub" {
   name = "${var.namespace}_SecurityGroup"
   description = "Allow traffic"
