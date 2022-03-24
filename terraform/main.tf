@@ -37,6 +37,7 @@ module "ec2" {
   is_db_volume_encrypted = var.is_db_volume_encrypted
   kms_key_arn = module.kms_key.kms_key_arn
   secret_key = module.ssm_param_secret_key.sec_string
+  aws_eip_id = module.network.instance_eip.id
 
   user_data = templatefile("setup.sh.tpl", {
     user_name = local.ec2_user_name
@@ -46,7 +47,7 @@ module "ec2" {
     repo_fork = var.repo_fork
     repo_branch = var.repo_branch
     nginx_port = var.nginx_port
-    nginx_host = module.network.public_dns
+    nginx_host = module.network.instance_eip.public_dns
     db_volume_device_name = var.db_volume_device_name
   })
 
