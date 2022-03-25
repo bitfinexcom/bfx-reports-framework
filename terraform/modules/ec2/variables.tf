@@ -3,12 +3,6 @@ variable "namespace" {
   default = "Custom"
 }
 
-variable "update_version" {
-  type = string
-  description = "App update version used to launch deploy script, when the version is increased"
-  default = "1.0.0"
-}
-
 variable "aws_instance_type" {
   type = string
   description = "AWS instance type"

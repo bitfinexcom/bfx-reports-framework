@@ -25,7 +25,6 @@ module "ec2" {
   aws_instance_detailed_mon = var.aws_instance_detailed_mon
   sec_gr_ids = [module.network.sec_gr_pub_id]
   subnet_id = module.network.vpc.public_subnets[0]
-  update_version = var.update_version
   key_name = module.ssh_key.key_name
   private_key = module.ssh_key.private_key
   user_name = local.ec2_user_name

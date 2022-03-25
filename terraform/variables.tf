@@ -22,12 +22,6 @@ variable "namespace" {
   default = "BFX"
 }
 
-variable "update_version" {
-  type = string
-  description = "App update version used to launch deploy script, when the version is increased"
-  default = "1.0.0"
-}
-
 variable "key_name" {
   type = string
   description = "AWS SSH key name"

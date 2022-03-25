@@ -38,7 +38,7 @@ EOF
 
 resource "null_resource" "deploy" {
   triggers = {
-    version = "${var.update_version}_${timestamp()}"
+    version = timestamp()
   }
 
   connection {
