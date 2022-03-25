@@ -1,6 +1,7 @@
 update_version="1.0.0"
 
 aws_region="eu-central-1"
+aws_instance_type="t2.medium"
 
 aws_access_key=""
 aws_secret_key=""
