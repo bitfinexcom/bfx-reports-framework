@@ -8,3 +8,5 @@ repo_fork="bitfinexcom"
 repo_branch="master"
 
 env="production"
+
+backend_s3_bucket_force_destroy=false
