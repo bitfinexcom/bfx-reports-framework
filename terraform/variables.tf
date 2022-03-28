@@ -16,6 +16,30 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 
+variable "aws_replica_region" {
+  type = string
+  description = "The AWS region to which the state bucket is replicated. Two providers must point to different AWS regions."
+  default = "eu-north-1"
+}
+
+variable "is_backen_s3_replication_enabled" {
+  type = bool
+  description = "Set this to true to enable S3 bucket replication in another region."
+  default = false
+}
+
+variable "backend_s3_bucket_force_destroy" {
+  type = bool
+  description = "A boolean that indicates all objects should be deleted from S3 buckets so that the buckets can be destroyed without error. These objects are not recoverable."
+  default = false
+}
+
+variable "tf_lock_dynamodb_table_name" {
+  type = string
+  description = "Terraform lock DynamoDB table name"
+  default = "tf-remote-state-lock"
+}
+
 variable "namespace" {
   type = string
   description = "Namespace"
