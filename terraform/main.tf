@@ -79,37 +79,21 @@ module "ssm_param_secret_key" {
   common_tags = local.common_tags
 }
 
-# TODO: need to move to separate module and
-# add local_file resource generation with backend_s3 connection configs
 module "backend" {
-  source = "nozaq/remote-state-s3-backend/aws"
-  version = "1.1.2"
+  source = "./modules/backend"
 
-  terraform_iam_policy_create = true
-  enable_replication = var.is_backen_s3_replication_enabled
-  s3_bucket_force_destroy = var.backend_s3_bucket_force_destroy
-  dynamodb_table_name = var.tf_lock_dynamodb_table_name
-  replica_bucket_prefix = "terraform_state_bucket_replica"
-  state_bucket_prefix = "terraform_state_bucket"
+  count = var.is_backend_s3_enabled ? 1 : 0
 
   providers = {
     aws = aws
     aws.replica = aws.replica
   }
 
-  tags = merge(
-    local.common_tags,
-    { Name = "${var.namespace}_TF_Backend" }
-  )
-}
-
-resource "aws_iam_user" "terraform" {
-  name = "TerraformUser"
-}
-
-resource "aws_iam_user_policy_attachment" "backend_access" {
-  user = aws_iam_user.terraform.name
-  policy_arn = module.backend.terraform_iam_policy.arn
+  namespace = var.namespace
+  is_backend_s3_replication_enabled = var.is_backend_s3_replication_enabled
+  is_backend_s3_bucket_force_destroyed = var.is_backend_s3_bucket_force_destroyed
+  tf_lock_dynamodb_table_name = var.tf_lock_dynamodb_table_name
+  common_tags = local.common_tags
 }
 
 data "aws_availability_zones" "available" {}
