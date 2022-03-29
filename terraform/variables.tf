@@ -1,15 +1,3 @@
-variable "aws_access_key" {
-  type = string
-  description = "AWS Access Key ID"
-  sensitive = true
-}
-
-variable "aws_secret_key" {
-  type = string
-  description = "AWS Secret Access Key"
-  sensitive = true
-}
-
 variable "aws_region" {
   type = string
   description = "AWS region"
@@ -22,16 +10,22 @@ variable "aws_replica_region" {
   default = "eu-north-1"
 }
 
-variable "is_backen_s3_replication_enabled" {
+variable "is_backend_s3_enabled" {
+  type = bool
+  description = "Set this to true to enable S3 backend."
+  default = true
+}
+
+variable "is_backend_s3_replication_enabled" {
   type = bool
   description = "Set this to true to enable S3 bucket replication in another region."
   default = false
 }
 
-variable "backend_s3_bucket_force_destroy" {
+variable "is_backend_s3_bucket_force_destroyed" {
   type = bool
   description = "A boolean that indicates all objects should be deleted from S3 buckets so that the buckets can be destroyed without error. These objects are not recoverable."
-  default = false
+  default = true
 }
 
 variable "tf_lock_dynamodb_table_name" {
