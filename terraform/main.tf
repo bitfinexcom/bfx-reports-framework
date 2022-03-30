@@ -1,7 +1,11 @@
 locals {
   common_tags = merge(
     var.common_tags,
-    { Environment = var.env }
+    {
+      Namespace = var.namespace,
+      Workspace = terraform.workspace,
+      Environment = var.env
+    }
   )
 
   ec2_user_name = "ubuntu"
