@@ -6,4 +6,5 @@ repo_branch="master"
 
 env="production"
 
-is_backend_s3_enabled = true
+is_app_enabled=true
+is_backend_s3_enabled=true

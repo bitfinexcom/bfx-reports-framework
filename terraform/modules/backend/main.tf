@@ -43,6 +43,8 @@ EOF
 resource "local_file" "backend_tf" {
   filename = "backend.tf"
 
+  count = var.is_backend_s3_config_removed ? 0 : 1
+
   content = <<EOF
 terraform {
   backend "s3" {}

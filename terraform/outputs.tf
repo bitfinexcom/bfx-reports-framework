@@ -1,22 +1,22 @@
 output bfx_reports_framework_pub_ip {
-  value = module.network.instance_eip.public_ip
+  value = length(module.app) > 0 ? module.app[0].bfx_reports_framework_pub_ip : null
 }
 
 output bfx_reports_framework_pub_dns {
-  value = module.network.instance_eip.public_dns
+  value = length(module.app) > 0 ? module.app[0].bfx_reports_framework_pub_dns : null
 }
 
-output "kms_key" {
-  description = "The KMS customer master key to encrypt state buckets."
-  value = module.backend.kms_key
-}
-
-output "state_bucket" {
+output "tf_backend_state_bucket" {
   description = "The S3 bucket to store the remote state file."
-  value = module.backend.state_bucket
+  value = length(module.backend) > 0 ? module.backend[0].state_bucket : null
 }
 
-output "dynamodb_table_name" {
+output "tf_backend_dynamodb_table_name" {
   description = "The DynamoDB table name to manage lock states."
-  value = module.backend.dynamodb_table_name
+  value = length(module.backend) > 0 ? module.backend[0].dynamodb_table_name : null
+}
+
+output "tf_backend_kms_key" {
+  description = "The KMS customer master key to encrypt state buckets."
+  value = length(module.backend) > 0 ? module.backend[0].kms_key : null
 }
