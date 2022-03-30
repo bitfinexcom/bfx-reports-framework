@@ -30,7 +30,7 @@ resource "local_sensitive_file" "private_key" {
 
 set -euxo pipefail
 
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.key_name}.pem" ${var.user_name}@${aws_instance.ubuntu.public_dns}
+ssh -o ServerAliveInterval=1800 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.key_name}.pem" ${var.user_name}@${aws_instance.ubuntu.public_dns}
 EOF
 
   file_permission = "0754"
