@@ -105,8 +105,11 @@ if [ $launchWorker == 1 ]; then
   isGrape1Running=$(echo "$runningServices" | { grep 'grape1' || test $? = 1; } | wc -l)
   isGrape2Running=$(echo "$runningServices" | { grep 'grape2' || test $? = 1; } | wc -l)
 
-  if [ $isGrape1Running == 0 ] && [ $isGrape1Running == 0 ]; then
-    grapesServices="grape1 grape2"
+  if [ $isGrape1Running == 0 ]; then
+    grapesServices="grape1 $grapesServices"
+  fi
+  if [ $isGrape2Running == 0 ]; then
+    grapesServices="$grapesServices grape2"
   fi
 
   workerService="worker"
@@ -115,6 +118,7 @@ if [ $launchExpress == 1 ]; then
   expressService="express"
 fi
 
+grapesServices="$(echo -e "${grapesServices}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 docker-compose up $composeCommonFlags \
   $grapesServices $workerService $expressService
 
