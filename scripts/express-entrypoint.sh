@@ -13,6 +13,4 @@ export NODE_CONFIG="{\"app\":{\"port\":\"${API_PORT}\",\"host\":\"0.0.0.0\"},\"g
 
 set -- node "$@"
 
-# TODO: temporary fix, need to replace by adding health check to docker-compose config
-sleep 30
 exec "$@"

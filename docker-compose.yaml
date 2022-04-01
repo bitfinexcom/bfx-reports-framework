@@ -44,6 +44,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
+      args:
+        GRC_VER: "0.7.1"
+        GRAPE_APH: "30001"
+        GRAPE_HOST: "grape1"
     restart: unless-stopped
     depends_on:
       - grape1
@@ -74,9 +78,12 @@ services:
       dockerfile: Dockerfile.express
     restart: unless-stopped
     depends_on:
-      - worker
-      - grape1
-      - grape2
+      worker:
+        condition: service_healthy
+      grape1:
+        condition: service_started
+      grape2:
+        condition: service_started
     networks:
       - grapes
       - front-net
