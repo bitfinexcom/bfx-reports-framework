@@ -28,7 +28,8 @@ services:
       dockerfile: Dockerfile.grenache-grape
     restart: unless-stopped
     depends_on:
-      - grape1
+      grape1:
+        condition: service_healthy
     networks:
       - grapes
     environment:
@@ -44,14 +45,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-      args:
-        GRC_VER: "0.7.1"
-        GRAPE_APH: "30001"
-        GRAPE_HOST: "grape1"
     restart: unless-stopped
     depends_on:
-      - grape1
-      - grape2
+      grape1:
+        condition: service_healthy
+      grape2:
+        condition: service_healthy
     network_mode: "service:grape1"
     volumes:
       - temp:/home/node/bfx-reports-framework/temp
@@ -81,9 +80,9 @@ services:
       worker:
         condition: service_healthy
       grape1:
-        condition: service_started
+        condition: service_healthy
       grape2:
-        condition: service_started
+        condition: service_healthy
     networks:
       - grapes
       - front-net
@@ -110,7 +109,8 @@ services:
     image: nginx:1.21.5-alpine
     restart: unless-stopped
     depends_on:
-      - express
+      express:
+        condition: service_healthy
     networks:
       - front-net
     ports:
