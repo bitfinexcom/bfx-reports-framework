@@ -9,7 +9,7 @@ if [ "${NODE_ENV:-"production"}" = "development" ]; then
 fi
 
 export SUPPRESS_NO_CONFIG_WARNING=true
-export NODE_CONFIG="{\"app\":{\"port\":\"${API_PORT}\",\"host\":\"0.0.0.0\"},\"grenacheClient\":{\"grape\":\"http://$GRAPE_HOST:$GRAPE_APH\"},\"enableLog\":true,\"enableLogDebug\":$enableLogDebug}"
+export NODE_CONFIG="{\"app\":{\"port\":\"${API_PORT}\",\"host\":\"${BIND_HOST}\"},\"grenacheClient\":{\"grape\":\"http://$GRAPE_HOST:$GRAPE_APH\"},\"enableLog\":true,\"enableLogDebug\":$enableLogDebug}"
 
 set -- node "$@"
 
