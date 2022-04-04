@@ -25,10 +25,12 @@ RUN cp config/default.json.example config/default.json
 COPY ./bfx-report-ui/bfx-report-express .
 COPY ./scripts/express-entrypoint.sh /usr/local/bin/
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=2s --retries=3 \
-  CMD curl -f -X POST -H "Content-Type: application/json" \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl --retry-delay 10 --max-time 3 --retry 3 --retry-max-time 30 \
+    -f -X POST -H "Content-Type: application/json" \
     -d '{ "method": "isSchedulerEnabled" }' \
-    http://${BIND_HOST}:${API_PORT}/api/json-rpc || exit 1
+    http://${BIND_HOST}:${API_PORT}/api/json-rpc \
+    || kill 1
 
 ENTRYPOINT ["express-entrypoint.sh"]
 CMD ["index.js"]

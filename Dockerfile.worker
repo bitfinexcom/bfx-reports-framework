@@ -53,8 +53,9 @@ RUN cp config/schedule.json.example config/schedule.json \
 COPY . .
 COPY ./scripts/worker-entrypoint.sh /usr/local/bin/
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=2s --retries=3 \
-  CMD grenache-lookup -g ${GRAPE_HOST} -p ${GRAPE_APH} "rest:report:api" || exit 1
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD grenache-lookup -g ${GRAPE_HOST} -p ${GRAPE_APH} "rest:report:api" \
+    || kill 1
 
 ENTRYPOINT ["worker-entrypoint.sh"]
 CMD ["worker.js"]

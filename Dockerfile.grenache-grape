@@ -19,8 +19,11 @@ RUN git clone https://github.com/bitfinexcom/grenache-grape.git . \
 
 COPY ./scripts/grenache-grape-entrypoint.sh /usr/local/bin/
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=2s --retries=3 \
-  CMD curl -f -X POST -d '{}' http://${BIND_HOST}:${GRAPE_APH} || exit 1
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl --retry-delay 10 --max-time 3 --retry 3 --retry-max-time 30 \
+    -f -X POST -d '{}' \
+    http://${BIND_HOST}:${GRAPE_APH} \
+    || kill 1
 
 ENTRYPOINT ["grenache-grape-entrypoint.sh"]
 CMD ["bin/grape.js"]
