@@ -118,10 +118,14 @@ if [ $launchExpress == 1 ]; then
   expressService="express"
 fi
 
-grapesServices="$(echo -e "${grapesServices}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-docker-compose up $composeCommonFlags \
-  $grapesServices $workerService $expressService
-
+if [ $launchGrapes == 1 ] \
+  || [ $launchWorker == 1 ] \
+  || [ $launchExpress == 1 ]
+then
+  grapesServices="$(echo -e "${grapesServices}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  docker-compose up $composeCommonFlags \
+    $grapesServices $workerService $expressService
+fi
 if [ $launchNginx == 1 ]; then
   docker-compose up $composeCommonFlags --no-deps \
     nginx
