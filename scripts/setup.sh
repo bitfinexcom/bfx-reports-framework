@@ -5,6 +5,9 @@ set -euo pipefail
 SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
 ROOT="$(dirname "$SCRIPTPATH")"
 
+user="$(id -un 2>/dev/null || true)"
+MAIN_USER="${USER:-user}"
+
 envFilePath="$ROOT/.env"
 envExampleFilePath="$ROOT/.env.example"
 
@@ -164,8 +167,11 @@ ${COLOR_NORMAL}" >&2
 
     dockerScriptPath="$SCRIPTPATH/get-docker.sh"
     curl -fsSL https://get.docker.com -o "$dockerScriptPath"
-    sudo sh "$dockerScriptPath"
+    sh "$dockerScriptPath"
     rm -f "$dockerScriptPath"
+
+    usermod -aG docker $MAIN_USER
+    newgrp docker
   fi
 fi
 
@@ -178,9 +184,9 @@ ${COLOR_NORMAL}" >&2
     # Install Compose on Linux systems
     # https://docs.docker.com/compose/install/#install-compose-on-linux-systems
 
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null
+    curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null
 
     docker-compose --version
   fi

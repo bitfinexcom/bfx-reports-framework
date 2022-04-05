@@ -18,7 +18,6 @@ nginxHost="${nginx_host}"
 
 rm -rf "$ROOT"
 mkdir -p "$ROOT" 2>/dev/null
-chown $USER_NAME:$USER_NAME -R "$ROOT"
 
 git clone -b $repoBranch https://github.com/$repoFork/bfx-reports-framework.git "$ROOT"
 
@@ -62,7 +61,10 @@ function setConfig {
 
 cd "$ROOT"
 export REPO_BRANCH="$repoBranch"
+export USER="$USER_NAME"
 "$ROOT/scripts/setup.sh" "-yn"
+chown $USER_NAME:$USER_NAME -R "$ROOT"
+
 setConfig "$envFilePath" "NODE_ENV" $env
 setConfig "$envFilePath" "UI_ENV" $env
 setConfig "$envFilePath" "NGINX_ENV" $env
