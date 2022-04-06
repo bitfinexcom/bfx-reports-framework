@@ -54,8 +54,13 @@ resource "null_resource" "deploy" {
     inline = [
       "echo \"Waiting for cloud-init...\"",
       "cloud-init status --wait > /dev/null 2>&1",
+      "echo \"cloud-init is done\""
+    ]
+  }
+  provisioner "remote-exec" {
+    inline = [
       "if [ -f \"${var.root_dir}/READY\" ]; then \"${var.root_dir}/scripts/deploy.sh\" SECRET_KEY=${local.secret_key}; fi",
-      "if ! [ -f \"${var.root_dir}/READY\" ]; then echo \"The bash setup script has not been finished successfully!\"; fi"
+      "if ! [ -f \"${var.root_dir}/READY\" ]; then echo \"The bash setup script has not been finished successfully!\"; exit 1; fi"
     ]
   }
 }
