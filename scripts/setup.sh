@@ -5,6 +5,9 @@ set -euo pipefail
 SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1; pwd -P)"
 ROOT="$(dirname "$SCRIPTPATH")"
 
+user="$(id -un 2>/dev/null || true)"
+MAIN_USER="${USER:-user}"
+
 envFilePath="$ROOT/.env"
 envExampleFilePath="$ROOT/.env.example"
 
@@ -16,6 +19,7 @@ COLOR_NORMAL="\033[39m"
 
 programname=$0
 yesToEverything=0
+isDBFoldedRemoved=1
 
 function usage {
   echo -e "\
@@ -23,13 +27,15 @@ function usage {
 \nOptions:
   -y    With this option, all questions are automatically answered with 'Yes'. \
 In this case, the questions themselves will not be displayed
+  -n    Don't remove files of DBs
   -h    Display help\
 ${COLOR_NORMAL}" 1>&2
 }
 
-while getopts "yh" opt; do
+while getopts "ynh" opt; do
   case "${opt}" in
     y) yesToEverything=1;;
+    n) isDBFoldedRemoved=0;;
     h)
       usage
       exit 0
@@ -41,8 +47,6 @@ while getopts "yh" opt; do
       ;;
   esac
 done
-
-echo "yesToEverything: $yesToEverything"
 
 function askUser {
   if [ $yesToEverything == 1 ]; then
@@ -90,7 +94,7 @@ function askUserAboutBranch {
   local betaptrn="^$betaBranch$"
 
   if [ $yesToEverything == 1 ]; then
-    echo "$masterBranch"
+    echo "${REPO_BRANCH:-"$masterBranch"}"
     return
   fi
 
@@ -141,9 +145,14 @@ function setConfig {
   local propName="$2"
   local value="$3"
 
-  sed -i "s/^$propName.*/$propName=$value/g" "$filePath"
+  escapedValue=$(echo $value \
+    | sed 's/\//\\\//g' \
+    | sed 's/\+/\\\+/g' \
+    | sed 's/\./\\\./g')
+
+  sed -i "s/^$propName.*/$propName=$escapedValue/g" "$filePath"
   grep -q "^$propName" "$filePath" \
-    || echo "$propName=$value" >> "$filePath"
+    || echo "$propName=$escapedValue" >> "$filePath"
 }
 
 if ! docker --version; then
@@ -158,8 +167,11 @@ ${COLOR_NORMAL}" >&2
 
     dockerScriptPath="$SCRIPTPATH/get-docker.sh"
     curl -fsSL https://get.docker.com -o "$dockerScriptPath"
-    sudo sh "$dockerScriptPath"
+    sh "$dockerScriptPath"
     rm -f "$dockerScriptPath"
+
+    usermod -aG docker $MAIN_USER
+    newgrp docker
   fi
 fi
 
@@ -172,9 +184,9 @@ ${COLOR_NORMAL}" >&2
     # Install Compose on Linux systems
     # https://docs.docker.com/compose/install/#install-compose-on-linux-systems
 
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null
+    curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null
 
     docker-compose --version
   fi
@@ -190,7 +202,9 @@ Are you sure?\
   mkdir "$ROOT/logs" 2>/dev/null
   mkdir "$ROOT/csv" 2>/dev/null
 
-  find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
+  if [ $isDBFoldedRemoved == 1 ]; then
+    find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +
+  fi
 fi
 
 secretKey=$({ dd if=/dev/urandom bs=256 count=1 || test $? = 1; } 2>/dev/null | od -A n -t x | tr -d '\n| ')

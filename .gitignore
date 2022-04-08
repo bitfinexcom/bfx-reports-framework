@@ -21,3 +21,15 @@ bfx-report-ui/src
 .env
 scripts/get-docker.sh
 scripts/maintenance/maintenance.on
+terraform/.terraform
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.plan
+terraform/terraform.tfvars
+terraform/bfx-ssh-key.pem
+terraform/worker-connect.sh
+terraform/config/backend.conf
+terraform/config/credentials.conf
+terraform/backend.tf
+terraform/.terraform.tfstate.lock.info
+READY

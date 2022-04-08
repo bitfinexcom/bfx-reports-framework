@@ -11,6 +11,12 @@ COLOR_GREEN="\033[32m"
 COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
 
+dotEnvFilePath="$ROOT/.env"
+
+set -a
+[ -f "$dotEnvFilePath" ] && . "$dotEnvFilePath"
+set +a
+
 programname=$0
 uiSubmoduleName=bfx-report-ui
 expressSubmoduleName=bfx-report-express
