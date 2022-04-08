@@ -48,6 +48,9 @@ sed -i -e \
 sed -i -e \
   "s/showFrameworkMode: false/showFrameworkMode: true/g" \
   $ROOT/src/config.js
+sed -i -e \
+  "s/hostedFrameworkMode: false/hostedFrameworkMode: true/g" \
+  $ROOT/src/config.js
 
 npm run build
 
