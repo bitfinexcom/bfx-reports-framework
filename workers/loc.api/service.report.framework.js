@@ -10,7 +10,8 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
-  getDataFromApi
+  getDataFromApi,
+  isENetError
 } = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
@@ -21,13 +22,12 @@ const {
   checkParams,
   checkParamsAuth,
   isNotSyncRequired,
-  isEnotfoundError,
-  isEaiAgainError,
   collObjToArr,
   getAuthFromSubAccountAuth,
   sumObjectsNumbers,
-  sumAllObjectsNumbers,
-  sumArrayVolumes
+  pickAllLowerObjectsNumbers,
+  sumArrayVolumes,
+  pickLowerObjectsNumbers
 } = require('./helpers')
 
 const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
@@ -193,10 +193,8 @@ class FrameworkReportService extends ReportService {
 
         return true
       } catch (err) {
-        const isServerUnavailable = (
-          isEnotfoundError(err) ||
-          isEaiAgainError(err)
-        )
+        const isServerUnavailable = isENetError(err)
+
         const _err = isServerUnavailable
           ? new ServerAvailabilityError(this._conf.restUrl)
           : err
@@ -1095,25 +1093,25 @@ class FrameworkReportService extends ReportService {
       const objRes = {
         trade_vol_30d: sumArrayVolumes(
           'trade_vol_30d', arrRes),
-        fees_trading_30d: sumAllObjectsNumbers(
+        fees_trading_30d: pickAllLowerObjectsNumbers(
           'fees_trading_30d', arrRes),
-        fees_trading_total_30d: sumObjectsNumbers(
+        fees_trading_total_30d: pickLowerObjectsNumbers(
           'fees_trading_total_30d', arrRes),
-        fees_funding_30d: sumAllObjectsNumbers(
+        fees_funding_30d: pickAllLowerObjectsNumbers(
           'fees_funding_30d', arrRes),
-        fees_funding_total_30d: sumObjectsNumbers(
+        fees_funding_total_30d: pickLowerObjectsNumbers(
           'fees_funding_total_30d', arrRes),
-        makerFee: sumObjectsNumbers(
+        makerFee: pickLowerObjectsNumbers(
           'makerFee', arrRes),
         derivMakerRebate: sumObjectsNumbers(
           'derivMakerRebate', arrRes),
-        takerFeeToCrypto: sumObjectsNumbers(
+        takerFeeToCrypto: pickLowerObjectsNumbers(
           'takerFeeToCrypto', arrRes),
-        takerFeeToStable: sumObjectsNumbers(
+        takerFeeToStable: pickLowerObjectsNumbers(
           'takerFeeToStable', arrRes),
-        takerFeeToFiat: sumObjectsNumbers(
+        takerFeeToFiat: pickLowerObjectsNumbers(
           'takerFeeToFiat', arrRes),
-        derivTakerFee: sumObjectsNumbers(
+        derivTakerFee: pickLowerObjectsNumbers(
           'derivTakerFee', arrRes),
         leoLev: sumObjectsNumbers(
           'leoLev', arrRes),

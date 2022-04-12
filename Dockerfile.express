@@ -1,0 +1,36 @@
+FROM node:14.16.0-alpine
+
+ENV BIND_HOST "0.0.0.0"
+
+WORKDIR /home/node/bfx-report-express
+
+RUN apk add --no-cache --virtual \
+  .gyp \
+  python3 \
+  make \
+  g++ \
+  curl \
+  git \
+  openssh \
+  bash
+
+COPY bfx-report-ui/bfx-report-express/package*.json \
+  bfx-report-ui/bfx-report-express/.npmrc \
+  ./
+RUN npm i --production --no-audit
+
+COPY ./bfx-report-ui/bfx-report-express/config ./config
+RUN cp config/default.json.example config/default.json
+
+COPY ./bfx-report-ui/bfx-report-express .
+COPY ./scripts/express-entrypoint.sh /usr/local/bin/
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl --retry-delay 10 --max-time 3 --retry 3 --retry-max-time 30 \
+    -f -X POST -H "Content-Type: application/json" \
+    -d '{ "method": "isSchedulerEnabled" }' \
+    http://${BIND_HOST}:${API_PORT}/api/json-rpc \
+    || kill 1
+
+ENTRYPOINT ["express-entrypoint.sh"]
+CMD ["index.js"]

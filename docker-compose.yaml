@@ -1,0 +1,145 @@
+version: '3.9'
+
+x-common-variables: &common-variables
+  API_PORT: "31339"
+  GRAPE_APH: "30001"
+  GRAPE_HOST: "grape1"
+
+services:
+  grape1:
+    container_name: grape1
+    build:
+      context: .
+      dockerfile: Dockerfile.grenache-grape
+    restart: unless-stopped
+    networks:
+      - grapes
+    environment:
+      <<: *common-variables
+      GRAPE_DP: "20001"
+      GRAPE_BN: "20002"
+      GRAPE_BIND: "grape2"
+      NODE_ENV: ${NODE_ENV}
+
+  grape2:
+    container_name: grape2
+    build:
+      context: .
+      dockerfile: Dockerfile.grenache-grape
+    restart: unless-stopped
+    depends_on:
+      grape1:
+        condition: service_healthy
+    networks:
+      - grapes
+    environment:
+      <<: *common-variables
+      GRAPE_DP: "20002"
+      GRAPE_APH: "40001"
+      GRAPE_BN: "20001"
+      GRAPE_BIND: "grape1"
+      NODE_ENV: ${NODE_ENV}
+
+  worker:
+    container_name: worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      grape1:
+        condition: service_healthy
+      grape2:
+        condition: service_healthy
+    network_mode: "service:grape1"
+    volumes:
+      - temp:/home/node/bfx-reports-framework/temp
+      - ./db:/home/node/bfx-reports-framework/db
+      - ./csv:/home/node/bfx-reports-framework/csv
+      - ./logs:/home/node/bfx-reports-framework/logs
+    environment:
+      <<: *common-variables
+      WORKER_API_PORT: "1337"
+      WORKER_WS_PORT: "1455"
+      TEMP_FOLDER: "/home/node/bfx-reports-framework/temp"
+      DB_FOLDER: "/home/node/bfx-reports-framework/db"
+      CSV_FOLDER: "/home/node/bfx-reports-framework/csv"
+      LOGS_FOLDER: "/home/node/bfx-reports-framework/logs"
+      SECRET_KEY: ${SECRET_KEY} # Required
+      SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
+      NGINX_AUTOINDEX: ${NGINX_AUTOINDEX} # Required
+      NODE_ENV: ${NODE_ENV}
+
+  express:
+    container_name: express
+    build:
+      context: .
+      dockerfile: Dockerfile.express
+    restart: unless-stopped
+    depends_on:
+      worker:
+        condition: service_healthy
+      grape1:
+        condition: service_healthy
+      grape2:
+        condition: service_healthy
+    networks:
+      - grapes
+      - front-net
+    volumes:
+      - ./logs:/home/node/bfx-report-express/logs
+    environment:
+      <<: *common-variables
+      NODE_ENV: ${NODE_ENV}
+
+  ui-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui-builder
+    volumes:
+      - front-build:/home/node/bfx-report-ui/front-build
+    environment:
+      FRONT_BUILD_FOLDER: "/home/node/bfx-report-ui/front-build"
+      CI_ENVIRONMENT_NAME: ${UI_ENV} # Non-required
+      NGINX_HOST: ${NGINX_HOST} # Required
+      NGINX_PORT: ${NGINX_PORT} # Non-required
+
+  nginx:
+    container_name: nginx
+    image: nginx:1.21.5-alpine
+    restart: unless-stopped
+    depends_on:
+      express:
+        condition: service_healthy
+    networks:
+      - front-net
+    ports:
+      - "${NGINX_PORT}:8080"
+    volumes:
+      - front-build:/var/www/html
+      - ./scripts/maintenance:/var/www/maintenance
+      - ./nginx-configs/autoindex-format.xslt:/etc/nginx/autoindex-format.xslt:ro
+      - ./nginx-configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-configs/templates:/etc/nginx/templates
+      - ./logs:/var/log/nginx/bfx-reports-framework
+      - ./csv:/var/www/csv
+    environment:
+      <<: *common-variables
+      CSV_FOLDER: "/var/www/csv"
+      MAINTENANCE_STATIC_FOLDER: "/var/www/maintenance"
+      FRONT_BUILD_FOLDER: "/var/www/html"
+      LOGS_FOLDER: "/var/log/nginx/bfx-reports-framework"
+      NGINX_HOST: ${NGINX_HOST} # Required
+      NGINX_PORT: ${NGINX_PORT} # Non-required
+      NGINX_ENV: ${NGINX_ENV} # Non-required
+      NGINX_AUTOINDEX: ${NGINX_AUTOINDEX} # Required
+
+networks:
+  grapes:
+    driver: bridge
+  front-net:
+    driver: bridge
+
+volumes:
+  temp:
+  front-build:

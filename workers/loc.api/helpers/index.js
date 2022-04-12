@@ -8,13 +8,11 @@ const {
   getDateString,
   isNotSyncRequired,
   sumObjectsNumbers,
+  pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 } = require('./utils')
-const {
-  isEnotfoundError,
-  isEaiAgainError
-} = require('./api-errors-testers')
 const {
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
@@ -28,12 +26,12 @@ module.exports = {
   collObjToArr,
   getDateString,
   isNotSyncRequired,
-  isEnotfoundError,
-  isEaiAgainError,
   isSubAccountApiKeys,
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth,
   sumObjectsNumbers,
+  pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
+  pickAllLowerObjectsNumbers,
   sumArrayVolumes
 }

@@ -1,0 +1,10 @@
+bucket="THE_NAME_OF_THE_STATE_BUCKET"
+kms_key_id="THE_ID_OF_THE_KMS_KEY"
+
+key="states/bfx-reports-framework.tfstate"
+dynamodb_table="tf-remote-state-lock"
+encrypt=true
+
+shared_credentials_file = "config/credentials.conf"
+profile = "default"
+region="eu-central-1"

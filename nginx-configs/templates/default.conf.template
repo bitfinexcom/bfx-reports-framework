@@ -1,0 +1,108 @@
+map ${NGINX_ENV} $is_log_enabled {
+  "development" 1;
+}
+
+map $http_cookie $auth_token {
+  default "";
+  "~*token=(?<token>[^;]+)" "$token";
+}
+
+upstream backend {
+  server express:${API_PORT};
+}
+
+server {
+  listen 8080 default_server;
+  listen [::]:8080 default_server;
+  server_name ${NGINX_HOST};
+
+  gzip on;
+
+  root ${FRONT_BUILD_FOLDER};
+  index index.html;
+
+  access_log ${LOGS_FOLDER}/nginx.access.log main_bfx if=$is_log_enabled;
+  error_log ${LOGS_FOLDER}/nginx.error.log warn;
+
+  location / {
+    if (-f ${MAINTENANCE_STATIC_FOLDER}/maintenance.on) {
+      root ${MAINTENANCE_STATIC_FOLDER};
+    }
+  
+    try_files $uri $uri/ /index.html;
+  }
+
+  error_page 401 = @redirectToMain;
+
+  location @redirectToMain {
+    return 302 $scheme://${NGINX_HOST}:${NGINX_PORT}/;
+  }
+
+  location ~* \.(?:map|css|js|jpg|svg|png|ico|woff2|woff|eot|ttf)$ {
+    expires 10d;
+    add_header Cache-Control "public";
+  }
+
+  location ~* \.(?:json)$ {
+    expires 1d;
+    add_header Cache-Control "public";
+  }
+
+  location /csv {
+    auth_request /api/auth;
+
+    autoindex ${NGINX_AUTOINDEX};
+    autoindex_format xml;
+    xslt_stylesheet /etc/nginx/autoindex-format.xslt path='$uri';
+
+    try_files $uri/ =404;
+    alias ${CSV_FOLDER};
+
+    if ($arg_token ~ ".+") {
+      add_header Set-Cookie "token=$arg_token; Max-Age=3600; SameSite=strict; HttpOnly";
+    }
+    if ($request_filename ~ "^.*/(.+\.(zip|csv))$") {
+      set $fname $1;
+      add_header Content-Disposition 'attachment; filename="$fname"';
+    }
+  }
+
+  location /api/auth {
+    internal;
+    proxy_pass http://backend;
+
+    proxy_http_version 1.1;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header X-Auth-Token $auth_token;
+  }
+
+  location /api {
+    proxy_pass http://backend;
+
+    proxy_http_version 1.1;
+    proxy_cache_bypass $http_upgrade;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /ws {
+    proxy_pass http://backend;
+
+    proxy_http_version 1.1;
+    proxy_cache_bypass $http_upgrade;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
