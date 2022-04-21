@@ -518,7 +518,7 @@ class DataChecker {
         return accum
       }
 
-      accum.push(currency)
+      accum.add(currency)
 
       const synonymous = currenciesSynonymous.get(currency)
 
@@ -527,17 +527,19 @@ class DataChecker {
       }
 
       const uniqueSynonymous = synonymous
-        .filter(([syn]) => (
-          accum.every((symb) => symb !== syn)
-        ))
+        .filter(([syn]) => !accum.has(syn))
         .map(([syn]) => syn)
 
-      accum.push(...uniqueSynonymous)
+      if (uniqueSynonymous.length > 0) {
+        accum.add(...uniqueSynonymous)
+      }
 
       return accum
-    }, [])
+    }, new Set())
 
-    const _collСonfig = uniqueSymbs.map((currency) => {
+    const _collСonfig = []
+
+    for (const currency of uniqueSymbs) {
       const _currency = typeof currency === 'string'
         ? currency.replace(/F0$/i, '')
         : currency
@@ -548,11 +550,12 @@ class DataChecker {
         ? ':'
         : ''
 
-      return {
+      _collСonfig.push({
         symbol: `t${_currency}${separator}${CONVERT_TO}`,
         start: lastElemLedgers.mts
-      }
-    })
+      })
+    }
+
     const collСonfig = this.FOREX_SYMBS.reduce((accum, convertTo) => {
       const _symb = `tBTC${convertTo}`
 
