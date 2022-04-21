@@ -384,6 +384,16 @@ class DataInserter extends EventEmitter {
       }
     }
 
+    // After whole sync prepare collections if it's not done earlier
+    if (!methodCollMap.has(this.SYNC_API_METHODS.LEDGERS)) {
+      await this._prepareLedgers(
+        this.SYNC_API_METHODS.LEDGERS,
+        { isLastSubUser }
+      )
+    }
+    if (!methodCollMap.has(this.SYNC_API_METHODS.MOVEMENTS)) {
+      await this._prepareMovements(this.SYNC_API_METHODS.MOVEMENTS)
+    }
     if (isSubAccount) {
       this._syncedSubUsers.push(subUserId)
     }
