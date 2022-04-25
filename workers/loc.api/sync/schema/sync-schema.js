@@ -270,10 +270,8 @@ const _methodCollMap = new Map([
       dateFieldName: 'mts',
       symbolFieldName: 'currency',
       sort: [['mts', -1]],
+      groupFns: ['max(mts)', 'max(id)'],
       groupResBy: ['wallet', 'currency'],
-      subQuery: {
-        sort: [['mts', -1], ['id', -1]]
-      },
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.HIDDEN_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.LEDGERS),
