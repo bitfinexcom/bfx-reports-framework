@@ -300,7 +300,7 @@ class DataChecker {
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName },
-        groupFns: ['min(start)'],
+        subQuery: { sort: [['start', 1]] },
         groupResBy
       }
     )
