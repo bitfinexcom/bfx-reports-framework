@@ -130,7 +130,7 @@ class DataChecker {
 
     this._resetSyncSchemaProps(schema)
 
-    const args = this._getMethodArgMap(method, { auth, limit: 1 })
+    const args = this._getMethodArgMap(schema, { auth, limit: 1 })
     args.params.notThrowError = true
     args.params.notCheckNextPage = true
 
@@ -337,7 +337,7 @@ class DataChecker {
         ? { timeframe }
         : {}
       const args = this._getMethodArgMap(
-        method,
+        schema,
         {
           limit: 1,
           params: {
@@ -588,11 +588,11 @@ class DataChecker {
         symbol
       }
       const argsForLastElem = this._getMethodArgMap(
-        method,
+        schema,
         { limit: 1, params }
       )
       const argsForReceivingStart = this._getMethodArgMap(
-        method,
+        schema,
         { limit: 1, end: _start, params }
       )
 
@@ -733,10 +733,11 @@ class DataChecker {
   }
 
   _getMethodArgMap (method, opts) {
-    return getMethodArgMap(
-      this._methodCollMap.get(method),
-      opts
-    )
+    const schema = typeof method === 'string'
+      ? this._methodCollMap.get(method)
+      : method
+
+    return getMethodArgMap(schema, opts)
   }
 
   _getDataFromApi (methodApi, args) {

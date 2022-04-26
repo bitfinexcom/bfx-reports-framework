@@ -547,7 +547,7 @@ class DataInserter extends EventEmitter {
       Number.isInteger(baseStartTo)
     ) {
       const args = this._getMethodArgMap(
-        methodApi,
+        schema,
         {
           auth,
           limit: 10000000,
@@ -561,7 +561,7 @@ class DataInserter extends EventEmitter {
     }
     if (Number.isInteger(currStart)) {
       const args = this._getMethodArgMap(
-        methodApi,
+        schema,
         {
           auth,
           limit: 10000000,
@@ -753,7 +753,7 @@ class DataInserter extends EventEmitter {
     } = schema
 
     const args = this._getMethodArgMap(
-      methodApi,
+      schema,
       { start: null, end: null })
     const elemsFromApi = await this._getDataFromApi(methodApi, args)
 
@@ -822,7 +822,7 @@ class DataInserter extends EventEmitter {
         }
 
         const args = this._getMethodArgMap(
-          methodApi,
+          schema,
           {
             start: null,
             end: null,
@@ -910,7 +910,7 @@ class DataInserter extends EventEmitter {
     }
 
     const args = this._getMethodArgMap(
-      methodApi,
+      schema,
       { start: null, end: null }
     )
     const apiRes = await this._getDataFromApi(methodApi, args)
@@ -958,10 +958,11 @@ class DataInserter extends EventEmitter {
   }
 
   _getMethodArgMap (method, opts) {
-    return getMethodArgMap(
-      this._methodCollMap.get(method),
-      opts
-    )
+    const schema = typeof method === 'string'
+      ? this._methodCollMap.get(method)
+      : method
+
+    return getMethodArgMap(schema, opts)
   }
 
   _getMethodCollMap () {
