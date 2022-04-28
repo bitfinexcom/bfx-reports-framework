@@ -767,6 +767,7 @@ class BetterSqliteDAO extends DAO {
       subQuery = {
         sort: []
       },
+      groupFns = [],
       groupResBy = [],
       isDistinct = false,
       projection = [],
@@ -775,7 +776,10 @@ class BetterSqliteDAO extends DAO {
       limit = null
     } = {}
   ) {
-    const group = getGroupQuery({ groupResBy })
+    const {
+      group,
+      groupProj
+    } = getGroupQuery({ groupFns, groupResBy })
     const _subQuery = getSubQuery({ name: collName, subQuery })
     const _sort = getOrderQuery(sort)
     const {
@@ -793,7 +797,7 @@ class BetterSqliteDAO extends DAO {
       limitVal
     } = getLimitQuery({ limit })
 
-    const sql = `SELECT ${distinct}${_projection} FROM ${_subQuery}
+    const sql = `SELECT ${distinct}${groupProj}${_projection} FROM ${_subQuery}
       ${where}
       ${group}
       ${_sort}

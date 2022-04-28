@@ -367,8 +367,7 @@ class DataInserter extends EventEmitter {
         )
       }
 
-      await this._prepareLedgers(method, { isLastSubUser })
-      await this._prepareMovements(method)
+      await this.prepareData({ method }, { isLastSubUser })
 
       await this.syncCollsManager.setCollAsSynced({
         collName: method, userId, subUserId
@@ -384,6 +383,9 @@ class DataInserter extends EventEmitter {
       }
     }
 
+    // After whole sync prepare collections if it's not done earlier
+    await this.prepareData({ methodCollMap }, { isLastSubUser })
+
     if (isSubAccount) {
       this._syncedSubUsers.push(subUserId)
     }
@@ -391,16 +393,33 @@ class DataInserter extends EventEmitter {
     return progress
   }
 
+  async prepareData (args = {}, opts = {}) {
+    await this._prepareLedgers(args, opts)
+    await this._prepareMovements(args, opts)
+  }
+
   /* If ledgers are syncing
     sync candles,
     convert currency,
     recalc sub-account */
-  async _prepareLedgers (method, { isLastSubUser }) {
-    if (method !== this.SYNC_API_METHODS.LEDGERS) {
+  async _prepareLedgers (args = {}, opts = {}) {
+    const {
+      method = this.SYNC_API_METHODS.LEDGERS,
+      methodCollMap
+    } = args ?? {}
+    const { isLastSubUser } = opts ?? {}
+
+    if (
+      method !== this.SYNC_API_METHODS.LEDGERS ||
+      (
+        methodCollMap instanceof Map &&
+        methodCollMap.has(this.SYNC_API_METHODS.LEDGERS)
+      )
+    ) {
       return
     }
 
-    const candlesSchema = this.dataChecker
+    const candlesSchema = this.syncSchema
       .getMethodCollMap().get(this.SYNC_API_METHODS.CANDLES)
 
     await this.dataChecker.checkNewCandlesData(
@@ -430,8 +449,19 @@ class DataInserter extends EventEmitter {
 
   /* If movements are syncing
     convert currency */
-  async _prepareMovements (method) {
-    if (method !== this.SYNC_API_METHODS.MOVEMENTS) {
+  async _prepareMovements (args = {}) {
+    const {
+      method = this.SYNC_API_METHODS.MOVEMENTS,
+      methodCollMap
+    } = args ?? {}
+
+    if (
+      method !== this.SYNC_API_METHODS.MOVEMENTS ||
+      (
+        methodCollMap instanceof Map &&
+        methodCollMap.has(this.SYNC_API_METHODS.MOVEMENTS)
+      )
+    ) {
       return
     }
 
@@ -517,7 +547,7 @@ class DataInserter extends EventEmitter {
       Number.isInteger(baseStartTo)
     ) {
       const args = this._getMethodArgMap(
-        methodApi,
+        schema,
         {
           auth,
           limit: 10000000,
@@ -531,7 +561,7 @@ class DataInserter extends EventEmitter {
     }
     if (Number.isInteger(currStart)) {
       const args = this._getMethodArgMap(
-        methodApi,
+        schema,
         {
           auth,
           limit: 10000000,
@@ -723,7 +753,7 @@ class DataInserter extends EventEmitter {
     } = schema
 
     const args = this._getMethodArgMap(
-      methodApi,
+      schema,
       { start: null, end: null })
     const elemsFromApi = await this._getDataFromApi(methodApi, args)
 
@@ -792,7 +822,7 @@ class DataInserter extends EventEmitter {
         }
 
         const args = this._getMethodArgMap(
-          methodApi,
+          schema,
           {
             start: null,
             end: null,
@@ -880,7 +910,7 @@ class DataInserter extends EventEmitter {
     }
 
     const args = this._getMethodArgMap(
-      methodApi,
+      schema,
       { start: null, end: null }
     )
     const apiRes = await this._getDataFromApi(methodApi, args)
@@ -928,10 +958,11 @@ class DataInserter extends EventEmitter {
   }
 
   _getMethodArgMap (method, opts) {
-    return getMethodArgMap(
-      this._methodCollMap.get(method),
-      opts
-    )
+    const schema = typeof method === 'string'
+      ? this._methodCollMap.get(method)
+      : method
+
+    return getMethodArgMap(schema, opts)
   }
 
   _getMethodCollMap () {

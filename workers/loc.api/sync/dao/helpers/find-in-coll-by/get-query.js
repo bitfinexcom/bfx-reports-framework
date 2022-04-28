@@ -40,7 +40,10 @@ module.exports = (args, methodColl, opts) => {
     filter,
     { requestedFilter }
   )
-  const group = getGroupQuery(methodColl)
+  const {
+    group,
+    groupProj
+  } = getGroupQuery(methodColl)
   const subQuery = getSubQuery(methodColl)
   const projection = getProjectionQuery(
     _model,
@@ -48,7 +51,7 @@ module.exports = (args, methodColl, opts) => {
     isExcludePrivate
   )
 
-  const sql = `SELECT ${projection} FROM ${subQuery}
+  const sql = `SELECT ${groupProj}${projection} FROM ${subQuery}
     ${where}
     ${group}
     ${sort}

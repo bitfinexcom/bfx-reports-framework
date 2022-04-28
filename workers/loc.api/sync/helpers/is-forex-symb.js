@@ -1,6 +1,8 @@
 'use strict'
 
-const FOREX_SYMBS = require('./forex-symbs')
+const FOREX_SYMBS = require(
+  'bfx-report/workers/loc.api/helpers/forex.symbs'
+)
 
 module.exports = (
   currSymb,
