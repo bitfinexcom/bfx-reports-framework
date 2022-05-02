@@ -130,7 +130,7 @@ class DataChecker {
 
     this._resetSyncSchemaProps(schema)
 
-    const args = this._getMethodArgMap(method, { auth, limit: 1 })
+    const args = this._getMethodArgMap(schema, { auth, limit: 1 })
     args.params.notThrowError = true
     args.params.notCheckNextPage = true
 
@@ -337,7 +337,7 @@ class DataChecker {
         ? { timeframe }
         : {}
       const args = this._getMethodArgMap(
-        method,
+        schema,
         {
           limit: 1,
           params: {
@@ -518,7 +518,7 @@ class DataChecker {
         return accum
       }
 
-      accum.push(currency)
+      accum.add(currency)
 
       const synonymous = currenciesSynonymous.get(currency)
 
@@ -527,17 +527,19 @@ class DataChecker {
       }
 
       const uniqueSynonymous = synonymous
-        .filter(([syn]) => (
-          accum.every((symb) => symb !== syn)
-        ))
+        .filter(([syn]) => !accum.has(syn))
         .map(([syn]) => syn)
 
-      accum.push(...uniqueSynonymous)
+      if (uniqueSynonymous.length > 0) {
+        accum.add(...uniqueSynonymous)
+      }
 
       return accum
-    }, [])
+    }, new Set())
 
-    const _collСonfig = uniqueSymbs.map((currency) => {
+    const _collСonfig = []
+
+    for (const currency of uniqueSymbs) {
       const _currency = typeof currency === 'string'
         ? currency.replace(/F0$/i, '')
         : currency
@@ -548,11 +550,12 @@ class DataChecker {
         ? ':'
         : ''
 
-      return {
+      _collСonfig.push({
         symbol: `t${_currency}${separator}${CONVERT_TO}`,
         start: lastElemLedgers.mts
-      }
-    })
+      })
+    }
+
     const collСonfig = this.FOREX_SYMBS.reduce((accum, convertTo) => {
       const _symb = `tBTC${convertTo}`
 
@@ -585,11 +588,11 @@ class DataChecker {
         symbol
       }
       const argsForLastElem = this._getMethodArgMap(
-        method,
+        schema,
         { limit: 1, params }
       )
       const argsForReceivingStart = this._getMethodArgMap(
-        method,
+        schema,
         { limit: 1, end: _start, params }
       )
 
@@ -730,10 +733,11 @@ class DataChecker {
   }
 
   _getMethodArgMap (method, opts) {
-    return getMethodArgMap(
-      this._methodCollMap.get(method),
-      opts
-    )
+    const schema = typeof method === 'string'
+      ? this._methodCollMap.get(method)
+      : method
+
+    return getMethodArgMap(schema, opts)
   }
 
   _getDataFromApi (methodApi, args) {

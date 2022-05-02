@@ -37,8 +37,7 @@ const DataConsistencyChecker = require(
   '../sync/data.consistency.checker'
 )
 const {
-  redirectRequestsToApi,
-  FOREX_SYMBS
+  redirectRequestsToApi
 } = require('../sync/helpers')
 const {
   searchClosePriceAndSumAmount
@@ -163,7 +162,6 @@ module.exports = ({
     bind(TYPES.SYNC_QUEUE_STATES).toConstantValue(SYNC_QUEUE_STATES)
     bind(TYPES.CHECKER_NAMES).toConstantValue(CHECKER_NAMES)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
-    bind(TYPES.FOREX_SYMBS).toConstantValue(FOREX_SYMBS)
     bind(TYPES.ProcessMessageManager)
       .to(ProcessMessageManager)
       .inSingletonScope()

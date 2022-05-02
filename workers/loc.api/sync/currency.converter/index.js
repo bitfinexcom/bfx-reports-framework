@@ -163,8 +163,12 @@ class CurrencyConverter {
 
     return synonymous.reduce((accum, [symbol, conversion]) => {
       const separator = (
-        symbol.length > 3 ||
-        lastSymb.length > 3
+        symbol &&
+        lastSymb &&
+        (
+          symbol.length > 3 ||
+          lastSymb.length > 3
+        )
       )
         ? ':'
         : ''
@@ -180,8 +184,12 @@ class CurrencyConverter {
       ) {
         const _symbol = this._getConvertingSymb(symbol)
         const _separator = (
-          _symbol.length > 3 ||
-          lastSymb.length > 3
+          _symbol &&
+          lastSymb &&
+          (
+            _symbol.length > 3 ||
+            lastSymb.length > 3
+          )
         )
           ? ':'
           : ''
