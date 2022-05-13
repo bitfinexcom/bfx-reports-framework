@@ -236,6 +236,12 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
+  _tryToExecuteRollback () {
+    try {
+      this.db.prepare('ROLLBACK').run()
+    } catch (err) {}
+  }
+
   _vacuum () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.RUN,
@@ -307,6 +313,10 @@ class BetterSqliteDAO extends DAO {
     await this._enableWALJournalMode()
     await this._setCacheSize()
     await this._setAnalysisLimit()
+
+    // In case if the app is closed with non-finished transaction
+    // try to execute `ROLLBACK` sql query to avoid locking the DB
+    this._tryToExecuteRollback()
   }
 
   /**
