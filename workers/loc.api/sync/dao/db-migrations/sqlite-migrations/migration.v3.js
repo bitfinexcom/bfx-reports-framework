@@ -92,7 +92,10 @@ class MigrationV3 extends AbstractMigration {
 
     await this.dao.executeQueriesInTrans(
       sql,
-      { beforeTransFn: () => this.dao.enableForeignKeys() }
+      {
+        beforeTransFn: () => this.dao.enableForeignKeys(),
+        withoutWorkerThreads: true
+      }
     )
     await this.dao.disableForeignKeys()
   }

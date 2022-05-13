@@ -170,7 +170,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   _createTriggerIfNotExists () {
@@ -181,7 +181,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   _createIndexisIfNotExists () {
@@ -192,7 +192,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   async _getTablesNames () {
@@ -291,7 +291,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
 
     await this._walCheckpoint()
     await this._vacuum()
