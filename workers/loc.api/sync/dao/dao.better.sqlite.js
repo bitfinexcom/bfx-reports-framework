@@ -796,8 +796,14 @@ class BetterSqliteDAO extends DAO {
       limit: _limit,
       limitVal
     } = getLimitQuery({ limit })
+    const delimiter = (
+      groupProj.length > 0 &&
+      _projection.length > 0
+    )
+      ? ', '
+      : ''
 
-    const sql = `SELECT ${distinct}${groupProj}${_projection} FROM ${_subQuery}
+    const sql = `SELECT ${distinct}${groupProj}${delimiter}${_projection} FROM ${_subQuery}
       ${where}
       ${group}
       ${_sort}
