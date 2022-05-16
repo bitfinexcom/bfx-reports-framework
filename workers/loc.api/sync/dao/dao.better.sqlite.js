@@ -515,7 +515,7 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       isReplacedIfExists,
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...opts }
 
     const keys = Object.keys(obj)
@@ -861,7 +861,7 @@ class BetterSqliteDAO extends DAO {
     opts
   ) {
     const {
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...opts }
     const {
       where,
@@ -939,7 +939,7 @@ class BetterSqliteDAO extends DAO {
     const res = await this.query({
       action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
       params: { data, name }
-    })
+    }, { withoutWorkerThreads: true })
     const { changes } = { ...res }
 
     if (changes < 1) {
@@ -967,7 +967,7 @@ class BetterSqliteDAO extends DAO {
     }
 
     const {
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...opts }
     const {
       where,
@@ -1014,7 +1014,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    })
+    }, { withoutWorkerThreads: true })
   }
 }
 
