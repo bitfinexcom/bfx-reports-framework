@@ -170,7 +170,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   _createTriggerIfNotExists () {
@@ -181,7 +181,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   _createIndexisIfNotExists () {
@@ -192,7 +192,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   async _getTablesNames () {
@@ -234,6 +234,12 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `analysis_limit = ${limit}`
     })
+  }
+
+  _tryToExecuteRollback () {
+    try {
+      this.db.prepare('ROLLBACK').run()
+    } catch (err) {}
   }
 
   _vacuum () {
@@ -291,7 +297,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    })
+    }, { withoutWorkerThreads: true })
 
     await this._walCheckpoint()
     await this._vacuum()
@@ -307,6 +313,10 @@ class BetterSqliteDAO extends DAO {
     await this._enableWALJournalMode()
     await this._setCacheSize()
     await this._setAnalysisLimit()
+
+    // In case if the app is closed with non-finished transaction
+    // try to execute `ROLLBACK` sql query to avoid locking the DB
+    this._tryToExecuteRollback()
   }
 
   /**
@@ -505,7 +515,7 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       isReplacedIfExists,
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...opts }
 
     const keys = Object.keys(obj)
@@ -796,8 +806,14 @@ class BetterSqliteDAO extends DAO {
       limit: _limit,
       limitVal
     } = getLimitQuery({ limit })
+    const delimiter = (
+      groupProj.length > 0 &&
+      _projection.length > 0
+    )
+      ? ', '
+      : ''
 
-    const sql = `SELECT ${distinct}${groupProj}${_projection} FROM ${_subQuery}
+    const sql = `SELECT ${distinct}${groupProj}${delimiter}${_projection} FROM ${_subQuery}
       ${where}
       ${group}
       ${_sort}
@@ -845,7 +861,7 @@ class BetterSqliteDAO extends DAO {
     opts
   ) {
     const {
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...opts }
     const {
       where,
@@ -923,7 +939,7 @@ class BetterSqliteDAO extends DAO {
     const res = await this.query({
       action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
       params: { data, name }
-    })
+    }, { withoutWorkerThreads: true })
     const { changes } = { ...res }
 
     if (changes < 1) {
@@ -951,7 +967,7 @@ class BetterSqliteDAO extends DAO {
     }
 
     const {
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...opts }
     const {
       where,
@@ -998,7 +1014,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    })
+    }, { withoutWorkerThreads: true })
   }
 }
 

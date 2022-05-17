@@ -72,7 +72,7 @@ class Authenticator {
       isNotSetSession = false,
       isNotInTrans = false,
       masterUserId,
-      withoutWorkerThreads = false
+      withoutWorkerThreads = true
     } = { ...params }
 
     if (
@@ -199,7 +199,7 @@ class Authenticator {
       isReturnedUser,
       isNotInTrans,
       isNotSetSession,
-      withoutWorkerThreads
+      withoutWorkerThreads = true
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -380,7 +380,7 @@ class Authenticator {
       isReturnedUser = false,
       isNotInTrans = false,
       isSubUser = false,
-      withoutWorkerThreads = false
+      withoutWorkerThreads = true
     } = { ...params }
 
     if (
