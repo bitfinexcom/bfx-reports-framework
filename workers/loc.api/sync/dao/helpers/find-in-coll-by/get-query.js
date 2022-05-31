@@ -50,8 +50,14 @@ module.exports = (args, methodColl, opts) => {
     exclude,
     isExcludePrivate
   )
+  const delimiter = (
+    groupProj.length > 0 &&
+    projection.length > 0
+  )
+    ? ', '
+    : ''
 
-  const sql = `SELECT ${groupProj}${projection} FROM ${subQuery}
+  const sql = `SELECT ${groupProj}${delimiter}${projection} FROM ${subQuery}
     ${where}
     ${group}
     ${sort}
