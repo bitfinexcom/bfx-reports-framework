@@ -56,12 +56,21 @@ class ProcessMessageManager {
       if (!this.SET_PROCESS_STATES.has(state)) {
         return
       }
+
+      this._processQueue(state, (queue) => {
+        for (const [, job] of queue.entries()) {
+          job.hasTriggered = true
+        }
+      })
+
       if (typeof this[state] === 'function') {
         await this[state](err, state, data)
       }
 
-      this._processPromise(err, state, data)
+      this._processQueuePromises(state, err, data)
     }, this.logger)
+
+    return this
   }
 
   sendState (state, data) {
@@ -83,30 +92,42 @@ class ProcessMessageManager {
       throw new ProcessStateSendingError()
     }
 
+    const queue = this._promisesToWait.get(state)
     const job = {
       promise: null,
+      index: null,
+      hasTriggered: false,
+
       resolve: () => {},
-      reject: () => {}
+      reject: () => {},
+      close: (err, data) => {
+        queue.splice(job.index, 1)
+
+        if (err) {
+          job.reject(err)
+
+          return
+        }
+
+        job.resolve(data)
+      }
     }
 
-    const promise = new Promise((resolve, reject) => {
-      const queue = this._promisesToWait.get(state)
+    job.promise = new Promise((resolve, reject) => {
       job.resolve = resolve
       job.reject = reject
 
-      queue.push(job)
+      job.index = queue.push(job) - 1
     })
 
-    job.promise = promise
-
-    return promise
+    return job
   }
 
   async processState (state, data) {
     await this._mainHandler({ state, data })
   }
 
-  _processPromise (err, state, data) {
+  _processQueue (state, handler, params = {}) {
     const queue = this._promisesToWait.get(state)
 
     if (
@@ -116,22 +137,23 @@ class ProcessMessageManager {
       return
     }
 
-    for (const [i, task] of queue.entries()) {
-      const {
-        resolve,
-        reject
-      } = task
+    handler(queue, params)
+  }
 
-      queue.splice(i, 1)
+  _processQueuePromises (state, err, data) {
+    this._processQueue(state, (queue) => {
+      for (const [, job] of queue.entries()) {
+        const { close } = job
 
-      if (err) {
-        reject(err)
+        if (err) {
+          close(err)
 
-        continue
+          continue
+        }
+
+        close(null, data)
       }
-
-      resolve(data)
-    }
+    })
   }
 
   async [PROCESS_STATES.CLEAR_ALL_TABLES] (err, state, data) {

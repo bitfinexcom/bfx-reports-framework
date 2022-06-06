@@ -27,7 +27,7 @@ class SqliteDbMigrator extends DbMigrator {
         throw err
       }
 
-      const responsePromise = this.processMessageManager.addStateToWait(
+      const { promise: responsePromise } = this.processMessageManager.addStateToWait(
         this.processMessageManager.PROCESS_STATES.RESPONSE_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE
       )
       this.processMessageManager.sendState(
@@ -45,7 +45,7 @@ class SqliteDbMigrator extends DbMigrator {
           return
         }
 
-        const rmDbPromise = this.processMessageManager.addStateToWait(
+        const { promise: rmDbPromise } = this.processMessageManager.addStateToWait(
           this.processMessageManager.PROCESS_STATES.REMOVE_ALL_TABLES
         )
         this.processMessageManager.sendState(
