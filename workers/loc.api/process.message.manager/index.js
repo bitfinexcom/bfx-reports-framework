@@ -41,14 +41,14 @@ class ProcessMessageManager {
     this._mainHandler = null
   }
 
-  setDeps (deps = {}) {
-    const {
-      dao,
-      dbBackupManager
-    } = deps
-
+  setDeps (
+    dao,
+    dbBackupManager,
+    recalcSubAccountLedgersBalancesHook
+  ) {
     this.dao = dao
     this.dbBackupManager = dbBackupManager
+    this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
   }
 
   init () {
@@ -208,6 +208,22 @@ class ProcessMessageManager {
     }
 
     await this.dbBackupManager.backupDb()
+  }
+
+  async [PROCESS_STATES.PREPARE_DB] (err, state, data) {
+    if (err) {
+      this.logger.debug('[DB has not been prepared]:', data)
+      this.logger.error(err)
+
+      this.sendState(PROCESS_MESSAGES.DB_HAS_NOT_BEEN_PREPARED)
+
+      return
+    }
+
+    await this.recalcSubAccountLedgersBalancesHook.execute()
+
+    this.logger.debug('[DB has been prepared]')
+    this.sendState(PROCESS_MESSAGES.DB_HAS_BEEN_PREPARED)
   }
 
   async [PROCESS_STATES.RESTORE_DB] (err, state, data) {
