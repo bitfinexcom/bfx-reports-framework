@@ -49,10 +49,24 @@ class DAO {
     }
 
     await this.beforeMigrationHook()
-    this.processMessageManagerFactory().init()
+    const processMessageManager = this.processMessageManagerFactory()
+      .init()
+    const pmmJob = processMessageManager.addStateToWait(
+      processMessageManager.SET_PROCESS_STATES.PREPARE_DB
+    )
 
     const dbMigrator = this.dbMigratorFactory()
     await dbMigrator.migrateFromCurrToSupportedVer()
+
+    if (!pmmJob.hasTriggered) {
+      pmmJob.close(null)
+    }
+
+    /*
+     * This is needed to wait for the end of database preparation
+     * when starting this process in migrations
+     */
+    await pmmJob.promise
   }
 
   /**
