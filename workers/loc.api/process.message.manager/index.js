@@ -97,11 +97,20 @@ class ProcessMessageManager {
       promise: null,
       index: null,
       hasTriggered: false,
+      hasClosed: false,
 
       resolve: () => {},
       reject: () => {},
       close: (err, data) => {
-        queue.splice(job.index, 1)
+        if (job.hasClosed) {
+          return
+        }
+        if (Number.isInteger(job.index)) {
+          queue.splice(job.index, 1)
+          job.index = null
+        }
+
+        job.hasClosed = true
 
         if (err) {
           job.reject(err)
