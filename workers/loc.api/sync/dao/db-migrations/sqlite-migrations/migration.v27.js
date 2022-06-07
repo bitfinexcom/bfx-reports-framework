@@ -12,7 +12,7 @@ class MigrationV27 extends AbstractMigration {
      * to apply the fix for sub-accounts recalculation hook after sync
     */
     const sqlArr = [
-      `UPDATE ledgers SET _isBalanceRecalced = 0
+      `UPDATE ledgers SET _isBalanceRecalced = NULL
         WHERE subUserId IS NOT NULL`
     ]
 
@@ -28,7 +28,7 @@ class MigrationV27 extends AbstractMigration {
      * to apply the fix for sub-accounts recalculation hook after sync
     */
     const sqlArr = [
-      `UPDATE ledgers SET _isBalanceRecalced = 0
+      `UPDATE ledgers SET _isBalanceRecalced = NULL
         WHERE subUserId IS NOT NULL`
     ]
 
