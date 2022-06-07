@@ -158,7 +158,7 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    this._auth = getAuthFromDb(this.authenticator)
+    this._auth = await getAuthFromDb(this.authenticator)
 
     if (
       !this._auth ||

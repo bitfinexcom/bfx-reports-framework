@@ -36,15 +36,27 @@ const normalizeApiData = (
   })
 }
 
-const getAuthFromDb = (authenticator) => {
+const getAuthFromDb = async (authenticator, opts = {}) => {
+  const {
+    shouldGetEveryone = false
+  } = opts ?? {}
   const auth = new Map()
-  const sessions = authenticator.getUserSessions()
+  const sessions = shouldGetEveryone
+    ? await authenticator.getUsers(
+        { isSubAccount: true, isSubUser: false },
+        { isFilledSubUsers: true }
+      )
+    : authenticator.getUserSessions()
 
   if (sessions.size === 0) {
     return auth
   }
 
-  for (const [, session] of sessions) {
+  for (const session of sessions) {
+    const user = shouldGetEveryone
+      ? session
+      : session[1]
+
     const {
       _id,
       email,
@@ -53,7 +65,7 @@ const getAuthFromDb = (authenticator) => {
       isSubAccount,
       subUsers,
       token
-    } = { ...session }
+    } = user ?? {}
     const authPayload = {
       _id,
       email,

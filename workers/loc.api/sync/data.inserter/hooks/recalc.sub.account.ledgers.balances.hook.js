@@ -3,6 +3,7 @@
 const { orderBy } = require('lodash')
 
 const DataInserterHook = require('./data.inserter.hook')
+const { getAuthFromDb } = require('../helpers/utils')
 const {
   SubAccountLedgersBalancesRecalcError
 } = require('../../../errors')
@@ -11,17 +12,20 @@ const { decorateInjectable } = require('../../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.DAO,
-  TYPES.TABLES_NAMES
+  TYPES.TABLES_NAMES,
+  TYPES.Authenticator
 ]
 class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
   constructor (
     dao,
-    TABLES_NAMES
+    TABLES_NAMES,
+    authenticator
   ) {
     super()
 
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
+    this.authenticator = authenticator
   }
 
   _getSubUsersIdsByMasterUserId (auth, userId) {
@@ -253,7 +257,12 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
    */
   async execute () {
     const dataInserter = this.getDataInserter()
-    const auth = dataInserter.getAuth()
+    const auth = dataInserter
+      ? dataInserter.getAuth()
+      : await getAuthFromDb(
+        this.authenticator,
+        { shouldGetEveryone: true }
+      )
 
     if (
       !auth ||
