@@ -34,6 +34,15 @@ class MigrationV27 extends AbstractMigration {
 
     this.addSql(sqlArr)
   }
+
+  /**
+   * @override
+   */
+  async after () {
+    await this.processMessageManager.processState(
+      this.processMessageManager.PROCESS_STATES.PREPARE_DB
+    )
+  }
 }
 
 module.exports = MigrationV27
