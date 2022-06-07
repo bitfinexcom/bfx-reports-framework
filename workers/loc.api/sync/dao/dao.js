@@ -52,7 +52,7 @@ class DAO {
     const processMessageManager = this.processMessageManagerFactory()
       .init()
     const pmmJob = processMessageManager.addStateToWait(
-      processMessageManager.SET_PROCESS_STATES.PREPARE_DB
+      processMessageManager.PROCESS_STATES.PREPARE_DB
     )
 
     const dbMigrator = this.dbMigratorFactory()
@@ -62,10 +62,6 @@ class DAO {
       pmmJob.close(null)
     }
 
-    /*
-     * This is needed to wait for the end of database preparation
-     * when starting this process in migrations
-     */
     await pmmJob.promise
   }
 
