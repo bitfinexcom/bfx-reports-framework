@@ -269,6 +269,10 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       !(auth instanceof Map) ||
       auth.size === 0
     ) {
+      if (!dataInserter) {
+        return
+      }
+
       throw new SubAccountLedgersBalancesRecalcError()
     }
 
