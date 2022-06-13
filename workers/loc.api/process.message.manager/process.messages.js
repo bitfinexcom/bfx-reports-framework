@@ -20,6 +20,9 @@ module.exports = {
   DB_HAS_BEEN_RESTORED: 'db-has-been-restored',
   DB_HAS_NOT_BEEN_RESTORED: 'db-has-not-been-restored',
 
+  DB_HAS_NOT_BEEN_PREPARED: 'db-has-not-been-prepared',
+  DB_HAS_BEEN_PREPARED: 'db-has-been-prepared',
+
   REQUEST_MIGRATION_HAS_FAILED_WHAT_SHOULD_BE_DONE: 'request:migration-has-failed:what-should-be-done',
   REQUEST_SHOULD_ALL_TABLES_BE_REMOVED: 'request:should-all-tables-be-removed',
 

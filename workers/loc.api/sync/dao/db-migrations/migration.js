@@ -10,13 +10,15 @@ class Migration {
     dao,
     TABLES_NAMES,
     syncSchema,
-    logger
+    logger,
+    processMessageManager
   ) {
     this.version = version
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.logger = logger
+    this.processMessageManager = processMessageManager
   }
 
   getVersion () {

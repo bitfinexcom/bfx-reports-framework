@@ -30,7 +30,8 @@ module.exports = (ctx) => {
       TYPES.DAO,
       TYPES.TABLES_NAMES,
       TYPES.SyncSchema,
-      TYPES.Logger
+      TYPES.Logger,
+      TYPES.ProcessMessageManager
     ]
     const deps = depTypes.map((type) => {
       return ctx.container.get(type)

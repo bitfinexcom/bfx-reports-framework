@@ -41,14 +41,14 @@ class ProcessMessageManager {
     this._mainHandler = null
   }
 
-  setDeps (deps = {}) {
-    const {
-      dao,
-      dbBackupManager
-    } = deps
-
+  setDeps (
+    dao,
+    dbBackupManager,
+    recalcSubAccountLedgersBalancesHook
+  ) {
     this.dao = dao
     this.dbBackupManager = dbBackupManager
+    this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
   }
 
   init () {
@@ -56,12 +56,21 @@ class ProcessMessageManager {
       if (!this.SET_PROCESS_STATES.has(state)) {
         return
       }
+
+      this._processQueue(state, (queue) => {
+        for (const [, job] of queue.entries()) {
+          job.hasTriggered = true
+        }
+      })
+
       if (typeof this[state] === 'function') {
         await this[state](err, state, data)
       }
 
-      this._processPromise(err, state, data)
+      this._processQueuePromises(state, err, data)
     }, this.logger)
+
+    return this
   }
 
   sendState (state, data) {
@@ -83,30 +92,51 @@ class ProcessMessageManager {
       throw new ProcessStateSendingError()
     }
 
+    const queue = this._promisesToWait.get(state)
     const job = {
       promise: null,
+      index: null,
+      hasTriggered: false,
+      hasClosed: false,
+
       resolve: () => {},
-      reject: () => {}
+      reject: () => {},
+      close: (err, data) => {
+        if (job.hasClosed) {
+          return
+        }
+        if (Number.isInteger(job.index)) {
+          queue.splice(job.index, 1)
+          job.index = null
+        }
+
+        job.hasClosed = true
+
+        if (err) {
+          job.reject(err)
+
+          return
+        }
+
+        job.resolve(data)
+      }
     }
 
-    const promise = new Promise((resolve, reject) => {
-      const queue = this._promisesToWait.get(state)
+    job.promise = new Promise((resolve, reject) => {
       job.resolve = resolve
       job.reject = reject
 
-      queue.push(job)
+      job.index = queue.push(job) - 1
     })
 
-    job.promise = promise
-
-    return promise
+    return job
   }
 
   async processState (state, data) {
     await this._mainHandler({ state, data })
   }
 
-  _processPromise (err, state, data) {
+  _processQueue (state, handler, params = {}) {
     const queue = this._promisesToWait.get(state)
 
     if (
@@ -116,22 +146,23 @@ class ProcessMessageManager {
       return
     }
 
-    for (const [i, task] of queue.entries()) {
-      const {
-        resolve,
-        reject
-      } = task
+    handler(queue, params)
+  }
 
-      queue.splice(i, 1)
+  _processQueuePromises (state, err, data) {
+    this._processQueue(state, (queue) => {
+      for (const [, job] of queue.entries()) {
+        const { close } = job
 
-      if (err) {
-        reject(err)
+        if (err) {
+          close(err)
 
-        continue
+          continue
+        }
+
+        close(null, data)
       }
-
-      resolve(data)
-    }
+    })
   }
 
   async [PROCESS_STATES.CLEAR_ALL_TABLES] (err, state, data) {
@@ -186,6 +217,22 @@ class ProcessMessageManager {
     }
 
     await this.dbBackupManager.backupDb()
+  }
+
+  async [PROCESS_STATES.PREPARE_DB] (err, state, data) {
+    if (err) {
+      this.logger.debug('[DB has not been prepared]:', data)
+      this.logger.error(err)
+
+      this.sendState(PROCESS_MESSAGES.DB_HAS_NOT_BEEN_PREPARED)
+
+      return
+    }
+
+    await this.recalcSubAccountLedgersBalancesHook.execute()
+
+    this.logger.debug('[DB has been prepared]')
+    this.sendState(PROCESS_MESSAGES.DB_HAS_BEEN_PREPARED)
   }
 
   async [PROCESS_STATES.RESTORE_DB] (err, state, data) {
