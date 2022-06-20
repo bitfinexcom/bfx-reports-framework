@@ -69,6 +69,7 @@ const _methodCollMap = new Map([
       start: [],
       confName: 'publicTradesConf',
       isSyncRequiredAtLeastOnce: false,
+      additionalApiCallArgs: { isNotMoreThanInnerMax: true },
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.PUBLIC_TRADES)
     }
@@ -259,6 +260,7 @@ const _methodCollMap = new Map([
       start: [],
       confName: 'tickersHistoryConf',
       isSyncRequiredAtLeastOnce: false,
+      additionalApiCallArgs: { isNotMoreThanInnerMax: true },
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.TICKERS_HISTORY)
     }
@@ -387,6 +389,7 @@ const _methodCollMap = new Map([
       confName: 'candlesConf',
       isSyncDoneForCurrencyConv: false,
       isSyncRequiredAtLeastOnce: true,
+      additionalApiCallArgs: { isNotMoreThanInnerMax: true },
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CANDLES)
     }
