@@ -380,7 +380,13 @@ class SubAccount {
         throw new SubAccountUpdatingError()
       }
 
-      const { _id, email, token, subUsers } = subAccountUser
+      const {
+        _id,
+        email,
+        token,
+        subUsers,
+        isNotProtected
+      } = subAccountUser
 
       const masterUser = subUsers.find((subUser) => {
         const { email: _email } = { ...subUser }
@@ -473,7 +479,8 @@ class SubAccount {
             {
               auth: {
                 ...auth,
-                password: subAccountUser.password
+                password: subAccountUser.password,
+                isNotProtected
               }
             },
             {
