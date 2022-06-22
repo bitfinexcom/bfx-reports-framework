@@ -532,7 +532,7 @@ class BetterSqliteDAO extends DAO {
       INTO ${name}(${projection})
       VALUES (${placeholders})`
 
-    await this.query({
+    return await this.query({
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
