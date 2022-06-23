@@ -267,14 +267,14 @@ class BetterSqliteDAO extends DAO {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = ON'
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   disableForeignKeys () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = OFF'
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   async dropAllTables (opts = {}) {
