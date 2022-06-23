@@ -95,6 +95,10 @@ class BetterSqliteDAO extends DAO {
     await this.startDb()
 
     this.db = this.getConnection()
+
+    await this.beforeMigrationHook()
+    await this._walCheckpoint()
+    await this._vacuum()
   }
 
   query (args, opts) {
