@@ -39,7 +39,20 @@ class MigrationV28 extends AbstractMigration {
       )`,
 
       ...this._getRemappingSubUserIdSQL([
-        'ledregs'
+        'ledregs',
+        'trades',
+        'fundingTrades',
+        'orders',
+        'movements',
+        'fundingOfferHistory',
+        'fundingLoanHistory',
+        'fundingCreditHistory',
+        'positionsHistory',
+        'positionsSnapshot',
+        'logins',
+        'changeLogs',
+        'payInvoiceList',
+        'completedOnFirstSyncColls'
       ])
     ]
 
