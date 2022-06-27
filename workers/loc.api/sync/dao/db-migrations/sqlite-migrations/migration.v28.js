@@ -3,6 +3,19 @@
 const AbstractMigration = require('./abstract.migration')
 
 class MigrationV28 extends AbstractMigration {
+  _getRemappingSubUserIdSQL (tableNames = []) {
+    return tableNames.map((tableName) => (
+      `UPDATE ${tableName} AS up SET subUserId = (
+        SELECT subUserId FROM subAccounts AS sa WHERE masterUserId = up.user_id AND (
+          SELECT 1 FROM users AS WHERE _id = up.subUserId AND email = (
+            SELECT email FROM users WHERE _id = sa.subUserId
+          )
+        )
+      )
+        WHERE subUserId IS NOT NULL`
+    ))
+  }
+
   /**
    * @override
    */
@@ -25,14 +38,9 @@ class MigrationV28 extends AbstractMigration {
         )
       )`,
 
-      `UPDATE ledgers AS up SET subUserId = (
-        SELECT subUserId FROM subAccounts AS sa WHERE masterUserId = up.user_id AND (
-          SELECT 1 FROM users AS WHERE _id = up.subUserId AND email = (
-            SELECT email FROM users WHERE _id = sa.subUserId
-          )
-        )
-      )
-        WHERE subUserId IS NOT NULL`
+      ...this._getRemappingSubUserIdSQL([
+        'ledregs'
+      ])
     ]
 
     this.addSql(sqlArr)
