@@ -6,6 +6,11 @@ class MigrationV28 extends AbstractMigration {
   /**
    * @override
    */
+  before () { return this.dao.disableForeignKeys() }
+
+  /**
+   * @override
+   */
   up () {
     const sqlArr = [
       `UPDATE users SET isNotProtected = 1
@@ -23,6 +28,11 @@ class MigrationV28 extends AbstractMigration {
 
     this.addSql(sqlArr)
   }
+
+  /**
+   * @override
+   */
+  after () { return this.dao.enableForeignKeys() }
 }
 
 module.exports = MigrationV28
