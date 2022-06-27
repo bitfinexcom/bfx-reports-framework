@@ -23,7 +23,16 @@ class MigrationV28 extends AbstractMigration {
         ) AND username LIKE '%-sub-user-' || (
           SELECT id FROM users WHERE isSubAccount = 1 AND _id = sa.masterUserId
         )
-      )`
+      )`,
+
+      `UPDATE ledgers AS up SET subUserId = (
+        SELECT subUserId FROM subAccounts AS sa WHERE masterUserId = up.user_id AND (
+          SELECT 1 FROM users AS WHERE _id = up.subUserId AND email = (
+            SELECT email FROM users WHERE _id = sa.subUserId
+          )
+        )
+      )
+        WHERE subUserId IS NOT NULL`
     ]
 
     this.addSql(sqlArr)
