@@ -6,8 +6,8 @@ class MigrationV28 extends AbstractMigration {
   _getRemappingSubUserIdSQL (tableNames = []) {
     return tableNames.map((tableName) => (
       `UPDATE ${tableName} AS up SET subUserId = (
-        SELECT subUserId FROM subAccounts AS sa WHERE masterUserId = up.user_id AND (
-          SELECT 1 FROM users AS WHERE _id = up.subUserId AND email = (
+        SELECT subUserId FROM subAccounts AS sa WHERE sa.masterUserId = up.user_id AND (
+          SELECT 1 FROM users WHERE _id = up.subUserId AND email = (
             SELECT email FROM users WHERE _id = sa.subUserId
           )
         )
@@ -24,8 +24,8 @@ class MigrationV28 extends AbstractMigration {
   /**
    * @override
    */
-  up () {
-    const sqlArr = [
+  async up () {
+    const usersSqlArr = [
       `UPDATE users SET isNotProtected = 1
         WHERE isSubUser = 1 AND isNotProtected != 1 AND username LIKE '%-sub-user-' || (
           SELECT id FROM users WHERE isSubAccount = 1 AND isNotProtected = 1
@@ -36,25 +36,30 @@ class MigrationV28 extends AbstractMigration {
         ) AND username LIKE '%-sub-user-' || (
           SELECT id FROM users WHERE isSubAccount = 1 AND _id = sa.masterUserId
         )
-      )`,
-
-      ...this._getRemappingSubUserIdSQL([
-        'ledregs',
-        'trades',
-        'fundingTrades',
-        'orders',
-        'movements',
-        'fundingOfferHistory',
-        'fundingLoanHistory',
-        'fundingCreditHistory',
-        'positionsHistory',
-        'positionsSnapshot',
-        'logins',
-        'changeLogs',
-        'payInvoiceList',
-        'completedOnFirstSyncColls'
-      ])
+      )`
     ]
+
+    await this.dao.executeQueriesInTrans(
+      usersSqlArr,
+      { withoutWorkerThreads: true }
+    )
+
+    const sqlArr = this._getRemappingSubUserIdSQL([
+      'ledgers',
+      'trades',
+      'fundingTrades',
+      'orders',
+      'movements',
+      'fundingOfferHistory',
+      'fundingLoanHistory',
+      'fundingCreditHistory',
+      'positionsHistory',
+      'positionsSnapshot',
+      'logins',
+      'changeLogs',
+      'payInvoiceList',
+      'completedOnFirstSyncColls'
+    ])
 
     this.addSql(sqlArr)
   }
