@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 28
+const SUPPORTED_DB_VERSION = 29
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -255,6 +255,8 @@ const _models = new Map([
       placedId: 'BIGINT',
       _lastAmount: 'DECIMAL(22,12)',
       amountExecuted: 'DECIMAL(22,12)',
+      routing: 'VARCHAR(255)',
+      meta: 'TEXT', // JSON
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
 
