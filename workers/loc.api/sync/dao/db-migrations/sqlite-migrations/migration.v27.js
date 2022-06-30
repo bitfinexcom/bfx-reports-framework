@@ -38,7 +38,7 @@ class MigrationV27 extends AbstractMigration {
   /**
    * @override
    */
-  async after () {
+  async afterUp () {
     await this.processMessageManager.processState(
       this.processMessageManager.PROCESS_STATES.PREPARE_DB
     )

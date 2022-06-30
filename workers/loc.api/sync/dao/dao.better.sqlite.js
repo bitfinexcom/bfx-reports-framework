@@ -95,6 +95,10 @@ class BetterSqliteDAO extends DAO {
     await this.startDb()
 
     this.db = this.getConnection()
+
+    await this.beforeMigrationHook()
+    await this._walCheckpoint()
+    await this._vacuum()
   }
 
   query (args, opts) {
@@ -267,14 +271,14 @@ class BetterSqliteDAO extends DAO {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = ON'
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   disableForeignKeys () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = OFF'
-    })
+    }, { withoutWorkerThreads: true })
   }
 
   async dropAllTables (opts = {}) {
@@ -532,7 +536,7 @@ class BetterSqliteDAO extends DAO {
       INTO ${name}(${projection})
       VALUES (${placeholders})`
 
-    await this.query({
+    return await this.query({
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
