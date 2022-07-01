@@ -2394,7 +2394,9 @@ module.exports = (
       'priceAuxLimit',
       'notify',
       'placedId',
-      'amountExecuted'
+      'amountExecuted',
+      'routing',
+      'meta'
     ])
   })
 
