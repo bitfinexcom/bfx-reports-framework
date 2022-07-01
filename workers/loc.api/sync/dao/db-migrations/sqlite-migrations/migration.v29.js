@@ -10,7 +10,10 @@ class MigrationV29 extends AbstractMigration {
   up () {
     const sqlArr = [
       'ALTER TABLE orders ADD COLUMN routing VARCHAR(255)',
-      'ALTER TABLE orders ADD COLUMN meta TEXT'
+      'ALTER TABLE orders ADD COLUMN meta TEXT',
+      'DELETE FROM orders',
+      `DELETE FROM completedOnFirstSyncColls
+        WHERE collName = '_getOrders'`
     ]
 
     this.addSql(sqlArr)
