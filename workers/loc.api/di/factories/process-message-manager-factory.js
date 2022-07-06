@@ -8,21 +8,20 @@ module.exports = (ctx) => {
   )
 
   return () => {
-    const dao = ctx.container.get(
-      TYPES.DAO
-    )
-    const dbBackupManager = ctx.container.get(
-      TYPES.DBBackupManager
-    )
+    const depTypes = [
+      TYPES.DAO,
+      TYPES.DBBackupManager,
+      TYPES.RecalcSubAccountLedgersBalancesHook
+    ]
+    const deps = depTypes.map((type) => {
+      return ctx.container.get(type)
+    })
 
     if (dbDriver === 'better-sqlite') {
       const processMessageManager = ctx.container.get(
         TYPES.ProcessMessageManager
       )
-      processMessageManager.setDeps({
-        dao,
-        dbBackupManager
-      })
+      processMessageManager.setDeps(...deps)
 
       return processMessageManager
     }

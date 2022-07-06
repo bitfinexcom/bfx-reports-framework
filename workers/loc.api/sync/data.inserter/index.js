@@ -99,7 +99,7 @@ class DataInserter extends EventEmitter {
 
     this._asyncProgressHandlers = []
     this._auth = null
-    this._syncedSubUsers = []
+    this._syncedSubUsers = new Set()
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
     )
@@ -158,7 +158,7 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    this._auth = getAuthFromDb(this.authenticator)
+    this._auth = await getAuthFromDb(this.authenticator)
 
     if (
       !this._auth ||
@@ -314,21 +314,10 @@ class DataInserter extends EventEmitter {
     const {
       _id: userId,
       subUser,
-      subUsers,
       isSubAccount
-    } = { ...auth }
-    const { _id: subUserId } = { ...subUser }
-    const isLastSubUser = (
-      isSubAccount &&
-      subUsers.every((subUser) => {
-        const { _id } = { ...subUser }
-
-        return [
-          ...this._syncedSubUsers,
-          subUserId
-        ].some((suId) => _id === suId)
-      })
-    )
+    } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+    const isLastSubUser = this._isLastSubUser(auth)
 
     let count = 0
     let progress = 0
@@ -387,7 +376,7 @@ class DataInserter extends EventEmitter {
     await this.prepareData({ methodCollMap }, { isLastSubUser })
 
     if (isSubAccount) {
-      this._syncedSubUsers.push(subUserId)
+      this._setSyncedSubUser(userId, subUserId)
     }
 
     return progress
@@ -967,6 +956,42 @@ class DataInserter extends EventEmitter {
 
   _getMethodCollMap () {
     return new Map(this._methodCollMap)
+  }
+
+  _isLastSubUser (auth = {}) {
+    const {
+      _id: userId,
+      subUser,
+      subUsers,
+      isSubAccount
+    } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+    const restSubUsers = subUsers.filter((user) => (
+      user?._id !== subUserId
+    ))
+    const currSubUser = this._getSyncedSubUser(userId, subUserId)
+
+    return (
+      isSubAccount &&
+      !this._syncedSubUsers.has(currSubUser) &&
+      restSubUsers.every((subUser) => (
+        this._syncedSubUsers
+          .has(this._getSyncedSubUser(userId, subUser?._id))
+      ))
+    )
+  }
+
+  _setSyncedSubUser (userId, subUserId) {
+    if (!(this._syncedSubUsers instanceof Set)) {
+      this._syncedSubUsers = new Set()
+    }
+
+    this._syncedSubUsers
+      .add(this._getSyncedSubUser(userId, subUserId))
+  }
+
+  _getSyncedSubUser (userId, subUserId) {
+    return `${userId}-${subUserId}`
   }
 }
 

@@ -4,7 +4,10 @@ module.exports = (
   schema,
   opts
 ) => {
-  const { maxLimit = null } = schema
+  const {
+    maxLimit = null,
+    additionalApiCallArgs
+  } = schema
   const {
     auth: reqAuth = {},
     limit = maxLimit,
@@ -32,8 +35,10 @@ module.exports = (
     : { apiKey, apiSecret, session: reqAuth }
 
   return {
+    ...additionalApiCallArgs,
     auth,
     params: {
+      ...additionalApiCallArgs?.params,
       ...params,
       limit,
       end,

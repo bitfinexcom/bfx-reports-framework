@@ -747,22 +747,22 @@ class Authenticator {
 
   async createUser (data, params) {
     const {
-      email,
-      isSubAccount = false,
-      isSubUser = false
-    } = { ...data }
-    const {
       isNotInTrans,
       withoutWorkerThreads
     } = { ...params }
 
-    await this.dao.insertElemToDb(
+    const { lastInsertRowid } = await this.dao.insertElemToDb(
       this.TABLES_NAMES.USERS,
       data,
       { withoutWorkerThreads }
     )
+
+    if (!Number.isInteger(lastInsertRowid)) {
+      throw new AuthError()
+    }
+
     const user = await this.getUser(
-      { email, isSubAccount, isSubUser },
+      { _id: lastInsertRowid },
       { isNotInTrans, withoutWorkerThreads }
     )
 
