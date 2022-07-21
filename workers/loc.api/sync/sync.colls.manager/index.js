@@ -14,17 +14,20 @@ const { decorateInjectable } = require('../../di/utils')
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
-  TYPES.SyncSchema
+  TYPES.SyncSchema,
+  TYPES.SYNC_API_METHODS
 ]
 class SyncCollsManager {
   constructor (
     dao,
     TABLES_NAMES,
-    syncSchema
+    syncSchema,
+    SYNC_API_METHODS
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
+    this.SYNC_API_METHODS = SYNC_API_METHODS
 
     this._methodCollMap = this.syncSchema.getMethodCollMap()
   }
@@ -97,13 +100,65 @@ class SyncCollsManager {
     )
   }
 
-  async haveCollsBeenSyncedAtLeastOnce (args) {
-    const { auth } = { ...args }
+  async _haveLedgerMovementsBeenSyncedAtLeastOnce (args, opts) {
     const {
       _id: userId,
       subUsers,
       isSubAccount
-    } = auth
+    } = args?.auth ?? {}
+    const {
+      method,
+      completedColls = []
+    } = opts ?? {}
+
+    if (method !== this.SYNC_API_METHODS.MOVEMENTS) {
+      return false
+    }
+
+    if (isSubAccount) {
+      const isLedgersCollDone = subUsers.every((subUser) => (
+        Number.isInteger(subUser?._id) &&
+        completedColls.some((completedColl) => (
+          completedColl?.collName === this.SYNC_API_METHODS.LEDGERS &&
+          completedColl?.user_id === userId &&
+          completedColl?.subUserId === subUser._id
+        ))
+      ))
+
+      if (!isLedgersCollDone) {
+        return false
+      }
+    }
+
+    const isLedgersCollDone = completedColls.some((completedColl) => (
+      completedColl?.collName === this.SYNC_API_METHODS.LEDGERS
+    ))
+
+    if (!isLedgersCollDone) {
+      return false
+    }
+
+    const subAccountFilter = isSubAccount
+      ? { $in: { subUserId: subUsers } }
+      : {}
+    const ledger = await this.dao.getElemInCollBy(
+      this.TABLES_NAMES.LEDGERS,
+      {
+        $eq: { _isSubAccountsTransfer: 1 },
+        user_id: userId,
+        ...subAccountFilter
+      }
+    )
+
+    return Number.isInteger(ledger?._id)
+  }
+
+  async haveCollsBeenSyncedAtLeastOnce (args) {
+    const {
+      _id: userId,
+      subUsers,
+      isSubAccount
+    } = args?.auth ?? {}
 
     const completedColls = await this._getCompletedCollsBy({
       $or: {
@@ -144,9 +199,7 @@ class SyncCollsManager {
       }
       if (isPublic(type)) {
         const isDone = completedColls.some((completedColl) => (
-          completedColl &&
-          typeof completedColl === 'object' &&
-          completedColl.collName === method
+          completedColl?.collName === method
         ))
 
         checkingRes.push(isDone)
@@ -155,31 +208,37 @@ class SyncCollsManager {
       }
       if (isSubAccount) {
         const isDone = subUsers.every((subUser) => (
-          subUser &&
-          typeof subUser === 'object' &&
-          Number.isInteger(subUser._id) &&
+          Number.isInteger(subUser?._id) &&
           completedColls.some((completedColl) => (
-            completedColl &&
-            typeof completedColl === 'object' &&
-            completedColl.collName === method &&
-            completedColl.user_id === userId &&
-            completedColl.subUserId === subUser._id
+            completedColl?.collName === method &&
+            completedColl?.user_id === userId &&
+            completedColl?.subUserId === subUser._id
           ))
         ))
+        const isLedgerMovementsDone = !isDone
+          ? await this._haveLedgerMovementsBeenSyncedAtLeastOnce(
+              args,
+              { method, completedColls }
+            )
+          : false
 
-        checkingRes.push(isDone)
+        checkingRes.push(isDone || isLedgerMovementsDone)
 
         continue
       }
 
       const isDone = completedColls.some((completedColl) => (
-        completedColl &&
-        typeof completedColl === 'object' &&
-        completedColl.collName === method &&
-        completedColl.user_id === userId
+        completedColl?.collName === method &&
+        completedColl?.user_id === userId
       ))
+      const isLedgerMovementsDone = !isDone
+        ? await this._haveLedgerMovementsBeenSyncedAtLeastOnce(
+            args,
+            { method, completedColls }
+          )
+        : false
 
-      checkingRes.push(isDone)
+      checkingRes.push(isDone || isLedgerMovementsDone)
     }
 
     return checkingRes.every((res) => res)
