@@ -122,10 +122,10 @@ module.exports = (rService) => async (
     pipeline(rStream, wStream, nope)
   })
 
-  const res = await getDataFromApi(
-    rService[name].bind(rService),
+  const res = await getDataFromApi({
+    getData: rService[name].bind(rService),
     args
-  )
+  })
   const {
     startingPositionsSnapshot,
     endingPositionsSnapshot,

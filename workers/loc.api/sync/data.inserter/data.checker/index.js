@@ -745,14 +745,12 @@ class DataChecker {
       throw new FindMethodError()
     }
 
-    return getDataFromApi(
-      (space, args) => this.rService[methodApi]
+    return getDataFromApi({
+      getData: (space, args) => this.rService[methodApi]
         .bind(this.rService)(args),
       args,
-      null,
-      null,
-      this.syncInterrupter
-    )
+      interrupter: this.syncInterrupter
+    })
   }
 }
 

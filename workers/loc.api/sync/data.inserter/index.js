@@ -464,13 +464,13 @@ class DataInserter extends EventEmitter {
       throw new FindMethodError()
     }
 
-    return getDataFromApi(
-      methodApi,
+    return getDataFromApi({
+      getData: methodApi,
       args,
-      this.apiMiddleware.request.bind(this.apiMiddleware),
-      isCheckCall,
-      this.syncInterrupter
-    )
+      middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
+      middlewareParams: isCheckCall,
+      interrupter: this.syncInterrupter
+    })
   }
 
   async _insertApiDataPublicArrObjTypeToDb (
