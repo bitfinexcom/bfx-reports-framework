@@ -46,12 +46,6 @@ class UpdateRecordError extends BaseError {
   }
 }
 
-class ImplementationError extends BaseError {
-  constructor (message = 'ERR_NOT_IMPLEMENTED') {
-    super(message)
-  }
-}
-
 class DAOInitializationError extends BaseError {
   constructor (message = 'ERR_DAO_NOT_INITIALIZED') {
     super(message)
@@ -194,7 +188,6 @@ module.exports = {
   AfterAllInsertsHookIsNotHookError,
   RemoveListElemsError,
   UpdateRecordError,
-  ImplementationError,
   DAOInitializationError,
   ServerAvailabilityError,
   ObjectMappingError,
