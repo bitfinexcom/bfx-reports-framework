@@ -5,9 +5,6 @@ const {
 } = require('lodash')
 const moment = require('moment')
 const {
-  getDataFromApi
-} = require('bfx-report/workers/loc.api/helpers')
-const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
@@ -41,7 +38,8 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.CurrencyConverter,
   TYPES.SyncInterrupter,
-  TYPES.SyncCollsManager
+  TYPES.SyncCollsManager,
+  TYPES.GetDataFromApi
 ]
 class DataChecker {
   constructor (
@@ -53,7 +51,8 @@ class DataChecker {
     FOREX_SYMBS,
     currencyConverter,
     syncInterrupter,
-    syncCollsManager
+    syncCollsManager,
+    getDataFromApi
   ) {
     this.rService = rService
     this.dao = dao
@@ -64,6 +63,7 @@ class DataChecker {
     this.currencyConverter = currencyConverter
     this.syncInterrupter = syncInterrupter
     this.syncCollsManager = syncCollsManager
+    this.getDataFromApi = getDataFromApi
 
     this._methodCollMap = new Map()
 
@@ -745,11 +745,11 @@ class DataChecker {
       throw new FindMethodError()
     }
 
-    return getDataFromApi({
+    return this.getDataFromApi({
       getData: (space, args) => this.rService[methodApi]
         .bind(this.rService)(args),
       args,
-      interrupter: this.syncInterrupter
+      callerName: 'DATA_SYNCER'
     })
   }
 }
