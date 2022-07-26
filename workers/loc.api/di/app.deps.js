@@ -141,7 +141,8 @@ module.exports = ({
           ['_privResponder', TYPES.PrivResponder],
           ['_syncCollsManager', TYPES.SyncCollsManager],
           ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
-          ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance]
+          ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance],
+          ['_getDataFromApi', TYPES.GetDataFromApi]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
