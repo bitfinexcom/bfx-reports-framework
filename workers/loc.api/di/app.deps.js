@@ -9,6 +9,9 @@ const EventEmitter = require('events')
 const { bindDepsToFn } = require(
   'bfx-report/workers/loc.api/di/helpers'
 )
+const {
+  getDataFromApi
+} = require('bfx-report/workers/loc.api/helpers')
 
 const TYPES = require('./types')
 
@@ -332,5 +335,14 @@ module.exports = ({
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)
       .inSingletonScope()
+    rebind(TYPES.GetDataFromApi).toConstantValue(
+      bindDepsToFn(
+        getDataFromApi,
+        [
+          TYPES.SyncInterrupter,
+          TYPES.WSEventEmitter
+        ]
+      )
+    )
   })
 }
