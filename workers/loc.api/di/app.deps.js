@@ -331,7 +331,10 @@ module.exports = ({
       .toConstantValue(
         bindDepsToFn(
           fullTaxReportCsvWriter,
-          [TYPES.RService]
+          [
+            TYPES.RService,
+            TYPES.GetDataFromApi
+          ]
         )
       )
     bind(TYPES.FullTaxReport)
