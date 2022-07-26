@@ -6,9 +6,6 @@ const {
   cloneDeep
 } = require('lodash')
 const {
-  getDataFromApi
-} = require('bfx-report/workers/loc.api/helpers')
-const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
 
@@ -59,7 +56,8 @@ const depsTypes = (TYPES) => [
   TYPES.DataChecker,
   TYPES.SyncInterrupter,
   TYPES.WSEventEmitter,
-  TYPES.SyncCollsManager
+  TYPES.SyncCollsManager,
+  TYPES.GetDataFromApi
 ]
 class DataInserter extends EventEmitter {
   constructor (
@@ -77,7 +75,8 @@ class DataInserter extends EventEmitter {
     dataChecker,
     syncInterrupter,
     wsEventEmitter,
-    syncCollsManager
+    syncCollsManager,
+    getDataFromApi
   ) {
     super()
 
@@ -96,6 +95,7 @@ class DataInserter extends EventEmitter {
     this.syncInterrupter = syncInterrupter
     this.wsEventEmitter = wsEventEmitter
     this.syncCollsManager = syncCollsManager
+    this.getDataFromApi = getDataFromApi
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -464,12 +464,12 @@ class DataInserter extends EventEmitter {
       throw new FindMethodError()
     }
 
-    return getDataFromApi({
+    return this.getDataFromApi({
       getData: methodApi,
       args,
       middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
       middlewareParams: isCheckCall,
-      interrupter: this.syncInterrupter
+      callerName: 'DATA_SYNCER'
     })
   }
 
