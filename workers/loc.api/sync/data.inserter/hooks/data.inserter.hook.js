@@ -2,7 +2,7 @@
 
 const {
   ImplementationError
-} = require('../../../errors')
+} = require('bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../../../di/utils')
 

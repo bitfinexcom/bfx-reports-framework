@@ -10,7 +10,6 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
-  getDataFromApi,
   isENetError
 } = require('bfx-report/workers/loc.api/helpers')
 
@@ -592,10 +591,11 @@ class FrameworkReportService extends ReportService {
     return this._privResponder(() => {
       return this._subAccountApiData
         .getDataForSubAccount(
-          (args) => getDataFromApi(
-            (space, args) => super.getActivePositions(space, args),
-            args
-          ),
+          (args) => this._getDataFromApi({
+            getData: (space, args) => super.getActivePositions(space, args),
+            args,
+            callerName: 'ACTIVE_POSITIONS_GETTER'
+          }),
           args,
           {
             datePropName: 'mtsUpdate',
@@ -625,12 +625,13 @@ class FrameworkReportService extends ReportService {
     return responder(async () => {
       return this._positionsAudit
         .getPositionsAuditForSubAccount(
-          (args) => getDataFromApi(
-            (space, args) => {
+          (args) => this._getDataFromApi({
+            getData: (space, args) => {
               return super.getPositionsAudit(space, args)
             },
-            args
-          ),
+            args,
+            callerName: 'POSITIONS_AUDIT_GETTER'
+          }),
           args,
           {
             checkParamsFn: (args) => checkParams(

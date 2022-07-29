@@ -9,6 +9,9 @@ const EventEmitter = require('events')
 const { bindDepsToFn } = require(
   'bfx-report/workers/loc.api/di/helpers'
 )
+const {
+  getDataFromApi
+} = require('bfx-report/workers/loc.api/helpers')
 
 const TYPES = require('./types')
 
@@ -138,7 +141,8 @@ module.exports = ({
           ['_privResponder', TYPES.PrivResponder],
           ['_syncCollsManager', TYPES.SyncCollsManager],
           ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
-          ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance]
+          ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance],
+          ['_getDataFromApi', TYPES.GetDataFromApi]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -317,14 +321,20 @@ module.exports = ({
       .toConstantValue(
         bindDepsToFn(
           fullSnapshotReportCsvWriter,
-          [TYPES.RService]
+          [
+            TYPES.RService,
+            TYPES.GetDataFromApi
+          ]
         )
       )
     bind(TYPES.FullTaxReportCsvWriter)
       .toConstantValue(
         bindDepsToFn(
           fullTaxReportCsvWriter,
-          [TYPES.RService]
+          [
+            TYPES.RService,
+            TYPES.GetDataFromApi
+          ]
         )
       )
     bind(TYPES.FullTaxReport)
@@ -332,5 +342,14 @@ module.exports = ({
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)
       .inSingletonScope()
+    rebind(TYPES.GetDataFromApi).toConstantValue(
+      bindDepsToFn(
+        getDataFromApi,
+        [
+          TYPES.SyncInterrupter,
+          TYPES.WSEventEmitter
+        ]
+      )
+    )
   })
 }
