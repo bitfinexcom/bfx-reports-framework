@@ -1,8 +1,11 @@
 'use strict'
 
 const {
-  DAOInitializationError,
   ImplementationError
+} = require('bfx-report/workers/loc.api/errors')
+
+const {
+  DAOInitializationError
 } = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')

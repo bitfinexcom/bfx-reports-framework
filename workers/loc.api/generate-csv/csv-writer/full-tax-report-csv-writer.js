@@ -6,13 +6,13 @@ const { stringify } = require('csv')
 const {
   write
 } = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
-const {
-  getDataFromApi
-} = require('bfx-report/workers/loc.api/helpers')
 
 const nope = () => {}
 
-module.exports = (rService) => async (
+module.exports = (
+  rService,
+  getDataFromApi
+) => async (
   wStream,
   jobData
 ) => {
@@ -122,10 +122,11 @@ module.exports = (rService) => async (
     pipeline(rStream, wStream, nope)
   })
 
-  const res = await getDataFromApi(
-    rService[name].bind(rService),
-    args
-  )
+  const res = await getDataFromApi({
+    getData: rService[name].bind(rService),
+    args,
+    callerName: 'CSV_WRITER'
+  })
   const {
     startingPositionsSnapshot,
     endingPositionsSnapshot,

@@ -1,13 +1,29 @@
 'use strict'
 
+const AbstractWSEventEmitter = require(
+  'bfx-report/workers/loc.api/abstract.ws.event.emitter'
+)
+
 const { decorateInjectable } = require('../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.WSTransport
 ]
-class WSEventEmitter {
+class WSEventEmitter extends AbstractWSEventEmitter {
   constructor (wsTransport) {
+    super()
+
     this.wsTransport = wsTransport
+  }
+
+  /**
+   * @override
+   */
+  emit (handler, action) {
+    return this.wsTransport.sendToActiveUsers(
+      handler,
+      action
+    )
   }
 
   isInvalidAuth (auth = {}, { _id, email } = {}) {
@@ -20,7 +36,7 @@ class WSEventEmitter {
   emitProgress (
     handler = () => {}
   ) {
-    return this.wsTransport.sendToActiveUsers(
+    return this.emit(
       handler,
       'emitProgress'
     )
@@ -29,7 +45,7 @@ class WSEventEmitter {
   emitSyncingStep (
     handler = () => {}
   ) {
-    return this.wsTransport.sendToActiveUsers(
+    return this.emit(
       handler,
       'emitSyncingStep'
     )
@@ -57,7 +73,7 @@ class WSEventEmitter {
   async emitRedirectingRequestsStatusToApi (
     handler = () => {}
   ) {
-    return this.wsTransport.sendToActiveUsers(
+    return this.emit(
       handler,
       'emitRedirectingRequestsStatusToApi'
     )

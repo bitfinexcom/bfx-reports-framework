@@ -19,7 +19,8 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.SYNC_API_METHODS,
-  TYPES.Movements
+  TYPES.Movements,
+  TYPES.Wallets
 ]
 class WinLoss {
   constructor (
@@ -30,7 +31,8 @@ class WinLoss {
     FOREX_SYMBS,
     authenticator,
     SYNC_API_METHODS,
-    movements
+    movements,
+    wallets
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
@@ -40,6 +42,7 @@ class WinLoss {
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
     this.movements = movements
+    this.wallets = wallets
 
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
@@ -67,8 +70,10 @@ class WinLoss {
     return { [symb]: res }
   }
 
-  _getWinLossByTimeframe ({ isUnrealizedProfitExcluded }) {
-    let firstWalletsVals = {}
+  _getWinLossByTimeframe ({
+    isUnrealizedProfitExcluded,
+    firstWalletsVals
+  }) {
     let firstPLVals = 0
     let prevMovementsRes = 0
 
@@ -82,7 +87,6 @@ class WinLoss {
       const isFirst = (i + 1) === arr.length
 
       if (isFirst) {
-        firstWalletsVals = walletsGroupedByTimeframe
         firstPLVals = plGroupedByTimeframe
       }
 
@@ -229,6 +233,10 @@ class WinLoss {
       ? []
       : this.positionsSnapshot.getPLSnapshot(args)
 
+    const firstWalletsPromise = this.wallets.getWallets({
+      auth,
+      params: { end: start }
+    })
     const walletsGroupedByTimeframePromise = this.balanceHistory.getBalanceHistory(
       {
         ...args,
@@ -280,18 +288,46 @@ class WinLoss {
     )
 
     const [
+      firstWallets,
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
       walletsGroupedByTimeframe,
       plGroupedByTimeframe
     ] = await Promise.all([
+      firstWalletsPromise,
       withdrawalsGroupedByTimeframePromise,
       depositsGroupedByTimeframePromise,
       walletsGroupedByTimeframePromise,
       plGroupedByTimeframePromise
     ])
 
+    const firstWalletsVals = firstWallets.reduce((accum, curr = {}) => {
+      const { balance, balanceUsd, currency } = curr ?? {}
+      const _isForexSymb = isForexSymb(currency, this.FOREX_SYMBS)
+      const _isNotUsedBalanceUsdField = (
+        _isForexSymb &&
+        !Number.isFinite(balanceUsd)
+      )
+      const _balance = _isNotUsedBalanceUsdField
+        ? balance
+        : balanceUsd
+      const symb = _isNotUsedBalanceUsdField
+        ? currency
+        : 'USD'
+
+      if (!Number.isFinite(_balance)) {
+        return accum
+      }
+
+      accum[symb] = Number.isFinite(accum[symb])
+        ? accum[symb] + _balance
+        : _balance
+
+      return accum
+    }, {})
+
     return {
+      firstWalletsVals,
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
       walletsGroupedByTimeframe,
@@ -324,6 +360,7 @@ class WinLoss {
     }
 
     const {
+      firstWalletsVals,
       walletsGroupedByTimeframe,
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
@@ -339,7 +376,10 @@ class WinLoss {
       },
       false,
       this._getWinLossByTimeframe(
-        { isUnrealizedProfitExcluded }
+        {
+          isUnrealizedProfitExcluded,
+          firstWalletsVals
+        }
       ),
       true
     )
