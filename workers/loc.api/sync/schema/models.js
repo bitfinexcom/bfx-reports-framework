@@ -815,7 +815,30 @@ const _models = new Map([
     {
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
-      state: 'VARCHAR(255)'
+      state: 'VARCHAR(255)',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
+
+      [TRIGGER_FIELD_NAME]: [
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          WHEN NEW.state != OLD.state
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
     }
   ],
   [
