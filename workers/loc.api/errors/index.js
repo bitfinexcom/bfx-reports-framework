@@ -37,6 +37,12 @@ class RemoveListElemsError extends BaseError {
   }
 }
 
+class RemoveElemsLeaveLastNRecordsError extends BaseError {
+  constructor (message = 'ERR_STORE_ROWS_LIMIT_MUST_BE_MORE_THAN_0') {
+    super(message)
+  }
+}
+
 class UpdateRecordError extends BaseError {
   constructor (name) {
     const recordName = name && typeof name === 'string'
@@ -194,6 +200,7 @@ module.exports = {
   AsyncProgressHandlerIsNotFnError,
   AfterAllInsertsHookIsNotHookError,
   RemoveListElemsError,
+  RemoveElemsLeaveLastNRecordsError,
   UpdateRecordError,
   DAOInitializationError,
   ServerAvailabilityError,
