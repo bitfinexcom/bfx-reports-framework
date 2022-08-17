@@ -145,6 +145,10 @@ class SyncQueue extends EventEmitter {
       await this._updateStateById(_id, FINISHED_JOB_STATE)
     }
 
+    /*
+     * Remove finished sync jobs from the queue
+     * leaving the last 100 for debug purposes
+     */
     await this._removeByState(FINISHED_JOB_STATE)
 
     if (!this.syncInterrupter.hasInterrupted()) {
@@ -302,10 +306,13 @@ class SyncQueue extends EventEmitter {
   }
 
   _removeByState (state) {
-    return this.dao.removeElemsFromDb(
+    return this.dao.removeElemsLeaveLastNRecords(
       this.name,
-      null,
-      { state }
+      {
+        filter: { state },
+        limit: 100,
+        sort: [['updatedAt', -1], ['_id', -1]]
+      }
     )
   }
 
