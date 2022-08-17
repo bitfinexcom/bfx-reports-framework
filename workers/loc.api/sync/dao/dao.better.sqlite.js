@@ -37,7 +37,8 @@ const {
   DbVersionTypeError,
   SqlCorrectnessError,
   RemoveListElemsError,
-  UpdateRecordError
+  UpdateRecordError,
+  RemoveElemsLeaveLastNRecordsError
 } = require('../../errors')
 
 const {
@@ -985,6 +986,51 @@ class BetterSqliteDAO extends DAO {
       sql,
       params
     }, { withoutWorkerThreads })
+  }
+
+  /**
+   * @override
+   */
+  async removeElemsLeaveLastNRecords (name, params = {}) {
+    const {
+      filter,
+      limit,
+      sort
+    } = params ?? {}
+
+    if (
+      !Number.isInteger(limit) ||
+      limit < 0
+    ) {
+      throw new RemoveElemsLeaveLastNRecordsError()
+    }
+
+    const {
+      where,
+      values
+    } = getWhereQuery(
+      filter,
+      { isNotSetWhereClause: true }
+    )
+    const _sort = getOrderQuery(sort)
+    const {
+      limit: _limit,
+      limitVal
+    } = getLimitQuery({ limit })
+    const limitRestrictionQuery = `WHERE _id NOT IN
+      (SELECT _id FROM ${name} WHERE ${where} ${_sort} ${_limit})`
+    const _where = [
+      limitRestrictionQuery,
+      where
+    ].filter((query) => query).join(' AND ')
+
+    const sql = `DELETE FROM ${name} ${_where}`
+
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.RUN,
+      sql,
+      params: { ...values, ...limitVal }
+    }, { withoutWorkerThreads: true })
   }
 
   /**

@@ -156,6 +156,11 @@ class DAO {
   /**
    * @abstract
    */
+  async removeElemsLeaveLastNRecords () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async removeElemsFromDbIfNotInLists () { throw new ImplementationError() }
 }
 
