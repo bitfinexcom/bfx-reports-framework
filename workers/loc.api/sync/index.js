@@ -1,6 +1,9 @@
 'use strict'
 
-const { CollSyncPermissionError } = require('../errors')
+const {
+  CollSyncPermissionError,
+  SyncQueueOwnerSettingError
+} = require('../errors')
 
 const { decorateInjectable } = require('../di/utils')
 
@@ -73,18 +76,33 @@ class Sync {
     return currProgress
   }
 
-  async start (
-    isSolveAfterRedirToApi,
-    syncColls = this.ALLOWED_COLLS.ALL
-  ) {
+  async start (params = {}) {
+    const {
+      isSolveAfterRedirToApi = false,
+      syncColls = this.ALLOWED_COLLS.ALL,
+      ownerUserId = null,
+      isOwnerScheduler = false
+    } = params ?? {}
+
     let error = null
 
     try {
+      if (
+        !Number.isInteger(ownerUserId) &&
+        !isOwnerScheduler
+      ) {
+        throw new SyncQueueOwnerSettingError()
+      }
+
       const isEnable = await this.rService.isSchedulerEnabled()
       const currProgress = await this.progress.getProgress()
 
       if (isEnable) {
-        await this.syncQueue.add(syncColls)
+        await this.syncQueue.add({
+          syncColls,
+          ownerUserId,
+          isOwnerScheduler
+        })
       }
       if (
         (currProgress < 100) ||

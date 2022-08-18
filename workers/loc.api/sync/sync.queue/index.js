@@ -9,7 +9,8 @@ const {
   checkCollPermission
 } = require('../helpers')
 const {
-  UpdateSyncQueueJobError
+  UpdateSyncQueueJobError,
+  SyncQueueOwnerSettingError
 } = require('../../errors')
 
 const {
@@ -76,7 +77,20 @@ class SyncQueue extends EventEmitter {
     this.name = name
   }
 
-  async add (syncColls) {
+  async add (params) {
+    const {
+      syncColls,
+      ownerUserId,
+      isOwnerScheduler
+    } = params ?? {}
+
+    if (
+      !Number.isInteger(ownerUserId) &&
+      !isOwnerScheduler
+    ) {
+      throw new SyncQueueOwnerSettingError()
+    }
+
     const _syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
@@ -97,7 +111,9 @@ class SyncQueue extends EventEmitter {
     const data = uSyncColls.map(collName => {
       return {
         collName,
-        state: NEW_JOB_STATE
+        state: NEW_JOB_STATE,
+        ownerUserId,
+        isOwnerScheduler
       }
     })
 
