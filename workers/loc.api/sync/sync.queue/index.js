@@ -175,13 +175,20 @@ class SyncQueue extends EventEmitter {
   }
 
   async _subProcess (nextSync, multiplier) {
-    const { _id, collName } = nextSync
+    const {
+      _id,
+      collName,
+      ownerUserId,
+      isOwnerScheduler
+    } = nextSync
     let currMultiplier = 0
 
     try {
       const dataInserter = this.dataInserterFactory({
+        syncColls: collName,
         syncQueueId: _id,
-        syncColls: collName
+        ownerUserId,
+        isOwnerScheduler
       })
 
       dataInserter.addAsyncProgressHandler(async (progress) => {

@@ -114,10 +114,14 @@ class DataInserter extends EventEmitter {
     })
 
     const {
-      syncQueueId = this.ALLOWED_COLLS.ALL,
-      syncColls
+      syncColls = this.ALLOWED_COLLS.ALL,
+      syncQueueId,
+      ownerUserId,
+      isOwnerScheduler
     } = params ?? {}
     this.syncQueueId = syncQueueId
+    this.ownerUserId = ownerUserId
+    this.isOwnerScheduler = isOwnerScheduler
     this.syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
@@ -163,7 +167,13 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    this._auth = await getAuthFromDb(this.authenticator)
+    this._auth = await getAuthFromDb(
+      this.authenticator,
+      {
+        ownerUserId: this.ownerUserId,
+        isOwnerScheduler: this.isOwnerScheduler
+      }
+    )
 
     if (
       !this._auth ||
