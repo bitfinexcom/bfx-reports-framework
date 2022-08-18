@@ -163,7 +163,10 @@ class SyncQueue extends EventEmitter {
     let currMultiplier = 0
 
     try {
-      const dataInserter = this.dataInserterFactory(collName)
+      const dataInserter = this.dataInserterFactory({
+        syncQueueId: _id,
+        syncColls: collName
+      })
 
       dataInserter.addAsyncProgressHandler(async (progress) => {
         currMultiplier = await this._getMultiplier(collName)

@@ -3,11 +3,11 @@
 const TYPES = require('../types')
 
 module.exports = (ctx) => {
-  return (syncColls) => {
+  return (params) => {
     const dataInserter = ctx.container.get(
       TYPES.DataInserter
     )
-    dataInserter.init(syncColls)
+    dataInserter.init(params)
 
     return dataInserter
   }

@@ -108,11 +108,16 @@ class DataInserter extends EventEmitter {
     this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
-  init (syncColls = this.ALLOWED_COLLS.ALL) {
+  init (params) {
     this.syncInterrupter.onceInterrupt(() => {
       this._isInterrupted = true
     })
 
+    const {
+      syncQueueId = this.ALLOWED_COLLS.ALL,
+      syncColls
+    } = params ?? {}
+    this.syncQueueId = syncQueueId
     this.syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
