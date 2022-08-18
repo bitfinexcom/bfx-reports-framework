@@ -818,6 +818,8 @@ const _models = new Map([
       state: 'VARCHAR(255)',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
+      ownerUserId: 'INT',
+      isOwnerScheduler: 'INT',
 
       [TRIGGER_FIELD_NAME]: [
         `insert_#{tableName}_createdAt_and_updatedAt
