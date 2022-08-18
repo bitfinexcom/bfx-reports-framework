@@ -193,6 +193,12 @@ class TotalFeesParamsFlagError extends ArgsParamsError {
   }
 }
 
+class SyncQueueOwnerSettingError extends BaseError {
+  constructor (message = 'ERR_NO_PROVIDED_SYNC_QUEUE_OWNER') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -222,5 +228,6 @@ module.exports = {
   DataConsistencyWhileSyncingError,
   ProcessStateSendingError,
   DbRestoringError,
-  TotalFeesParamsFlagError
+  TotalFeesParamsFlagError,
+  SyncQueueOwnerSettingError
 }
