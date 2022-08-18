@@ -209,7 +209,7 @@ class FrameworkReportService extends ReportService {
 
   enableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      await this._authenticator.signIn(
+      const user = await this._authenticator.signIn(
         args,
         {
           active: null,
@@ -225,7 +225,10 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync.start(true)
+      await this._sync.start({
+        isSolveAfterRedirToApi: true,
+        ownerUserId: user?._id
+      })
 
       return true
     }, 'enableSyncMode', args, cb)
@@ -281,7 +284,10 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync.start(true)
+      await this._sync.start({
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'enableScheduler', args, cb)
@@ -337,12 +343,11 @@ class FrameworkReportService extends ReportService {
 
   syncNow (space, args = {}, cb) {
     return this._privResponder(() => {
-      const { params } = { ...args }
-      const {
-        syncColls = this._ALLOWED_COLLS.ALL
-      } = { ...params }
-
-      return this._sync.start(true, syncColls)
+      return this._sync.start({
+        syncColls: args?.params?.syncColls ?? this._ALLOWED_COLLS.ALL,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
     }, 'syncNow', args, cb)
   }
 
@@ -463,7 +468,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync.start(true, syncedColls)
+      await this._sync.start({
+        syncColls: syncedColls,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editCandlesConf', args, cb)

@@ -563,7 +563,10 @@ class SubAccount {
       this.TABLES_NAMES.SCHEDULER,
       { isEnable: true }
     )
-    await this.sync.start(true)
+    await this.sync.start({
+      isSolveAfterRedirToApi: true,
+      ownerUserId: subAccountAuth?._id
+    })
 
     return res
   }
