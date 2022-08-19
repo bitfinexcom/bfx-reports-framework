@@ -48,8 +48,29 @@ const _models = new Map([
       isNotProtected: 'INT',
       isSubAccount: 'INT',
       isSubUser: 'INT',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
 
-      [UNIQUE_INDEX_FIELD_NAME]: ['email', 'username']
+      [UNIQUE_INDEX_FIELD_NAME]: ['email', 'username'],
+      [TRIGGER_FIELD_NAME]: [
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
     }
   ],
   [
@@ -58,6 +79,9 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       masterUserId: 'INT NOT NULL',
       subUserId: 'INT NOT NULL',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
+
       [CONSTR_FIELD_NAME]: [
         `CONSTRAINT #{tableName}_fk_masterUserId
         FOREIGN KEY (masterUserId)
@@ -70,13 +94,32 @@ const _models = new Map([
         ON UPDATE CASCADE
         ON DELETE CASCADE`
       ],
-      [TRIGGER_FIELD_NAME]: `delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
-        AFTER DELETE ON #{tableName}
-        FOR EACH ROW
-        BEGIN
-          DELETE FROM ${TABLES_NAMES.USERS}
-            WHERE _id = OLD.subUserId;
-        END`
+      [TRIGGER_FIELD_NAME]: [
+        `delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
+          AFTER DELETE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            DELETE FROM ${TABLES_NAMES.USERS}
+              WHERE _id = OLD.subUserId;
+          END`,
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
     }
   ],
   [
