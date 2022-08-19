@@ -836,21 +836,87 @@ const _models = new Map([
     TABLES_NAMES.SCHEDULER,
     {
       _id: ID_PRIMARY_KEY,
-      isEnable: 'INT'
+      isEnable: 'INT',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
+
+      [TRIGGER_FIELD_NAME]: [
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
     }
   ],
   [
     TABLES_NAMES.SYNC_MODE,
     {
       _id: ID_PRIMARY_KEY,
-      isEnable: 'INT'
+      isEnable: 'INT',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
+
+      [TRIGGER_FIELD_NAME]: [
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
     }
   ],
   [
     TABLES_NAMES.PROGRESS,
     {
       _id: ID_PRIMARY_KEY,
-      value: 'VARCHAR(255)'
+      value: 'VARCHAR(255)',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
+
+      [TRIGGER_FIELD_NAME]: [
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
     }
   ],
   [
