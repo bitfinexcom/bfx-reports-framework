@@ -45,6 +45,11 @@ class DAO {
   /**
    * @abstract
    */
+  async createDBStructure () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async databaseInitialize (db) {
     if (db) this.setDB(db)
     if (!this.db) {
@@ -66,6 +71,8 @@ class DAO {
     }
 
     await pmmJob.promise
+
+    await this.createDBStructure()
   }
 
   /**

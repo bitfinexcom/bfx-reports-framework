@@ -334,12 +334,18 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
+  async createDBStructure (opts = {}) {
+    await this._createTablesIfNotExists(opts)
+    await this._createIndexisIfNotExists(opts)
+    await this._createTriggerIfNotExists(opts)
+  }
+
+  /**
+   * @override
+   */
   async databaseInitialize (db) {
     await super.databaseInitialize(db)
 
-    await this._createTablesIfNotExists()
-    await this._createIndexisIfNotExists()
-    await this._createTriggerIfNotExists()
     await this._walCheckpoint()
     await this._vacuum()
     await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
