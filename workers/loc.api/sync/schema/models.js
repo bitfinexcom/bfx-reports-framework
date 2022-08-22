@@ -952,6 +952,41 @@ const _models = new Map([
       ]
     }
   ],
+  // TODO:
+  [
+    TABLES_NAMES.SYNC_USER_STEPS,
+    {
+      _id: ID_PRIMARY_KEY,
+      collName: 'VARCHAR(255)',
+      state: 'VARCHAR(255)',
+      start: 'BIGINT',
+      end: 'BIGINT',
+      createdAt: 'BIGINT',
+      updatedAt: 'BIGINT',
+      userId: 'INT',
+      syncQueueId: 'INT',
+
+      [TRIGGER_FIELD_NAME]: [
+        `insert_#{tableName}_createdAt_and_updatedAt
+          AFTER INSERT ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`,
+        `update_#{tableName}_updatedAt
+          AFTER UPDATE ON #{tableName}
+          FOR EACH ROW
+          BEGIN
+            UPDATE #{tableName}
+              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
+              WHERE _id = NEW._id;
+          END`
+      ]
+    }
+  ],
   [
     TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
     {
