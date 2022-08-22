@@ -190,9 +190,12 @@ class BetterSqliteDAO extends DAO {
     }, { withoutWorkerThreads: true })
   }
 
-  _createIndexisIfNotExists () {
-    const models = this._getModelsMap({ omittedFields: [] })
-    const sql = getIndexCreationQuery(models)
+  _createIndexisIfNotExists (opts = {}) {
+    const models = this._getModelsMap({
+      models: opts?.models,
+      omittedFields: []
+    })
+    const sql = getIndexCreationQuery(models, opts)
 
     return this.query({
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,

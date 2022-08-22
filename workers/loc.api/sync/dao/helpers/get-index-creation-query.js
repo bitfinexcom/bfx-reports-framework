@@ -12,8 +12,8 @@ const _getIndexQuery = (
 ) => {
   const {
     isUnique,
-    isCreatedIfNotExists
-  } = { ...opts }
+    shouldNotAddIfNotExistsStm
+  } = opts ?? {}
 
   if (
     !name ||
@@ -25,9 +25,9 @@ const _getIndexQuery = (
   }
 
   const unique = isUnique ? ' UNIQUE' : ''
-  const condition = isCreatedIfNotExists
-    ? ' IF NOT EXISTS'
-    : ''
+  const condition = shouldNotAddIfNotExistsStm
+    ? ''
+    : ' IF NOT EXISTS'
 
   const rootFields = fields.filter((field) => {
     return field && typeof field === 'string'
@@ -61,8 +61,12 @@ const _getIndexQuery = (
 const _getIndexQueryFromModel = (
   name,
   model,
-  isCreatedIfNotExists
+  opts
 ) => {
+  const {
+    shouldNotAddIfNotExistsStm
+  } = opts ?? {}
+
   const uniqueIndexFields = (
     model[UNIQUE_INDEX_FIELD_NAME] &&
     typeof model[UNIQUE_INDEX_FIELD_NAME] === 'string'
@@ -79,12 +83,12 @@ const _getIndexQueryFromModel = (
   const uniqueIndexiesArr = _getIndexQuery(
     name,
     uniqueIndexFields,
-    { isUnique: true, isCreatedIfNotExists }
+    { isUnique: true, shouldNotAddIfNotExistsStm }
   )
   const indexiesArr = _getIndexQuery(
     name,
     indexFields,
-    { isCreatedIfNotExists }
+    { shouldNotAddIfNotExistsStm }
   )
 
   return [
@@ -98,8 +102,9 @@ module.exports = (
   opts = {}
 ) => {
   const {
-    isCreatedIfExists
-  } = { ...opts }
+    namePrefix
+  } = opts ?? {}
+
   const _models = models instanceof Map
     ? [...models]
     : models
@@ -108,10 +113,14 @@ module.exports = (
     : [_models]
 
   return _modelsArr.reduce((accum, [name, model]) => {
+    const prefix = typeof namePrefix === 'function'
+      ? namePrefix(name, model)
+      : namePrefix ?? ''
+    const _name = `${prefix}${name}`
     const indexies = _getIndexQueryFromModel(
-      name,
+      _name,
       model,
-      !isCreatedIfExists
+      opts
     )
 
     accum.push(...indexies)
