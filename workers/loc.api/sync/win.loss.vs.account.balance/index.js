@@ -44,6 +44,7 @@ class WinLossVSAccountBalance {
     }
 
     const {
+      firstWalletsVals,
       walletsGroupedByTimeframe,
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
@@ -59,7 +60,10 @@ class WinLossVSAccountBalance {
       },
       false,
       this._winLossVSAccountBalanceByTimeframe(
-        { isUnrealizedProfitExcluded }
+        {
+          isUnrealizedProfitExcluded,
+          firstWalletsVals
+        }
       ),
       true
     )
@@ -76,9 +80,9 @@ class WinLossVSAccountBalance {
   }
 
   _winLossVSAccountBalanceByTimeframe ({
-    isUnrealizedProfitExcluded
+    isUnrealizedProfitExcluded,
+    firstWalletsVals
   }) {
-    let firstWalletsVals = {}
     let firstPLVals = 0
     let prevMovementsRes = 0
 
@@ -92,7 +96,6 @@ class WinLossVSAccountBalance {
       const isFirst = (i + 1) === arr.length
 
       if (isFirst) {
-        firstWalletsVals = walletsGroupedByTimeframe
         firstPLVals = plGroupedByTimeframe
       }
 
