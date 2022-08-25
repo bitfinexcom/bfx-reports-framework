@@ -39,7 +39,8 @@ class Movements {
       exclude = ['user_id'],
       isExcludePrivate = true,
       isWithdrawals = false,
-      isDeposits = false
+      isDeposits = false,
+      isMovementsWithoutSATransferLedgers = false
     } = params ?? {}
 
     const user = await this.authenticator
@@ -83,8 +84,13 @@ class Movements {
         isExcludePrivate
       }
     )
+
+    if (isMovementsWithoutSATransferLedgers) {
+      return movementsPromise
+    }
+
     const ledgersOrder = this._getLedgersOrder(sort)
-    const ledgersPromise = this._getLedgers({
+    const ledgersPromise = this.getSubAccountsTransferLedgers({
       auth: user,
       start,
       end,
@@ -123,7 +129,7 @@ class Movements {
    * Consider the `SA(nameAccount1->nameAccount2)` transfers
    * as internal movements for win/loss and tax calculations
    */
-  _getLedgers (params = {}) {
+  getSubAccountsTransferLedgers (params = {}) {
     const {
       auth = {},
       start = 0,
