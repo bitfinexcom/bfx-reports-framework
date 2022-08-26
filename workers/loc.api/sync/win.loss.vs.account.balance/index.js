@@ -1,7 +1,8 @@
 'use strict'
 
 const {
-  calcGroupedData
+  calcGroupedData,
+  groupByTimeframe
 } = require('../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -36,7 +37,11 @@ class WinLossVSAccountBalance {
     const args = {
       auth: user,
       params: {
-        timeframe,
+        /*
+         * We have to get day timeframe data for all timeframes
+         * and then pick data for non-day timeframes due to accuracy issue
+         */
+        timeframe: 'day',
         start,
         end,
         isUnrealizedProfitExcluded
@@ -75,12 +80,27 @@ class WinLossVSAccountBalance {
       ),
       true
     )
-    groupedData.push({
+    const pickedRes = timeframe === 'day'
+      ? groupedData
+      : (await groupByTimeframe(
+          groupedData,
+          { timeframe, start, end },
+          null,
+          'mts',
+          null,
+          (data = []) => data[0]
+        )).map((obj) => {
+          const res = obj?.vals ?? {}
+          res.mts = obj.mts
+
+          return res
+        })
+    pickedRes.push({
       mts: start,
       perc: 0
     })
     const res = this.winLoss.shiftMtsToNextTimeframe(
-      groupedData,
+      pickedRes,
       { timeframe, end }
     )
 
@@ -119,10 +139,10 @@ class WinLossVSAccountBalance {
       const newSATransferLedgers = Number.isFinite(subAccountsTransferLedgersGroupedByTimeframe[symb])
         ? subAccountsTransferLedgersGroupedByTimeframe[symb]
         : 0
-      const areMovementsChanged = !!newSATransferLedgers
+      const hasNewSATransferLedgers = !!newSATransferLedgers
 
       prevMovementsRes = this.winLoss.sumMovementsWithPrevRes(
-        areMovementsChanged ? {} : prevMovementsRes,
+        hasNewSATransferLedgers ? {} : prevMovementsRes,
         withdrawalsGroupedByTimeframe,
         depositsGroupedByTimeframe
       )
@@ -140,7 +160,7 @@ class WinLossVSAccountBalance {
         ? plGroupedByTimeframe[symb]
         : 0
 
-      if (areMovementsChanged) {
+      if (hasNewSATransferLedgers) {
         // Apply current temeframe wallets as first wallet
         firstWallets = prevWallets + newSATransferLedgers
       }
@@ -161,7 +181,7 @@ class WinLossVSAccountBalance {
         return { perc: percCorrection }
       }
 
-      if (areMovementsChanged) {
+      if (hasNewSATransferLedgers) {
         percCorrection = prevPerc
       }
 
