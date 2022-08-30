@@ -32,7 +32,8 @@ class WinLossVSAccountBalance {
       timeframe = 'day',
       start = 0,
       end = Date.now(),
-      isUnrealizedProfitExcluded
+      isUnrealizedProfitExcluded,
+      isVSPrevDayBalance
     } = params ?? {}
     const args = {
       auth: user,
@@ -56,6 +57,20 @@ class WinLossVSAccountBalance {
       plGroupedByTimeframe
     } = await this.winLoss.getDataToCalcWinLoss(args)
 
+    const getWinLossPercByTimeframe = isVSPrevDayBalance
+      ? this._getWinLossPrevDayBalanceByTimeframe(
+          {
+            isUnrealizedProfitExcluded,
+            firstWalletsVals
+          }
+        )
+      : this._getWinLossVSAccountBalanceByTimeframe(
+        {
+          isUnrealizedProfitExcluded,
+          firstWalletsVals
+        }
+      )
+
     const groupedData = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
@@ -64,12 +79,7 @@ class WinLossVSAccountBalance {
         plGroupedByTimeframe
       },
       false,
-      this._winLossVSAccountBalanceByTimeframe(
-        {
-          isUnrealizedProfitExcluded,
-          firstWalletsVals
-        }
-      ),
+      getWinLossPercByTimeframe,
       true
     )
     const pickedRes = timeframe === 'day'
@@ -99,7 +109,7 @@ class WinLossVSAccountBalance {
     return res
   }
 
-  _winLossVSAccountBalanceByTimeframe ({
+  _getWinLossVSAccountBalanceByTimeframe ({
     isUnrealizedProfitExcluded,
     firstWalletsVals
   }) {
@@ -176,6 +186,74 @@ class WinLossVSAccountBalance {
       }
 
       const perc = ((winLoss / firstWallets) * 100) + percCorrection
+      prevPerc = perc
+
+      return { perc }
+    }
+  }
+
+  _getWinLossPrevDayBalanceByTimeframe ({
+    isUnrealizedProfitExcluded,
+    firstWalletsVals
+  }) {
+    let prevPerc = 0
+    let prevWallets = 0
+    let prevPL = 0
+    let prevMultiplying = 1
+
+    return ({
+      walletsGroupedByTimeframe = {},
+      withdrawalsGroupedByTimeframe = {},
+      depositsGroupedByTimeframe = {},
+      plGroupedByTimeframe = {}
+    } = {}, i, arr) => {
+      const symb = 'USD'
+      const isFirst = (i + 1) === arr.length
+
+      if (isFirst) {
+        prevWallets = Number.isFinite(firstWalletsVals[symb])
+          ? firstWalletsVals[symb]
+          : 0
+        prevPL = Number.isFinite(plGroupedByTimeframe[symb])
+          ? plGroupedByTimeframe[symb]
+          : 0
+      }
+
+      const movementsRes = this.winLoss.sumMovementsWithPrevRes(
+        {},
+        withdrawalsGroupedByTimeframe,
+        depositsGroupedByTimeframe
+      )
+
+      const movements = Number.isFinite(movementsRes[symb])
+        ? movementsRes[symb]
+        : 0
+      const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
+        ? walletsGroupedByTimeframe[symb]
+        : 0
+      const pl = Number.isFinite(plGroupedByTimeframe[symb])
+        ? plGroupedByTimeframe[symb]
+        : 0
+
+      const realized = (wallets - movements) - prevWallets
+      const unrealized = isUnrealizedProfitExcluded
+        ? 0
+        : pl - prevPL
+
+      const winLoss = realized + unrealized
+
+      prevWallets = wallets
+      prevPL = pl
+
+      if (
+        !Number.isFinite(winLoss) ||
+        prevWallets === 0
+      ) {
+        return { perc: prevPerc }
+      }
+
+      prevMultiplying = ((prevWallets + winLoss) / prevWallets) * prevMultiplying
+      const perc = (prevMultiplying - 1) * 100
       prevPerc = perc
 
       return { perc }
