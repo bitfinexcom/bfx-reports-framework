@@ -53,23 +53,15 @@ class WinLossVSAccountBalance {
       walletsGroupedByTimeframe,
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
-      plGroupedByTimeframe,
-      subAccountsTransferLedgersGroupedByTimeframe
-    } = await this.winLoss.getDataToCalcWinLoss(
-      args,
-      {
-        isSubAccountsTransferLedgersAdded: true,
-        isMovementsWithoutSATransferLedgers: true
-      }
-    )
+      plGroupedByTimeframe
+    } = await this.winLoss.getDataToCalcWinLoss(args)
 
     const groupedData = await calcGroupedData(
       {
         walletsGroupedByTimeframe,
         withdrawalsGroupedByTimeframe,
         depositsGroupedByTimeframe,
-        plGroupedByTimeframe,
-        subAccountsTransferLedgersGroupedByTimeframe
+        plGroupedByTimeframe
       },
       false,
       this._winLossVSAccountBalanceByTimeframe(
@@ -122,8 +114,7 @@ class WinLossVSAccountBalance {
       walletsGroupedByTimeframe = {},
       withdrawalsGroupedByTimeframe = {},
       depositsGroupedByTimeframe = {},
-      plGroupedByTimeframe = {},
-      subAccountsTransferLedgersGroupedByTimeframe = {}
+      plGroupedByTimeframe = {}
     } = {}, i, arr) => {
       const symb = 'USD'
       const isFirst = (i + 1) === arr.length
@@ -136,20 +127,20 @@ class WinLossVSAccountBalance {
         prevWallets = firstWallets
       }
 
-      const newSATransferLedgers = Number.isFinite(subAccountsTransferLedgersGroupedByTimeframe[symb])
-        ? subAccountsTransferLedgersGroupedByTimeframe[symb]
-        : 0
-      const hasNewSATransferLedgers = !!newSATransferLedgers
-
-      prevMovementsRes = this.winLoss.sumMovementsWithPrevRes(
-        hasNewSATransferLedgers ? {} : prevMovementsRes,
+      const newMovementsRes = this.winLoss.sumMovementsWithPrevRes(
+        {},
         withdrawalsGroupedByTimeframe,
         depositsGroupedByTimeframe
       )
-
-      const movements = Number.isFinite(prevMovementsRes[symb])
-        ? prevMovementsRes[symb]
+      const newMovements = Number.isFinite(newMovementsRes[symb])
+        ? newMovementsRes[symb]
         : 0
+      const hasNewMovements = !!newMovements
+      prevMovementsRes = this.winLoss.sumMovementsWithPrevRes(
+        hasNewMovements ? {} : prevMovementsRes,
+        newMovementsRes
+      )
+
       const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
         ? walletsGroupedByTimeframe[symb]
         : 0
@@ -160,14 +151,13 @@ class WinLossVSAccountBalance {
         ? plGroupedByTimeframe[symb]
         : 0
 
-      if (hasNewSATransferLedgers) {
-        // Apply current temeframe wallets as first wallet
-        firstWallets = prevWallets + newSATransferLedgers
+      if (hasNewMovements) {
+        firstWallets = prevWallets + newMovements
       }
 
       prevWallets = wallets
 
-      const realized = (wallets - movements) - firstWallets
+      const realized = wallets - firstWallets
       const unrealized = isUnrealizedProfitExcluded
         ? 0
         : pl - firstPL
@@ -181,7 +171,7 @@ class WinLossVSAccountBalance {
         return { perc: percCorrection }
       }
 
-      if (hasNewSATransferLedgers) {
+      if (newMovements) {
         percCorrection = prevPerc
       }
 
