@@ -46,7 +46,10 @@ class WinLoss {
 
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
+    this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
+      .get(this.SYNC_API_METHODS.LEDGERS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
+    this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
   }
 
   sumMovementsWithPrevRes (
@@ -216,11 +219,15 @@ class WinLoss {
     }, [])
   }
 
-  async getDataToCalcWinLoss (args = {}) {
+  async getDataToCalcWinLoss (args = {}, opts = {}) {
     const {
       auth = {},
       params = {}
     } = args ?? {}
+    const {
+      isSubAccountsTransferLedgersAdded,
+      isMovementsWithoutSATransferLedgers
+    } = opts ?? {}
 
     const {
       timeframe = 'day',
@@ -245,29 +252,41 @@ class WinLoss {
           isUnrealizedProfitExcluded: true
         }
       },
-      true
+      { isSubCalc: true }
     )
     const withdrawalsPromise = this.movements.getMovements({
       auth,
       start,
       end,
       sort: [['mtsStarted', -1]],
-      isWithdrawals: true
+      isWithdrawals: true,
+      isMovementsWithoutSATransferLedgers
     })
     const depositsPromise = this.movements.getMovements({
       auth,
       start,
       end,
       sort: [['mtsUpdated', -1]],
-      isDeposits: true
+      isDeposits: true,
+      isMovementsWithoutSATransferLedgers
     })
+    const subAccountsTransferLedgersPromise = isSubAccountsTransferLedgersAdded
+      ? this.movements.getSubAccountsTransferLedgers({
+          auth,
+          start,
+          end,
+          sort: [['mts', -1], ['id', -1]]
+        })
+      : null
 
     const [
       withdrawals,
-      deposits
+      deposits,
+      subAccountsTransferLedgers
     ] = await Promise.all([
       withdrawalsPromise,
-      depositsPromise
+      depositsPromise,
+      subAccountsTransferLedgersPromise
     ])
 
     const withdrawalsGroupedByTimeframePromise = groupByTimeframe(
@@ -286,19 +305,32 @@ class WinLoss {
       this.movementsSymbolFieldName,
       this._calcMovements.bind(this)
     )
+    const subAccountsTransferLedgersGroupedByTimeframePromise = isSubAccountsTransferLedgersAdded
+      ? groupByTimeframe(
+          subAccountsTransferLedgers,
+          { timeframe, start, end },
+          this.FOREX_SYMBS,
+          'mts',
+          this.ledgersSymbolFieldName,
+          // NOTE: The movements fn may be used to calc ledgers
+          this._calcMovements.bind(this)
+        )
+      : null
 
     const [
       firstWallets,
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
       walletsGroupedByTimeframe,
-      plGroupedByTimeframe
+      plGroupedByTimeframe,
+      subAccountsTransferLedgersGroupedByTimeframe
     ] = await Promise.all([
       firstWalletsPromise,
       withdrawalsGroupedByTimeframePromise,
       depositsGroupedByTimeframePromise,
       walletsGroupedByTimeframePromise,
-      plGroupedByTimeframePromise
+      plGroupedByTimeframePromise,
+      subAccountsTransferLedgersGroupedByTimeframePromise
     ])
 
     const firstWalletsVals = firstWallets.reduce((accum, curr = {}) => {
@@ -331,7 +363,8 @@ class WinLoss {
       withdrawalsGroupedByTimeframe,
       depositsGroupedByTimeframe,
       walletsGroupedByTimeframe,
-      plGroupedByTimeframe
+      plGroupedByTimeframe,
+      subAccountsTransferLedgersGroupedByTimeframe
     }
   }
 
