@@ -641,6 +641,9 @@ class CsvJobData extends BaseCsvJobData {
     )
 
     const csvArgs = getCsvArgs(args)
+    const suffix = args?.params?.isVSPrevDayBalance
+      ? 'balance'
+      : 'deposits'
 
     const jobData = {
       userInfo,
@@ -648,7 +651,7 @@ class CsvJobData extends BaseCsvJobData {
       name: 'getWinLossVSAccountBalance',
       fileNamesMap: [[
         'getWinLossVSAccountBalance',
-        'win-loss-vs-account-balance'
+        `win-loss-percentage-gains-vs-${suffix}`
       ]],
       args: csvArgs,
       propNameForPagination: null,
