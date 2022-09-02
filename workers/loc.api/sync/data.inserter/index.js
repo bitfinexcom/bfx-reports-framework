@@ -57,7 +57,8 @@ const depsTypes = (TYPES) => [
   TYPES.SyncInterrupter,
   TYPES.WSEventEmitter,
   TYPES.SyncCollsManager,
-  TYPES.GetDataFromApi
+  TYPES.GetDataFromApi,
+  TYPES.SyncTempTablesManager
 ]
 class DataInserter extends EventEmitter {
   constructor (
@@ -76,7 +77,8 @@ class DataInserter extends EventEmitter {
     syncInterrupter,
     wsEventEmitter,
     syncCollsManager,
-    getDataFromApi
+    getDataFromApi,
+    syncTempTablesManager
   ) {
     super()
 
@@ -96,6 +98,7 @@ class DataInserter extends EventEmitter {
     this.wsEventEmitter = wsEventEmitter
     this.syncCollsManager = syncCollsManager
     this.getDataFromApi = getDataFromApi
+    this.syncTempTablesManager = syncTempTablesManager
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -140,6 +143,7 @@ class DataInserter extends EventEmitter {
       this.recalcSubAccountLedgersBalancesHook
     ])
     this.dataChecker.init({ methodCollMap: this._methodCollMap })
+    this.syncTempTablesManager.init({ syncQueueId: this.syncQueueId })
   }
 
   addAsyncProgressHandler (handler) {
