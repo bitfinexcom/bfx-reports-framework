@@ -199,6 +199,12 @@ class SyncQueueOwnerSettingError extends BaseError {
   }
 }
 
+class SyncQueueIDSettingError extends BaseError {
+  constructor (message = 'ERR_SYNC_QUEUE_ID_MUST_BE_INTEGER') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -229,5 +235,6 @@ module.exports = {
   ProcessStateSendingError,
   DbRestoringError,
   TotalFeesParamsFlagError,
-  SyncQueueOwnerSettingError
+  SyncQueueOwnerSettingError,
+  SyncQueueIDSettingError
 }
