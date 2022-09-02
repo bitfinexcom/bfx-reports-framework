@@ -2,6 +2,8 @@
 
 const { decorateInjectable } = require('../../../di/utils')
 
+const { SyncQueueIDSettingError } = require('../../../errors')
+
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
@@ -20,7 +22,17 @@ class SyncTempTablesManager {
     this.syncSchema = syncSchema
     this.SYNC_API_METHODS = SYNC_API_METHODS
 
+    this.syncQueueId = null
+
     this._methodCollMap = this.syncSchema.getMethodCollMap()
+  }
+
+  init (params = {}) {
+    if (!Number.isInteger(params?.syncQueueId)) {
+      throw new SyncQueueIDSettingError()
+    }
+
+    this.syncQueueId = params.syncQueueId
   }
 }
 
