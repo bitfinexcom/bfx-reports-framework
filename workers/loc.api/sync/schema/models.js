@@ -24,7 +24,10 @@ const {
 } = require('./helpers')
 
 const getModelsMap = (params = {}) => {
-  return _getModelsMap({ models: _models, ...params })
+  return _getModelsMap({
+    ...params,
+    models: params?.models ?? _models
+  })
 }
 
 const getModelOf = (tableName) => {
