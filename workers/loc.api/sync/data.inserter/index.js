@@ -278,6 +278,8 @@ class DataInserter extends EventEmitter {
       .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
+    await this.syncTempTablesManager
+      .createTempDBStructureForSync(methodCollMap)
     const size = methodCollMap.size
 
     let count = 0
@@ -329,6 +331,8 @@ class DataInserter extends EventEmitter {
     )
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
+    await this.syncTempTablesManager
+      .createTempDBStructureForSync(methodCollMap)
     const size = this._methodCollMap.size
     const {
       _id: userId,
@@ -434,6 +438,10 @@ class DataInserter extends EventEmitter {
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
     )
+    await this.syncTempTablesManager.createTempDBStructureForSync(new Map([[
+      this.SYNC_API_METHODS.CANDLES,
+      candlesSchema
+    ]]))
     await this._insertApiDataPublicArrObjTypeToDb(
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema

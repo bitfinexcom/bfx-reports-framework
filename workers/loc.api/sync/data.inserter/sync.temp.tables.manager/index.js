@@ -34,6 +34,18 @@ class SyncTempTablesManager {
 
     this.syncQueueId = params.syncQueueId
   }
+
+  async createTempDBStructureForSync (methodCollMap) {
+    const models = [...methodCollMap]
+      .map(([method, schema]) => [schema.name, schema.model])
+    const namePrefix = this._getNamePrefix()
+
+    await this.dao.createDBStructure({ models, namePrefix })
+  }
+
+  _getNamePrefix () {
+    return `temp_s${this.syncQueueId}_`
+  }
 }
 
 decorateInjectable(SyncTempTablesManager, depsTypes)
