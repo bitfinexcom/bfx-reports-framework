@@ -38,12 +38,19 @@ class SyncTempTablesManager {
     this.syncQueueId = params.syncQueueId
   }
 
-  async createTempDBStructureForSync (methodCollMap) {
+  async createTempDBStructureForCurrSync (methodCollMap) {
     const models = [...methodCollMap]
       .map(([method, schema]) => [schema.name, schema.model])
     const namePrefix = this._getNamePrefix()
 
     await this.dao.createDBStructure({ models, namePrefix })
+  }
+
+  async removeTempDBStructureForCurrSync () {
+    await this.dao.dropAllTables({
+      expectations: [this.syncQueueId],
+      isNotStrictEqual: true
+    })
   }
 
   async cleanUpTempDBStructure () {
@@ -67,7 +74,10 @@ class SyncTempTablesManager {
     const exceptions = activeSyncs
       .map(({ _id }) => this._getNamePrefix(_id))
 
-    await this.dao.dropAllTables({ exceptions })
+    await this.dao.dropAllTables({
+      exceptions,
+      isNotStrictEqual: true
+    })
   }
 
   _getNamePrefix (id) {

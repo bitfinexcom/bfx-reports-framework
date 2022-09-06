@@ -279,7 +279,7 @@ class DataInserter extends EventEmitter {
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
     await this.syncTempTablesManager
-      .createTempDBStructureForSync(methodCollMap)
+      .createTempDBStructureForCurrSync(methodCollMap)
     const size = methodCollMap.size
 
     let count = 0
@@ -332,7 +332,7 @@ class DataInserter extends EventEmitter {
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
     await this.syncTempTablesManager
-      .createTempDBStructureForSync(methodCollMap)
+      .createTempDBStructureForCurrSync(methodCollMap)
     const size = this._methodCollMap.size
     const {
       _id: userId,
@@ -438,7 +438,7 @@ class DataInserter extends EventEmitter {
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
     )
-    await this.syncTempTablesManager.createTempDBStructureForSync(new Map([[
+    await this.syncTempTablesManager.createTempDBStructureForCurrSync(new Map([[
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
     ]]))
