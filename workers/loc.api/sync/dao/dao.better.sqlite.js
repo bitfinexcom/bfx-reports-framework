@@ -291,15 +291,30 @@ class BetterSqliteDAO extends DAO {
 
   async dropAllTables (opts = {}) {
     const {
-      exceptions = []
+      exceptions = [],
+      expectations = [],
+      isNotStrictEqual = false
     } = opts
 
     const _exceptions = Array.isArray(exceptions)
       ? exceptions
       : []
+    const _expectations = Array.isArray(expectations)
+      ? expectations
+      : []
     const tableNames = await this._getTablesNames()
     const filteredTableNames = tableNames.filter((name) => (
-      !_exceptions.includes(name)
+      _exceptions.every((exc) => (
+        name !== exc &&
+        (!isNotStrictEqual || !name.includes(exc)))
+      ) &&
+      (
+        _expectations.length === 0 ||
+        _expectations.some((exp) => (
+          name === exp ||
+          (isNotStrictEqual && name.includes(exp)))
+        )
+      )
     ))
     const sql = filteredTableNames.map((name) => (
       `DROP TABLE IF EXISTS ${name}`
