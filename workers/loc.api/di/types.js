@@ -64,5 +64,6 @@ module.exports = {
   ProcessMessageManagerFactory: Symbol.for('ProcessMessageManagerFactory'),
   TotalFeesReport: Symbol.for('TotalFeesReport'),
   SyncTempTablesManager: Symbol.for('SyncTempTablesManager'),
-  SyncUserStepManager: Symbol.for('SyncUserStepManager')
+  SyncUserStepManager: Symbol.for('SyncUserStepManager'),
+  SyncUserStepData: Symbol.for('SyncUserStepData')
 }
