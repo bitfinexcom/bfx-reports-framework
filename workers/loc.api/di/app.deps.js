@@ -36,6 +36,9 @@ const SyncCollsManager = require('../sync/sync.colls.manager')
 const SyncTempTablesManager = require(
   '../sync/data.inserter/sync.temp.tables.manager'
 )
+const SyncUserStepManager = require(
+  '../sync/data.inserter/sync.user.step.manager'
+)
 const Checkers = require(
   '../sync/data.consistency.checker/checkers'
 )
@@ -282,6 +285,8 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SyncTempTablesManager)
       .to(SyncTempTablesManager)
+    bind(TYPES.SyncUserStepManager)
+      .to(SyncUserStepManager)
     bind(TYPES.Checkers)
       .to(Checkers)
       .inSingletonScope()
