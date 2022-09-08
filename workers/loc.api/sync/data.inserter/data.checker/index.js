@@ -9,6 +9,9 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
+  SyncQueueIDSettingError
+} = require('../../../errors')
+const {
   getMethodArgMap
 } = require('../helpers')
 const {
@@ -39,7 +42,8 @@ const depsTypes = (TYPES) => [
   TYPES.CurrencyConverter,
   TYPES.SyncInterrupter,
   TYPES.SyncCollsManager,
-  TYPES.GetDataFromApi
+  TYPES.GetDataFromApi,
+  TYPES.SyncUserStepManager
 ]
 class DataChecker {
   constructor (
@@ -52,7 +56,8 @@ class DataChecker {
     currencyConverter,
     syncInterrupter,
     syncCollsManager,
-    getDataFromApi
+    getDataFromApi,
+    syncUserStepManager
   ) {
     this.rService = rService
     this.dao = dao
@@ -64,18 +69,31 @@ class DataChecker {
     this.syncInterrupter = syncInterrupter
     this.syncCollsManager = syncCollsManager
     this.getDataFromApi = getDataFromApi
+    this.syncUserStepManager = syncUserStepManager
 
     this._methodCollMap = new Map()
 
     this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
-  init ({ methodCollMap }) {
+  init (params = {}) {
     this.syncInterrupter.onceInterrupt(() => {
       this._isInterrupted = true
     })
 
+    const {
+      syncQueueId,
+      methodCollMap
+    } = params ?? {}
+
+    if (!Number.isInteger(syncQueueId)) {
+      throw new SyncQueueIDSettingError()
+    }
+
+    this.syncQueueId = syncQueueId
     this.setMethodCollMap(methodCollMap)
+
+    this.syncUserStepManager.init({ syncQueueId: this.syncQueueId })
   }
 
   async checkNewData (auth) {
