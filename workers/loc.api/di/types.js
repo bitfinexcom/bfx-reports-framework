@@ -65,5 +65,6 @@ module.exports = {
   TotalFeesReport: Symbol.for('TotalFeesReport'),
   SyncTempTablesManager: Symbol.for('SyncTempTablesManager'),
   SyncUserStepManager: Symbol.for('SyncUserStepManager'),
-  SyncUserStepData: Symbol.for('SyncUserStepData')
+  SyncUserStepData: Symbol.for('SyncUserStepData'),
+  SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory')
 }

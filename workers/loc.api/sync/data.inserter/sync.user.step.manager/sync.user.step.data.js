@@ -15,12 +15,12 @@ class SyncUserStepData {
    * @param {?number} [currEnd] - Used to specify current end mts point
    */
   setParams (
-    symbol,
-    timeframe,
-    baseStart,
-    baseEnd,
-    currStart,
-    currEnd
+    symbol = null,
+    timeframe = null,
+    baseStart = null,
+    baseEnd = null,
+    currStart = null,
+    currEnd = null
   ) {
     this.symbol = symbol
     this.timeframe = timeframe
