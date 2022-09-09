@@ -962,13 +962,41 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
       state: 'VARCHAR(255)',
-      start: 'BIGINT',
-      end: 'BIGINT',
+      baseStart: 'BIGINT',
+      baseEnd: 'BIGINT',
+      isBaseStepReady: 'INT',
+      currStart: 'BIGINT',
+      currEnd: 'BIGINT',
+      isCurrStepReady: 'INT',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
+      subUserId: 'INT',
       userId: 'INT',
       syncQueueId: 'INT',
 
+      [UNIQUE_INDEX_FIELD_NAME]: [
+        // It needs to cover public collections
+        ['collName',
+          'WHERE user_id IS NULL'],
+        // It needs to cover private collections
+        ['user_id', 'collName',
+          'WHERE user_id IS NOT NULL AND subUserId IS NULL'],
+        // It needs to cover private collections of sub-account
+        ['user_id', 'subUserId', 'collName',
+          'WHERE user_id IS NOT NULL AND subUserId IS NOT NULL']
+      ],
+      [CONSTR_FIELD_NAME]: [
+        `CONSTRAINT #{tableName}_fk_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`,
+        `CONSTRAINT #{tableName}_fk_subUserId
+        FOREIGN KEY (subUserId)
+        REFERENCES ${TABLES_NAMES.USERS}(_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE`
+      ],
       [TRIGGER_FIELD_NAME]: [
         `insert_#{tableName}_createdAt_and_updatedAt
           AFTER INSERT ON #{tableName}
