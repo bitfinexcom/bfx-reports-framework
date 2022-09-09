@@ -39,7 +39,29 @@ class TotalFeesReport {
   }
 
   // TODO:
-  async getTotalFeesReport (args) {
+  async getTotalFeesReport (args = {}) {
+    const {
+      auth,
+      params
+    } = args ?? {}
+    const {
+      start = 0,
+      end = Date.now(),
+      timeframe = 'day',
+      symbol: symbs
+    } = params ?? {}
+    const _symbol = Array.isArray(symbs)
+      ? symbs
+      : [symbs]
+    const symbol = _symbol.filter((s) => (
+      s && typeof s === 'string'
+    ))
+    const args = {
+      auth,
+      start,
+      end,
+      symbol
+    }
   }
 }
 
