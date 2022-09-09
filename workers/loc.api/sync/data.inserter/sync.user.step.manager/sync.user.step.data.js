@@ -1,6 +1,6 @@
 'use strict'
 
-const { decorateInjectable } = require('../../di/utils')
+const { decorateInjectable } = require('../../../di/utils')
 
 /**
  * Universal data structure for the one sync user step
