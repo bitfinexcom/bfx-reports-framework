@@ -1,6 +1,9 @@
 'use strict'
 
 const {
+  TotalFeesParamsFlagError
+} = require('../../errors')
+const {
   calcGroupedData,
   groupByTimeframe,
   getStartMtsByTimeframe
@@ -56,11 +59,70 @@ class TotalFeesReport {
     const symbol = _symbol.filter((s) => (
       s && typeof s === 'string'
     ))
-    const args = {
+    const filter = this._getLedgersFilter(params)
+    const _args = {
       auth,
       start,
       end,
-      symbol
+      symbol,
+      filter
+    }
+
+    const ledgers = await this._getLedgers(_args)
+  }
+
+  async _getLedgers ({
+    auth,
+    start,
+    end,
+    symbol,
+    filter,
+    projection = this.ledgersModel
+  }) {
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+
+    const symbFilter = (
+      Array.isArray(symbol) &&
+      symbol.length !== 0
+    )
+      ? { $in: { currency: symbol } }
+      : {}
+    const filterToSkipNotRecalcedBalance = user.isSubAccount
+      ? { _isBalanceRecalced: 1 }
+      : {}
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      {
+        filter: {
+          ...filter,
+          user_id: user._id,
+          $lte: { mts: end },
+          $gte: { mts: start },
+          ...symbFilter,
+          ...filterToSkipNotRecalcedBalance
+        },
+        sort: [['mts', -1]],
+        projection,
+        exclude: ['user_id'],
+        isExcludePrivate: true
+      }
+    )
+  }
+
+  // TODO:
+  _getLedgersFilter (params) {
+    const {
+      isTradingFees,
+      isFundingFees
+    } = params ?? {}
+
+    if (
+      !isTradingFees &&
+      !isFundingFees
+    ) {
+      throw new TotalFeesParamsFlagError()
     }
   }
 }

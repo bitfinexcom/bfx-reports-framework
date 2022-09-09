@@ -327,6 +327,12 @@ const paramsSchemaForTotalFeesReportApi = {
     },
     symbol: {
       type: ['string', 'array']
+    },
+    isTradingFees: {
+      type: 'boolean'
+    },
+    isFundingFees: {
+      type: 'boolean'
     }
   }
 }
