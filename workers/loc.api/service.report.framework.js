@@ -1380,6 +1380,9 @@ class FrameworkReportService extends ReportService {
     }, 'getTradedVolumeCsv', args, cb)
   }
 
+  /**
+   * @deprecated
+   */
   getFeesReportCsv (space, args, cb) {
     return this._responder(() => {
       return this._generateCsv(
@@ -1387,6 +1390,15 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFeesReportCsv', args, cb)
+  }
+
+  getTotalFeesReportCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getTotalFeesReportCsvJobData',
+        args
+      )
+    }, 'getTotalFeesReportCsv', args, cb)
   }
 
   getPerformingLoanCsv (space, args, cb) {
