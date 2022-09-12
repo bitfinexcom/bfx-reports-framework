@@ -111,7 +111,6 @@ class TotalFeesReport {
     )
   }
 
-  // TODO:
   _getLedgersFilter (params) {
     const {
       isTradingFees,
@@ -124,6 +123,27 @@ class TotalFeesReport {
     ) {
       throw new TotalFeesParamsFlagError()
     }
+
+    const _category = []
+
+    /*
+     * Considering 'category' filter
+     * https://docs.bitfinex.com/reference/rest-auth-ledgers
+     * workers/loc.api/sync/data.inserter/api.middleware/helpers/get-category-from-description.js
+     */
+    if (isTradingFees) {
+      _category.push(201) // trading fee
+    }
+    if (isFundingFees) {
+      _category.push(
+        27, // position funding cost or interest charged
+        226, // used margin funding charge
+        228, // unused margin funding fee
+        29 // derivatives funding event
+      )
+    }
+
+    return { $in: { _category } }
   }
 }
 
