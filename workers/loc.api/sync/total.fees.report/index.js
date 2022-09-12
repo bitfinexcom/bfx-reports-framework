@@ -69,6 +69,20 @@ class TotalFeesReport {
     }
 
     const ledgers = await this._getLedgers(_args)
+
+    const {
+      dateFieldName: ledgersDateFieldName,
+      symbolFieldName: ledgersSymbolFieldName
+    } = this.ledgersMethodColl
+
+    const ledgersGroupedByTimeframe = await groupByTimeframe(
+      ledgers,
+      { timeframe, start, end },
+      this.FOREX_SYMBS,
+      ledgersDateFieldName,
+      ledgersSymbolFieldName,
+      this._calcLedgers()
+    )
   }
 
   async _getLedgers ({
@@ -144,6 +158,29 @@ class TotalFeesReport {
     }
 
     return { $in: { _category } }
+  }
+
+  _calcLedgers () {
+    return (data = []) => {
+      const res = data.reduce((accum, curr) => {
+        const { amountUsd } = curr ?? {}
+
+        if (!Number.isFinite(amountUsd)) {
+          return accum
+        }
+
+        const _amountUsd = amountUsd !== 0
+          ? amountUsd * -1
+          : amountUsd
+        accum.USD = Number.isFinite(accum.USD)
+          ? accum.USD + _amountUsd
+          : _amountUsd
+
+        return accum
+      }, {})
+
+      return res
+    }
   }
 }
 
