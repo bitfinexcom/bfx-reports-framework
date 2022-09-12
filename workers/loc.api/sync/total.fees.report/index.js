@@ -5,8 +5,7 @@ const {
 } = require('../../errors')
 const {
   calcGroupedData,
-  groupByTimeframe,
-  getStartMtsByTimeframe
+  groupByTimeframe
 } = require('../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -41,7 +40,6 @@ class TotalFeesReport {
       .get(this.ALLOWED_COLLS.LEDGERS)
   }
 
-  // TODO:
   async getTotalFeesReport (args = {}) {
     const {
       auth,
@@ -83,6 +81,15 @@ class TotalFeesReport {
       ledgersSymbolFieldName,
       this._calcLedgers()
     )
+
+    const groupedData = await calcGroupedData(
+      { ledgersGroupedByTimeframe },
+      false,
+      this._getLedgersByTimeframe(),
+      true
+    )
+
+    return groupedData
   }
 
   async _getLedgers ({
@@ -181,6 +188,33 @@ class TotalFeesReport {
 
       return res
     }
+  }
+
+  _getLedgersByTimeframe () {
+    let cumulative = 0
+
+    return ({ ledgersGroupedByTimeframe = {} }) => {
+      cumulative = this._calcPrevAmount(
+        ledgersGroupedByTimeframe,
+        cumulative
+      )
+
+      return {
+        cumulative,
+        USD: ledgersGroupedByTimeframe.USD ?? 0
+      }
+    }
+  }
+
+  _calcPrevAmount (usdAmount, cumulative) {
+    const { USD: amount } = usdAmount ?? {}
+    const _cumulative = Number.isFinite(cumulative)
+      ? cumulative
+      : 0
+
+    return Number.isFinite(amount)
+      ? amount + _cumulative
+      : _cumulative
   }
 }
 
