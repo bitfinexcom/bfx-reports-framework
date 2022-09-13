@@ -509,7 +509,6 @@ module.exports = (
       assert.isObject(res.body)
       assert.propertyVal(res.body, 'id', 5)
       assert.isArray(res.body.result)
-      console.log('[getTotalFeesReport]:'.bgBlue, res.body.result)
 
       const resItem = res.body.result[0]
 
@@ -938,6 +937,33 @@ module.exports = (
           start,
           timeframe: 'day',
           email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getTotalFeesReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTotalFeesReportCsv',
+        params: {
+          end,
+          start,
+          timeframe: 'day',
+          email,
+          isTradingFees: true
         },
         id: 5
       })
