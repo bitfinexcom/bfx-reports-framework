@@ -1,5 +1,7 @@
 'use strict'
 
+const { merge } = require('lodash')
+
 const {
   TotalFeesParamsFlagError
 } = require('../../errors')
@@ -112,16 +114,16 @@ class TotalFeesReport {
     const filterToSkipNotRecalcedBalance = user.isSubAccount
       ? { _isBalanceRecalced: 1 }
       : {}
+    const _filter = merge(filter, symbFilter)
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       {
         filter: {
-          ...filter,
+          ..._filter,
           user_id: user._id,
           $lte: { mts: end },
           $gte: { mts: start },
-          ...symbFilter,
           ...filterToSkipNotRecalcedBalance
         },
         sort: [['mts', -1]],
