@@ -48,8 +48,14 @@ class SyncTempTablesManager {
 
   async removeTempDBStructureForCurrSync () {
     await this.dao.dropAllTables({
-      expectations: [this.syncQueueId],
+      expectations: [this._getNamePrefix(this.syncQueueId)],
       isNotStrictEqual: true
+    })
+  }
+
+  async moveTempTableDataToMain () {
+    await this.dao.moveTempTableDataToMain({
+      namePrefix: this._getNamePrefix(this.syncQueueId)
     })
   }
 
