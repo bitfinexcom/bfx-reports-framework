@@ -961,7 +961,7 @@ const _models = new Map([
     {
       _id: ID_PRIMARY_KEY,
       collName: 'VARCHAR(255)',
-      state: 'VARCHAR(255)',
+      syncedAt: 'BIGINT',
       baseStart: 'BIGINT',
       baseEnd: 'BIGINT',
       isBaseStepReady: 'INT',
@@ -971,7 +971,7 @@ const _models = new Map([
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
       subUserId: 'INT',
-      userId: 'INT',
+      user_id: 'INT',
       syncQueueId: 'INT',
 
       [UNIQUE_INDEX_FIELD_NAME]: [
