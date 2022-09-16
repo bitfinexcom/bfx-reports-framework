@@ -40,6 +40,11 @@ class DAO {
   /**
    * @abstract
    */
+  async moveTempTableDataToMain () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async beforeMigrationHook () {}
 
   /**
