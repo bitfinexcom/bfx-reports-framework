@@ -294,7 +294,7 @@ class BetterSqliteDAO extends DAO {
       exceptions = [],
       expectations = [],
       isNotStrictEqual = false
-    } = opts
+    } = opts ?? {}
 
     const _exceptions = Array.isArray(exceptions)
       ? exceptions
@@ -330,6 +330,64 @@ class BetterSqliteDAO extends DAO {
     await this._vacuum()
 
     return res
+  }
+
+  /**
+   * @override
+   */
+  async moveTempTableDataToMain (opts = {}) {
+    const {
+      namePrefix
+    } = opts ?? {}
+
+    if (
+      !namePrefix ||
+      typeof namePrefix !== 'string'
+    ) {
+      return false
+    }
+
+    const modelsMap = this._getModelsMap({
+      omittedFields: [
+        '_id',
+        TRIGGER_FIELD_NAME,
+        INDEX_FIELD_NAME,
+        UNIQUE_INDEX_FIELD_NAME
+      ]
+    })
+
+    await this._beginTrans(async () => {
+      const tableNames = await this._getTablesNames()
+      const filteredTempTableNames = tableNames.filter((name) => (
+        name.includes(namePrefix)
+      ))
+      const insertSql = filteredTempTableNames.map((tempName) => {
+        const name = tempName.replace(namePrefix, '')
+        const model = modelsMap.get(name)
+        const projection = Object.keys(model).join(', ')
+
+        if (!model) {
+          return null
+        }
+
+        return `INSERT OR REPLACE
+          INTO ${name}(${projection})
+          SELECT ${projection} FROM ${tempName}`
+      }).filter((sql) => sql)
+      const dropTablesSql = filteredTempTableNames.map((name) => (
+        `DROP TABLE IF EXISTS ${name}`
+      ))
+
+      await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.RUN,
+        sql: [...insertSql, ...dropTablesSql]
+      }, { withoutWorkerThreads: true })
+    })
+
+    await this._walCheckpoint()
+    await this._vacuum()
+
+    return true
   }
 
   /**
