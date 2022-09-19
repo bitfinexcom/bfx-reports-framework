@@ -9,5 +9,6 @@ module.exports = {
   FULL_TAX_REPORT: 'getFullTaxReport',
   TRADED_VOLUME: 'getTradedVolume',
   FEES_REPORT: 'getFeesReport',
+  TOTAL_FEES_REPORT: 'getTotalFeesReport',
   PERFORMING_LOAN: 'getPerformingLoan'
 }

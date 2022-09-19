@@ -585,6 +585,44 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
+  async getTotalFeesReportCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForTotalFeesReportCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getTotalFeesReport',
+      fileNamesMap: [['getTotalFeesReport', 'total-fees-report']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        USD: 'USD',
+        cumulative: 'CUMULATIVE USD',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
+  }
+
   async getPerformingLoanCsvJobData (
     args,
     uId,

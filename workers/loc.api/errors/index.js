@@ -3,7 +3,8 @@
 const {
   BaseError,
   AuthError,
-  ConflictError
+  ConflictError,
+  ArgsParamsError
 } = require('bfx-report/workers/loc.api/errors')
 
 class CollSyncPermissionError extends BaseError {
@@ -180,6 +181,12 @@ class DbRestoringError extends BaseError {
   }
 }
 
+class TotalFeesParamsFlagError extends ArgsParamsError {
+  constructor (message = 'ERR_TOTAL_FEES_REPORT_PARAMS_FLAGS_MUST_HAVE_AT_LEAST_ONCE_TRUE_VALUE') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -207,5 +214,6 @@ module.exports = {
   DataConsistencyError,
   DataConsistencyWhileSyncingError,
   ProcessStateSendingError,
-  DbRestoringError
+  DbRestoringError,
+  TotalFeesParamsFlagError
 }

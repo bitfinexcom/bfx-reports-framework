@@ -73,7 +73,7 @@ module.exports = new Map([
         12.12345,
         12345.12345,
         null,
-        'Margin Funding Payment on wallet funding'
+        'Trading fees for 0.041154 BTG (BTGEUR) @ 28.818 on BFX (0.2%) on wallet exchange'
       ],
       [
         30012345,
@@ -95,7 +95,7 @@ module.exports = new Map([
         12.12345,
         12345.12345,
         null,
-        'Margin Funding Payment on wallet funding'
+        'Used Margin Funding Charge on wallet margin'
       ]
     ]
   ],

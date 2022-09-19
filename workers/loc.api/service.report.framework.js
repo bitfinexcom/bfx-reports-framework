@@ -1266,6 +1266,9 @@ class FrameworkReportService extends ReportService {
     }, 'getTradedVolume', args, cb)
   }
 
+  /**
+   * @deprecated
+   */
   getFeesReport (space, args, cb) {
     return this._privResponder(async () => {
       await this._dataConsistencyChecker
@@ -1275,6 +1278,17 @@ class FrameworkReportService extends ReportService {
 
       return this._feesReport.getFeesReport(args)
     }, 'getFeesReport', args, cb)
+  }
+
+  getTotalFeesReport (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TOTAL_FEES_REPORT, args)
+
+      checkParams(args, 'paramsSchemaForTotalFeesReportApi')
+
+      return this._totalFeesReport.getTotalFeesReport(args)
+    }, 'getTotalFeesReport', args, cb)
   }
 
   getPerformingLoan (space, args, cb) {
@@ -1366,6 +1380,9 @@ class FrameworkReportService extends ReportService {
     }, 'getTradedVolumeCsv', args, cb)
   }
 
+  /**
+   * @deprecated
+   */
   getFeesReportCsv (space, args, cb) {
     return this._responder(() => {
       return this._generateCsv(
@@ -1373,6 +1390,15 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFeesReportCsv', args, cb)
+  }
+
+  getTotalFeesReportCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getTotalFeesReportCsvJobData',
+        args
+      )
+    }, 'getTotalFeesReportCsv', args, cb)
   }
 
   getPerformingLoanCsv (space, args, cb) {

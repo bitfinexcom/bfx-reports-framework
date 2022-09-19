@@ -483,6 +483,70 @@ module.exports = (
     }
   })
 
+  it('it should be successfully performed by the getTotalFeesReport method', async function () {
+    this.timeout(60000)
+
+    const paramsArr = getParamsArrToTestTimeframeGrouping({
+      start,
+      end,
+      isTradingFees: true,
+      isFundingFees: true
+    })
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getTotalFeesReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      const resItem = res.body.result[0]
+
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'mts',
+        'cumulative',
+        'USD'
+      ])
+    }
+  })
+
+  it('it should not be successfully performed by the getTotalFeesReport method', async function () {
+    this.timeout(60000)
+
+    const paramsArr = getParamsArrToTestTimeframeGrouping({ start, end })
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getTotalFeesReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(400)
+
+      assert.isObject(res.body)
+      assert.isObject(res.body.error)
+      assert.propertyVal(res.body.error, 'code', 400)
+      assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
+      assert.propertyVal(res.body, 'id', 5)
+    }
+  })
+
   it('it should be successfully performed by the getPerformingLoan method', async function () {
     this.timeout(60000)
 
@@ -873,6 +937,33 @@ module.exports = (
           start,
           timeframe: 'day',
           email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getTotalFeesReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTotalFeesReportCsv',
+        params: {
+          end,
+          start,
+          timeframe: 'day',
+          email,
+          isTradingFees: true
         },
         id: 5
       })

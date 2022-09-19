@@ -73,6 +73,7 @@ const FullSnapshotReport = require('../sync/full.snapshot.report')
 const Trades = require('../sync/trades')
 const TradedVolume = require('../sync/traded.volume')
 const FeesReport = require('../sync/fees.report')
+const TotalFeesReport = require('../sync/total.fees.report')
 const PerformingLoan = require('../sync/performing.loan')
 const SubAccountApiData = require('../sync/sub.account.api.data')
 const PositionsAudit = require('../sync/positions.audit')
@@ -133,6 +134,7 @@ module.exports = ({
           ['_fullTaxReport', TYPES.FullTaxReport],
           ['_tradedVolume', TYPES.TradedVolume],
           ['_feesReport', TYPES.FeesReport],
+          ['_totalFeesReport', TYPES.TotalFeesReport],
           ['_performingLoan', TYPES.PerformingLoan],
           ['_subAccountApiData', TYPES.SubAccountApiData],
           ['_positionsAudit', TYPES.PositionsAudit],
@@ -309,6 +311,8 @@ module.exports = ({
       .to(TradedVolume)
     bind(TYPES.FeesReport)
       .to(FeesReport)
+    bind(TYPES.TotalFeesReport)
+      .to(TotalFeesReport)
     bind(TYPES.PerformingLoan)
       .to(PerformingLoan)
     bind(TYPES.SubAccountApiData)

@@ -129,6 +129,19 @@ class Checkers {
       })
   }
 
+  [CHECKER_NAMES.TOTAL_FEES_REPORT] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.CANDLES
+          ]
+        }
+      })
+  }
+
   async [CHECKER_NAMES.PERFORMING_LOAN] (auth) {
     const {
       _id: userId,
