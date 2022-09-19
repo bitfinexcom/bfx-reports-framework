@@ -289,6 +289,18 @@ class BetterSqliteDAO extends DAO {
     }, { withoutWorkerThreads: true })
   }
 
+  async hasTable (name) {
+    const names = Array.isArray(name)
+      ? name
+      : [name]
+
+    const tableNames = await this._getTablesNames()
+
+    return names.every((name) => (
+      tableNames.some((tName) => name === tName)
+    ))
+  }
+
   async dropAllTables (opts = {}) {
     const {
       exceptions = [],
