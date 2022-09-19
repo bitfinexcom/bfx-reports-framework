@@ -155,20 +155,15 @@ class DataChecker {
     const { _id, subUser } = { ...auth }
     const { _id: subUserId } = { ...subUser }
     const hasSubUserIdField = (
-      schema.model &&
-      typeof schema.model === 'object' &&
-      typeof schema.model.subUserId === 'string' &&
+      typeof schema?.model?.subUserId === 'string' &&
       Number.isInteger(subUserId)
     )
-    const subUserIdFilter = hasSubUserIdField
-      ? { $eq: { subUserId } }
-      : {}
+    const userIdFilter = hasSubUserIdField
+      ? { $eq: { user_id: _id, subUserId } }
+      : { $eq: { user_id: _id } }
     const lastElemFromDb = await this.dao.getElemInCollBy(
       schema.name,
-      {
-        user_id: _id,
-        ...subUserIdFilter
-      },
+      userIdFilter,
       schema.sort
     )
     const {
@@ -242,10 +237,7 @@ class DataChecker {
 
     const firstElemFromDb = await this.dao.getElemInCollBy(
       schema.name,
-      {
-        user_id: _id,
-        ...subUserIdFilter
-      },
+      userIdFilter,
       invertSort(schema.sort)
     )
 
