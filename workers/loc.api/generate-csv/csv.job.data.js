@@ -585,6 +585,44 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
+  async getTotalFeesReportCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForTotalFeesReportCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getTotalFeesReport',
+      fileNamesMap: [['getTotalFeesReport', 'total-fees-report']],
+      args: csvArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        USD: 'USD',
+        cumulative: 'CUMULATIVE USD',
+        mts: 'DATE'
+      },
+      formatSettings: {
+        mts: 'date'
+      }
+    }
+
+    return jobData
+  }
+
   async getPerformingLoanCsvJobData (
     args,
     uId,
@@ -641,6 +679,9 @@ class CsvJobData extends BaseCsvJobData {
     )
 
     const csvArgs = getCsvArgs(args)
+    const suffix = args?.params?.isVSPrevDayBalance
+      ? 'balance'
+      : 'deposits'
 
     const jobData = {
       userInfo,
@@ -648,7 +689,7 @@ class CsvJobData extends BaseCsvJobData {
       name: 'getWinLossVSAccountBalance',
       fileNamesMap: [[
         'getWinLossVSAccountBalance',
-        'win-loss-vs-account-balance'
+        `win-loss-percentage-gains-vs-${suffix}`
       ]],
       args: csvArgs,
       propNameForPagination: null,

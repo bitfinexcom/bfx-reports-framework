@@ -171,12 +171,7 @@ module.exports = async (
     const isLastIter = i === 0
     const nextItem = data[i - 1]
 
-    if (
-      item &&
-      typeof item === 'object' &&
-      Number.isInteger(item[dateFieldName]) &&
-      typeof item[symbolFieldName] === 'string'
-    ) {
+    if (Number.isInteger(item?.[dateFieldName])) {
       subRes.unshift(item)
     }
 

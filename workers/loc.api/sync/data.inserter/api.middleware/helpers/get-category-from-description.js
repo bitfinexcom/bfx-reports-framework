@@ -145,6 +145,12 @@ const _schema = [
   },
   {
     tester: (d) => (
+      _includes(d, 'margin funding fee')
+    ),
+    category: 228
+  },
+  {
+    tester: (d) => (
       _startsWith(d, 'earned fee') ||
       _startsWith(d, 'affiliate rebate')
     ),

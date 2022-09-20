@@ -477,7 +477,7 @@ class BalanceHistory {
       auth: _auth = {},
       params = {}
     } = {},
-    isSubCalc = false
+    opts = {}
   ) {
     const auth = await this.authenticator
       .verifyRequestUser({ auth: _auth })
@@ -488,6 +488,9 @@ class BalanceHistory {
       end = Date.now(),
       isUnrealizedProfitExcluded
     } = params ?? {}
+    const {
+      isSubCalc = false
+    } = opts ?? {}
 
     if (Number.isInteger(timeframe)) {
       return this._getWalletsGroupedByOneTimeframe(
