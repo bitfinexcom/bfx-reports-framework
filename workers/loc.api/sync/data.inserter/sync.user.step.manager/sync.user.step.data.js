@@ -1,5 +1,7 @@
 'use strict'
 
+const { ALL_SYMBOLS_TO_SYNC } = require('../const')
+
 const { decorateInjectable } = require('../../../di/utils')
 
 /**
@@ -28,6 +30,38 @@ class SyncUserStepData {
     this.baseEnd = baseEnd
     this.currStart = currStart
     this.currEnd = currEnd
+  }
+
+  get hasSymbol () {
+    return (
+      this.symbol &&
+      typeof this.symbol === 'string'
+    )
+  }
+
+  get areAllSymbolsRequired () {
+    return this.symbol === ALL_SYMBOLS_TO_SYNC
+  }
+
+  get hasTimeframe () {
+    return (
+      this.timeframe &&
+      typeof this.timeframe === 'string'
+    )
+  }
+
+  get hasBaseStep () {
+    return (
+      Number.isInteger(this.baseStart) &&
+      Number.isInteger(this.baseEnd)
+    )
+  }
+
+  get hasCurrStep () {
+    return (
+      Number.isInteger(this.currStart) &&
+      Number.isInteger(this.currEnd)
+    )
   }
 }
 
