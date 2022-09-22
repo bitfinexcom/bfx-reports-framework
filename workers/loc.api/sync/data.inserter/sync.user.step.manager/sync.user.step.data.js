@@ -15,6 +15,8 @@ class SyncUserStepData {
    * @param {?number} [baseEnd] - Used to specify base end mts point to continue first sync
    * @param {?number} [currStart] - Used to specify current start mts point
    * @param {?number} [currEnd] - Used to specify current end mts point
+   * @param {?boolean} [isBaseStepReady] - Used to mark base sync step is ready
+   * @param {?boolean} [isCurrStepReady] - Used to mark current sync step is ready
    */
   setParams (
     symbol = null,
@@ -22,7 +24,9 @@ class SyncUserStepData {
     baseStart = null,
     baseEnd = null,
     currStart = null,
-    currEnd = null
+    currEnd = null,
+    isBaseStepReady = false,
+    isCurrStepReady = false
   ) {
     this.symbol = symbol
     this.timeframe = timeframe
@@ -30,6 +34,8 @@ class SyncUserStepData {
     this.baseEnd = baseEnd
     this.currStart = currStart
     this.currEnd = currEnd
+    this.isBaseStepReady = isBaseStepReady
+    this.isCurrStepReady = isCurrStepReady
   }
 
   get hasSymbol () {
