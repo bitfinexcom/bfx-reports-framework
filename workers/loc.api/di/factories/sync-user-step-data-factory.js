@@ -18,7 +18,9 @@ module.exports = (ctx) => {
           args[0]?.baseStart,
           args[0]?.baseEnd,
           args[0]?.currStart,
-          args[0]?.currEnd
+          args[0]?.currEnd,
+          args[0]?.isBaseStepReady,
+          args[0]?.isCurrStepReady
         ]
       : args
 
