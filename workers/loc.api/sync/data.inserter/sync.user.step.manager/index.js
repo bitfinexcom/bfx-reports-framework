@@ -1,8 +1,16 @@
 'use strict'
 
 const {
+  isEmpty,
+  min
+} = require('lodash')
+
+const {
   isInsertableArrObjTypeOfColl
 } = require('../../schema/utils')
+const {
+  invertSort
+} = require('../data.checker/helpers')
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
 
 const { decorateInjectable } = require('../../../di/utils')
@@ -13,19 +21,22 @@ const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
-  TYPES.SYNC_API_METHODS
+  TYPES.SYNC_API_METHODS,
+  TYPES.SyncUserStepDataFactory
 ]
 class SyncUserStepManager {
   constructor (
     dao,
     TABLES_NAMES,
     syncSchema,
-    SYNC_API_METHODS
+    SYNC_API_METHODS,
+    syncUserStepDataFactory
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.syncUserStepDataFactory = syncUserStepDataFactory
 
     this.syncQueueId = null
 
@@ -56,7 +67,11 @@ class SyncUserStepManager {
       typeof syncSchema?.model?.subUserId === 'string' &&
       Number.isInteger(subUserId)
     )
-    const tableName = syncSchema.name
+    const {
+      name: tableName,
+      dateFieldName,
+      sort: tableOrder
+    } = syncSchema
     const tempTableName = this._getCurrNamePrefix()
     const hasTempTable = await this.dao.hasTable(tempTableName)
 
@@ -75,25 +90,94 @@ class SyncUserStepManager {
     const lastElemFromMainTablePromise = this.dao.getElemInCollBy(
       tableName,
       userIdFilter,
-      syncSchema.sort
+      tableOrder
+    )
+    const firstElemFromMainTablePromise = this.dao.getElemInCollBy(
+      tableName,
+      userIdFilter,
+      invertSort(tableOrder)
     )
     const lastElemFromTempTablePromise = hasTempTable
       ? this.dao.getElemInCollBy(
           tempTableName,
           userIdFilter,
-          syncSchema.sort
+          tableOrder
+        )
+      : null
+    const firstElemFromTempTablePromise = hasTempTable
+      ? this.dao.getElemInCollBy(
+          tempTableName,
+          userIdFilter,
+          invertSort(tableOrder)
         )
       : null
 
     const [
       syncUserStepInfo,
       lastElemFromMainTable,
-      lastElemFromTempTable
+      firstElemFromMainTable,
+      lastElemFromTempTable,
+      firstElemFromTempTable
     ] = Promise.all([
       syncUserStepInfoPromise,
       lastElemFromMainTablePromise,
-      lastElemFromTempTablePromise
+      firstElemFromMainTablePromise,
+      lastElemFromTempTablePromise,
+      firstElemFromTempTablePromise
     ])
+
+    const {
+      baseStart,
+      baseEnd,
+      currStart,
+      currEnd,
+      isBaseStepReady = false,
+      isCurrStepReady = false
+    } = syncUserStepInfo ?? {}
+    const isMainTableEmpty = isEmpty(lastElemFromMainTable)
+    const isTempTableEmpty = isEmpty(lastElemFromTempTable)
+
+    if (
+      !isBaseStepReady &&
+      isMainTableEmpty &&
+      isTempTableEmpty
+    ) {
+      const syncUserStepData = this.syncUserStepDataFactory({
+        baseStart,
+        baseEnd,
+        isBaseStepReady
+      })
+
+      return {
+        syncUserStepData
+      }
+    }
+
+    const syncUserStepData = this.syncUserStepDataFactory({
+      baseStart,
+      baseEnd,
+      currStart,
+      currEnd,
+      isBaseStepReady,
+      isCurrStepReady
+    })
+
+    if (!isCurrStepReady) {
+      const lastElemMtsFromMainTable = lastElemFromMainTable?.[dateFieldName] ?? null
+      const firstElemMtsFromTempTable = firstElemFromTempTable?.[dateFieldName] ?? null
+
+      syncUserStepData.setParams({
+        currStart: min([currStart, lastElemMtsFromMainTable]) ?? 0,
+        currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
+      })
+    }
+    // TODO:
+    // if (!isBaseStepReady) {
+    // }
+
+    return {
+      syncUserStepData
+    }
   }
 
   _getCurrNamePrefix (id) {
