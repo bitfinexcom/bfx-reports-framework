@@ -18,24 +18,26 @@ class SyncUserStepData {
    * @param {?boolean} [isBaseStepReady] - Used to mark base sync step is ready
    * @param {?boolean} [isCurrStepReady] - Used to mark current sync step is ready
    */
-  setParams (
-    symbol = null,
-    timeframe = null,
-    baseStart = null,
-    baseEnd = null,
-    currStart = null,
-    currEnd = null,
-    isBaseStepReady = false,
-    isCurrStepReady = false
-  ) {
-    this.symbol = symbol
-    this.timeframe = timeframe
-    this.baseStart = baseStart
-    this.baseEnd = baseEnd
-    this.currStart = currStart
-    this.currEnd = currEnd
-    this.isBaseStepReady = isBaseStepReady
-    this.isCurrStepReady = isCurrStepReady
+  setParams (params = {}) {
+    const {
+      symbol = this.symbol,
+      timeframe = this.timeframe,
+      baseStart = this.baseStart,
+      baseEnd = this.baseEnd,
+      currStart = this.currStart,
+      currEnd = this.currEnd,
+      isBaseStepReady = this.isBaseStepReady,
+      isCurrStepReady = this.isCurrStepReady
+    } = params ?? {}
+
+    this.symbol = symbol ?? null
+    this.timeframe = timeframe ?? null
+    this.baseStart = baseStart ?? null
+    this.baseEnd = baseEnd ?? null
+    this.currStart = currStart ?? null
+    this.currEnd = currEnd ?? null
+    this.isBaseStepReady = isBaseStepReady ?? false
+    this.isCurrStepReady = isCurrStepReady ?? false
   }
 
   get hasSymbol () {
