@@ -54,7 +54,6 @@ class SyncUserStepManager {
     this.syncQueueId = params.syncQueueId
   }
 
-  // TODO:
   async getLastSyncedInfoForCurrColl (syncSchema, params) {
     if (!isInsertableArrObjTypeOfColl(syncSchema)) {
       throw new LastSyncedInfoGettingError()
@@ -137,8 +136,12 @@ class SyncUserStepManager {
       isBaseStepReady = false,
       isCurrStepReady = false
     } = syncUserStepInfo ?? {}
+
     const isMainTableEmpty = isEmpty(lastElemFromMainTable)
     const isTempTableEmpty = isEmpty(lastElemFromTempTable)
+    const firstElemMtsFromMainTable = firstElemFromMainTable?.[dateFieldName] ?? null
+    const lastElemMtsFromMainTable = lastElemFromMainTable?.[dateFieldName] ?? null
+    const firstElemMtsFromTempTable = firstElemFromTempTable?.[dateFieldName] ?? null
 
     if (
       !isBaseStepReady &&
@@ -146,8 +149,8 @@ class SyncUserStepManager {
       isTempTableEmpty
     ) {
       const syncUserStepData = this.syncUserStepDataFactory({
-        baseStart,
-        baseEnd,
+        baseStart: baseStart ?? 0,
+        baseEnd: baseEnd ?? Date.now(),
         isBaseStepReady
       })
 
@@ -166,17 +169,17 @@ class SyncUserStepManager {
     })
 
     if (!isCurrStepReady) {
-      const lastElemMtsFromMainTable = lastElemFromMainTable?.[dateFieldName] ?? null
-      const firstElemMtsFromTempTable = firstElemFromTempTable?.[dateFieldName] ?? null
-
       syncUserStepData.setParams({
         currStart: min([currStart, lastElemMtsFromMainTable]) ?? 0,
         currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
       })
     }
-    // TODO:
-    // if (!isBaseStepReady) {
-    // }
+    if (!isBaseStepReady) {
+      syncUserStepData.setParams({
+        baseStart: min([baseStart, firstElemMtsFromMainTable]) ?? 0,
+        baseEnd: min([baseEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
+      })
+    }
 
     return {
       syncUserStepData
