@@ -137,6 +137,37 @@ class DataChecker {
     }
   }
 
+  // TODO: need to remove `NewWay` from end of method name
+  async _checkItemNewDataArrObjTypeNewWay (
+    method,
+    schema,
+    auth
+  ) {
+    if (this._isInterrupted) {
+      return
+    }
+
+    const { _id: userId, subUser } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+
+    this._resetSyncSchemaProps(schema)
+
+    const {
+      syncUserStepData
+    } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+      schema,
+      {
+        collName: method,
+        userId,
+        subUserId
+      }
+    )
+  }
+
+  /**
+   * TODO:
+   * @deprecated
+   */
   async _checkItemNewDataArrObjType (
     method,
     schema,
