@@ -15,7 +15,10 @@ const SyncTempTablesManager = require('../sync.temp.tables.manager')
 
 const { decorateInjectable } = require('../../../di/utils')
 
-const { SyncQueueIDSettingError } = require('../../../errors')
+const {
+  SyncQueueIDSettingError,
+  LastSyncedInfoGettingError
+} = require('../../../errors')
 
 const depsTypes = (TYPES) => [
   TYPES.DAO,
@@ -54,7 +57,7 @@ class SyncUserStepManager {
   // TODO:
   async getLastSyncedInfoForCurrColl (syncSchema, params) {
     if (!isInsertableArrObjTypeOfColl(syncSchema)) {
-      throw new Error('ERR_') // TODO:
+      throw new LastSyncedInfoGettingError()
     }
 
     const {

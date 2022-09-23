@@ -205,6 +205,12 @@ class SyncQueueIDSettingError extends BaseError {
   }
 }
 
+class LastSyncedInfoGettingError extends BaseError {
+  constructor (message = 'ERR_LAST_SYNCED_INFO_GETTING_FOR_UNAVAILABLE_COLLECTION_TYPE') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -236,5 +242,6 @@ module.exports = {
   DbRestoringError,
   TotalFeesParamsFlagError,
   SyncQueueOwnerSettingError,
-  SyncQueueIDSettingError
+  SyncQueueIDSettingError,
+  LastSyncedInfoGettingError
 }
