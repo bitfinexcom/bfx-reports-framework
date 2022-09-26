@@ -2,7 +2,8 @@
 
 const {
   isEmpty,
-  min
+  min,
+  max
 } = require('lodash')
 
 const {
@@ -142,6 +143,8 @@ class SyncUserStepManager {
     const firstElemMtsFromMainTable = firstElemFromMainTable?.[dateFieldName] ?? null
     const lastElemMtsFromMainTable = lastElemFromMainTable?.[dateFieldName] ?? null
     const firstElemMtsFromTempTable = firstElemFromTempTable?.[dateFieldName] ?? null
+    const lastElemMtsFromTempTable = lastElemFromTempTable?.[dateFieldName] ?? null
+    const lastElemMtsFromTables = max([lastElemMtsFromTempTable, lastElemMtsFromMainTable]) ?? 0
 
     if (
       !isBaseStepReady &&
@@ -155,7 +158,8 @@ class SyncUserStepManager {
       })
 
       return {
-        syncUserStepData
+        syncUserStepData,
+        lastElemMtsFromTables
       }
     }
 
@@ -182,7 +186,8 @@ class SyncUserStepManager {
     }
 
     return {
-      syncUserStepData
+      syncUserStepData,
+      lastElemMtsFromTables
     }
   }
 
