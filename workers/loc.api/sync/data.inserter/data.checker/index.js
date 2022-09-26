@@ -793,6 +793,34 @@ class DataChecker {
       callerName: 'DATA_SYNCER'
     })
   }
+
+  _shouldFreshSyncBeAdded (
+    syncUserStepData,
+    currMts = Date.now(),
+    allowedHoursDiff = 1
+  ) {
+    const baseEnd = (
+      !syncUserStepData.isBaseStepReady &&
+      syncUserStepData.hasBaseStep
+    )
+      ? syncUserStepData.baseEnd
+      : 0
+    const currEnd = (
+      !syncUserStepData.isCurrStepReady &&
+      syncUserStepData.hasCurrStep
+    )
+      ? syncUserStepData.currEnd
+      : 0
+
+    const momentBaseEnd = moment(baseEnd)
+    const momentCurrEnd = moment(currEnd)
+    const momentCurrMts = moment(currMts)
+
+    const momentMaxEnd = moment.max(momentBaseEnd, momentCurrEnd)
+    const momentHoursDiff = momentCurrMts.diff(momentMaxEnd, 'hours')
+
+    return momentHoursDiff > allowedHoursDiff
+  }
 }
 
 decorateInjectable(DataChecker, depsTypes)
