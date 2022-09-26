@@ -43,7 +43,8 @@ const depsTypes = (TYPES) => [
   TYPES.SyncInterrupter,
   TYPES.SyncCollsManager,
   TYPES.GetDataFromApi,
-  TYPES.SyncUserStepManager
+  TYPES.SyncUserStepManager,
+  TYPES.SyncUserStepDataFactory
 ]
 class DataChecker {
   constructor (
@@ -57,7 +58,8 @@ class DataChecker {
     syncInterrupter,
     syncCollsManager,
     getDataFromApi,
-    syncUserStepManager
+    syncUserStepManager,
+    syncUserStepDataFactory
   ) {
     this.rService = rService
     this.dao = dao
@@ -70,6 +72,7 @@ class DataChecker {
     this.syncCollsManager = syncCollsManager
     this.getDataFromApi = getDataFromApi
     this.syncUserStepManager = syncUserStepManager
+    this.syncUserStepDataFactory = syncUserStepDataFactory
 
     this._methodCollMap = new Map()
 
@@ -152,6 +155,7 @@ class DataChecker {
 
     this._resetSyncSchemaProps(schema)
 
+    const currMts = Date.now()
     const {
       syncUserStepData
     } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
@@ -162,6 +166,31 @@ class DataChecker {
         subUserId
       }
     )
+
+    if (
+      !syncUserStepData.isBaseStepReady ||
+      !syncUserStepData.isCurrStepReady
+    ) {
+      schema.hasNewData = true
+      schema.start.push(syncUserStepData)
+    }
+
+    const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
+      syncUserStepData,
+      currMts
+    )
+
+    if (!shouldFreshSyncBeAdded) {
+      return
+    }
+
+    const freshSyncUserStepData = this.syncUserStepDataFactory({
+      currStart: syncUserStepData.lastElemMtsFromTables,
+      currEnd: currMts,
+      isCurrStepReady: false
+    })
+    schema.hasNewData = true
+    schema.start.push(freshSyncUserStepData)
   }
 
   /**
