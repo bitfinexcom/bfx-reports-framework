@@ -378,6 +378,30 @@ class DataChecker {
     if (isEmpty(publicСollsСonf)) {
       return
     }
+
+    for (const confs of publicСollsСonf) {
+      if (this._isInterrupted) {
+        return
+      }
+
+      const {
+        symbol,
+        timeframe,
+        start
+      } = confs ?? {}
+
+      const {
+        syncUserStepData,
+        lastElemMtsFromTables
+      } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+        schema,
+        {
+          collName: method,
+          symbol,
+          timeframe
+        }
+      )
+    }
   }
 
   /**
