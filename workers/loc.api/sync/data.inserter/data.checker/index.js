@@ -352,6 +352,31 @@ class DataChecker {
     }
 
     this._resetSyncSchemaProps(schema)
+
+    const {
+      confName,
+      timeframeFieldName
+    } = schema ?? {}
+    const groupResBy = (
+      timeframeFieldName &&
+      typeof timeframeFieldName === 'string'
+    )
+      ? ['symbol', 'timeframe']
+      : ['symbol']
+
+    const publicСollsСonf = await this.dao.getElemsInCollBy(
+      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
+      {
+        filter: { confName },
+        subQuery: { sort: [['start', 1]] },
+        groupResBy,
+        groupFns: ['min(start)']
+      }
+    )
+
+    if (isEmpty(publicСollsСonf)) {
+      return
+    }
   }
 
   /**
