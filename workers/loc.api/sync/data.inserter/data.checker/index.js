@@ -345,6 +345,19 @@ class DataChecker {
     }
   }
 
+  // TODO: need to remove `NewWay` from end of method name
+  async _checkNewConfigurablePublicDataNewWay (method, schema) {
+    if (this._isInterrupted) {
+      return
+    }
+
+    this._resetSyncSchemaProps(schema)
+  }
+
+  /**
+   * TODO:
+   * @deprecated
+   */
   async _checkNewConfigurablePublicData (method, schema) {
     if (this._isInterrupted) {
       return
