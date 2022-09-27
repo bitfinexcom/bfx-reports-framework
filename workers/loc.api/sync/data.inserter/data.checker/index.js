@@ -157,7 +157,8 @@ class DataChecker {
 
     const currMts = Date.now()
     const {
-      syncUserStepData
+      syncUserStepData,
+      lastElemMtsFromTables
     } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
       schema,
       {
@@ -185,7 +186,7 @@ class DataChecker {
     }
 
     const freshSyncUserStepData = this.syncUserStepDataFactory({
-      currStart: syncUserStepData.lastElemMtsFromTables,
+      currStart: lastElemMtsFromTables,
       currEnd: currMts,
       isCurrStepReady: false
     })
