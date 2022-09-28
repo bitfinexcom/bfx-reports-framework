@@ -2,6 +2,7 @@
 
 const {
   isEmpty,
+  merge,
   min,
   max
 } = require('lodash')
@@ -63,24 +64,53 @@ class SyncUserStepManager {
     const {
       collName,
       userId,
-      subUserId
+      subUserId,
+      symbol,
+      timeframe
     } = params ?? {}
-
-    const hasSubUserIdField = (
-      typeof syncSchema?.model?.subUserId === 'string' &&
-      Number.isInteger(subUserId)
-    )
     const {
       name: tableName,
       dateFieldName,
-      sort: tableOrder
-    } = syncSchema
+      symbolFieldName,
+      timeframeFieldName,
+      sort: tableOrder,
+      model
+    } = syncSchema ?? {}
+
+    const hasSubUserIdField = (
+      typeof model?.subUserId === 'string' &&
+      Number.isInteger(subUserId)
+    )
+    const hasSymbolField = (
+      symbolFieldName &&
+      typeof model?.[symbolFieldName] === 'string' &&
+      symbol &&
+      typeof symbol === 'string'
+    )
+    const hasTimeframeField = (
+      timeframeFieldName &&
+      typeof model?.[timeframeFieldName] === 'string' &&
+      timeframe &&
+      typeof timeframe === 'string'
+    )
+
     const tempTableName = this._getCurrNamePrefix()
     const hasTempTable = await this.dao.hasTable(tempTableName)
 
     const userIdFilter = hasSubUserIdField
       ? { $eq: { user_id: userId, subUserId } }
       : { $eq: { user_id: userId } }
+    const symbolFilter = hasSymbolField
+      ? { $eq: { [symbolFieldName]: symbol } }
+      : {}
+    const timeframeFilter = hasTimeframeField
+      ? { $eq: { [timeframeFieldName]: timeframe } }
+      : {}
+    const dataFilter = merge(
+      userIdFilter,
+      symbolFilter,
+      timeframeFilter
+    )
 
     const syncUserStepInfoPromise = this.dao.getElemInCollBy(
       this.TABLES_NAMES.SYNC_USER_STEPS,
@@ -92,25 +122,25 @@ class SyncUserStepManager {
     )
     const lastElemFromMainTablePromise = this.dao.getElemInCollBy(
       tableName,
-      userIdFilter,
+      dataFilter,
       tableOrder
     )
     const firstElemFromMainTablePromise = this.dao.getElemInCollBy(
       tableName,
-      userIdFilter,
+      dataFilter,
       invertSort(tableOrder)
     )
     const lastElemFromTempTablePromise = hasTempTable
       ? this.dao.getElemInCollBy(
           tempTableName,
-          userIdFilter,
+          dataFilter,
           tableOrder
         )
       : null
     const firstElemFromTempTablePromise = hasTempTable
       ? this.dao.getElemInCollBy(
           tempTableName,
-          userIdFilter,
+          dataFilter,
           invertSort(tableOrder)
         )
       : null
