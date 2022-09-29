@@ -1266,20 +1266,6 @@ class FrameworkReportService extends ReportService {
     }, 'getTradedVolume', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getFeesReport (space, args, cb) {
-    return this._privResponder(async () => {
-      await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.FEES_REPORT, args)
-
-      checkParams(args, 'paramsSchemaForFeesReportApi')
-
-      return this._feesReport.getFeesReport(args)
-    }, 'getFeesReport', args, cb)
-  }
-
   getTotalFeesReport (space, args, cb) {
     return this._privResponder(async () => {
       await this._dataConsistencyChecker
@@ -1378,18 +1364,6 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getTradedVolumeCsv', args, cb)
-  }
-
-  /**
-   * @deprecated
-   */
-  getFeesReportCsv (space, args, cb) {
-    return this._responder(() => {
-      return this._generateCsv(
-        'getFeesReportCsvJobData',
-        args
-      )
-    }, 'getFeesReportCsv', args, cb)
   }
 
   getTotalFeesReportCsv (space, args, cb) {

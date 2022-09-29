@@ -8,7 +8,6 @@ module.exports = {
   FULL_SNAPSHOT_REPORT: 'getFullSnapshotReport',
   FULL_TAX_REPORT: 'getFullTaxReport',
   TRADED_VOLUME: 'getTradedVolume',
-  FEES_REPORT: 'getFeesReport',
   TOTAL_FEES_REPORT: 'getTotalFeesReport',
   PERFORMING_LOAN: 'getPerformingLoan'
 }
