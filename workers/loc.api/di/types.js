@@ -43,7 +43,6 @@ module.exports = {
   SqliteDbMigrator: Symbol.for('SqliteDbMigrator'),
   Trades: Symbol.for('Trades'),
   TradedVolume: Symbol.for('TradedVolume'),
-  FeesReport: Symbol.for('FeesReport'),
   PerformingLoan: Symbol.for('PerformingLoan'),
   SubAccount: Symbol.for('SubAccount'),
   ConvertCurrencyHook: Symbol.for('ConvertCurrencyHook'),
