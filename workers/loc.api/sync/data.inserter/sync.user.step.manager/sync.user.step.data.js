@@ -61,14 +61,16 @@ class SyncUserStepData {
   get hasBaseStep () {
     return (
       Number.isInteger(this.baseStart) &&
-      Number.isInteger(this.baseEnd)
+      Number.isInteger(this.baseEnd) &&
+      this.baseStart < this.baseEnd
     )
   }
 
   get hasCurrStep () {
     return (
       Number.isInteger(this.currStart) &&
-      Number.isInteger(this.currEnd)
+      Number.isInteger(this.currEnd) &&
+      this.currStart < this.currEnd
     )
   }
 }
