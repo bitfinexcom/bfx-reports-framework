@@ -354,6 +354,7 @@ class DataChecker {
 
     this._resetSyncSchemaProps(schema)
 
+    const currMts = Date.now()
     const {
       confName,
       timeframeFieldName
@@ -398,9 +399,35 @@ class DataChecker {
         {
           collName: method,
           symbol,
-          timeframe
+          timeframe,
+          defaultStart: start
         }
       )
+
+      if (
+        !syncUserStepData.isBaseStepReady ||
+        !syncUserStepData.isCurrStepReady
+      ) {
+        schema.hasNewData = true
+        schema.start.push(syncUserStepData)
+      }
+
+      const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
+        syncUserStepData,
+        currMts
+      )
+
+      if (!shouldFreshSyncBeAdded) {
+        return
+      }
+
+      const freshSyncUserStepData = this.syncUserStepDataFactory({
+        currStart: lastElemMtsFromTables,
+        currEnd: currMts,
+        isCurrStepReady: false
+      })
+      schema.hasNewData = true
+      schema.start.push(freshSyncUserStepData)
     }
   }
 
