@@ -620,6 +620,49 @@ class DataChecker {
     })
   }
 
+  // TODO: need to remove `NewWay` from end of method name
+  async checkNewCandlesDataNewWay (
+    method,
+    schema
+  ) {
+    if (this._isInterrupted) {
+      return
+    }
+
+    this._resetSyncSchemaProps(schema)
+
+    const currMts = Date.now()
+    const lastElemLedgers = await this.dao.getElemInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      { $not: { currency: this.FOREX_SYMBS } },
+      [['mts', 1]]
+    )
+
+    if (!Number.isInteger(lastElemLedgers?.mts)) {
+      return
+    }
+
+    const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      {
+        filter: { $not: { currency: this.FOREX_SYMBS } },
+        isDistinct: true,
+        projection: ['currency']
+      }
+    )
+
+    if (
+      !Array.isArray(uniqueLedgersSymbs) ||
+      uniqueLedgersSymbs.length === 0
+    ) {
+      return
+    }
+  }
+
+  /**
+   * TODO:
+   * @deprecated
+   */
   async checkNewCandlesData (
     method,
     schema
