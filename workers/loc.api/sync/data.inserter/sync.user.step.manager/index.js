@@ -66,7 +66,8 @@ class SyncUserStepManager {
       userId,
       subUserId,
       symbol,
-      timeframe
+      timeframe,
+      defaultStart = 0
     } = params ?? {}
     const {
       name: tableName,
@@ -174,7 +175,7 @@ class SyncUserStepManager {
     const lastElemMtsFromMainTable = lastElemFromMainTable?.[dateFieldName] ?? null
     const firstElemMtsFromTempTable = firstElemFromTempTable?.[dateFieldName] ?? null
     const lastElemMtsFromTempTable = lastElemFromTempTable?.[dateFieldName] ?? null
-    const lastElemMtsFromTables = max([lastElemMtsFromTempTable, lastElemMtsFromMainTable]) ?? 0
+    const lastElemMtsFromTables = max([lastElemMtsFromTempTable, lastElemMtsFromMainTable]) ?? defaultStart
 
     if (
       !isBaseStepReady &&
@@ -204,13 +205,13 @@ class SyncUserStepManager {
 
     if (!isCurrStepReady) {
       syncUserStepData.setParams({
-        currStart: min([currStart, lastElemMtsFromMainTable]) ?? 0,
+        currStart: min([currStart, lastElemMtsFromMainTable]) ?? defaultStart,
         currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
       })
     }
     if (!isBaseStepReady) {
       syncUserStepData.setParams({
-        baseStart: min([baseStart, firstElemMtsFromMainTable]) ?? 0,
+        baseStart: min([baseStart, firstElemMtsFromMainTable]) ?? defaultStart,
         baseEnd: min([baseEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
       })
     }
