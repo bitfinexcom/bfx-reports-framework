@@ -151,7 +151,7 @@ class SyncUserStepManager {
       firstElemFromMainTable,
       lastElemFromTempTable,
       firstElemFromTempTable
-    ] = Promise.all([
+    ] = await Promise.all([
       syncUserStepInfoPromise,
       lastElemFromMainTablePromise,
       firstElemFromMainTablePromise,
