@@ -61,6 +61,7 @@ class SyncUserStepManager {
       throw new LastSyncedInfoGettingError()
     }
 
+    const currMts = Date.now()
     const {
       collName,
       userId,
@@ -184,7 +185,7 @@ class SyncUserStepManager {
     ) {
       const syncUserStepData = this.syncUserStepDataFactory({
         baseStart: baseStart ?? 0,
-        baseEnd: baseEnd ?? Date.now(),
+        baseEnd: baseEnd ?? currMts,
         isBaseStepReady
       })
 
@@ -206,13 +207,13 @@ class SyncUserStepManager {
     if (!isCurrStepReady) {
       syncUserStepData.setParams({
         currStart: min([currStart, lastElemMtsFromMainTable]) ?? defaultStart,
-        currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
+        currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? currMts
       })
     }
     if (!isBaseStepReady) {
       syncUserStepData.setParams({
         baseStart: min([baseStart, firstElemMtsFromMainTable]) ?? defaultStart,
-        baseEnd: min([baseEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? Date.now()
+        baseEnd: min([baseEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? currMts
       })
     }
 
