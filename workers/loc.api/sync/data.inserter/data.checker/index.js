@@ -637,7 +637,7 @@ class DataChecker {
     const currMts = Date.now()
     const lastElemLedgers = await this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
-      { $not: { currency: this.FOREX_SYMBS } },
+      { $not: { currency: 'USD' } },
       [['mts', 1]]
     )
 
@@ -645,20 +645,23 @@ class DataChecker {
       return
     }
 
-    const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.LEDGERS,
-      {
-        filter: { $not: { currency: this.FOREX_SYMBS } },
-        isDistinct: true,
-        projection: ['currency']
-      }
-    )
+    const uniqueSymbsSet = await this._getUniqueSymbsFromLedgers()
+    const candlesPairsSet = new Set()
 
-    if (
-      !Array.isArray(uniqueLedgersSymbs) ||
-      uniqueLedgersSymbs.length === 0
-    ) {
-      return
+    for (const symbol of uniqueSymbsSet) {
+      const currency = typeof symbol === 'string'
+        ? symbol.replace(/F0$/i, '')
+        : symbol
+      const separator = (
+        typeof currency === 'string' &&
+        currency.length > 3
+      )
+        ? ':'
+        : ''
+
+      if (currency) {
+        candlesPairsSet.add(`t${currency}${separator}${CONVERT_TO}`)
+      }
     }
   }
 
