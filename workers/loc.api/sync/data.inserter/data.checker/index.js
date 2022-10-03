@@ -635,13 +635,13 @@ class DataChecker {
     this._resetSyncSchemaProps(schema)
 
     const currMts = Date.now()
-    const lastElemLedgers = await this.dao.getElemInCollBy(
+    const firstElemLedgers = await this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       { $not: { currency: 'USD' } },
       [['mts', 1]]
     )
 
-    if (!Number.isInteger(lastElemLedgers?.mts)) {
+    if (!Number.isInteger(firstElemLedgers?.mts)) {
       return
     }
 
@@ -662,6 +662,9 @@ class DataChecker {
       if (currency) {
         candlesPairsSet.add(`t${currency}${separator}${CONVERT_TO}`)
       }
+    }
+    for (const forexSymbol of this.FOREX_SYMBS) {
+      candlesPairsSet.add(`tBTC${forexSymbol}`)
     }
   }
 
