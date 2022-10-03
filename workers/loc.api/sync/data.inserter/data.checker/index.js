@@ -983,9 +983,9 @@ class DataChecker {
       ? syncUserStepData.currEnd
       : 0
 
-    const momentBaseEnd = moment(baseEnd)
-    const momentCurrEnd = moment(currEnd)
-    const momentCurrMts = moment(currMts)
+    const momentBaseEnd = moment.utc(baseEnd)
+    const momentCurrEnd = moment.utc(currEnd)
+    const momentCurrMts = moment.utc(currMts)
 
     const momentMaxEnd = moment.max(momentBaseEnd, momentCurrEnd)
     const momentHoursDiff = momentCurrMts.diff(momentMaxEnd, 'hours')
