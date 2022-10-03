@@ -620,7 +620,10 @@ class DataChecker {
     })
   }
 
-  // TODO: need to remove `NewWay` from end of method name
+  /*
+   * TODO: need to remove `NewWay` from end of method name
+   * This step is used for the currency converter
+   */
   async checkNewCandlesDataNewWay (
     method,
     schema
@@ -982,6 +985,55 @@ class DataChecker {
     const momentHoursDiff = momentCurrMts.diff(momentMaxEnd, 'hours')
 
     return momentHoursDiff > allowedHoursDiff
+  }
+
+  async _getUniqueSymbsFromLedgers () {
+    const uniqueLedgersSymbsPromise = this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      {
+        filter: { $not: { currency: this.FOREX_SYMBS } },
+        isDistinct: true,
+        projection: ['currency']
+      }
+    )
+    const currenciesSynonymousPromise = await this.currencyConverter
+      .getCurrenciesSynonymous()
+
+    const [
+      uniqueLedgersSymbs,
+      currenciesSynonymous
+    ] = await Promise.all([
+      uniqueLedgersSymbsPromise,
+      currenciesSynonymousPromise
+    ])
+
+    const uniqueSymbs = uniqueLedgersSymbs.reduce((accum, ledger) => {
+      const { currency } = ledger ?? {}
+
+      if (!currency) {
+        return accum
+      }
+
+      accum.add(currency)
+
+      const synonymous = currenciesSynonymous.get(currency)
+
+      if (!synonymous) {
+        return accum
+      }
+
+      const uniqueSynonymous = synonymous
+        .filter(([syn]) => !accum.has(syn))
+        .map(([syn]) => syn)
+
+      if (uniqueSynonymous.length > 0) {
+        accum.add(...uniqueSynonymous)
+      }
+
+      return accum
+    }, new Set())
+
+    return uniqueSymbs
   }
 }
 
