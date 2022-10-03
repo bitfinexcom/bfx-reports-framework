@@ -666,6 +666,54 @@ class DataChecker {
     for (const forexSymbol of this.FOREX_SYMBS) {
       candlesPairsSet.add(`tBTC${forexSymbol}`)
     }
+
+    if (candlesPairsSet.size === 0) {
+      return
+    }
+
+    for (const symbol of candlesPairsSet) {
+      if (this._isInterrupted) {
+        return
+      }
+
+      const {
+        syncUserStepData,
+        lastElemMtsFromTables
+      } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+        schema,
+        {
+          collName: method,
+          symbol,
+          timeframe: CANDLES_TIMEFRAME,
+          defaultStart: firstElemLedgers.mts
+        }
+      )
+
+      if (
+        !syncUserStepData.isBaseStepReady ||
+        !syncUserStepData.isCurrStepReady
+      ) {
+        schema.hasNewData = true
+        schema.start.push(syncUserStepData)
+      }
+
+      const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
+        syncUserStepData,
+        currMts
+      )
+
+      if (!shouldFreshSyncBeAdded) {
+        return
+      }
+
+      const freshSyncUserStepData = this.syncUserStepDataFactory({
+        currStart: lastElemMtsFromTables,
+        currEnd: currMts,
+        isCurrStepReady: false
+      })
+      schema.hasNewData = true
+      schema.start.push(freshSyncUserStepData)
+    }
   }
 
   /**
