@@ -11,8 +11,8 @@ const {
   isInsertableArrObjTypeOfColl
 } = require('../../schema/utils')
 const {
-  invertSort
-} = require('../data.checker/helpers')
+  invertOrders
+} = require('./helpers')
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
 
 const { decorateInjectable } = require('../../../di/utils')
@@ -130,7 +130,7 @@ class SyncUserStepManager {
     const firstElemFromMainTablePromise = this.dao.getElemInCollBy(
       tableName,
       dataFilter,
-      invertSort(tableOrder)
+      invertOrders(tableOrder)
     )
     const lastElemFromTempTablePromise = hasTempTable
       ? this.dao.getElemInCollBy(
@@ -143,7 +143,7 @@ class SyncUserStepManager {
       ? this.dao.getElemInCollBy(
           tempTableName,
           dataFilter,
-          invertSort(tableOrder)
+          invertOrders(tableOrder)
         )
       : null
 
