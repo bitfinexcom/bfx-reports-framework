@@ -140,8 +140,8 @@ class DataChecker {
     }
   }
 
-  // TODO: need to remove `NewWay` from end of method name
-  async _checkItemNewDataArrObjTypeNewWay (
+  // TODO:
+  async _checkItemNewDataArrObjType (
     method,
     schema,
     auth
@@ -198,7 +198,7 @@ class DataChecker {
    * TODO:
    * @deprecated
    */
-  async _checkItemNewDataArrObjType (
+  async _checkItemNewDataArrObjTypeOldWay (
     method,
     schema,
     auth
@@ -346,8 +346,8 @@ class DataChecker {
     }
   }
 
-  // TODO: need to remove `NewWay` from end of method name
-  async _checkNewConfigurablePublicDataNewWay (method, schema) {
+  // TODO:
+  async _checkNewConfigurablePublicData (method, schema) {
     if (this._isInterrupted) {
       return
     }
@@ -457,7 +457,7 @@ class DataChecker {
    * TODO:
    * @deprecated
    */
-  async _checkNewConfigurablePublicData (method, schema) {
+  async _checkNewConfigurablePublicDataOldWay (method, schema) {
     if (this._isInterrupted) {
       return
     }
@@ -643,10 +643,10 @@ class DataChecker {
   }
 
   /*
-   * TODO: need to remove `NewWay` from end of method name
+   * TODO:
    * This step is used for the currency converter
    */
-  async checkNewCandlesDataNewWay (
+  async checkNewCandlesData (
     method,
     schema
   ) {
@@ -764,7 +764,7 @@ class DataChecker {
    * TODO:
    * @deprecated
    */
-  async checkNewCandlesData (
+  async checkNewCandlesDataOldWay (
     method,
     schema
   ) {
