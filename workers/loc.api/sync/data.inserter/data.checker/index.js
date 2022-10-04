@@ -1016,8 +1016,13 @@ class DataChecker {
   _shouldFreshSyncBeAdded (
     syncUserStepData,
     currMts = Date.now(),
-    allowedHoursDiff = 1
+    allowedDiff
   ) {
+    const {
+      measure = 'minutes',
+      allowedTimeDiff = 60
+    } = allowedDiff ?? {}
+
     const baseEnd = (
       !syncUserStepData.isBaseStepReady &&
       syncUserStepData.hasBaseStep
@@ -1036,9 +1041,34 @@ class DataChecker {
     const momentCurrMts = moment.utc(currMts)
 
     const momentMaxEnd = moment.max(momentBaseEnd, momentCurrEnd)
-    const momentHoursDiff = momentCurrMts.diff(momentMaxEnd, 'hours')
+    const momentDiff = momentCurrMts.diff(momentMaxEnd, measure)
 
-    return momentHoursDiff > allowedHoursDiff
+    return momentDiff > allowedTimeDiff
+  }
+
+  _wasStartPointChanged (
+    syncUserStepData,
+    startMts = 0,
+    allowedDiff
+  ) {
+    const {
+      measure = 'minutes',
+      allowedTimeDiff = 5
+    } = allowedDiff ?? {}
+
+    const baseStart = (
+      syncUserStepData.isBaseStepReady &&
+      syncUserStepData.hasBaseStep
+    )
+      ? syncUserStepData.baseStart
+      : 0
+
+    const momentBaseStart = moment.utc(baseStart)
+    const momentStartMts = moment.utc(startMts)
+
+    const momentDiff = momentBaseStart.diff(momentStartMts, measure)
+
+    return momentDiff > allowedTimeDiff
   }
 
   async _getUniqueSymbsFromLedgers () {
