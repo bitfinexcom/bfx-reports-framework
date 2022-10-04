@@ -697,20 +697,42 @@ class DataChecker {
         schema.start.push(syncUserStepData)
       }
 
+      const wasStartPointChanged = this._wasStartPointChanged(
+        syncUserStepData,
+        firstElemLedgers.mts
+      )
       const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
         syncUserStepData,
         currMts
       )
 
-      if (!shouldFreshSyncBeAdded) {
+      if (
+        !wasStartPointChanged &&
+        !shouldFreshSyncBeAdded
+      ) {
         return
       }
 
       const freshSyncUserStepData = this.syncUserStepDataFactory({
-        currStart: lastElemMtsFromTables,
-        currEnd: currMts,
-        isCurrStepReady: false
+        isBaseStepReady: true,
+        isCurrStepReady: true
       })
+
+      if (wasStartPointChanged) {
+        freshSyncUserStepData.setParams({
+          baseStart: firstElemLedgers.mts,
+          baseEnd: syncUserStepData.baseStart,
+          isBaseStepReady: false
+        })
+      }
+      if (shouldFreshSyncBeAdded) {
+        freshSyncUserStepData.setParams({
+          currStart: lastElemMtsFromTables,
+          currEnd: currMts,
+          isCurrStepReady: false
+        })
+      }
+
       schema.hasNewData = true
       schema.start.push(freshSyncUserStepData)
     }
