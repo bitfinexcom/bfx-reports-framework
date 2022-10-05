@@ -213,10 +213,12 @@ class DataInserter extends EventEmitter {
 
       const userProgress = (count / this._auth.size) * 100
 
+      // TODO:
       progress = await this.insertNewDataToDb(authItem[1], userProgress)
       count += 1
     }
 
+    // TODO:
     await this.insertNewPublicDataToDb(progress)
 
     await this.wsEventEmitter
@@ -276,6 +278,7 @@ class DataInserter extends EventEmitter {
     this._afterAllInsertsHooks.push(...hookArr)
   }
 
+  // TODO:
   async insertNewPublicDataToDb (prevProgress) {
     if (this._isInterrupted) {
       return
@@ -302,7 +305,7 @@ class DataInserter extends EventEmitter {
 
       await this._updateApiDataArrObjTypeToDb(method, item)
       await this._updateApiDataArrTypeToDb(method, item)
-      await this._insertApiDataPublicArrObjTypeToDb(method, item)
+      await this._insertApiDataPublicArrObjTypeToDb(method, item) // TODO:
 
       await this.syncCollsManager.setCollAsSynced({
         collName: method
@@ -319,6 +322,7 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  // TODO:
   async insertNewDataToDb (auth, userProgress = 0) {
     if (this._isInterrupted) {
       return userProgress
@@ -377,6 +381,7 @@ class DataInserter extends EventEmitter {
           ? {}
           : { symbol }
 
+        // TODO:
         await this._insertConfigurableApiData(
           method,
           schema,
@@ -449,6 +454,7 @@ class DataInserter extends EventEmitter {
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
     ]]))
+    // TODO:
     await this._insertApiDataPublicArrObjTypeToDb(
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
@@ -507,6 +513,7 @@ class DataInserter extends EventEmitter {
     })
   }
 
+  // TODO:
   async _insertApiDataPublicArrObjTypeToDb (
     methodApi,
     schema
@@ -518,7 +525,7 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const { name, start } = { ...schema }
+    const { name, start } = { ...schema } // TODO:
 
     if (
       name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
@@ -548,6 +555,7 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  // TODO:
   async _insertConfigurableApiData (
     methodApi,
     schema,
@@ -580,6 +588,7 @@ class DataInserter extends EventEmitter {
         }
       )
 
+      // TODO:
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
     if (Number.isInteger(currStart)) {
@@ -593,10 +602,12 @@ class DataInserter extends EventEmitter {
         }
       )
 
+      // TODO:
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
   }
 
+  // TODO:
   async _insertApiDataArrObjTypeToDb (
     args,
     methodApi,
@@ -606,8 +617,8 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const { auth } = { ...args }
-    const { apiKey, apiSecret } = { ...auth }
+    const { auth } = args ?? {}
+    const { apiKey, apiSecret } = auth ?? {}
     const isPublic = (
       !apiKey ||
       typeof apiKey !== 'string' ||
@@ -629,13 +640,13 @@ class DataInserter extends EventEmitter {
     _args.params.notThrowError = true
     const currIterationArgs = cloneDeep(_args)
 
-    const { subUserId } = { ...model }
+    const { subUserId } = model ?? {}
     const hasNotSubUserField = (
       !subUserId ||
       typeof subUserId !== 'string'
     )
-    const { auth: _auth } = { ..._args }
-    const { session } = { ..._auth }
+    const { auth: _auth } = _args ?? {}
+    const { session } = _auth ?? {}
     const sessionAuth = isPublic || hasNotSubUserField
       ? null
       : { ...session }
