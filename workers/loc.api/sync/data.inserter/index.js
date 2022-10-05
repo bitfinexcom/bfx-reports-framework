@@ -386,7 +386,7 @@ class DataInserter extends EventEmitter {
           method,
           schema,
           { ...dates, baseStartFrom },
-          addApiParams,
+          addApiParams, // TODO: remove
           auth
         )
       }
@@ -555,12 +555,10 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  // TODO:
   async _insertConfigurableApiData (
     methodApi,
     schema,
-    dates,
-    addApiParams = {},
+    syncUserStepData,
     auth = {}
   ) {
     if (this._isInterrupted) {
@@ -568,46 +566,69 @@ class DataInserter extends EventEmitter {
     }
 
     const {
-      baseStartFrom,
-      baseStartTo,
-      currStart
-    } = { ...dates }
+      symbol,
+      timeframe,
+      baseStart,
+      baseEnd,
+      currStart,
+      currEnd,
+      isBaseStepReady,
+      isCurrStepReady,
+      hasBaseStep,
+      hasCurrStep,
+      hasSymbol,
+      hasTimeframe
+    } = syncUserStepData
+    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
+
+    const params = {}
+
+    if (hasSymbol) {
+      params.symbol = symbol
+    }
+    if (hasTimeframe) {
+      params.timeframe = timeframe
+    }
+    if (hasCandlesSection) {
+      params.section = CANDLES_SECTION
+    }
 
     if (
-      Number.isInteger(baseStartFrom) &&
-      Number.isInteger(baseStartTo)
+      !isBaseStepReady &&
+      hasBaseStep
     ) {
       const args = this._getMethodArgMap(
         schema,
         {
           auth,
           limit: 10000000,
-          start: baseStartFrom,
-          end: baseStartTo,
-          params: { ...addApiParams }
+          start: baseStart,
+          end: baseEnd,
+          params
         }
       )
 
-      // TODO:
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
-    if (Number.isInteger(currStart)) {
+    if (
+      !isCurrStepReady &&
+      hasCurrStep
+    ) {
       const args = this._getMethodArgMap(
         schema,
         {
           auth,
           limit: 10000000,
           start: currStart,
-          params: { ...addApiParams }
+          end: currEnd,
+          params
         }
       )
 
-      // TODO:
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
   }
 
-  // TODO:
   async _insertApiDataArrObjTypeToDb (
     args,
     methodApi,
