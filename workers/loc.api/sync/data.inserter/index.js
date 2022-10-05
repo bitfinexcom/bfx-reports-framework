@@ -513,7 +513,6 @@ class DataInserter extends EventEmitter {
     })
   }
 
-  // TODO:
   async _insertApiDataPublicArrObjTypeToDb (
     methodApi,
     schema
@@ -525,31 +524,22 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const { name, start } = { ...schema } // TODO:
+    const { name, start } = schema ?? {}
 
     if (
       name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
       name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
       name === this.ALLOWED_COLLS.CANDLES
     ) {
-      for (const [symbol, dates, timeframe] of start) {
+      for (const syncUserStepData of start) {
         if (this._isInterrupted) {
           return
         }
 
-        const addApiParams = name === this.ALLOWED_COLLS.CANDLES
-          ? {
-              symbol,
-              timeframe,
-              section: CANDLES_SECTION
-            }
-          : { symbol }
-
         await this._insertConfigurableApiData(
           methodApi,
           schema,
-          dates,
-          addApiParams
+          syncUserStepData
         )
       }
     }
