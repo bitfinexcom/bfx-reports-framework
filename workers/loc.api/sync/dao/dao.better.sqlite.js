@@ -1036,16 +1036,21 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
-  async updateRecordOf (name, record) {
+  async updateRecordOf (name, record, opts) {
+    const {
+      shouldNotThrowError = false
+    } = opts ?? {}
     const data = serializeObj(record)
 
     const res = await this.query({
       action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
       params: { data, name }
     }, { withoutWorkerThreads: true })
-    const { changes } = { ...res }
 
-    if (changes < 1) {
+    if (shouldNotThrowError) {
+      return res
+    }
+    if (res?.changes < 1) {
       throw new UpdateRecordError()
     }
   }
