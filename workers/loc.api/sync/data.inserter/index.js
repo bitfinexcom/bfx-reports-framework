@@ -512,10 +512,6 @@ class DataInserter extends EventEmitter {
       name === this.ALLOWED_COLLS.CANDLES
     ) {
       for (const syncUserStepData of start) {
-        if (this._isInterrupted) {
-          return
-        }
-
         await this._insertConfigurableApiData(
           methodApi,
           schema,
