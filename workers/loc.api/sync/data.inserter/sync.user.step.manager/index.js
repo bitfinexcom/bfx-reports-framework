@@ -56,6 +56,34 @@ class SyncUserStepManager {
     this.syncQueueId = params.syncQueueId
   }
 
+  // TODO:
+  async updateOrInsertSyncInfoForCurrColl (syncSchema, params) {
+    if (!isInsertableArrObjTypeOfColl(syncSchema)) {
+      throw new LastSyncedInfoGettingError()
+    }
+
+    const syncInfo = {
+      ...params,
+      subUserId: this.syncQueueId
+    }
+
+    const updateRes = await this.dao.updateRecordOf(
+      this.TABLES_NAMES.SYNC_USER_STEPS,
+      syncInfo,
+      { shouldNotThrowError: true }
+    )
+
+    if (updateRes?.changes > 0) {
+      return
+    }
+
+    await this.dao.insertElemToDb(
+      this.TABLES_NAMES.SYNC_USER_STEPS,
+      syncInfo,
+      { isReplacedIfExists: true }
+    )
+  }
+
   async getLastSyncedInfoForCurrColl (syncSchema, params) {
     if (!isInsertableArrObjTypeOfColl(syncSchema)) {
       throw new LastSyncedInfoGettingError()
