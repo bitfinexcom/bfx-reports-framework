@@ -10,8 +10,7 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
-  CANDLES_SECTION,
-  ALL_SYMBOLS_TO_SYNC
+  CANDLES_SECTION
 } = require('./const')
 const {
   filterMethodCollMapByList,
@@ -213,12 +212,10 @@ class DataInserter extends EventEmitter {
 
       const userProgress = (count / this._auth.size) * 100
 
-      // TODO:
       progress = await this.insertNewDataToDb(authItem[1], userProgress)
       count += 1
     }
 
-    // TODO:
     await this.insertNewPublicDataToDb(progress)
 
     await this.wsEventEmitter
@@ -278,7 +275,6 @@ class DataInserter extends EventEmitter {
     this._afterAllInsertsHooks.push(...hookArr)
   }
 
-  // TODO:
   async insertNewPublicDataToDb (prevProgress) {
     if (this._isInterrupted) {
       return
@@ -295,7 +291,7 @@ class DataInserter extends EventEmitter {
     let count = 0
     let progress = 0
 
-    for (const [method, item] of methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
         return
       }
@@ -303,9 +299,9 @@ class DataInserter extends EventEmitter {
       await this.wsEventEmitter
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
-      await this._updateApiDataArrObjTypeToDb(method, item)
-      await this._updateApiDataArrTypeToDb(method, item)
-      await this._insertApiDataPublicArrObjTypeToDb(method, item) // TODO:
+      await this._updateApiDataArrObjTypeToDb(method, schema)
+      await this._updateApiDataArrTypeToDb(method, schema)
+      await this._insertApiDataPublicArrObjTypeToDb(method, schema)
 
       await this.syncCollsManager.setCollAsSynced({
         collName: method
@@ -322,7 +318,6 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  // TODO:
   async insertNewDataToDb (auth, userProgress = 0) {
     if (this._isInterrupted) {
       return userProgress
@@ -366,27 +361,13 @@ class DataInserter extends EventEmitter {
         auth
       )
 
-      const { start } = schema
+      const { start } = schema ?? {}
 
-      for (const [symbol, dates] of start) {
-        const { baseStartFrom = 0 } = { ...dates }
-        const addApiParams = (
-          !symbol ||
-          symbol === ALL_SYMBOLS_TO_SYNC ||
-          (
-            Array.isArray(symbol) &&
-            symbol.length === 0
-          )
-        )
-          ? {}
-          : { symbol }
-
-        // TODO:
+      for (const syncUserStepData of start) {
         await this._insertConfigurableApiData(
           method,
           schema,
-          { ...dates, baseStartFrom },
-          addApiParams, // TODO: remove
+          syncUserStepData,
           auth
         )
       }
@@ -454,7 +435,6 @@ class DataInserter extends EventEmitter {
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
     ]]))
-    // TODO:
     await this._insertApiDataPublicArrObjTypeToDb(
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
