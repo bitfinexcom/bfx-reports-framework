@@ -543,13 +543,17 @@ class DataInserter extends EventEmitter {
       hasBaseStep,
       hasCurrStep,
       hasSymbol,
-      hasTimeframe
+      hasTimeframe,
+      areAllSymbolsRequired
     } = syncUserStepData
     const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
 
     const params = {}
 
-    if (hasSymbol) {
+    if (
+      hasSymbol &&
+      !areAllSymbolsRequired
+    ) {
       params.symbol = symbol
     }
     if (hasTimeframe) {
