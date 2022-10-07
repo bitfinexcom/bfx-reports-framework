@@ -211,6 +211,12 @@ class LastSyncedInfoGettingError extends BaseError {
   }
 }
 
+class SyncInfoUpdatingError extends BaseError {
+  constructor (message = 'ERR_SYNC_INFO_UPDATING_HAS_BEEN_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -243,5 +249,6 @@ module.exports = {
   TotalFeesParamsFlagError,
   SyncQueueOwnerSettingError,
   SyncQueueIDSettingError,
-  LastSyncedInfoGettingError
+  LastSyncedInfoGettingError,
+  SyncInfoUpdatingError
 }
