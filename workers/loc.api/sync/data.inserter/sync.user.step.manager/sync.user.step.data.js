@@ -40,6 +40,28 @@ class SyncUserStepData {
     this.isCurrStepReady = isCurrStepReady ?? false
   }
 
+  getParams (opts) {
+    const {
+      areStoringParamsReturned = false
+    } = opts ?? {}
+    const params = areStoringParamsReturned
+      ? {}
+      : {
+          symbol: this.symbol,
+          timeframe: this.timeframe
+        }
+
+    return {
+      ...params,
+      baseStart: this.baseStart,
+      baseEnd: this.baseEnd,
+      currStart: this.currStart,
+      currEnd: this.currEnd,
+      isBaseStepReady: this.isBaseStepReady,
+      isCurrStepReady: this.isCurrStepReady
+    }
+  }
+
   get hasSymbol () {
     return (
       this.symbol &&
