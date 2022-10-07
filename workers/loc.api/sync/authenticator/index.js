@@ -267,8 +267,8 @@ class Authenticator {
       { _id, email: emailFromDb },
       {
         ...freshUserData,
-        active: serializeVal(freshUserData.active),
-        isDataFromDb: serializeVal(freshUserData.isDataFromDb)
+        active: freshUserData.active,
+        isDataFromDb: freshUserData.isDataFromDb
       },
       { withoutWorkerThreads }
     )
@@ -343,7 +343,7 @@ class Authenticator {
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
-      { active: serializeVal(active) }
+      { active: active }
     )
 
     if (res && res.changes < 1) {
@@ -466,9 +466,9 @@ class Authenticator {
       { _id: userFromDb._id, email },
       {
         ...freshUserData,
-        active: serializeVal(freshUserData.active),
-        isDataFromDb: serializeVal(freshUserData.isDataFromDb),
-        isNotProtected: serializeVal(isNotProtected)
+        active: freshUserData.active,
+        isDataFromDb: freshUserData.isDataFromDb,
+        isNotProtected: isNotProtected
       },
       { withoutWorkerThreads }
     )

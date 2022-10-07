@@ -965,14 +965,17 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       withoutWorkerThreads = true
-    } = { ...opts }
+    } = opts ?? {}
     const {
       where,
       values: params
     } = getWhereQuery(filter)
-    const fields = Object.keys(data).map((item) => {
+
+    const dataKeys = Object.keys(data)
+    const serializedData = serializeObj(data, dataKeys)
+    const fields = dataKeys.map((item) => {
       const key = `new_${item}`
-      params[key] = data[item]
+      params[key] = serializedData[item]
 
       return `${item} = $${key}`
     }).join(', ')
