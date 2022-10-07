@@ -3,6 +3,7 @@
 const {
   isEmpty,
   merge,
+  omit,
   min,
   max
 } = require('lodash')
@@ -19,7 +20,8 @@ const { decorateInjectable } = require('../../../di/utils')
 
 const {
   SyncQueueIDSettingError,
-  LastSyncedInfoGettingError
+  LastSyncedInfoGettingError,
+  SyncInfoUpdatingError
 } = require('../../../errors')
 
 const depsTypes = (TYPES) => [
@@ -56,21 +58,50 @@ class SyncUserStepManager {
     this.syncQueueId = params.syncQueueId
   }
 
-  // TODO:
   async updateOrInsertSyncInfoForCurrColl (syncSchema, params) {
-    if (!isInsertableArrObjTypeOfColl(syncSchema)) {
-      throw new LastSyncedInfoGettingError()
+    const {
+      collName,
+      subUserId,
+      userId,
+      syncUserStepData
+    } = params ?? {}
+    const hasUserIdField = Number.isInteger(userId)
+    const hasSubUserIdField = Number.isInteger(subUserId)
+    const mustBePublicColl = !hasUserIdField
+
+    if (
+      !isInsertableArrObjTypeOfColl(syncSchema, mustBePublicColl) ||
+      !collName ||
+      typeof collName !== 'string'
+    ) {
+      throw new SyncInfoUpdatingError()
     }
+
+    const syncUserStepDataParams = syncUserStepData
+      ?.getParams?.({ areStoringParamsReturned: true }) ?? {}
 
     const syncInfo = {
-      ...params,
-      subUserId: this.syncQueueId
+      ...syncUserStepDataParams,
+      ...omit(params, 'syncUserStepData'),
+      syncQueueId: this.syncQueueId
     }
 
-    const updateRes = await this.dao.updateRecordOf(
+    const userIdFilter = hasUserIdField
+      ? { $eq: { user_id: userId } }
+      : {}
+    const subUserIdFilter = hasSubUserIdField
+      ? { $eq: { subUserId } }
+      : {}
+    const filter = merge(
+      { $eq: { collName } },
+      userIdFilter,
+      subUserIdFilter
+    )
+
+    const updateRes = await this.dao.updateCollBy(
       this.TABLES_NAMES.SYNC_USER_STEPS,
-      syncInfo,
-      { shouldNotThrowError: true }
+      filter,
+      syncInfo
     )
 
     if (updateRes?.changes > 0) {
