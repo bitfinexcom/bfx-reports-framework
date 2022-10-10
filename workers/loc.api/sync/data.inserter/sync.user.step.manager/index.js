@@ -285,7 +285,7 @@ class SyncUserStepManager {
   _getCurrNamePrefix (id) {
     const syncQueueId = id ?? this.syncQueueId
 
-    return SyncTempTablesManager._getNamePrefix(syncQueueId)
+    return SyncTempTablesManager.getNamePrefix(syncQueueId)
   }
 }
 

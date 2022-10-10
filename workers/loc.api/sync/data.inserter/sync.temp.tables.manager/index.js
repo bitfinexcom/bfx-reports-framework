@@ -41,7 +41,7 @@ class SyncTempTablesManager {
   async createTempDBStructureForCurrSync (methodCollMap) {
     const models = [...methodCollMap]
       .map(([method, schema]) => [schema.name, schema.model])
-    const namePrefix = this._getNamePrefix()
+    const namePrefix = this._getCurrNamePrefix()
 
     await this.dao.createDBStructure({ models, namePrefix })
   }
@@ -89,10 +89,10 @@ class SyncTempTablesManager {
   _getCurrNamePrefix (id) {
     const syncQueueId = id ?? this.syncQueueId
 
-    return this.constructor._getNamePrefix(syncQueueId)
+    return this.constructor.getNamePrefix(syncQueueId)
   }
 
-  static _getNamePrefix (id) {
+  static getNamePrefix (id) {
     return `temp_s${id}_`
   }
 }
