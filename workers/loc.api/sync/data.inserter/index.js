@@ -303,6 +303,7 @@ class DataInserter extends EventEmitter {
       await this._updateApiDataArrTypeToDb(method, schema)
       await this._insertApiDataPublicArrObjTypeToDb(method, schema)
 
+      // TODO:
       await this.syncCollsManager.setCollAsSynced({
         collName: method
       })
@@ -340,12 +341,8 @@ class DataInserter extends EventEmitter {
     await this.syncTempTablesManager
       .createTempDBStructureForCurrSync(methodCollMap)
     const size = this._methodCollMap.size
-    const {
-      _id: userId,
-      subUser,
-      isSubAccount
-    } = auth ?? {}
-    const { _id: subUserId } = subUser ?? {}
+    const { isSubAccount } = auth ?? {}
+    const { userId, subUserId } = this._getUserIds(auth)
     const isLastSubUser = this._isLastSubUser(auth)
 
     let count = 0
@@ -374,6 +371,7 @@ class DataInserter extends EventEmitter {
 
       await this.prepareData({ method }, { isLastSubUser })
 
+      // TODO:
       await this.syncCollsManager.setCollAsSynced({
         collName: method, userId, subUserId
       })
@@ -439,6 +437,7 @@ class DataInserter extends EventEmitter {
       this.SYNC_API_METHODS.CANDLES,
       candlesSchema
     )
+    // TODO:
     await this.syncCollsManager.setCollAsSynced({
       collName: this.SYNC_API_METHODS.CANDLES
     })
@@ -521,6 +520,7 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  // TODO:
   async _insertConfigurableApiData (
     methodApi,
     schema,
@@ -530,6 +530,17 @@ class DataInserter extends EventEmitter {
     if (this._isInterrupted) {
       return
     }
+
+    const { userId, subUserId } = this._getUserIds(auth)
+    await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
+      schema,
+      {
+        collName: methodApi,
+        userId,
+        subUserId,
+        syncUserStepData
+      }
+    )
 
     const {
       symbol,
@@ -1028,6 +1039,16 @@ class DataInserter extends EventEmitter {
 
   _getSyncedSubUser (userId, subUserId) {
     return `${userId}-${subUserId}`
+  }
+
+  _getUserIds (auth) {
+    const {
+      _id: userId,
+      subUser
+    } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+
+    return { userId, subUserId }
   }
 }
 
