@@ -195,6 +195,7 @@ class DataInserter extends EventEmitter {
       return
     }
 
+    const syncedUsersMap = new Map()
     let count = 0
     let progress = 0
 
@@ -212,15 +213,29 @@ class DataInserter extends EventEmitter {
 
       const userProgress = (count / this._auth.size) * 100
 
-      progress = await this.insertNewDataToDb(authItem[1], userProgress)
+      const {
+        progress: currProgress,
+        methodCollMap
+      } = await this.insertNewDataToDb(authItem[1], userProgress)
+      syncedUsersMap.set(authItem[0], {
+        auth: authItem[1],
+        methodCollMap
+      })
+
+      progress = currProgress
       count += 1
     }
 
-    await this.insertNewPublicDataToDb(progress)
+    const {
+      methodCollMap: pubMethodCollMap
+    } = await this.insertNewPublicDataToDb(progress)
 
     await this.wsEventEmitter
       .emitSyncingStep('DB_PREPARATION')
-    await this._afterAllInserts()
+    await this._afterAllInserts({
+      syncedUsersMap,
+      pubMethodCollMap
+    })
 
     if (typeof this.dao.optimize === 'function') {
       await this.dao.optimize()
@@ -233,7 +248,7 @@ class DataInserter extends EventEmitter {
     await this.setProgress(100)
   }
 
-  async _afterAllInserts () {
+  async _afterAllInserts (params) {
     if (this._isInterrupted) {
       return
     }
@@ -252,6 +267,41 @@ class DataInserter extends EventEmitter {
       }
 
       await hook.execute()
+    }
+
+    const {
+      syncedUsersMap,
+      pubMethodCollMap
+    } = params
+    const syncedAt = Date.now()
+
+    for (const { auth, methodCollMap } of syncedUsersMap) {
+      const { userId, subUserId } = this._getUserIds(auth)
+
+      for (const [collName, schema] of methodCollMap) {
+        await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
+          schema,
+          {
+            collName,
+            userId,
+            subUserId,
+            syncedAt,
+            isBaseStepReady: true,
+            isCurrStepReady: true
+          }
+        )
+      }
+    }
+    for (const [collName, schema] of pubMethodCollMap) {
+      await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
+        schema,
+        {
+          collName,
+          syncedAt,
+          isBaseStepReady: true,
+          isCurrStepReady: true
+        }
+      )
     }
   }
 
@@ -277,7 +327,7 @@ class DataInserter extends EventEmitter {
 
   async insertNewPublicDataToDb (prevProgress) {
     if (this._isInterrupted) {
-      return
+      return { methodCollMap: new Map() }
     }
 
     await this.wsEventEmitter
@@ -293,7 +343,7 @@ class DataInserter extends EventEmitter {
 
     for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
-        return
+        return { methodCollMap: new Map() }
       }
 
       await this.wsEventEmitter
@@ -317,11 +367,16 @@ class DataInserter extends EventEmitter {
         await this.setProgress(progress)
       }
     }
+
+    return { methodCollMap }
   }
 
   async insertNewDataToDb (auth, userProgress = 0) {
     if (this._isInterrupted) {
-      return userProgress
+      return {
+        progress: userProgress,
+        methodCollMap: new Map()
+      }
     }
     if (
       typeof auth.apiKey !== 'string' ||
@@ -329,7 +384,10 @@ class DataInserter extends EventEmitter {
     ) {
       await this.setProgress(MESS_ERR_UNAUTH)
 
-      return userProgress
+      return {
+        progress: userProgress,
+        methodCollMap: new Map()
+      }
     }
 
     await this.wsEventEmitter.emitSyncingStepToOne(
@@ -350,7 +408,10 @@ class DataInserter extends EventEmitter {
 
     for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
-        return userProgress
+        return {
+          progress: userProgress,
+          methodCollMap: new Map()
+        }
       }
 
       await this.wsEventEmitter.emitSyncingStepToOne(
@@ -393,7 +454,7 @@ class DataInserter extends EventEmitter {
       this._setSyncedSubUser(userId, subUserId)
     }
 
-    return progress
+    return { progress, methodCollMap }
   }
 
   async prepareData (args = {}, opts = {}) {
