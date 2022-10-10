@@ -41,21 +41,21 @@ class SyncTempTablesManager {
   async createTempDBStructureForCurrSync (methodCollMap) {
     const models = [...methodCollMap]
       .map(([method, schema]) => [schema.name, schema.model])
-    const namePrefix = this._getCurrNamePrefix()
+    const namePrefix = this.getCurrNamePrefix()
 
     await this.dao.createDBStructure({ models, namePrefix })
   }
 
   async removeTempDBStructureForCurrSync () {
     await this.dao.dropAllTables({
-      expectations: [this._getCurrNamePrefix()],
+      expectations: [this.getCurrNamePrefix()],
       isNotStrictEqual: true
     })
   }
 
   async moveTempTableDataToMain () {
     await this.dao.moveTempTableDataToMain({
-      namePrefix: this._getCurrNamePrefix()
+      namePrefix: this.getCurrNamePrefix()
     })
   }
 
@@ -78,7 +78,7 @@ class SyncTempTablesManager {
       }
     )
     const exceptions = activeSyncs
-      .map(({ _id }) => this._getCurrNamePrefix(_id))
+      .map(({ _id }) => this.getCurrNamePrefix(_id))
 
     await this.dao.dropAllTables({
       exceptions,
@@ -86,7 +86,7 @@ class SyncTempTablesManager {
     })
   }
 
-  _getCurrNamePrefix (id) {
+  getCurrNamePrefix (id) {
     const syncQueueId = id ?? this.syncQueueId
 
     return this.constructor.getNamePrefix(syncQueueId)

@@ -748,7 +748,7 @@ class DataInserter extends EventEmitter {
       prevRes = normalizedApiData
 
       await this.dao.insertElemsToDb(
-        collName,
+        this._getTempTableName(collName),
         sessionAuth,
         normalizedApiData,
         { isReplacedIfExists: true }
@@ -1049,6 +1049,13 @@ class DataInserter extends EventEmitter {
     const { _id: subUserId } = subUser ?? {}
 
     return { userId, subUserId }
+  }
+
+  _getTempTableName (tableName) {
+    const prefix = this.syncTempTablesManager
+      .getCurrNamePrefix(this.syncQueueId)
+
+    return `${prefix}${tableName}`
   }
 }
 
