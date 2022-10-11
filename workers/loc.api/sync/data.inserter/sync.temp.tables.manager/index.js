@@ -92,6 +92,12 @@ class SyncTempTablesManager {
     return this.constructor.getNamePrefix(syncQueueId)
   }
 
+  static getTempTableName (tableName, id) {
+    const prefix = this.getNamePrefix(id)
+
+    return `${prefix}${tableName}`
+  }
+
   static getNamePrefix (id) {
     return `temp_s${id}_`
   }

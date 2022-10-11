@@ -548,7 +548,6 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  // TODO:
   async _insertConfigurableApiData (
     methodApi,
     schema,
@@ -776,7 +775,8 @@ class DataInserter extends EventEmitter {
       prevRes = normalizedApiData
 
       await this.dao.insertElemsToDb(
-        this._getTempTableName(collName),
+        this.syncTempTablesManager.constructor
+          .getTempTableName(collName, this.syncQueueId),
         sessionAuth,
         normalizedApiData,
         { isReplacedIfExists: true }
@@ -1077,13 +1077,6 @@ class DataInserter extends EventEmitter {
     const { _id: subUserId } = subUser ?? {}
 
     return { userId, subUserId }
-  }
-
-  _getTempTableName (tableName) {
-    const prefix = this.syncTempTablesManager
-      .getCurrNamePrefix(this.syncQueueId)
-
-    return `${prefix}${tableName}`
   }
 
   async _updateSyncInfo (params) {

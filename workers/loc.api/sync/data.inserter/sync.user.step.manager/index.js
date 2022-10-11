@@ -155,7 +155,7 @@ class SyncUserStepManager {
       typeof timeframe === 'string'
     )
 
-    const tempTableName = this._getCurrNamePrefix()
+    const tempTableName = this._getCurrTempTableName(tableName)
     const hasTempTable = await this.dao.hasTable(tempTableName)
 
     const userIdFilter = hasSubUserIdField
@@ -282,10 +282,11 @@ class SyncUserStepManager {
     }
   }
 
-  _getCurrNamePrefix (id) {
-    const syncQueueId = id ?? this.syncQueueId
-
-    return SyncTempTablesManager.getNamePrefix(syncQueueId)
+  _getCurrTempTableName (tableName) {
+    return SyncTempTablesManager.getTempTableName(
+      tableName,
+      this.syncQueueId
+    )
   }
 }
 
