@@ -1,6 +1,7 @@
 'use strict'
 
 const moment = require('moment')
+const { orderBy } = require('lodash')
 
 const {
   FindMethodError
@@ -16,6 +17,9 @@ const {
   isForexSymb
 } = require('../helpers')
 const { tryParseJSON } = require('../../helpers')
+const SyncTempTablesManager = require(
+  '../data.inserter/sync.temp.tables.manager'
+)
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -386,7 +390,8 @@ class CurrencyConverter {
 
   async _getCandleClosedPrice (
     reqSymb,
-    end
+    end,
+    opts
   ) {
     if (
       !reqSymb ||
@@ -394,6 +399,10 @@ class CurrencyConverter {
     ) {
       return null
     }
+
+    const {
+      shouldTempTablesBeIncluded
+    } = opts ?? {}
 
     const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
@@ -405,9 +414,52 @@ class CurrencyConverter {
       },
       this.candlesSchema.sort
     )
-    const { close } = { ...candle }
 
-    return close
+    if (!shouldTempTablesBeIncluded) {
+      return candle?.close
+    }
+
+    const tempTableNamePattern = SyncTempTablesManager.getTempTableName(
+      this.candlesSchema.name,
+      '\\d+'
+    )
+    const regExp = new RegExp(tempTableNamePattern)
+
+    const tableNames = await this.dao.getTablesNames()
+    const tempTableNames = tableNames.filter((name) => (
+      regExp.test(name)
+    ))
+    const candles = Number.isInteger(candle?.[this.candlesSchema.dateFieldName])
+      ? [candle]
+      : []
+
+    for (const candlesTempTableName of tempTableNames) {
+      const candleFromTempTable = await this.dao.getElemInCollBy(
+        candlesTempTableName,
+        {
+          [this.candlesSchema.symbolFieldName]: symbol,
+          end,
+          _dateFieldName: [this.candlesSchema.dateFieldName]
+        },
+        this.candlesSchema.sort
+      )
+
+      if (Number.isInteger(candleFromTempTable?.[this.candlesSchema.dateFieldName])) {
+        candles.push(candleFromTempTable)
+      }
+    }
+
+    if (candles.length === 0) {
+      return null
+    }
+
+    const orderedCandles = orderBy(
+      candles,
+      [this.candlesSchema.dateFieldName],
+      ['desc']
+    )
+
+    return orderedCandles[0]?.close
   }
 
   _getPriceMethodName (collName) {
@@ -434,7 +486,8 @@ class CurrencyConverter {
       convertTo,
       symbolFieldName,
       dateFieldName,
-      mts
+      mts,
+      shouldTempTablesBeIncluded
     }
   ) {
     const end = Number.isInteger(mts)
@@ -453,11 +506,13 @@ class CurrencyConverter {
     if (isRequiredConvFromForex) {
       const btcPriceIn = await _getPrice(
         `tBTC${item[symbolFieldName]}`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
       const btcPriceOut = await _getPrice(
         `tBTC${convertTo}`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
 
       if (
@@ -474,11 +529,13 @@ class CurrencyConverter {
     if (!isRequiredConvToForex) {
       const usdPriceIn = await _getPrice(
         `t${item[symbolFieldName]}USD`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
       const usdPriceOut = await _getPrice(
         `t${convertTo}USD`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
 
       if (
@@ -501,7 +558,8 @@ class CurrencyConverter {
           symbolFieldName
         }
       ),
-      end
+      end,
+      { shouldTempTablesBeIncluded }
     )
 
     return Number.isFinite(price)
