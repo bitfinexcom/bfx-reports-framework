@@ -286,7 +286,7 @@ class DataInserter extends EventEmitter {
 
     hookArr.forEach((hook) => {
       hook.setDataInserter(this)
-      hook.init()
+      hook.init({ syncQueueId: this.syncQueueId })
     })
 
     this._afterAllInsertsHooks.push(...hookArr)

@@ -1,5 +1,6 @@
 'use strict'
 
+const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const { CONVERT_TO } = require('../const')
 const DataInserterHook = require('./data.inserter.hook')
 
@@ -28,6 +29,7 @@ class ConvertCurrencyHook extends DataInserterHook {
       [
         this.ALLOWED_COLLS.LEDGERS,
         {
+          shouldTempTablesBeIncluded: true,
           symbolFieldName: 'currency',
           dateFieldName: 'mts',
           convFields: [
@@ -42,6 +44,7 @@ class ConvertCurrencyHook extends DataInserterHook {
       [
         this.ALLOWED_COLLS.MOVEMENTS,
         {
+          shouldTempTablesBeIncluded: true,
           symbolFieldName: 'currency',
           dateFieldName: 'mtsUpdated',
           convFields: [
@@ -95,6 +98,12 @@ class ConvertCurrencyHook extends DataInserterHook {
 
           return accum
         }, [])
+      const tableName = Number.isInteger(this._opts.syncQueueId)
+        ? SyncTempTablesManager.getTempTableName(
+            collName,
+            this._opts.syncQueueId
+          )
+        : collName
 
       while (true) {
         count += 1
@@ -102,7 +111,7 @@ class ConvertCurrencyHook extends DataInserterHook {
         if (count > 100) break
 
         const elems = await this.dao.getElemsInCollBy(
-          collName,
+          tableName,
           {
             filter: {
               $gt: { _id },
@@ -127,7 +136,7 @@ class ConvertCurrencyHook extends DataInserterHook {
           )
 
         await this.dao.updateElemsInCollBy(
-          collName,
+          tableName,
           convElems,
           ['_id'],
           updatedFieldNames
