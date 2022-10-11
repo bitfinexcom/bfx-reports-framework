@@ -269,40 +269,7 @@ class DataInserter extends EventEmitter {
       await hook.execute()
     }
 
-    const {
-      syncedUsersMap,
-      pubMethodCollMap
-    } = params
-    const syncedAt = Date.now()
-
-    for (const { auth, methodCollMap } of syncedUsersMap) {
-      const { userId, subUserId } = this._getUserIds(auth)
-
-      for (const [collName, schema] of methodCollMap) {
-        await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
-          schema,
-          {
-            collName,
-            userId,
-            subUserId,
-            syncedAt,
-            isBaseStepReady: true,
-            isCurrStepReady: true
-          }
-        )
-      }
-    }
-    for (const [collName, schema] of pubMethodCollMap) {
-      await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
-        schema,
-        {
-          collName,
-          syncedAt,
-          isBaseStepReady: true,
-          isCurrStepReady: true
-        }
-      )
-    }
+    await this._updateSyncInfo(params)
   }
 
   addAfterAllInsertsHooks (hook) {
@@ -1117,6 +1084,54 @@ class DataInserter extends EventEmitter {
       .getCurrNamePrefix(this.syncQueueId)
 
     return `${prefix}${tableName}`
+  }
+
+  async _updateSyncInfo (params) {
+    await this.dao.executeQueriesInTrans(async () => {
+      const {
+        syncedUsersMap,
+        pubMethodCollMap
+      } = params
+      const syncedAt = Date.now()
+      const updatesForPubCollsPromises = []
+
+      for (const { auth, methodCollMap } of syncedUsersMap) {
+        const { userId, subUserId } = this._getUserIds(auth)
+        const updatesForOneUserPromises = []
+
+        for (const [collName, schema] of methodCollMap) {
+          const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
+            schema,
+            {
+              collName,
+              userId,
+              subUserId,
+              syncedAt,
+              isBaseStepReady: true,
+              isCurrStepReady: true
+            }
+          )
+          updatesForOneUserPromises.push(promise)
+        }
+
+        await Promise.all(updatesForOneUserPromises)
+      }
+      for (const [collName, schema] of pubMethodCollMap) {
+        const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
+          schema,
+          {
+            collName,
+            syncedAt,
+            isBaseStepReady: true,
+            isCurrStepReady: true
+          }
+        )
+
+        updatesForPubCollsPromises.push(promise)
+      }
+
+      await Promise.all(updatesForPubCollsPromises)
+    }, { withoutWorkerThreads: true })
   }
 }
 
