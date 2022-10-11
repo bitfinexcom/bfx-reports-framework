@@ -207,7 +207,7 @@ class BetterSqliteDAO extends DAO {
     }, { withoutWorkerThreads: true })
   }
 
-  async _getTablesNames () {
+  async getTablesNames () {
     const sql = getTablesNamesQuery()
     const data = await this.query({
       action: MAIN_DB_WORKER_ACTIONS.ALL,
@@ -294,7 +294,7 @@ class BetterSqliteDAO extends DAO {
       ? name
       : [name]
 
-    const tableNames = await this._getTablesNames()
+    const tableNames = await this.getTablesNames()
 
     return names.every((name) => (
       tableNames.some((tName) => name === tName)
@@ -314,7 +314,7 @@ class BetterSqliteDAO extends DAO {
     const _expectations = Array.isArray(expectations)
       ? expectations
       : []
-    const tableNames = await this._getTablesNames()
+    const tableNames = await this.getTablesNames()
     const filteredTableNames = tableNames.filter((name) => (
       _exceptions.every((exc) => (
         name !== exc &&
@@ -376,7 +376,7 @@ class BetterSqliteDAO extends DAO {
     })
 
     await this._beginTrans(async () => {
-      const tableNames = await this._getTablesNames()
+      const tableNames = await this.getTablesNames()
       const filteredTempTableNames = tableNames.filter((name) => (
         name.includes(namePrefix)
       ))
@@ -447,7 +447,7 @@ class BetterSqliteDAO extends DAO {
    * @override
    */
   async isDBEmpty () {
-    const tableNames = await this._getTablesNames()
+    const tableNames = await this.getTablesNames()
 
     return (
       !Array.isArray(tableNames) ||
