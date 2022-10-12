@@ -104,7 +104,6 @@ class DataInserter extends EventEmitter {
 
     this._asyncProgressHandlers = []
     this._auth = null
-    this._syncedSubUsers = new Set()
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
     )
@@ -366,9 +365,7 @@ class DataInserter extends EventEmitter {
     await this.syncTempTablesManager
       .createTempDBStructureForCurrSync(methodCollMap)
     const size = this._methodCollMap.size
-    const { isSubAccount } = auth ?? {}
     const { userId, subUserId } = this._getUserIds(auth)
-    const isLastSubUser = this._isLastSubUser(auth)
 
     let count = 0
     let progress = 0
@@ -397,8 +394,6 @@ class DataInserter extends EventEmitter {
         )
       }
 
-      await this.prepareData({ method }, { isLastSubUser })
-
       // TODO:
       await this.syncCollsManager.setCollAsSynced({
         collName: method, userId, subUserId
@@ -414,96 +409,7 @@ class DataInserter extends EventEmitter {
       }
     }
 
-    // After whole sync prepare collections if it's not done earlier
-    await this.prepareData({ methodCollMap }, { isLastSubUser })
-
-    if (isSubAccount) {
-      this._setSyncedSubUser(userId, subUserId)
-    }
-
     return { progress, methodCollMap }
-  }
-
-  async prepareData (args = {}, opts = {}) {
-    await this._prepareLedgers(args, opts)
-    await this._prepareMovements(args, opts)
-  }
-
-  /* If ledgers are syncing
-    sync candles,
-    convert currency,
-    recalc sub-account */
-  async _prepareLedgers (args = {}, opts = {}) {
-    const {
-      method = this.SYNC_API_METHODS.LEDGERS,
-      methodCollMap
-    } = args ?? {}
-    const { isLastSubUser } = opts ?? {}
-
-    if (
-      method !== this.SYNC_API_METHODS.LEDGERS ||
-      (
-        methodCollMap instanceof Map &&
-        methodCollMap.has(this.SYNC_API_METHODS.LEDGERS)
-      )
-    ) {
-      return
-    }
-
-    const candlesSchema = this.syncSchema
-      .getMethodCollMap().get(this.SYNC_API_METHODS.CANDLES)
-
-    await this.dataChecker.checkNewCandlesData(
-      this.SYNC_API_METHODS.CANDLES,
-      candlesSchema
-    )
-    await this.syncTempTablesManager.createTempDBStructureForCurrSync(new Map([[
-      this.SYNC_API_METHODS.CANDLES,
-      candlesSchema
-    ]]))
-    await this._insertApiDataPublicArrObjTypeToDb(
-      this.SYNC_API_METHODS.CANDLES,
-      candlesSchema
-    )
-    // TODO:
-    await this.syncCollsManager.setCollAsSynced({
-      collName: this.SYNC_API_METHODS.CANDLES
-    })
-
-    candlesSchema.isSyncDoneForCurrencyConv = true
-
-    await this.convertCurrencyHook.execute(
-      this.ALLOWED_COLLS.LEDGERS
-    )
-
-    if (!isLastSubUser) {
-      return
-    }
-
-    await this.recalcSubAccountLedgersBalancesHook.execute()
-  }
-
-  /* If movements are syncing
-    convert currency */
-  async _prepareMovements (args = {}) {
-    const {
-      method = this.SYNC_API_METHODS.MOVEMENTS,
-      methodCollMap
-    } = args ?? {}
-
-    if (
-      method !== this.SYNC_API_METHODS.MOVEMENTS ||
-      (
-        methodCollMap instanceof Map &&
-        methodCollMap.has(this.SYNC_API_METHODS.MOVEMENTS)
-      )
-    ) {
-      return
-    }
-
-    await this.convertCurrencyHook.execute(
-      this.ALLOWED_COLLS.MOVEMENTS
-    )
   }
 
   _getDataFromApi (methodApi, args, isCheckCall) {
@@ -1031,42 +937,6 @@ class DataInserter extends EventEmitter {
 
   _getMethodCollMap () {
     return new Map(this._methodCollMap)
-  }
-
-  _isLastSubUser (auth = {}) {
-    const {
-      _id: userId,
-      subUser,
-      subUsers,
-      isSubAccount
-    } = auth ?? {}
-    const { _id: subUserId } = subUser ?? {}
-    const restSubUsers = subUsers.filter((user) => (
-      user?._id !== subUserId
-    ))
-    const currSubUser = this._getSyncedSubUser(userId, subUserId)
-
-    return (
-      isSubAccount &&
-      !this._syncedSubUsers.has(currSubUser) &&
-      restSubUsers.every((subUser) => (
-        this._syncedSubUsers
-          .has(this._getSyncedSubUser(userId, subUser?._id))
-      ))
-    )
-  }
-
-  _setSyncedSubUser (userId, subUserId) {
-    if (!(this._syncedSubUsers instanceof Set)) {
-      this._syncedSubUsers = new Set()
-    }
-
-    this._syncedSubUsers
-      .add(this._getSyncedSubUser(userId, subUserId))
-  }
-
-  _getSyncedSubUser (userId, subUserId) {
-    return `${userId}-${subUserId}`
   }
 
   _getUserIds (auth) {
