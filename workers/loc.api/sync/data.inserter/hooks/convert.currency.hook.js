@@ -29,7 +29,6 @@ class ConvertCurrencyHook extends DataInserterHook {
       [
         this.ALLOWED_COLLS.LEDGERS,
         {
-          shouldTempTablesBeIncluded: true,
           symbolFieldName: 'currency',
           dateFieldName: 'mts',
           convFields: [
@@ -44,7 +43,6 @@ class ConvertCurrencyHook extends DataInserterHook {
       [
         this.ALLOWED_COLLS.MOVEMENTS,
         {
-          shouldTempTablesBeIncluded: true,
           symbolFieldName: 'currency',
           dateFieldName: 'mtsUpdated',
           convFields: [
@@ -87,7 +85,12 @@ class ConvertCurrencyHook extends DataInserterHook {
       let count = 0
       let _id = 0
 
-      const { convFields } = { ...schema }
+      const _schema = {
+        shouldTempTablesBeIncluded: true,
+        convertTo: CONVERT_TO,
+        ...schema
+      }
+      const { convFields } = schema ?? {}
       const updatedFieldNames = convFields
         .reduce((accum, { outputField }) => {
           const _outputField = Array.isArray(outputField)
@@ -129,10 +132,7 @@ class ConvertCurrencyHook extends DataInserterHook {
         const convElems = await this.currencyConverter
           .convertByCandles(
             elems,
-            {
-              convertTo: CONVERT_TO,
-              ...schema
-            }
+            _schema
           )
 
         await this.dao.updateElemsInCollBy(
