@@ -324,7 +324,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
     while (true) {
       count += 1
 
-      if (count > 100) break
+      if (count > 1000) break
 
       const elems = await this.dao.getElemsInCollBy(
         tableName,
