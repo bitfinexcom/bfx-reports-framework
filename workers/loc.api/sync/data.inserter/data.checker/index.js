@@ -27,7 +27,6 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.CurrencyConverter,
   TYPES.SyncInterrupter,
-  TYPES.SyncCollsManager,
   TYPES.SyncUserStepManager,
   TYPES.SyncUserStepDataFactory
 ]
@@ -40,7 +39,6 @@ class DataChecker {
     FOREX_SYMBS,
     currencyConverter,
     syncInterrupter,
-    syncCollsManager,
     syncUserStepManager,
     syncUserStepDataFactory
   ) {
@@ -51,7 +49,6 @@ class DataChecker {
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
     this.syncInterrupter = syncInterrupter
-    this.syncCollsManager = syncCollsManager // TODO:
     this.syncUserStepManager = syncUserStepManager
     this.syncUserStepDataFactory = syncUserStepDataFactory
 
@@ -75,13 +72,13 @@ class DataChecker {
     }
 
     this.syncQueueId = syncQueueId
-    this.setMethodCollMap(methodCollMap)
+    this._setMethodCollMap(methodCollMap)
 
     this.syncUserStepManager.init({ syncQueueId: this.syncQueueId })
   }
 
   async checkNewData (auth) {
-    const methodCollMap = this.getMethodCollMap()
+    const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap)
@@ -93,7 +90,7 @@ class DataChecker {
   }
 
   async checkNewPublicData () {
-    const methodCollMap = this.getMethodCollMap()
+    const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
@@ -121,7 +118,6 @@ class DataChecker {
     }
   }
 
-  // TODO:
   async _checkItemNewDataArrObjType (
     method,
     schema,
@@ -183,21 +179,14 @@ class DataChecker {
       if (!isInsertableArrObjTypeOfColl(schema, true)) {
         continue
       }
+      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+        await this._checkNewCandlesData(method, schema)
+      }
       if (
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-        schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
+        schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
+        schema.name === this.ALLOWED_COLLS.CANDLES
       ) {
-        await this._checkNewConfigurablePublicData(method, schema)
-
-        continue
-      }
-      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        if (!schema.isSyncDoneForCurrencyConv) {
-          await this.checkNewCandlesData(method, schema)
-
-          schema.isSyncDoneForCurrencyConv = true
-        }
-
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
@@ -205,7 +194,6 @@ class DataChecker {
     }
   }
 
-  // TODO:
   async _checkNewConfigurablePublicData (method, schema) {
     if (this._isInterrupted) {
       return
@@ -313,10 +301,9 @@ class DataChecker {
   }
 
   /*
-   * TODO:
    * This step is used for the currency converter
    */
-  async checkNewCandlesData (
+  async _checkNewCandlesData (
     method,
     schema
   ) {
@@ -430,20 +417,6 @@ class DataChecker {
     }
   }
 
-  getMethodCollMap () {
-    return new Map(this._methodCollMap)
-  }
-
-  setMethodCollMap (methodCollMap) {
-    this._methodCollMap = this.syncSchema
-      .getMethodCollMap(methodCollMap)
-  }
-
-  _resetSyncSchemaProps (schema) {
-    schema.hasNewData = false
-    schema.start = []
-  }
-
   _shouldFreshSyncBeAdded (
     syncUserStepData,
     currMts = Date.now(),
@@ -549,6 +522,20 @@ class DataChecker {
     }, new Set())
 
     return uniqueSymbs
+  }
+
+  _resetSyncSchemaProps (schema) {
+    schema.hasNewData = false
+    schema.start = []
+  }
+
+  _getMethodCollMap () {
+    return new Map(this._methodCollMap)
+  }
+
+  _setMethodCollMap (methodCollMap) {
+    this._methodCollMap = this.syncSchema
+      .getMethodCollMap(methodCollMap)
   }
 }
 

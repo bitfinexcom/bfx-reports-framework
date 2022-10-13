@@ -387,7 +387,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'candlesConf',
-      isSyncDoneForCurrencyConv: false,
       isSyncRequiredAtLeastOnce: true,
       additionalApiCallArgs: { isNotMoreThanInnerMax: true },
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
