@@ -333,6 +333,7 @@ class BetterSqliteDAO extends DAO {
   }
 
   async dropAllTables (opts = {}) {
+    const { isNotInTrans } = opts ?? {}
     const filteredTableNames = await this.getFilteredTablesNames(opts)
 
     const sql = filteredTableNames.map((name) => (
@@ -340,7 +341,9 @@ class BetterSqliteDAO extends DAO {
     ))
 
     const res = await this.query({
-      action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
+      action: isNotInTrans
+        ? DB_WORKER_ACTIONS.RUN
+        : DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
     }, { withoutWorkerThreads: true })
