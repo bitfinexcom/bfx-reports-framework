@@ -949,8 +949,12 @@ class DataInserter extends EventEmitter {
     return { userId, subUserId }
   }
 
+  // TODO:
   async _updateSyncInfo (params) {
     await this.dao.executeQueriesInTrans(async () => {
+      await this.syncTempTablesManager
+        .moveTempTableDataToMain({ isNotInTrans: true })
+
       const {
         syncedUsersMap,
         pubMethodCollMap
