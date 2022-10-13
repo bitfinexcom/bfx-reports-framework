@@ -46,10 +46,13 @@ class SyncTempTablesManager {
     await this.dao.createDBStructure({ models, namePrefix })
   }
 
-  async removeTempDBStructureForCurrSync () {
+  async removeTempDBStructureForCurrSync (opts) {
+    const { isNotInTrans } = opts ?? {}
+
     await this.dao.dropAllTables({
       expectations: [this.getCurrNamePrefix()],
-      isNotStrictEqual: true
+      isNotStrictEqual: true,
+      isNotInTrans
     })
   }
 
