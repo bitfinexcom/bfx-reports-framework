@@ -139,7 +139,7 @@ class DataInserter extends EventEmitter {
       this._allowedCollsNames
     )
     this.convertCurrencyHook.init({ syncColls: this.syncColls })
-    this.addAfterAllInsertsHooks([
+    this._addAfterAllInsertsHooks([
       this.convertCurrencyHook,
       this.recalcSubAccountLedgersBalancesHook
     ])
@@ -151,24 +151,14 @@ class DataInserter extends EventEmitter {
     this.syncTempTablesManager.init({ syncQueueId: this.syncQueueId })
   }
 
+  getAuth () { return this._auth }
+
   addAsyncProgressHandler (handler) {
     if (typeof handler !== 'function') {
       throw new AsyncProgressHandlerIsNotFnError()
     }
 
     this._asyncProgressHandlers.push(handler)
-  }
-
-  async setProgress (progress) {
-    for (const handler of this._asyncProgressHandlers) {
-      await handler(progress)
-    }
-
-    this.emit('progress', progress)
-  }
-
-  getAuth () {
-    return this._auth
   }
 
   async insertNewDataToDbMultiUser () {
@@ -189,7 +179,7 @@ class DataInserter extends EventEmitter {
       !(this._auth instanceof Map) ||
       this._auth.size === 0
     ) {
-      await this.setProgress(MESS_ERR_UNAUTH)
+      await this._setProgress(MESS_ERR_UNAUTH)
 
       return
     }
@@ -215,7 +205,7 @@ class DataInserter extends EventEmitter {
       const {
         progress: currProgress,
         methodCollMap
-      } = await this.insertNewDataToDb(authItem[1], userProgress)
+      } = await this._insertNewDataToDb(authItem[1], userProgress)
       syncedUsersMap.set(authItem[0], {
         auth: authItem[1],
         methodCollMap
@@ -227,7 +217,7 @@ class DataInserter extends EventEmitter {
 
     const {
       methodCollMap: pubMethodCollMap
-    } = await this.insertNewPublicDataToDb(progress)
+    } = await this._insertNewPublicDataToDb(progress)
 
     await this.wsEventEmitter
       .emitSyncingStep('DB_PREPARATION')
@@ -244,7 +234,7 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    await this.setProgress(100)
+    await this._setProgress(100)
   }
 
   async _afterAllInserts (params) {
@@ -271,27 +261,7 @@ class DataInserter extends EventEmitter {
     await this._updateSyncInfo(params)
   }
 
-  addAfterAllInsertsHooks (hook) {
-    const hookArr = Array.isArray(hook)
-      ? hook
-      : [hook]
-
-    if (hookArr.some((h) => !(h instanceof DataInserterHook))) {
-      throw new AfterAllInsertsHookIsNotHookError()
-    }
-    if (!Array.isArray(this._afterAllInsertsHooks)) {
-      this._afterAllInsertsHooks = []
-    }
-
-    hookArr.forEach((hook) => {
-      hook.setDataInserter(this)
-      hook.init({ syncQueueId: this.syncQueueId })
-    })
-
-    this._afterAllInsertsHooks.push(...hookArr)
-  }
-
-  async insertNewPublicDataToDb (prevProgress) {
+  async _insertNewPublicDataToDb (prevProgress) {
     if (this._isInterrupted) {
       return { methodCollMap: new Map() }
     }
@@ -330,14 +300,14 @@ class DataInserter extends EventEmitter {
       )
 
       if (progress < 100) {
-        await this.setProgress(progress)
+        await this._setProgress(progress)
       }
     }
 
     return { methodCollMap }
   }
 
-  async insertNewDataToDb (auth, userProgress = 0) {
+  async _insertNewDataToDb (auth, userProgress = 0) {
     if (this._isInterrupted) {
       return {
         progress: userProgress,
@@ -348,7 +318,7 @@ class DataInserter extends EventEmitter {
       typeof auth.apiKey !== 'string' ||
       typeof auth.apiSecret !== 'string'
     ) {
-      await this.setProgress(MESS_ERR_UNAUTH)
+      await this._setProgress(MESS_ERR_UNAUTH)
 
       return {
         progress: userProgress,
@@ -405,25 +375,11 @@ class DataInserter extends EventEmitter {
       )
 
       if (progress < 100) {
-        await this.setProgress(progress)
+        await this._setProgress(progress)
       }
     }
 
     return { progress, methodCollMap }
-  }
-
-  _getDataFromApi (methodApi, args, isCheckCall) {
-    if (!this.apiMiddleware.hasMethod(methodApi)) {
-      throw new FindMethodError()
-    }
-
-    return this.getDataFromApi({
-      getData: methodApi,
-      args,
-      middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
-      middlewareParams: isCheckCall,
-      callerName: 'DATA_SYNCER'
-    })
   }
 
   async _insertApiDataPublicArrObjTypeToDb (
@@ -763,7 +719,7 @@ class DataInserter extends EventEmitter {
       name: collName,
       fields,
       model
-    } = { ...schema }
+    } = schema ?? {}
 
     const publicСollsСonf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
@@ -868,7 +824,7 @@ class DataInserter extends EventEmitter {
       name: collName,
       fields,
       model
-    } = { ...schema }
+    } = schema ?? {}
 
     if (collName === this.ALLOWED_COLLS.STATUS_MESSAGES) {
       await this._updateConfigurableApiDataArrObjTypeToDb(
@@ -927,29 +883,6 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  _getMethodArgMap (method, opts) {
-    const schema = typeof method === 'string'
-      ? this._methodCollMap.get(method)
-      : method
-
-    return getMethodArgMap(schema, opts)
-  }
-
-  _getMethodCollMap () {
-    return new Map(this._methodCollMap)
-  }
-
-  _getUserIds (auth) {
-    const {
-      _id: userId,
-      subUser
-    } = auth ?? {}
-    const { _id: subUserId } = subUser ?? {}
-
-    return { userId, subUserId }
-  }
-
-  // TODO:
   async _updateSyncInfo (params) {
     await this.dao.executeQueriesInTrans(async () => {
       await this.syncTempTablesManager
@@ -1002,6 +935,70 @@ class DataInserter extends EventEmitter {
       await this.syncTempTablesManager
         .removeTempDBStructureForCurrSync({ isNotInTrans: true })
     }, { withoutWorkerThreads: true })
+  }
+
+  _addAfterAllInsertsHooks (hook) {
+    const hookArr = Array.isArray(hook)
+      ? hook
+      : [hook]
+
+    if (hookArr.some((h) => !(h instanceof DataInserterHook))) {
+      throw new AfterAllInsertsHookIsNotHookError()
+    }
+    if (!Array.isArray(this._afterAllInsertsHooks)) {
+      this._afterAllInsertsHooks = []
+    }
+
+    hookArr.forEach((hook) => {
+      hook.setDataInserter(this)
+      hook.init({ syncQueueId: this.syncQueueId })
+    })
+
+    this._afterAllInsertsHooks.push(...hookArr)
+  }
+
+  _getDataFromApi (methodApi, args, isCheckCall) {
+    if (!this.apiMiddleware.hasMethod(methodApi)) {
+      throw new FindMethodError()
+    }
+
+    return this.getDataFromApi({
+      getData: methodApi,
+      args,
+      middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
+      middlewareParams: isCheckCall,
+      callerName: 'DATA_SYNCER'
+    })
+  }
+
+  async _setProgress (progress) {
+    for (const handler of this._asyncProgressHandlers) {
+      await handler(progress)
+    }
+
+    this.emit('progress', progress)
+  }
+
+  _getUserIds (auth) {
+    const {
+      _id: userId,
+      subUser
+    } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+
+    return { userId, subUserId }
+  }
+
+  _getMethodArgMap (method, opts) {
+    const schema = typeof method === 'string'
+      ? this._methodCollMap.get(method)
+      : method
+
+    return getMethodArgMap(schema, opts)
+  }
+
+  _getMethodCollMap () {
+    return new Map(this._methodCollMap)
   }
 }
 
