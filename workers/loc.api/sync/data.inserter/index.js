@@ -998,6 +998,9 @@ class DataInserter extends EventEmitter {
       }
 
       await Promise.all(updatesForPubCollsPromises)
+
+      await this.syncTempTablesManager
+        .removeTempDBStructureForCurrSync({ isNotInTrans: true })
     }, { withoutWorkerThreads: true })
   }
 }
