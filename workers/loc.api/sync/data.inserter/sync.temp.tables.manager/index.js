@@ -56,9 +56,12 @@ class SyncTempTablesManager {
     })
   }
 
-  async moveTempTableDataToMain () {
+  async moveTempTableDataToMain (opts) {
+    const { isNotInTrans } = opts ?? {}
+
     await this.dao.moveTempTableDataToMain({
-      namePrefix: this.getCurrNamePrefix()
+      namePrefix: this.getCurrNamePrefix(),
+      isNotInTrans
     })
   }
 

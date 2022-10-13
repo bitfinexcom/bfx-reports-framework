@@ -156,7 +156,13 @@ class BetterSqliteDAO extends DAO {
     asyncExecQuery,
     opts = {}
   ) {
-    return manageTransaction(
+    const { isNotInTrans } = opts ?? {}
+
+    if (isNotInTrans) {
+      return await asyncExecQuery()
+    }
+
+    return await manageTransaction(
       () => this._proccesTrans(asyncExecQuery, opts)
     )
   }
@@ -359,7 +365,8 @@ class BetterSqliteDAO extends DAO {
    */
   async moveTempTableDataToMain (opts = {}) {
     const {
-      namePrefix
+      namePrefix,
+      isNotInTrans
     } = opts ?? {}
 
     if (
@@ -404,7 +411,7 @@ class BetterSqliteDAO extends DAO {
         action: MAIN_DB_WORKER_ACTIONS.RUN,
         sql: [...insertSql, ...dropTablesSql]
       }, { withoutWorkerThreads: true })
-    })
+    }, { isNotInTrans })
 
     await this._walCheckpoint()
     await this._vacuum()
