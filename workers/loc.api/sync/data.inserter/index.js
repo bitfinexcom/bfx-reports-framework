@@ -55,7 +55,6 @@ const depsTypes = (TYPES) => [
   TYPES.DataChecker,
   TYPES.SyncInterrupter,
   TYPES.WSEventEmitter,
-  TYPES.SyncCollsManager,
   TYPES.GetDataFromApi,
   TYPES.SyncTempTablesManager,
   TYPES.SyncUserStepManager
@@ -76,7 +75,6 @@ class DataInserter extends EventEmitter {
     dataChecker,
     syncInterrupter,
     wsEventEmitter,
-    syncCollsManager,
     getDataFromApi,
     syncTempTablesManager,
     syncUserStepManager
@@ -97,7 +95,6 @@ class DataInserter extends EventEmitter {
     this.dataChecker = dataChecker
     this.syncInterrupter = syncInterrupter
     this.wsEventEmitter = wsEventEmitter
-    this.syncCollsManager = syncCollsManager
     this.getDataFromApi = getDataFromApi
     this.syncTempTablesManager = syncTempTablesManager
     this.syncUserStepManager = syncUserStepManager
@@ -289,11 +286,6 @@ class DataInserter extends EventEmitter {
       await this._updateApiDataArrTypeToDb(method, schema)
       await this._insertApiDataPublicArrObjTypeToDb(method, schema)
 
-      // TODO:
-      await this.syncCollsManager.setCollAsSynced({
-        collName: method
-      })
-
       count += 1
       progress = Math.round(
         prevProgress + (count / size) * 100 * ((100 - prevProgress) / 100)
@@ -335,7 +327,6 @@ class DataInserter extends EventEmitter {
     await this.syncTempTablesManager
       .createTempDBStructureForCurrSync(methodCollMap)
     const size = this._methodCollMap.size
-    const { userId, subUserId } = this._getUserIds(auth)
 
     let count = 0
     let progress = 0
@@ -363,11 +354,6 @@ class DataInserter extends EventEmitter {
           auth
         )
       }
-
-      // TODO:
-      await this.syncCollsManager.setCollAsSynced({
-        collName: method, userId, subUserId
-      })
 
       count += 1
       progress = Math.round(
