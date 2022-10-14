@@ -58,7 +58,7 @@ class SyncUserStepManager {
     this.syncQueueId = params.syncQueueId
   }
 
-  async updateOrInsertSyncInfoForCurrColl (syncSchema, params) {
+  async updateOrInsertSyncInfoForCurrColl (params) {
     const {
       collName,
       subUserId,
@@ -67,10 +67,8 @@ class SyncUserStepManager {
     } = params ?? {}
     const hasUserIdField = Number.isInteger(userId)
     const hasSubUserIdField = Number.isInteger(subUserId)
-    const mustBePublicColl = !hasUserIdField
 
     if (
-      !isInsertableArrObjTypeOfColl(syncSchema, mustBePublicColl) ||
       !collName ||
       typeof collName !== 'string'
     ) {

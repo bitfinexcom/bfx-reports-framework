@@ -407,15 +407,12 @@ class DataInserter extends EventEmitter {
     }
 
     const { userId, subUserId } = this._getUserIds(auth)
-    await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
-      schema,
-      {
-        collName: methodApi,
-        userId,
-        subUserId,
-        syncUserStepData
-      }
-    )
+    await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+      collName: methodApi,
+      userId,
+      subUserId,
+      syncUserStepData
+    })
 
     const {
       symbol,
@@ -885,33 +882,27 @@ class DataInserter extends EventEmitter {
         const { userId, subUserId } = this._getUserIds(auth)
         const updatesForOneUserPromises = []
 
-        for (const [collName, schema] of methodCollMap) {
-          const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
-            schema,
-            {
-              collName,
-              userId,
-              subUserId,
-              syncedAt,
-              isBaseStepReady: true,
-              isCurrStepReady: true
-            }
-          )
+        for (const [collName] of methodCollMap) {
+          const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+            collName,
+            userId,
+            subUserId,
+            syncedAt,
+            isBaseStepReady: true,
+            isCurrStepReady: true
+          })
           updatesForOneUserPromises.push(promise)
         }
 
         await Promise.all(updatesForOneUserPromises)
       }
-      for (const [collName, schema] of pubMethodCollMap) {
-        const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl(
-          schema,
-          {
-            collName,
-            syncedAt,
-            isBaseStepReady: true,
-            isCurrStepReady: true
-          }
-        )
+      for (const [collName] of pubMethodCollMap) {
+        const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+          collName,
+          syncedAt,
+          isBaseStepReady: true,
+          isCurrStepReady: true
+        })
 
         updatesForPubCollsPromises.push(promise)
       }
