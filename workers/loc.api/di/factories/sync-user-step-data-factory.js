@@ -22,7 +22,7 @@ module.exports = (ctx) => {
       args[0] &&
       typeof args[0] === 'object'
     )
-      ? args
+      ? args[0]
       : paramsOrder.reduce((accum, curr, i) => {
         accum[curr] = args[i]
 
