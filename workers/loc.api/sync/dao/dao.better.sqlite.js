@@ -42,6 +42,7 @@ const {
 } = require('../../errors')
 
 const {
+  CONSTR_FIELD_NAME,
   TRIGGER_FIELD_NAME,
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
@@ -342,15 +343,25 @@ class BetterSqliteDAO extends DAO {
     const { isNotInTrans } = opts ?? {}
     const filteredTableNames = await this.getFilteredTablesNames(opts)
 
-    const sql = filteredTableNames.map((name) => (
+    const sqlArr = filteredTableNames.map((name) => (
       `DROP TABLE IF EXISTS ${name}`
     ))
 
+    if (isNotInTrans) {
+      const res = []
+
+      for (const sql of sqlArr) {
+        const oneRes = this.db.prepare(sql).run()
+
+        res.push(oneRes)
+      }
+
+      return res
+    }
+
     const res = await this.query({
-      action: isNotInTrans
-        ? DB_WORKER_ACTIONS.RUN
-        : DB_WORKER_ACTIONS.RUN_IN_TRANS,
-      sql,
+      action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
+      sql: sqlArr,
       params: { transVersion: 'exclusive' }
     }, { withoutWorkerThreads: true })
 
@@ -379,6 +390,7 @@ class BetterSqliteDAO extends DAO {
     const modelsMap = this._getModelsMap({
       omittedFields: [
         '_id',
+        CONSTR_FIELD_NAME,
         TRIGGER_FIELD_NAME,
         INDEX_FIELD_NAME,
         UNIQUE_INDEX_FIELD_NAME
@@ -403,18 +415,11 @@ class BetterSqliteDAO extends DAO {
           INTO ${name}(${projection})
           SELECT ${projection} FROM ${tempName}`
       }).filter((sql) => sql)
-      const dropTablesSql = filteredTempTableNames.map((name) => (
-        `DROP TABLE IF EXISTS ${name}`
-      ))
 
-      await this.query({
-        action: MAIN_DB_WORKER_ACTIONS.RUN,
-        sql: [...insertSql, ...dropTablesSql]
-      }, { withoutWorkerThreads: true })
+      for (const sql of insertSql) {
+        this.db.prepare(sql).run()
+      }
     }, { isNotInTrans })
-
-    await this._walCheckpoint()
-    await this._vacuum()
 
     return true
   }
