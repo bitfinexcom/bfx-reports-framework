@@ -881,7 +881,7 @@ class DataInserter extends EventEmitter {
       const syncedAt = Date.now()
       const updatesForPubCollsPromises = []
 
-      for (const { auth, methodCollMap } of syncedUsersMap) {
+      for (const [, { auth, methodCollMap }] of syncedUsersMap) {
         const { userId, subUserId } = this._getUserIds(auth)
         const updatesForOneUserPromises = []
 
