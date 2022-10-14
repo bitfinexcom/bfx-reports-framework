@@ -213,7 +213,8 @@ class FrameworkReportService extends ReportService {
         args,
         {
           active: null,
-          isDataFromDb: true
+          isDataFromDb: true,
+          isReturnedUser: true
         }
       )
       await this._dao.updateRecordOf(
