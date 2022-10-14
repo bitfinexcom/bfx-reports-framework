@@ -82,7 +82,8 @@ class SyncUserStepManager {
 
     const syncInfo = {
       ...syncUserStepDataParams,
-      ...omit(params, 'syncUserStepData'),
+      ...omit(params, ['syncUserStepData', 'userId']),
+      user_id: userId,
       syncQueueId: this.syncQueueId
     }
 
