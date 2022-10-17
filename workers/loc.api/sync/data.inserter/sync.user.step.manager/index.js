@@ -115,6 +115,8 @@ class SyncUserStepManager {
   }
 
   async getLastSyncedInfoForCurrColl (syncSchema, params) {
+    const currMts = Date.now()
+
     const {
       collName,
       userId,
@@ -123,13 +125,6 @@ class SyncUserStepManager {
       timeframe,
       defaultStart = 0
     } = params ?? {}
-    const shouldCollBePublic = !Number.isInteger(userId)
-
-    if (!isInsertableArrObjTypeOfColl(syncSchema, shouldCollBePublic)) {
-      throw new LastSyncedInfoGettingError()
-    }
-
-    const currMts = Date.now()
     const {
       name: tableName,
       dateFieldName,
@@ -139,6 +134,10 @@ class SyncUserStepManager {
       model
     } = syncSchema ?? {}
 
+    const hasUserIdField = (
+      typeof model?.user_id === 'string' &&
+      Number.isInteger(userId)
+    )
     const hasSubUserIdField = (
       typeof model?.subUserId === 'string' &&
       Number.isInteger(subUserId)
@@ -155,13 +154,21 @@ class SyncUserStepManager {
       timeframe &&
       typeof timeframe === 'string'
     )
+    const shouldCollBePublic = !hasUserIdField
+
+    if (!isInsertableArrObjTypeOfColl(syncSchema, shouldCollBePublic)) {
+      throw new LastSyncedInfoGettingError()
+    }
 
     const tempTableName = this._getCurrTempTableName(tableName)
     const hasTempTable = await this.dao.hasTable(tempTableName)
 
-    const userIdFilter = hasSubUserIdField
-      ? { $eq: { user_id: userId, subUserId } }
-      : { $eq: { user_id: userId } }
+    const userIdFilter = hasUserIdField
+      ? { $eq: { user_id: userId } }
+      : {}
+    const subUserIdFilter = hasSubUserIdField
+      ? { $eq: { subUserId } }
+      : {}
     const symbolFilter = hasSymbolField
       ? { $eq: { [symbolFieldName]: symbol } }
       : {}
@@ -170,6 +177,7 @@ class SyncUserStepManager {
       : {}
     const dataFilter = merge(
       userIdFilter,
+      subUserIdFilter,
       symbolFilter,
       timeframeFilter
     )
