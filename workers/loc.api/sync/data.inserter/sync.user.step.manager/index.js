@@ -176,6 +176,7 @@ class SyncUserStepManager {
       ? { $eq: { [timeframeFieldName]: timeframe } }
       : {}
     const dataFilter = merge(
+      {},
       userIdFilter,
       subUserIdFilter,
       symbolFilter,
@@ -252,9 +253,11 @@ class SyncUserStepManager {
       isTempTableEmpty
     ) {
       const syncUserStepData = this.syncUserStepDataFactory({
-        baseStart: baseStart ?? 0,
+        baseStart: baseStart ?? defaultStart,
         baseEnd: baseEnd ?? currMts,
-        isBaseStepReady
+        isBaseStepReady,
+        symbol,
+        timeframe
       })
 
       return {
@@ -269,7 +272,9 @@ class SyncUserStepManager {
       currStart,
       currEnd,
       isBaseStepReady,
-      isCurrStepReady
+      isCurrStepReady,
+      symbol,
+      timeframe
     })
 
     if (!isCurrStepReady) {
