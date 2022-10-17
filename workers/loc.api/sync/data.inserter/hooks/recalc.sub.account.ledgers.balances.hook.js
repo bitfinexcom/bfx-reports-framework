@@ -242,8 +242,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         }
 
         const filter = merge(
-          mainFilter,
-          { $eq: { subUserId } }
+          { $eq: { subUserId } },
+          mainFilter
         )
 
         const itemFromMainTable = await this.dao.getElemInCollBy(
