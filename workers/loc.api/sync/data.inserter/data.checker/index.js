@@ -318,27 +318,9 @@ class DataChecker {
     this._resetSyncSchemaProps(schema)
 
     const currMts = Date.now()
-    const firstElemFilter = { $not: { currency: 'USD' } }
-    const firstElemOrder = [['mts', 1]]
-    const firstMainElemLedgers = await this.dao.getElemInCollBy(
-      this.ALLOWED_COLLS.LEDGERS,
-      firstElemFilter,
-      firstElemOrder
-    )
-    const firstTempElemLedgers = await this.dao.getElemInCollBy(
-      SyncTempTablesManager.getTempTableName(
-        this.ALLOWED_COLLS.LEDGERS,
-        this.syncQueueId
-      ),
-      firstElemFilter,
-      firstElemOrder
-    )
-    const firstElemMts = min([
-      firstMainElemLedgers?.mts,
-      firstTempElemLedgers?.mts
-    ])
+    const firstLedgerMts = await this._getFirstLedgerMts()
 
-    if (!Number.isInteger(firstElemMts)) {
+    if (!Number.isInteger(firstLedgerMts)) {
       return
     }
 
@@ -382,7 +364,7 @@ class DataChecker {
           collName: method,
           symbol,
           timeframe: CANDLES_TIMEFRAME,
-          defaultStart: firstElemMts
+          defaultStart: firstLedgerMts
         }
       )
 
@@ -396,7 +378,7 @@ class DataChecker {
 
       const wasStartPointChanged = this._wasStartPointChanged(
         syncUserStepData,
-        firstElemMts
+        firstLedgerMts
       )
       const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
         syncUserStepData,
@@ -417,7 +399,7 @@ class DataChecker {
 
       if (wasStartPointChanged) {
         freshSyncUserStepData.setParams({
-          baseStart: firstElemMts,
+          baseStart: firstLedgerMts,
           baseEnd: syncUserStepData.baseStart,
           isBaseStepReady: false
         })
@@ -491,6 +473,40 @@ class DataChecker {
     const momentDiff = momentBaseStart.diff(momentStartMts, measure)
 
     return momentDiff > allowedTimeDiff
+  }
+
+  async _getFirstLedgerMts () {
+    const firstElemFilter = { $not: { currency: 'USD' } }
+    const firstElemOrder = [['mts', 1]]
+
+    const firstMainElemLedgersPromise = this.dao.getElemInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      firstElemFilter,
+      firstElemOrder
+    )
+    const firstTempElemLedgersPromise = this.dao.getElemInCollBy(
+      SyncTempTablesManager.getTempTableName(
+        this.ALLOWED_COLLS.LEDGERS,
+        this.syncQueueId
+      ),
+      firstElemFilter,
+      firstElemOrder
+    )
+
+    const [
+      firstMainElemLedgers,
+      firstTempElemLedgers
+    ] = await Promise.all([
+      firstMainElemLedgersPromise,
+      firstTempElemLedgersPromise
+    ])
+
+    const firstElemMts = min([
+      firstMainElemLedgers?.mts,
+      firstTempElemLedgers?.mts
+    ])
+
+    return firstElemMts
   }
 
   async _getUniqueSymbsFromLedgers () {
