@@ -1,6 +1,9 @@
 'use strict'
 
-const { isEmpty } = require('lodash')
+const {
+  isEmpty,
+  min
+} = require('lodash')
 const moment = require('moment')
 
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
@@ -315,13 +318,27 @@ class DataChecker {
     this._resetSyncSchemaProps(schema)
 
     const currMts = Date.now()
-    const firstElemLedgers = await this.dao.getElemInCollBy(
+    const firstElemFilter = { $not: { currency: 'USD' } }
+    const firstElemOrder = [['mts', 1]]
+    const firstMainElemLedgers = await this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
-      { $not: { currency: 'USD' } },
-      [['mts', 1]]
+      firstElemFilter,
+      firstElemOrder
     )
+    const firstTempElemLedgers = await this.dao.getElemInCollBy(
+      SyncTempTablesManager.getTempTableName(
+        this.ALLOWED_COLLS.LEDGERS,
+        this.syncQueueId
+      ),
+      firstElemFilter,
+      firstElemOrder
+    )
+    const firstElemMts = min([
+      firstMainElemLedgers?.mts,
+      firstTempElemLedgers?.mts
+    ])
 
-    if (!Number.isInteger(firstElemLedgers?.mts)) {
+    if (!Number.isInteger(firstElemMts)) {
       return
     }
 
@@ -365,7 +382,7 @@ class DataChecker {
           collName: method,
           symbol,
           timeframe: CANDLES_TIMEFRAME,
-          defaultStart: firstElemLedgers.mts
+          defaultStart: firstElemMts
         }
       )
 
@@ -379,7 +396,7 @@ class DataChecker {
 
       const wasStartPointChanged = this._wasStartPointChanged(
         syncUserStepData,
-        firstElemLedgers.mts
+        firstElemMts
       )
       const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
         syncUserStepData,
@@ -400,7 +417,7 @@ class DataChecker {
 
       if (wasStartPointChanged) {
         freshSyncUserStepData.setParams({
-          baseStart: firstElemLedgers.mts,
+          baseStart: firstElemMts,
           baseEnd: syncUserStepData.baseStart,
           isBaseStepReady: false
         })
