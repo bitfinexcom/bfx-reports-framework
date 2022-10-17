@@ -115,11 +115,6 @@ class SyncUserStepManager {
   }
 
   async getLastSyncedInfoForCurrColl (syncSchema, params) {
-    if (!isInsertableArrObjTypeOfColl(syncSchema)) {
-      throw new LastSyncedInfoGettingError()
-    }
-
-    const currMts = Date.now()
     const {
       collName,
       userId,
@@ -128,6 +123,13 @@ class SyncUserStepManager {
       timeframe,
       defaultStart = 0
     } = params ?? {}
+    const shouldCollBePublic = !Number.isInteger(userId)
+
+    if (!isInsertableArrObjTypeOfColl(syncSchema, shouldCollBePublic)) {
+      throw new LastSyncedInfoGettingError()
+    }
+
+    const currMts = Date.now()
     const {
       name: tableName,
       dateFieldName,
