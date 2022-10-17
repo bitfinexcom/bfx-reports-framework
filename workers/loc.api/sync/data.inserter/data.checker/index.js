@@ -3,6 +3,7 @@
 const { isEmpty } = require('lodash')
 const moment = require('moment')
 
+const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const {
   SyncQueueIDSettingError
 } = require('../../../errors')
@@ -476,26 +477,41 @@ class DataChecker {
   }
 
   async _getUniqueSymbsFromLedgers () {
-    const uniqueLedgersSymbsPromise = this.dao.getElemsInCollBy(
+    const ledgerParams = {
+      filter: { $not: { currency: this.FOREX_SYMBS } },
+      isDistinct: true,
+      projection: ['currency']
+    }
+
+    const uniqueMainLedgersSymbsPromise = this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
-      {
-        filter: { $not: { currency: this.FOREX_SYMBS } },
-        isDistinct: true,
-        projection: ['currency']
-      }
+      ledgerParams
+    )
+    const uniqueTempLedgersSymbsPromise = this.dao.getElemsInCollBy(
+      SyncTempTablesManager.getTempTableName(
+        this.ALLOWED_COLLS.LEDGERS,
+        this.syncQueueId
+      ),
+      ledgerParams
     )
     const currenciesSynonymousPromise = await this.currencyConverter
       .getCurrenciesSynonymous()
 
     const [
-      uniqueLedgersSymbs,
+      uniqueMainLedgersSymbs,
+      uniqueTempLedgersSymbs,
       currenciesSynonymous
     ] = await Promise.all([
-      uniqueLedgersSymbsPromise,
+      uniqueMainLedgersSymbsPromise,
+      uniqueTempLedgersSymbsPromise,
       currenciesSynonymousPromise
     ])
+    const ledgers = [
+      ...uniqueMainLedgersSymbs,
+      ...uniqueTempLedgersSymbs
+    ]
 
-    const uniqueSymbs = uniqueLedgersSymbs.reduce((accum, ledger) => {
+    const uniqueSymbs = ledgers.reduce((accum, ledger) => {
       const { currency } = ledger ?? {}
 
       if (!currency) {
