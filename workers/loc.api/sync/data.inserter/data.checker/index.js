@@ -106,17 +106,19 @@ class DataChecker {
   }
 
   async _checkNewDataArrObjType (auth, methodCollMap) {
-    for (const [method, item] of methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObjTypeOfColl(item)) {
+      if (!isInsertableArrObjTypeOfColl(schema)) {
         continue
       }
 
+      this._resetSyncSchemaProps(schema)
+
       await this._checkItemNewDataArrObjType(
         method,
-        item,
+        schema,
         auth
       )
     }
@@ -133,8 +135,6 @@ class DataChecker {
 
     const { _id: userId, subUser } = auth ?? {}
     const { _id: subUserId } = subUser ?? {}
-
-    this._resetSyncSchemaProps(schema)
 
     const currMts = Date.now()
     const {
@@ -183,6 +183,9 @@ class DataChecker {
       if (!isInsertableArrObjTypeOfColl(schema, true)) {
         continue
       }
+
+      this._resetSyncSchemaProps(schema)
+
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
         await this._checkNewCandlesData(method, schema)
       }
@@ -202,8 +205,6 @@ class DataChecker {
     if (this._isInterrupted) {
       return
     }
-
-    this._resetSyncSchemaProps(schema)
 
     const currMts = Date.now()
     const {
@@ -315,8 +316,6 @@ class DataChecker {
       return
     }
 
-    this._resetSyncSchemaProps(schema)
-
     const currMts = Date.now()
     const firstLedgerMts = await this._getFirstLedgerMts()
 
@@ -389,7 +388,7 @@ class DataChecker {
         !wasStartPointChanged &&
         !shouldFreshSyncBeAdded
       ) {
-        return
+        continue
       }
 
       const freshSyncUserStepData = this.syncUserStepDataFactory({
@@ -579,7 +578,8 @@ class DataChecker {
   }
 
   _getMethodCollMap () {
-    return new Map(this._methodCollMap)
+    return this.syncSchema
+      .getMethodCollMap(this._methodCollMap)
   }
 
   _setMethodCollMap (methodCollMap) {
