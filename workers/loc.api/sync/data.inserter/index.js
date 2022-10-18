@@ -888,7 +888,7 @@ class DataInserter extends EventEmitter {
             userId,
             subUserId,
             syncedAt,
-            ...this.syncUserStepManager.wereStepsBeSynced(schema.start)
+            ...this.syncUserStepManager.wereStepsSynced(schema.start)
           })
           updatesForOneUserPromises.push(promise)
         }
@@ -906,7 +906,7 @@ class DataInserter extends EventEmitter {
         const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
           collName,
           syncedAt,
-          ...this.syncUserStepManager.wereStepsBeSynced(schema.start)
+          ...this.syncUserStepManager.wereStepsSynced(schema.start)
         })
 
         updatesForPubCollsPromises.push(promise)

@@ -87,6 +87,20 @@ class SyncUserStepManager {
     return false
   }
 
+  wereStepsSynced (syncUserStepsData = []) {
+    const isBaseStepReadyParam = this._wereBaseStepsSynced(syncUserStepsData)
+      ? { isBaseStepReady: true }
+      : {}
+    const isCurrStepReadyParam = this._wereCurrStepsSynced(syncUserStepsData)
+      ? { isCurrStepReady: true }
+      : {}
+
+    return {
+      ...isBaseStepReadyParam,
+      ...isCurrStepReadyParam
+    }
+  }
+
   async updateOrInsertSyncInfoForCurrColl (params) {
     const {
       collName,
@@ -323,6 +337,34 @@ class SyncUserStepManager {
       syncUserStepData,
       lastElemMtsFromTables
     }
+  }
+
+  _wereBaseStepsSynced (syncUserStepsData = []) {
+    if (
+      !Array.isArray(syncUserStepsData) ||
+      syncUserStepsData.length === 0
+    ) {
+      return false
+    }
+
+    return syncUserStepsData.every((syncUserStepData) => (
+      syncUserStepData instanceof SyncUserStepData &&
+      syncUserStepData.wasBaseStepsBeSynced
+    ))
+  }
+
+  _wereCurrStepsSynced (syncUserStepsData = []) {
+    if (
+      !Array.isArray(syncUserStepsData) ||
+      syncUserStepsData.length === 0
+    ) {
+      return false
+    }
+
+    return syncUserStepsData.every((syncUserStepData) => (
+      syncUserStepData instanceof SyncUserStepData &&
+      syncUserStepData.wasCurrStepsBeSynced
+    ))
   }
 
   _getCurrTempTableName (tableName) {
