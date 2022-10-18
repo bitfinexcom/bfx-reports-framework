@@ -135,7 +135,6 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
-    this.convertCurrencyHook.init({ syncColls: this.syncColls })
     this._addAfterAllInsertsHooks([
       this.convertCurrencyHook,
       this.recalcSubAccountLedgersBalancesHook
@@ -455,6 +454,8 @@ class DataInserter extends EventEmitter {
       )
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
+
+      syncUserStepData.wasBaseStepsBeSynced = true
     }
     if (this.syncUserStepManager.shouldCurrStepBeSynced(syncUserStepData)) {
       const args = this._getMethodArgMap(
@@ -469,6 +470,8 @@ class DataInserter extends EventEmitter {
       )
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
+
+      syncUserStepData.wasCurrStepsBeSynced = true
     }
   }
 
@@ -856,7 +859,6 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  // TODO:
   async _updateSyncInfo (params) {
     await this.dao.executeQueriesInTrans(async () => {
       await this.syncTempTablesManager
@@ -873,26 +875,38 @@ class DataInserter extends EventEmitter {
         const { userId, subUserId } = this._getUserIds(auth)
         const updatesForOneUserPromises = []
 
-        for (const [collName] of methodCollMap) {
+        for (const [collName, schema] of methodCollMap) {
+          if (
+            !Array.isArray(schema?.start) ||
+            schema.start.length === 0
+          ) {
+            continue
+          }
+
           const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
             collName,
             userId,
             subUserId,
             syncedAt,
-            isBaseStepReady: true,
-            isCurrStepReady: true
+            ...this.syncUserStepManager.wereStepsBeSynced(schema.start)
           })
           updatesForOneUserPromises.push(promise)
         }
 
         await Promise.all(updatesForOneUserPromises)
       }
-      for (const [collName] of pubMethodCollMap) {
+      for (const [collName, schema] of pubMethodCollMap) {
+        if (
+          !Array.isArray(schema?.start) ||
+          schema.start.length === 0
+        ) {
+          continue
+        }
+
         const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
           collName,
           syncedAt,
-          isBaseStepReady: true,
-          isCurrStepReady: true
+          ...this.syncUserStepManager.wereStepsBeSynced(schema.start)
         })
 
         updatesForPubCollsPromises.push(promise)
@@ -919,7 +933,10 @@ class DataInserter extends EventEmitter {
 
     hookArr.forEach((hook) => {
       hook.setDataInserter(this)
-      hook.init({ syncQueueId: this.syncQueueId })
+      hook.init({
+        syncColls: this.syncColls,
+        syncQueueId: this.syncQueueId
+      })
     })
 
     this._afterAllInsertsHooks.push(...hookArr)
