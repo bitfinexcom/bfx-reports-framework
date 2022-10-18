@@ -15,6 +15,7 @@ const {
   invertOrders
 } = require('./helpers')
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
+const SyncUserStepData = require('./sync.user.step.data')
 
 const { decorateInjectable } = require('../../../di/utils')
 
@@ -56,6 +57,34 @@ class SyncUserStepManager {
     }
 
     this.syncQueueId = params.syncQueueId
+  }
+
+  shouldBaseStepBeSynced (syncUserStepData) {
+    if (!(syncUserStepData instanceof SyncUserStepData)) {
+      return false
+    }
+    if (
+      !syncUserStepData?.isBaseStepReady &&
+      syncUserStepData?.hasBaseStep
+    ) {
+      return true
+    }
+
+    return false
+  }
+
+  shouldCurrStepBeSynced (syncUserStepData) {
+    if (!(syncUserStepData instanceof SyncUserStepData)) {
+      return false
+    }
+    if (
+      !syncUserStepData?.isCurrStepReady &&
+      syncUserStepData?.hasCurrStep
+    ) {
+      return true
+    }
+
+    return false
   }
 
   async updateOrInsertSyncInfoForCurrColl (params) {
