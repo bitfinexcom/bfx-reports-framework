@@ -167,6 +167,7 @@ class DataChecker {
     }
 
     const freshSyncUserStepData = this.syncUserStepDataFactory({
+      ...syncUserStepData.getParams(),
       currStart: lastElemMtsFromTables,
       currEnd: currMts,
       isCurrStepReady: false
@@ -281,6 +282,7 @@ class DataChecker {
       }
 
       const freshSyncUserStepData = this.syncUserStepDataFactory({
+        ...syncUserStepData.getParams(),
         isBaseStepReady: true,
         isCurrStepReady: true
       })
@@ -392,6 +394,7 @@ class DataChecker {
       }
 
       const freshSyncUserStepData = this.syncUserStepDataFactory({
+        ...syncUserStepData.getParams(),
         isBaseStepReady: true,
         isCurrStepReady: true
       })
