@@ -8,6 +8,20 @@ const { decorateInjectable } = require('../../../di/utils')
  * Universal data structure for the one sync user step
  */
 class SyncUserStepData {
+  constructor () {
+    this.symbol = null
+    this.timeframe = null
+    this.baseStart = null
+    this.baseEnd = null
+    this.currStart = null
+    this.currEnd = null
+    this.isBaseStepReady = false
+    this.isCurrStepReady = false
+
+    this.wasBaseStepsBeSynced = false
+    this.wasCurrStepsBeSynced = false
+  }
+
   /**
    * @param {?string} [symbol] - Used to specify synced symbol, can be `_ALL` if all ones are syncing
    * @param {?string} [timeframe] - Used to specify synced timeframe, eg. for candles collection
@@ -30,14 +44,14 @@ class SyncUserStepData {
       isCurrStepReady = this.isCurrStepReady
     } = params ?? {}
 
-    this.symbol = symbol ?? null
-    this.timeframe = timeframe ?? null
-    this.baseStart = baseStart ?? null
-    this.baseEnd = baseEnd ?? null
-    this.currStart = currStart ?? null
-    this.currEnd = currEnd ?? null
-    this.isBaseStepReady = isBaseStepReady ?? false
-    this.isCurrStepReady = isCurrStepReady ?? false
+    this.symbol = symbol
+    this.timeframe = timeframe
+    this.baseStart = baseStart
+    this.baseEnd = baseEnd
+    this.currStart = currStart
+    this.currEnd = currEnd
+    this.isBaseStepReady = isBaseStepReady
+    this.isCurrStepReady = isCurrStepReady
   }
 
   getParams (opts) {
