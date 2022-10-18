@@ -347,8 +347,16 @@ class SyncUserStepManager {
       return false
     }
 
-    return syncUserStepsData.every((syncUserStepData) => (
-      syncUserStepData instanceof SyncUserStepData &&
+    const filteredSyncUserStepsData = syncUserStepsData
+      .filter((syncUserStepData) => (
+        this.shouldBaseStepBeSynced(syncUserStepData))
+      )
+
+    if (filteredSyncUserStepsData.length === 0) {
+      return false
+    }
+
+    return filteredSyncUserStepsData.every((syncUserStepData) => (
       syncUserStepData.wasBaseStepsBeSynced
     ))
   }
@@ -361,8 +369,16 @@ class SyncUserStepManager {
       return false
     }
 
-    return syncUserStepsData.every((syncUserStepData) => (
-      syncUserStepData instanceof SyncUserStepData &&
+    const filteredSyncUserStepsData = syncUserStepsData
+      .filter((syncUserStepData) => (
+        this.shouldCurrStepBeSynced(syncUserStepData))
+      )
+
+    if (filteredSyncUserStepsData.length === 0) {
+      return false
+    }
+
+    return filteredSyncUserStepsData.every((syncUserStepData) => (
       syncUserStepData.wasCurrStepsBeSynced
     ))
   }
