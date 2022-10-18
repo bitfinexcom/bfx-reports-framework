@@ -421,10 +421,6 @@ class DataInserter extends EventEmitter {
       baseEnd,
       currStart,
       currEnd,
-      isBaseStepReady,
-      isCurrStepReady,
-      hasBaseStep,
-      hasCurrStep,
       hasSymbol,
       hasTimeframe,
       areAllSymbolsRequired
@@ -446,10 +442,7 @@ class DataInserter extends EventEmitter {
       params.section = CANDLES_SECTION
     }
 
-    if (
-      !isBaseStepReady &&
-      hasBaseStep
-    ) {
+    if (this.syncUserStepManager.shouldBaseStepBeSynced(syncUserStepData)) {
       const args = this._getMethodArgMap(
         schema,
         {
@@ -463,10 +456,7 @@ class DataInserter extends EventEmitter {
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
     }
-    if (
-      !isCurrStepReady &&
-      hasCurrStep
-    ) {
+    if (this.syncUserStepManager.shouldCurrStepBeSynced(syncUserStepData)) {
       const args = this._getMethodArgMap(
         schema,
         {
@@ -866,6 +856,7 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  // TODO:
   async _updateSyncInfo (params) {
     await this.dao.executeQueriesInTrans(async () => {
       await this.syncTempTablesManager
