@@ -114,7 +114,10 @@ class Sync {
       await this.rService.pingApi()
 
       await this.progress.setProgress(0)
-      await this.redirectRequestsToApi({ isRedirected: true })
+      await this.redirectRequestsToApi({
+        isRedirected: true,
+        ownerUserId
+      })
     } catch (err) {
       if (err instanceof CollSyncPermissionError) {
         throw err
