@@ -1,12 +1,51 @@
 'use strict'
 
-const { isEmpty } = require('lodash')
+const _shouldNotSyncModeBeUpdated = async (deps, params) => {
+  const {
+    authenticator,
+    syncCollsManager
+  } = deps
+  const {
+    isRedirected = true,
+    ownerUserId
+  } = params ?? {}
+
+  if (
+    !isRedirected ||
+    !Number.isInteger(ownerUserId)
+  ) {
+    return false
+  }
+
+  const auth = await authenticator.getUser(
+    { _id: ownerUserId },
+    { isFilledSubUsers: true }
+  )
+  const haveCollsBeenSyncedAtLeastOnce = await syncCollsManager
+    .haveCollsBeenSyncedAtLeastOnce({ auth })
+
+  return !haveCollsBeenSyncedAtLeastOnce
+}
 
 module.exports = (
   dao,
   TABLES_NAMES,
-  wsEventEmitter
-) => async ({ isRedirected = true } = {}) => {
+  wsEventEmitter,
+  authenticator,
+  syncCollsManager
+) => async (params) => {
+  const {
+    isRedirected = true
+  } = params ?? {}
+  const shouldNotSyncModeBeUpdated = await _shouldNotSyncModeBeUpdated(
+    { authenticator, syncCollsManager },
+    params
+  )
+
+  if (shouldNotSyncModeBeUpdated) {
+    return
+  }
+
   await dao.updateRecordOf(
     TABLES_NAMES.SYNC_MODE,
     { isEnable: !isRedirected }
@@ -15,8 +54,7 @@ module.exports = (
     (user) => {
       return (
         isRedirected ||
-        isEmpty(user) ||
-        !user.isDataFromDb
+        !user?.isDataFromDb
       )
     }
   )
