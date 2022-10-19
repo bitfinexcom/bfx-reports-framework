@@ -44,6 +44,7 @@ class SyncCollsManager {
       : {}
 
     const completedColl = await this._getCompletedCollBy({
+      isBaseStepReady: true,
       user_id: userId,
       collName,
       ...subUserIdFilter
@@ -102,6 +103,7 @@ class SyncCollsManager {
       }
       if (isPublic(type)) {
         const isDone = completedColls.some((completedColl) => (
+          completedColl?.isBaseStepReady &&
           completedColl?.collName === method
         ))
 
@@ -113,6 +115,7 @@ class SyncCollsManager {
         const isDone = subUsers.every((subUser) => (
           Number.isInteger(subUser?._id) &&
           completedColls.some((completedColl) => (
+            completedColl?.isBaseStepReady &&
             completedColl?.collName === method &&
             completedColl?.user_id === userId &&
             completedColl?.subUserId === subUser._id
@@ -131,6 +134,7 @@ class SyncCollsManager {
       }
 
       const isDone = completedColls.some((completedColl) => (
+        completedColl?.isBaseStepReady &&
         completedColl?.collName === method &&
         completedColl?.user_id === userId
       ))
@@ -181,6 +185,7 @@ class SyncCollsManager {
       .filter((completedColl) => (
         completedColl &&
         typeof completedColl === 'object' &&
+        completedColl?.isBaseStepReady &&
         schemaNodes.some(([collName]) => (
           completedColl.collName === collName
         ))
@@ -247,6 +252,7 @@ class SyncCollsManager {
       const isLedgersCollDone = subUsers.every((subUser) => (
         Number.isInteger(subUser?._id) &&
         completedColls.some((completedColl) => (
+          completedColl?.isBaseStepReady &&
           completedColl?.collName === this.SYNC_API_METHODS.LEDGERS &&
           completedColl?.user_id === userId &&
           completedColl?.subUserId === subUser._id
@@ -259,6 +265,7 @@ class SyncCollsManager {
     }
 
     const isLedgersCollDone = completedColls.some((completedColl) => (
+      completedColl?.isBaseStepReady &&
       completedColl?.collName === this.SYNC_API_METHODS.LEDGERS
     ))
 
