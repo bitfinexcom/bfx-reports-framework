@@ -79,7 +79,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.STATUS_MESSAGES,
       maxLimit: 5000,
-      fields: [
+      fields: [ // TODO:
         'key',
         'timestamp',
         'price',
@@ -302,7 +302,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.SYMBOLS,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
       isSyncRequiredAtLeastOnce: true,
@@ -315,7 +315,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.MAP_SYMBOLS,
       maxLimit: 10000,
-      fields: ['key', 'value'],
+      projection: ['key', 'value'],
       sort: [['key', 1]],
       hasNewData: true,
       isSyncRequiredAtLeastOnce: true,
@@ -328,7 +328,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.INACTIVE_CURRENCIES,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
       isSyncRequiredAtLeastOnce: true,
@@ -341,7 +341,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
       isSyncRequiredAtLeastOnce: true,
@@ -354,7 +354,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.FUTURES,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
       hasNewData: true,
       isSyncRequiredAtLeastOnce: true,
@@ -367,7 +367,7 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.CURRENCIES,
       maxLimit: 10000,
-      fields: ['id'],
+      projection: null,
       sort: [['name', 1]],
       hasNewData: true,
       isSyncRequiredAtLeastOnce: true,
