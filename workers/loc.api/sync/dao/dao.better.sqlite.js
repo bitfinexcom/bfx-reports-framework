@@ -377,7 +377,8 @@ class BetterSqliteDAO extends DAO {
   async moveTempTableDataToMain (opts = {}) {
     const {
       namePrefix,
-      isNotInTrans
+      isNotInTrans,
+      isStrictEqual
     } = opts ?? {}
 
     if (
@@ -402,21 +403,27 @@ class BetterSqliteDAO extends DAO {
       const filteredTempTableNames = tableNames.filter((name) => (
         name.includes(namePrefix)
       ))
-      const insertSql = filteredTempTableNames.map((tempName) => {
+
+      const sqlArr = []
+
+      for (const tempName of filteredTempTableNames) {
         const name = tempName.replace(namePrefix, '')
         const model = modelsMap.get(name)
         const projection = Object.keys(model).join(', ')
 
         if (!model) {
-          return null
+          continue
+        }
+        if (isStrictEqual) {
+          sqlArr.push(`DELETE FROM ${name}`)
         }
 
-        return `INSERT OR REPLACE
+        sqlArr.push(`INSERT OR REPLACE
           INTO ${name}(${projection})
-          SELECT ${projection} FROM ${tempName}`
-      }).filter((sql) => sql)
+          SELECT ${projection} FROM ${tempName}`)
+      }
 
-      for (const sql of insertSql) {
+      for (const sql of sqlArr) {
         this.db.prepare(sql).run()
       }
     }, { isNotInTrans })
