@@ -11,35 +11,42 @@ const {
 const checkCollType = (
   type,
   coll,
-  isPublic
+  isPublic,
+  isPubAndPriv
 ) => {
   const _pub = isPublic ? PUBLIC : ''
-  const regExp = new RegExp(`^${_pub}${type}$`, 'i')
+  const startPattern = isPubAndPriv
+    ? ''
+    : `^${_pub}`
+  const regExp = new RegExp(`${startPattern}${type}$`, 'i')
 
   return regExp.test(coll.type)
 }
 
-const isInsertableArrObjTypeOfColl = (coll, isPublic) => {
+const isInsertableArrObjTypeOfColl = (coll, isPublic, isPubAndPriv) => {
   return checkCollType(
     INSERTABLE_ARRAY_OBJECTS,
     coll,
-    isPublic
+    isPublic,
+    isPubAndPriv
   )
 }
 
-const isUpdatableArrObjTypeOfColl = (coll, isPublic) => {
+const isUpdatableArrObjTypeOfColl = (coll, isPublic, isPubAndPriv) => {
   return checkCollType(
     UPDATABLE_ARRAY_OBJECTS,
     coll,
-    isPublic
+    isPublic,
+    isPubAndPriv
   )
 }
 
-const isUpdatableArrTypeOfColl = (coll, isPublic) => {
+const isUpdatableArrTypeOfColl = (coll, isPublic, isPubAndPriv) => {
   return checkCollType(
     UPDATABLE_ARRAY,
     coll,
-    isPublic
+    isPublic,
+    isPubAndPriv
   )
 }
 
