@@ -766,7 +766,9 @@ const _models = new Map([
     TABLES_NAMES.SYMBOLS,
     {
       _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)'
+      pairs: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
     }
   ],
   [
@@ -776,28 +778,34 @@ const _models = new Map([
       key: 'VARCHAR(255)',
       value: 'VARCHAR(255)',
 
-      [UNIQUE_INDEX_FIELD_NAME]: ['key', 'value']
+      [UNIQUE_INDEX_FIELD_NAME]: ['key']
     }
   ],
   [
     TABLES_NAMES.INACTIVE_CURRENCIES,
     {
       _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)'
+      pairs: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
     }
   ],
   [
     TABLES_NAMES.INACTIVE_SYMBOLS,
     {
       _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)'
+      pairs: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
     }
   ],
   [
     TABLES_NAMES.FUTURES,
     {
       _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)'
+      pairs: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
     }
   ],
   [
