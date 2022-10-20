@@ -1,8 +1,15 @@
 'use strict'
 
+const { pick } = require('lodash')
+
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
+
+const {
+  isUpdatableArrTypeOfColl,
+  isUpdatableArrObjTypeOfColl
+} = require('../sync/schema/utils')
 
 const checkParamsAuth = (args) => {
   const { auth } = { ...args }
@@ -43,17 +50,60 @@ const tryParseJSON = (
   return false
 }
 
-const collObjToArr = (coll = [], fieldName) => {
+const collObjToArr = (coll = [], opts) => {
+  const {
+    projection,
+    type
+  } = opts ?? {}
+  const _projection = Array.isArray(projection)
+    ? projection
+    : [projection]
+  const isProjectionExisted = (
+    _projection[0] &&
+    typeof _projection[0] === 'string'
+  )
+
   const res = []
 
-  coll.forEach(obj => {
-    if (
-      typeof obj === 'object' &&
-      typeof obj[fieldName] !== 'undefined'
-    ) {
-      res.push(obj[fieldName])
+  if (isUpdatableArrTypeOfColl({ type }, null, true)) {
+    const fieldName = isProjectionExisted
+      ? _projection[0]
+      : null
+
+    for (const obj of coll) {
+      if (
+        !obj ||
+        typeof obj !== 'object'
+      ) {
+        continue
+      }
+
+      const _fieldName = fieldName ?? Object.keys(obj)
+        .filter((key) => key !== '_id')[0]
+
+      if (typeof obj?.[_fieldName] === 'undefined') {
+        continue
+      }
+
+      res.push(obj?.[_fieldName])
     }
-  })
+  }
+  if (isUpdatableArrObjTypeOfColl({ type }, null, true)) {
+    if (!isProjectionExisted) {
+      return coll
+    }
+
+    for (const obj of coll) {
+      if (
+        !obj ||
+        typeof obj !== 'object'
+      ) {
+        continue
+      }
+
+      res.push(pick(obj, projection))
+    }
+  }
 
   return res
 }
