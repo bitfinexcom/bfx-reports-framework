@@ -530,17 +530,12 @@ class FrameworkReportService extends ReportService {
           { isPublic: true }
         )
 
-        if (method === this._SYNC_API_METHODS.CURRENCIES) {
-          return res
-        }
-        if (method === this._SYNC_API_METHODS.MAP_SYMBOLS) {
-          return res.map((row) => ([row.key, row.value]))
-        }
+        const {
+          projection,
+          type
+        } = this._syncSchema.getMethodCollMap().get(method)
 
-        const { field } = this._syncSchema.getMethodCollMap()
-          .get(method)
-
-        return collObjToArr(res, field)
+        return collObjToArr(res, { projection, type })
       })
 
       const res = await Promise.all(promises)
