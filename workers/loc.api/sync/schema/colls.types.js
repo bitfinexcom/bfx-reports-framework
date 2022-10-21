@@ -2,10 +2,11 @@
 
 const PUBLIC = 'public:'
 const HIDDEN = 'hidden:'
+const UPDATABLE = 'updatable:'
 
 const INSERTABLE_ARRAY_OBJECTS = 'insertable:array:objects'
-const UPDATABLE_ARRAY_OBJECTS = 'updatable:array:objects'
-const UPDATABLE_ARRAY = 'updatable:array'
+const UPDATABLE_ARRAY_OBJECTS = `${UPDATABLE}array:objects`
+const UPDATABLE_ARRAY = `${UPDATABLE}array`
 
 const PUBLIC_INSERTABLE_ARRAY_OBJECTS = `${PUBLIC}${INSERTABLE_ARRAY_OBJECTS}`
 const PUBLIC_UPDATABLE_ARRAY_OBJECTS = `${PUBLIC}${UPDATABLE_ARRAY_OBJECTS}`
@@ -16,6 +17,7 @@ const HIDDEN_INSERTABLE_ARRAY_OBJECTS = `${HIDDEN}${INSERTABLE_ARRAY_OBJECTS}`
 module.exports = {
   PUBLIC,
   HIDDEN,
+  UPDATABLE,
 
   INSERTABLE_ARRAY_OBJECTS,
   UPDATABLE_ARRAY_OBJECTS,
