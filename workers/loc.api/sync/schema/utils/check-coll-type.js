@@ -3,6 +3,7 @@
 const {
   PUBLIC,
   HIDDEN,
+  UPDATABLE,
   INSERTABLE_ARRAY_OBJECTS,
   UPDATABLE_ARRAY_OBJECTS,
   UPDATABLE_ARRAY
@@ -71,6 +72,12 @@ const isHidden = (type = '') => {
   return regExp.test(type)
 }
 
+const isUpdatable = (type = '') => {
+  const regExp = new RegExp(`${UPDATABLE}`, 'i')
+
+  return regExp.test(type)
+}
+
 module.exports = {
   checkCollType,
   isInsertableArrObjTypeOfColl,
@@ -78,5 +85,6 @@ module.exports = {
   isUpdatableArrTypeOfColl,
   isInsertableArrObjAnyProtection,
   isPublic,
-  isHidden
+  isHidden,
+  isUpdatable
 }

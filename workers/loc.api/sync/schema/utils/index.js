@@ -7,7 +7,8 @@ const {
   isUpdatableArrTypeOfColl,
   isInsertableArrObjAnyProtection,
   isPublic,
-  isHidden
+  isHidden,
+  isUpdatable
 } = require('./check-coll-type')
 
 module.exports = {
@@ -17,5 +18,6 @@ module.exports = {
   isUpdatableArrTypeOfColl,
   isInsertableArrObjAnyProtection,
   isPublic,
-  isHidden
+  isHidden,
+  isUpdatable
 }
