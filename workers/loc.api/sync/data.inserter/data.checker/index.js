@@ -11,7 +11,9 @@ const {
   SyncQueueIDSettingError
 } = require('../../../errors')
 const {
-  isInsertableArrObjTypeOfColl
+  isInsertableArrObjTypeOfColl,
+  isUpdatable,
+  isPublic
 } = require('../../schema/utils')
 const {
   filterMethodCollMap
@@ -101,6 +103,7 @@ class DataChecker {
     }
 
     await this._checkNewDataPublicArrObjType(methodCollMap)
+    await this._checkNewPublicUpdatableData(methodCollMap)
 
     return filterMethodCollMap(methodCollMap, true)
   }
@@ -414,6 +417,50 @@ class DataChecker {
         })
       }
 
+      schema.hasNewData = true
+      schema.start.push(freshSyncUserStepData)
+    }
+  }
+
+  async _checkNewPublicUpdatableData (methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
+      if (this._isInterrupted) {
+        return
+      }
+      if (
+        !isUpdatable(schema?.type) ||
+        !isPublic(schema?.type)
+      ) {
+        continue
+      }
+
+      this._resetSyncSchemaProps(schema)
+
+      const {
+        syncUserStepData
+      } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+        schema,
+        {
+          collName: method,
+          defaultStart: null,
+          currMts: null
+        }
+      )
+
+      if (
+        !syncUserStepData.isBaseStepReady ||
+        !syncUserStepData.isCurrStepReady
+      ) {
+        schema.hasNewData = true
+        schema.start.push(syncUserStepData)
+
+        continue
+      }
+
+      const freshSyncUserStepData = this.syncUserStepDataFactory({
+        ...syncUserStepData.getParams(),
+        isCurrStepReady: false
+      })
       schema.hasNewData = true
       schema.start.push(freshSyncUserStepData)
     }
