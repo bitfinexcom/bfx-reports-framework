@@ -9,7 +9,7 @@ const {
 } = require('lodash')
 
 const {
-  isInsertableArrObjTypeOfColl
+  isPublic
 } = require('../../schema/utils')
 const {
   invertOrders
@@ -59,13 +59,18 @@ class SyncUserStepManager {
     this.syncQueueId = params.syncQueueId
   }
 
-  shouldBaseStepBeSynced (syncUserStepData) {
+  shouldBaseStepBeSynced (syncUserStepData, opts) {
+    const { shouldNotMtsBeChecked } = opts ?? {}
+
     if (!(syncUserStepData instanceof SyncUserStepData)) {
       return false
     }
     if (
       !syncUserStepData?.isBaseStepReady &&
-      syncUserStepData?.hasBaseStep
+      (
+        shouldNotMtsBeChecked ||
+        syncUserStepData?.hasBaseStep
+      )
     ) {
       return true
     }
@@ -73,13 +78,18 @@ class SyncUserStepManager {
     return false
   }
 
-  shouldCurrStepBeSynced (syncUserStepData) {
+  shouldCurrStepBeSynced (syncUserStepData, opts) {
+    const { shouldNotMtsBeChecked } = opts ?? {}
+
     if (!(syncUserStepData instanceof SyncUserStepData)) {
       return false
     }
     if (
       !syncUserStepData?.isCurrStepReady &&
-      syncUserStepData?.hasCurrStep
+      (
+        shouldNotMtsBeChecked ||
+        syncUserStepData?.hasCurrStep
+      )
     ) {
       return true
     }
@@ -87,11 +97,11 @@ class SyncUserStepManager {
     return false
   }
 
-  wereStepsSynced (syncUserStepsData = []) {
-    const isBaseStepReadyParam = this._wereBaseStepsSynced(syncUserStepsData)
+  wereStepsSynced (syncUserStepsData = [], opts) {
+    const isBaseStepReadyParam = this._wereBaseStepsSynced(syncUserStepsData, opts)
       ? { isBaseStepReady: true }
       : {}
-    const isCurrStepReadyParam = this._wereCurrStepsSynced(syncUserStepsData)
+    const isCurrStepReadyParam = this._wereCurrStepsSynced(syncUserStepsData, opts)
       ? { isCurrStepReady: true }
       : {}
 
@@ -158,15 +168,14 @@ class SyncUserStepManager {
   }
 
   async getLastSyncedInfoForCurrColl (syncSchema, params) {
-    const currMts = Date.now()
-
     const {
       collName,
       userId,
       subUserId,
       symbol,
       timeframe,
-      defaultStart = 0
+      defaultStart = 0,
+      currMts = Date.now()
     } = params ?? {}
     const {
       name: tableName,
@@ -198,8 +207,12 @@ class SyncUserStepManager {
       typeof timeframe === 'string'
     )
     const shouldCollBePublic = !hasUserIdField
+    const shouldTableDataBeFetched = (
+      dateFieldName &&
+      typeof dateFieldName === 'string'
+    )
 
-    if (!isInsertableArrObjTypeOfColl(syncSchema, shouldCollBePublic)) {
+    if (isPublic(syncSchema?.type) !== shouldCollBePublic) {
       throw new LastSyncedInfoGettingError()
     }
 
@@ -234,24 +247,34 @@ class SyncUserStepManager {
       },
       [['syncedAt', -1]]
     )
-    const lastElemFromMainTablePromise = this.dao.getElemInCollBy(
-      tableName,
-      dataFilter,
-      tableOrder
+    const lastElemFromMainTablePromise = shouldTableDataBeFetched
+      ? this.dao.getElemInCollBy(
+          tableName,
+          dataFilter,
+          tableOrder
+        )
+      : null
+    const firstElemFromMainTablePromise = shouldTableDataBeFetched
+      ? this.dao.getElemInCollBy(
+          tableName,
+          dataFilter,
+          invertOrders(tableOrder)
+        )
+      : null
+    const lastElemFromTempTablePromise = (
+      hasTempTable &&
+      shouldTableDataBeFetched
     )
-    const firstElemFromMainTablePromise = this.dao.getElemInCollBy(
-      tableName,
-      dataFilter,
-      invertOrders(tableOrder)
-    )
-    const lastElemFromTempTablePromise = hasTempTable
       ? this.dao.getElemInCollBy(
           tempTableName,
           dataFilter,
           tableOrder
         )
       : null
-    const firstElemFromTempTablePromise = hasTempTable
+    const firstElemFromTempTablePromise = (
+      hasTempTable &&
+      shouldTableDataBeFetched
+    )
       ? this.dao.getElemInCollBy(
           tempTableName,
           dataFilter,
@@ -339,7 +362,7 @@ class SyncUserStepManager {
     }
   }
 
-  _wereBaseStepsSynced (syncUserStepsData = []) {
+  _wereBaseStepsSynced (syncUserStepsData = [], opts) {
     if (
       !Array.isArray(syncUserStepsData) ||
       syncUserStepsData.length === 0
@@ -349,7 +372,7 @@ class SyncUserStepManager {
 
     const filteredSyncUserStepsData = syncUserStepsData
       .filter((syncUserStepData) => (
-        this.shouldBaseStepBeSynced(syncUserStepData))
+        this.shouldBaseStepBeSynced(syncUserStepData, opts))
       )
 
     if (filteredSyncUserStepsData.length === 0) {
@@ -361,7 +384,7 @@ class SyncUserStepManager {
     ))
   }
 
-  _wereCurrStepsSynced (syncUserStepsData = []) {
+  _wereCurrStepsSynced (syncUserStepsData = [], opts) {
     if (
       !Array.isArray(syncUserStepsData) ||
       syncUserStepsData.length === 0
@@ -371,7 +394,7 @@ class SyncUserStepManager {
 
     const filteredSyncUserStepsData = syncUserStepsData
       .filter((syncUserStepData) => (
-        this.shouldCurrStepBeSynced(syncUserStepData))
+        this.shouldCurrStepBeSynced(syncUserStepData, opts))
       )
 
     if (filteredSyncUserStepsData.length === 0) {
