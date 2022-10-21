@@ -27,7 +27,9 @@ const {
 const {
   isInsertableArrObjTypeOfColl,
   isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl
+  isUpdatableArrTypeOfColl,
+  isUpdatable,
+  isPublic
 } = require('../schema/utils')
 const {
   AsyncProgressHandlerIsNotFnError,
@@ -281,9 +283,27 @@ class DataInserter extends EventEmitter {
       await this.wsEventEmitter
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
-      await this._updateApiDataArrObjTypeToDb(method, schema)
-      await this._updateApiDataArrTypeToDb(method, schema)
-      await this._insertApiDataPublicArrObjTypeToDb(method, schema)
+      const { type, start } = schema ?? {}
+
+      for (const syncUserStepData of start) {
+        if (isInsertableArrObjTypeOfColl(schema, true)) {
+          await this._insertApiData(
+            method,
+            schema,
+            syncUserStepData
+          )
+        }
+        if (
+          isUpdatable(type) &&
+          isPublic(type)
+        ) {
+          await this._updateApiData(
+            method,
+            schema,
+            syncUserStepData
+          )
+        }
+      }
 
       count += 1
       progress = Math.round(
@@ -346,7 +366,7 @@ class DataInserter extends EventEmitter {
       const { start } = schema ?? {}
 
       for (const syncUserStepData of start) {
-        await this._insertConfigurableApiData(
+        await this._insertApiData(
           method,
           schema,
           syncUserStepData,
@@ -367,35 +387,7 @@ class DataInserter extends EventEmitter {
     return { progress, methodCollMap }
   }
 
-  async _insertApiDataPublicArrObjTypeToDb (
-    methodApi,
-    schema
-  ) {
-    if (
-      this._isInterrupted ||
-      !isInsertableArrObjTypeOfColl(schema, true)
-    ) {
-      return
-    }
-
-    const { name, start } = schema ?? {}
-
-    if (
-      name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-      name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
-      name === this.ALLOWED_COLLS.CANDLES
-    ) {
-      for (const syncUserStepData of start) {
-        await this._insertConfigurableApiData(
-          methodApi,
-          schema,
-          syncUserStepData
-        )
-      }
-    }
-  }
-
-  async _insertConfigurableApiData (
+  async _insertApiData (
     methodApi,
     schema,
     syncUserStepData,
@@ -638,6 +630,38 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  async _updateApiData (
+    methodApi,
+    schema,
+    syncUserStepData
+  ) {
+    if (this._isInterrupted) {
+      return
+    }
+
+    await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+      collName: methodApi,
+      syncUserStepData
+    })
+
+    const checkOpts = { shouldNotMtsBeChecked: true }
+
+    if (this.syncUserStepManager
+      .shouldBaseStepBeSynced(syncUserStepData, checkOpts)) {
+      await this._updateApiDataArrObjTypeToDb(methodApi, schema)
+      await this._updateApiDataArrTypeToDb(methodApi, schema)
+
+      syncUserStepData.wasBaseStepsBeSynced = true
+    }
+    if (this.syncUserStepManager
+      .shouldCurrStepBeSynced(syncUserStepData, checkOpts)) {
+      await this._updateApiDataArrObjTypeToDb(methodApi, schema)
+      await this._updateApiDataArrTypeToDb(methodApi, schema)
+
+      syncUserStepData.wasCurrStepsBeSynced = true
+    }
+  }
+
   async _updateApiDataArrTypeToDb (
     methodApi,
     schema
@@ -651,8 +675,12 @@ class DataInserter extends EventEmitter {
 
     const {
       name: collName,
-      field
+      projection
     } = schema
+    const _projection = Array.isArray(projection)
+      ? projection
+      : [projection]
+    const fieldName = _projection[0]
 
     const args = this._getMethodArgMap(
       schema,
@@ -666,22 +694,97 @@ class DataInserter extends EventEmitter {
     ) {
       return
     }
+
     if (
-      Array.isArray(elemsFromApi) &&
-      elemsFromApi.length > 0
+      !Array.isArray(elemsFromApi) ||
+      elemsFromApi.length === 0
     ) {
-      await this.dao.removeElemsFromDbIfNotInLists(
-        collName,
-        { [field]: elemsFromApi }
-      )
-      await this.dao.insertElemsToDbIfNotExists(
-        collName,
-        null,
-        elemsFromApi.map(item => ({ [field]: item }))
-      )
+      return
     }
+
+    await this.dao.insertElemsToDb(
+      this.syncTempTablesManager.constructor
+        .getTempTableName(collName, this.syncQueueId),
+      null,
+      elemsFromApi.map((item) => ({ [fieldName]: item })),
+      {
+        isReplacedIfExists: true,
+        isStrictEqual: true
+      }
+    )
   }
 
+  async _updateApiDataArrObjTypeToDb (
+    methodApi,
+    schema
+  ) {
+    if (
+      this._isInterrupted ||
+      !isUpdatableArrObjTypeOfColl(schema, true)
+    ) {
+      return
+    }
+
+    const {
+      name: collName,
+      model
+    } = schema ?? {}
+
+    // TODO:
+    if (collName === this.ALLOWED_COLLS.STATUS_MESSAGES) {
+      // await this._updateConfigurableApiDataArrObjTypeToDb(
+      //   methodApi,
+      //   schema
+      // )
+
+      return
+    }
+
+    const args = this._getMethodArgMap(
+      schema,
+      { start: null, end: null }
+    )
+    const apiRes = await this._getDataFromApi(methodApi, args)
+    const isApiResObj = (
+      apiRes &&
+      typeof apiRes === 'object'
+    )
+
+    if (
+      isApiResObj &&
+      apiRes.isInterrupted
+    ) {
+      return
+    }
+
+    const elemsFromApi = (
+      isApiResObj &&
+      !Array.isArray(apiRes) &&
+      Array.isArray(apiRes.res)
+    )
+      ? apiRes.res
+      : apiRes
+
+    if (
+      !Array.isArray(elemsFromApi) ||
+      elemsFromApi.length === 0
+    ) {
+      return
+    }
+
+    await this.dao.insertElemsToDb(
+      this.syncTempTablesManager.constructor
+        .getTempTableName(collName, this.syncQueueId),
+      null,
+      normalizeApiData(elemsFromApi, model),
+      {
+        isReplacedIfExists: true,
+        isStrictEqual: true
+      }
+    )
+  }
+
+  // TODO:
   async _updateConfigurableApiDataArrObjTypeToDb (
     methodApi,
     schema
@@ -785,80 +888,6 @@ class DataInserter extends EventEmitter {
     }
   }
 
-  async _updateApiDataArrObjTypeToDb (
-    methodApi,
-    schema
-  ) {
-    if (
-      this._isInterrupted ||
-      !isUpdatableArrObjTypeOfColl(schema, true)
-    ) {
-      return
-    }
-
-    const {
-      name: collName,
-      fields,
-      model
-    } = schema ?? {}
-
-    if (collName === this.ALLOWED_COLLS.STATUS_MESSAGES) {
-      await this._updateConfigurableApiDataArrObjTypeToDb(
-        methodApi,
-        schema
-      )
-
-      return
-    }
-
-    const args = this._getMethodArgMap(
-      schema,
-      { start: null, end: null }
-    )
-    const apiRes = await this._getDataFromApi(methodApi, args)
-    const isApiResObj = (
-      apiRes &&
-      typeof apiRes === 'object'
-    )
-
-    if (
-      isApiResObj &&
-      apiRes.isInterrupted
-    ) {
-      return
-    }
-
-    const elemsFromApi = (
-      isApiResObj &&
-      !Array.isArray(apiRes) &&
-      Array.isArray(apiRes.res)
-    )
-      ? apiRes.res
-      : apiRes
-
-    if (
-      Array.isArray(elemsFromApi) &&
-      elemsFromApi.length > 0
-    ) {
-      const lists = fields.reduce((obj, curr) => {
-        obj[curr] = elemsFromApi.map(item => item[curr])
-
-        return obj
-      }, {})
-
-      await this.dao.removeElemsFromDbIfNotInLists(
-        collName,
-        lists
-      )
-      await this.dao.insertElemsToDb(
-        collName,
-        null,
-        normalizeApiData(elemsFromApi, model),
-        { isReplacedIfExists: true }
-      )
-    }
-  }
-
   async _updateSyncInfo (params) {
     await this.dao.executeQueriesInTrans(async () => {
       await this.syncTempTablesManager
@@ -888,7 +917,10 @@ class DataInserter extends EventEmitter {
             userId,
             subUserId,
             syncedAt,
-            ...this.syncUserStepManager.wereStepsSynced(schema.start)
+            ...this.syncUserStepManager.wereStepsSynced(
+              schema.start,
+              { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
+            )
           })
           updatesForOneUserPromises.push(promise)
         }
@@ -906,7 +938,10 @@ class DataInserter extends EventEmitter {
         const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
           collName,
           syncedAt,
-          ...this.syncUserStepManager.wereStepsSynced(schema.start)
+          ...this.syncUserStepManager.wereStepsSynced(
+            schema.start,
+            { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
+          )
         })
 
         updatesForPubCollsPromises.push(promise)
