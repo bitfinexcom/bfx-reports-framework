@@ -91,7 +91,7 @@ const _methodCollMap = new Map([
       dateFieldName: 'timestamp',
       symbolFieldName: 'key',
       sort: [['timestamp', -1]],
-      hasNewData: true,
+      hasNewData: false,
       confName: 'statusMessagesConf',
       isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
@@ -304,7 +304,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.SYMBOLS)
@@ -317,7 +317,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       projection: ['key', 'value'],
       sort: [['key', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.MAP_SYMBOLS)
@@ -330,7 +330,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.INACTIVE_CURRENCIES)
@@ -343,7 +343,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
@@ -356,7 +356,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.FUTURES)
@@ -369,7 +369,7 @@ const _methodCollMap = new Map([
       maxLimit: 10000,
       projection: null,
       sort: [['name', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CURRENCIES)
