@@ -683,11 +683,16 @@ class BetterSqliteDAO extends DAO {
     opts = {}
   ) {
     const {
-      isReplacedIfExists
-    } = { ...opts }
+      isReplacedIfExists,
+      isStrictEqual
+    } = opts ?? {}
 
     const sql = []
     const params = []
+
+    if (isStrictEqual) {
+      sql.push(`DELETE FROM ${name}`)
+    }
 
     for (const obj of data) {
       await setImmediatePromise()
