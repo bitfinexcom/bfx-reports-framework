@@ -60,7 +60,10 @@ class SyncUserStepManager {
   }
 
   shouldBaseStepBeSynced (syncUserStepData, opts) {
-    const { shouldNotMtsBeChecked } = opts ?? {}
+    const {
+      shouldNotMtsBeChecked,
+      shouldStartMtsBeChecked
+    } = opts ?? {}
 
     if (!(syncUserStepData instanceof SyncUserStepData)) {
       return false
@@ -70,6 +73,10 @@ class SyncUserStepManager {
       (
         shouldNotMtsBeChecked ||
         syncUserStepData?.hasBaseStep
+      ) &&
+      (
+        !shouldStartMtsBeChecked ||
+        syncUserStepData?.hasBaseStart
       )
     ) {
       return true
@@ -79,7 +86,10 @@ class SyncUserStepManager {
   }
 
   shouldCurrStepBeSynced (syncUserStepData, opts) {
-    const { shouldNotMtsBeChecked } = opts ?? {}
+    const {
+      shouldNotMtsBeChecked,
+      shouldStartMtsBeChecked
+    } = opts ?? {}
 
     if (!(syncUserStepData instanceof SyncUserStepData)) {
       return false
@@ -89,6 +99,10 @@ class SyncUserStepManager {
       (
         shouldNotMtsBeChecked ||
         syncUserStepData?.hasCurrStep
+      ) &&
+      (
+        !shouldStartMtsBeChecked ||
+        syncUserStepData?.hasCurrStart
       )
     ) {
       return true
