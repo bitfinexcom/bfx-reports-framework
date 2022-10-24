@@ -102,12 +102,20 @@ class SyncUserStepData {
     )
   }
 
+  get hasBaseStart () {
+    return Number.isInteger(this.baseStart)
+  }
+
   get hasCurrStep () {
     return (
       Number.isInteger(this.currStart) &&
       Number.isInteger(this.currEnd) &&
       this.currStart < this.currEnd
     )
+  }
+
+  get hasCurrStart () {
+    return Number.isInteger(this.currStart)
   }
 }
 
