@@ -2,7 +2,6 @@
 
 const EventEmitter = require('events')
 const {
-  isEmpty,
   cloneDeep
 } = require('lodash')
 const {
@@ -644,18 +643,82 @@ class DataInserter extends EventEmitter {
       syncUserStepData
     })
 
-    const checkOpts = { shouldNotMtsBeChecked: true }
+    const {
+      symbol,
+      timeframe,
+      baseStart,
+      currStart,
+      hasSymbol,
+      hasTimeframe,
+      areAllSymbolsRequired
+    } = syncUserStepData
+    const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+
+    const checkOpts = {
+      shouldNotMtsBeChecked: true,
+      shouldStartMtsBeChecked: true
+    }
+    const params = {}
+
+    if (
+      hasSymbol &&
+      !areAllSymbolsRequired
+    ) {
+      params.symbol = symbol
+    }
+    if (hasTimeframe) {
+      params.timeframe = timeframe
+    }
+    if (hasStatusMessagesSection) {
+      params.type = 'deriv'
+    }
 
     if (this.syncUserStepManager
       .shouldBaseStepBeSynced(syncUserStepData, checkOpts)) {
-      await this._updateApiDataArrObjTypeToDb(methodApi, schema)
+      const statusMessagesParams = {
+        ...params,
+        filter: {
+          $gte: { [schema?.dateFieldName]: baseStart }
+        }
+      }
+
+      const args = this._getMethodArgMap(
+        schema,
+        {
+          start: null,
+          end: null,
+          params: hasStatusMessagesSection
+            ? statusMessagesParams
+            : params
+        }
+      )
+
+      await this._updateApiDataArrObjTypeToDb(args, methodApi, schema)
       await this._updateApiDataArrTypeToDb(methodApi, schema)
 
       syncUserStepData.wasBaseStepsBeSynced = true
     }
     if (this.syncUserStepManager
       .shouldCurrStepBeSynced(syncUserStepData, checkOpts)) {
-      await this._updateApiDataArrObjTypeToDb(methodApi, schema)
+      const statusMessagesParams = {
+        ...params,
+        filter: {
+          $gte: { [schema?.dateFieldName]: currStart }
+        }
+      }
+
+      const args = this._getMethodArgMap(
+        schema,
+        {
+          start: null,
+          end: null,
+          params: hasStatusMessagesSection
+            ? statusMessagesParams
+            : params
+        }
+      )
+
+      await this._updateApiDataArrObjTypeToDb(args, methodApi, schema)
       await this._updateApiDataArrTypeToDb(methodApi, schema)
 
       syncUserStepData.wasCurrStepsBeSynced = true
@@ -715,6 +778,7 @@ class DataInserter extends EventEmitter {
   }
 
   async _updateApiDataArrObjTypeToDb (
+    args,
     methodApi,
     schema
   ) {
@@ -730,20 +794,6 @@ class DataInserter extends EventEmitter {
       model
     } = schema ?? {}
 
-    // TODO:
-    if (collName === this.ALLOWED_COLLS.STATUS_MESSAGES) {
-      // await this._updateConfigurableApiDataArrObjTypeToDb(
-      //   methodApi,
-      //   schema
-      // )
-
-      return
-    }
-
-    const args = this._getMethodArgMap(
-      schema,
-      { start: null, end: null }
-    )
     const apiRes = await this._getDataFromApi(methodApi, args)
     const isApiResObj = (
       apiRes &&
@@ -782,110 +832,6 @@ class DataInserter extends EventEmitter {
         isStrictEqual: true
       }
     )
-  }
-
-  // TODO:
-  async _updateConfigurableApiDataArrObjTypeToDb (
-    methodApi,
-    schema
-  ) {
-    if (this._isInterrupted) {
-      return
-    }
-
-    const {
-      dateFieldName,
-      name: collName,
-      fields,
-      model
-    } = schema ?? {}
-
-    const publicСollsСonf = await this.dao.getElemsInCollBy(
-      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
-      {
-        filter: { confName: schema.confName },
-        minPropName: 'start',
-        groupPropName: 'symbol'
-      }
-    )
-
-    if (isEmpty(publicСollsСonf)) {
-      return
-    }
-
-    const syncingTypes = ['deriv']
-    const elemsFromApi = []
-
-    for (const { symbol, start } of publicСollsСonf) {
-      if (this._isInterrupted) {
-        return
-      }
-
-      for (const type of syncingTypes) {
-        if (this._isInterrupted) {
-          return
-        }
-
-        const args = this._getMethodArgMap(
-          schema,
-          {
-            start: null,
-            end: null,
-            params: {
-              symbol,
-              filter: {
-                $gte: { [dateFieldName]: start }
-              },
-              type
-            }
-          }
-        )
-        const apiRes = await this._getDataFromApi(methodApi, args)
-        const isApiResObj = (
-          apiRes &&
-          typeof apiRes === 'object'
-        )
-
-        if (
-          isApiResObj &&
-          apiRes.isInterrupted
-        ) {
-          return
-        }
-
-        const oneSymbElemsFromApi = (
-          isApiResObj &&
-          !Array.isArray(apiRes) &&
-          Array.isArray(apiRes.res)
-        )
-          ? apiRes.res
-          : apiRes
-
-        if (!Array.isArray(oneSymbElemsFromApi)) {
-          continue
-        }
-
-        elemsFromApi.push(...oneSymbElemsFromApi)
-      }
-    }
-
-    if (elemsFromApi.length > 0) {
-      const lists = fields.reduce((obj, curr) => {
-        obj[curr] = elemsFromApi.map(item => item[curr])
-
-        return obj
-      }, {})
-
-      await this.dao.removeElemsFromDbIfNotInLists(
-        collName,
-        lists
-      )
-      await this.dao.insertElemsToDbIfNotExists(
-        collName,
-        null,
-        normalizeApiData(elemsFromApi, model)
-      )
-    }
   }
 
   async _updateSyncInfo (params) {
@@ -940,7 +886,10 @@ class DataInserter extends EventEmitter {
           syncedAt,
           ...this.syncUserStepManager.wereStepsSynced(
             schema.start,
-            { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
+            {
+              shouldNotMtsBeChecked: isUpdatable(schema?.type),
+              shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+            }
           )
         })
 
