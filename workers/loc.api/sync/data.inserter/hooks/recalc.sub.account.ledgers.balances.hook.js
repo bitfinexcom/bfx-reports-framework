@@ -304,6 +304,13 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
 
     const tableName = this._getTableName()
 
+    if (
+      this._shouldTempTableBeUsed() &&
+      !(await this.dao.hasTable(tableName))
+    ) {
+      return
+    }
+
     const firstNotRecalcedElem = await this.dao.getElemInCollBy(
       tableName,
       {
@@ -394,7 +401,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
   }
 
   _getTableName () {
-    const tableName = Number.isInteger(this._opts.syncQueueId)
+    const tableName = this._shouldTempTableBeUsed()
       ? SyncTempTablesManager.getTempTableName(
           this.TABLES_NAMES.LEDGERS,
           this._opts.syncQueueId
@@ -402,6 +409,10 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       : this.TABLES_NAMES.LEDGERS
 
     return tableName
+  }
+
+  _shouldTempTableBeUsed () {
+    return Number.isInteger(this._opts.syncQueueId)
   }
 }
 
