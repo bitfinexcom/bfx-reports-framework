@@ -736,7 +736,7 @@ const _models = new Map([
       clampMax: 'DECIMAL(22,12)',
       _type: 'VARCHAR(255)',
 
-      [UNIQUE_INDEX_FIELD_NAME]: ['timestamp', 'key', '_type'],
+      [UNIQUE_INDEX_FIELD_NAME]: ['key', '_type'],
       [INDEX_FIELD_NAME]: [
         ['key', 'timestamp']
       ]
