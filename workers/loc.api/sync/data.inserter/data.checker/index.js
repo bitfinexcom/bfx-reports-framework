@@ -212,6 +212,7 @@ class DataChecker {
 
     const currMts = Date.now()
     const {
+      type,
       confName,
       timeframeFieldName
     } = schema ?? {}
@@ -256,7 +257,10 @@ class DataChecker {
           collName: method,
           symbol,
           timeframe,
-          defaultStart: start
+          defaultStart: start,
+          currMts: isUpdatable(type)
+            ? null
+            : currMts
         }
       )
 
@@ -266,6 +270,23 @@ class DataChecker {
       ) {
         schema.hasNewData = true
         schema.start.push(syncUserStepData)
+
+        if (isUpdatable(type)) {
+          continue
+        }
+      }
+
+      if (isUpdatable(type)) {
+        const freshSyncUserStepData = this.syncUserStepDataFactory({
+          ...syncUserStepData.getParams(),
+          currStart: start,
+          isCurrStepReady: false
+        })
+
+        schema.hasNewData = true
+        schema.start.push(freshSyncUserStepData)
+
+        continue
       }
 
       const wasStartPointChanged = this._wasStartPointChanged(
@@ -281,7 +302,7 @@ class DataChecker {
         !wasStartPointChanged &&
         !shouldFreshSyncBeAdded
       ) {
-        return
+        continue
       }
 
       const freshSyncUserStepData = this.syncUserStepDataFactory({
@@ -435,6 +456,14 @@ class DataChecker {
       }
 
       this._resetSyncSchemaProps(schema)
+
+      const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+
+      if (hasStatusMessagesSection) {
+        await this._checkNewConfigurablePublicData(method, schema)
+
+        continue
+      }
 
       const {
         syncUserStepData
