@@ -656,7 +656,7 @@ class DataInserter extends EventEmitter {
 
     const checkOpts = {
       shouldNotMtsBeChecked: true,
-      shouldStartMtsBeChecked: true
+      shouldStartMtsBeChecked: hasStatusMessagesSection
     }
     const params = {}
 
