@@ -687,11 +687,10 @@ class BetterSqliteDAO extends DAO {
       isStrictEqual
     } = opts ?? {}
 
-    const sql = []
-    const params = []
+    const queries = []
 
     if (isStrictEqual) {
-      sql.push(`DELETE FROM ${name}`)
+      queries.push({ sql: `DELETE FROM ${name}` })
     }
 
     for (const obj of data) {
@@ -716,23 +715,31 @@ class BetterSqliteDAO extends DAO {
         ? ' OR REPLACE'
         : ''
 
-      sql.push(
-        `INSERT${replace}
+      queries.push({
+        sql: `INSERT${replace}
           INTO ${name}(${projection})
-          VALUES (${placeholders})`
-      )
-      params.push(placeholderVal)
+          VALUES (${placeholders})`,
+        param: placeholderVal
+      })
     }
 
-    if (sql.length === 0) {
+    if (queries.length === 0) {
       return
     }
 
     await this._beginTrans(async () => {
-      for (const [i, param] of params.entries()) {
+      for (const { sql, param } of queries) {
         await setImmediatePromise()
 
-        this.db.prepare(sql[i]).run(param)
+        const stm = this.db.prepare(sql)
+
+        if (typeof param === 'undefined') {
+          stm.run()
+
+          continue
+        }
+
+        stm.run(param)
       }
     })
   }
