@@ -9,7 +9,8 @@ const {
 } = require('lodash')
 
 const {
-  isPublic
+  isPublic,
+  isUpdatable
 } = require('../../schema/utils')
 const {
   invertOrders
@@ -362,12 +363,26 @@ class SyncUserStepManager {
         currStart: min([currStart, lastElemMtsFromMainTable]) ?? defaultStart,
         currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? currMts
       })
+
+      if (isUpdatable(syncSchema?.type)) {
+        syncUserStepData.setParams({
+          currStart: defaultStart,
+          currEnd: currMts
+        })
+      }
     }
     if (!isBaseStepReady) {
       syncUserStepData.setParams({
         baseStart: min([baseStart, firstElemMtsFromMainTable]) ?? defaultStart,
         baseEnd: min([baseEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? currMts
       })
+
+      if (isUpdatable(syncSchema?.type)) {
+        syncUserStepData.setParams({
+          baseStart: defaultStart,
+          baseEnd: currMts
+        })
+      }
     }
 
     return {
