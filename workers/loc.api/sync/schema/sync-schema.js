@@ -79,15 +79,6 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.STATUS_MESSAGES,
       maxLimit: 5000,
-      fields: [ // TODO:
-        'key',
-        'timestamp',
-        'price',
-        'priceSpot',
-        'fundBal',
-        'fundingAccrued',
-        'fundingStep'
-      ],
       dateFieldName: 'timestamp',
       symbolFieldName: 'key',
       sort: [['timestamp', -1]],
