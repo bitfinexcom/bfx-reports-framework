@@ -50,8 +50,8 @@ class SyncUserStepData {
     this.baseEnd = baseEnd
     this.currStart = currStart
     this.currEnd = currEnd
-    this.isBaseStepReady = isBaseStepReady
-    this.isCurrStepReady = isCurrStepReady
+    this.isBaseStepReady = !!isBaseStepReady
+    this.isCurrStepReady = !!isCurrStepReady
   }
 
   getParams (opts) {
