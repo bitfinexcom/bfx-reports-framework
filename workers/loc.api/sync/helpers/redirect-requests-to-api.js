@@ -24,7 +24,7 @@ const _shouldNotSyncModeBeUpdated = async (deps, params) => {
   const haveCollsBeenSyncedAtLeastOnce = await syncCollsManager
     .haveCollsBeenSyncedAtLeastOnce({ auth })
 
-  return !haveCollsBeenSyncedAtLeastOnce
+  return haveCollsBeenSyncedAtLeastOnce
 }
 
 module.exports = (
