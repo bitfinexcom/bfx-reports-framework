@@ -3,7 +3,7 @@
 const getSymbolFilter = require('./get-symbol-filter')
 const getTimeframeFilter = require('./get-timeframe-filter')
 const {
-  isInsertableArrObjAnyProtection
+  isInsertableArrObj
 } = require('../../schema/utils')
 
 const getFieldsFilters = (
@@ -49,7 +49,7 @@ module.exports = (
   } = {},
   params = {}
 ) => {
-  if (!isInsertableArrObjAnyProtection(type)) {
+  if (!isInsertableArrObj(type)) {
     return {}
   }
 
