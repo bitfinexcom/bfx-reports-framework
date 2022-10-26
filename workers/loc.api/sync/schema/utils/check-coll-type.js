@@ -1,89 +1,78 @@
 'use strict'
 
 const {
+  SEPARATOR,
+
   PUBLIC,
   HIDDEN,
+
   UPDATABLE,
+
   INSERTABLE_ARRAY_OBJECTS,
   UPDATABLE_ARRAY_OBJECTS,
   UPDATABLE_ARRAY
 } = require('../colls.types')
 
-const checkCollType = (
-  type,
-  coll,
-  isPublic,
-  isPubAndPriv
-) => {
-  const _pub = isPublic ? PUBLIC : ''
-  const startPattern = isPubAndPriv
-    ? ''
-    : `^${_pub}`
-  const regExp = new RegExp(`${startPattern}${type}$`, 'i')
+const publicCollRegExp = new RegExp(`${PUBLIC}${SEPARATOR}`, 'i')
+const hiddenCollRegExp = new RegExp(`${HIDDEN}${SEPARATOR}`, 'i')
+const updatableCollRegExp = new RegExp(`${UPDATABLE}${SEPARATOR}`, 'i')
 
-  return regExp.test(coll.type)
+const isInsertableArrObj = (type = '', opts) => {
+  const regExp = _getRegExp(INSERTABLE_ARRAY_OBJECTS, opts)
+
+  return regExp.test(type)
 }
 
-const isInsertableArrObjTypeOfColl = (coll, isPublic, isPubAndPriv) => {
-  return checkCollType(
-    INSERTABLE_ARRAY_OBJECTS,
-    coll,
-    isPublic,
-    isPubAndPriv
-  )
+const isUpdatableArrObj = (type = '', opts) => {
+  const regExp = _getRegExp(UPDATABLE_ARRAY_OBJECTS, opts)
+
+  return regExp.test(type)
 }
 
-const isUpdatableArrObjTypeOfColl = (coll, isPublic, isPubAndPriv) => {
-  return checkCollType(
-    UPDATABLE_ARRAY_OBJECTS,
-    coll,
-    isPublic,
-    isPubAndPriv
-  )
-}
-
-const isUpdatableArrTypeOfColl = (coll, isPublic, isPubAndPriv) => {
-  return checkCollType(
-    UPDATABLE_ARRAY,
-    coll,
-    isPublic,
-    isPubAndPriv
-  )
-}
-
-const isInsertableArrObjAnyProtection = (type = '') => {
-  const regExp = new RegExp(
-    `^((${HIDDEN})|(${PUBLIC})|())${INSERTABLE_ARRAY_OBJECTS}$`,
-    'i'
-  )
+const isUpdatableArr = (type = '', opts) => {
+  const regExp = _getRegExp(UPDATABLE_ARRAY, opts)
 
   return regExp.test(type)
 }
 
 const isPublic = (type = '') => {
-  const regExp = new RegExp(`^${PUBLIC}`, 'i')
-
-  return regExp.test(type)
+  return publicCollRegExp.test(type)
 }
 
 const isHidden = (type = '') => {
-  const regExp = new RegExp(`^${HIDDEN}`, 'i')
-
-  return regExp.test(type)
+  return hiddenCollRegExp.test(type)
 }
 
 const isUpdatable = (type = '') => {
-  const regExp = new RegExp(`${UPDATABLE}`, 'i')
+  return updatableCollRegExp.test(type)
+}
 
-  return regExp.test(type)
+const _getStartPattern = (opts) => {
+  const {
+    isPublic,
+    isPrivate
+  } = opts ?? {}
+
+  if (isPrivate) {
+    return '^'
+  }
+  if (isPublic) {
+    return `^${PUBLIC}${SEPARATOR}`
+  }
+
+  return ''
+}
+
+const _getRegExp = (type = '', opts) => {
+  const startPattern = _getStartPattern(opts)
+
+  return new RegExp(`${startPattern}${type}$`, 'i')
 }
 
 module.exports = {
-  checkCollType,
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl,
-  isInsertableArrObjAnyProtection,
+  isInsertableArrObj,
+  isUpdatableArrObj,
+  isUpdatableArr,
   isPublic,
   isHidden,
   isUpdatable
