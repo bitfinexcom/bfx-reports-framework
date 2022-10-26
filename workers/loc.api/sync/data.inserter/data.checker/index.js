@@ -11,7 +11,7 @@ const {
   SyncQueueIDSettingError
 } = require('../../../errors')
 const {
-  isInsertableArrObjTypeOfColl,
+  isInsertableArrObj,
   isUpdatable,
   isPublic
 } = require('../../schema/utils')
@@ -113,7 +113,7 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObjTypeOfColl(schema)) {
+      if (!isInsertableArrObj(schema?.type, { isPrivate: true })) {
         continue
       }
 
@@ -184,7 +184,7 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObjTypeOfColl(schema, true)) {
+      if (!isInsertableArrObj(schema?.type, { isPublic: true })) {
         continue
       }
 
