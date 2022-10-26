@@ -7,8 +7,8 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
-  isUpdatableArrTypeOfColl,
-  isUpdatableArrObjTypeOfColl
+  isUpdatableArr,
+  isUpdatableArrObj
 } = require('../sync/schema/utils')
 
 const checkParamsAuth = (args) => {
@@ -65,7 +65,7 @@ const collObjToArr = (coll = [], opts) => {
 
   const res = []
 
-  if (isUpdatableArrTypeOfColl({ type }, null, true)) {
+  if (isUpdatableArr(type)) {
     const fieldName = isProjectionExisted
       ? _projection[0]
       : null
@@ -88,7 +88,7 @@ const collObjToArr = (coll = [], opts) => {
       res.push(obj?.[_fieldName])
     }
   }
-  if (isUpdatableArrObjTypeOfColl({ type }, null, true)) {
+  if (isUpdatableArrObj(type)) {
     if (!isProjectionExisted) {
       return coll
     }
