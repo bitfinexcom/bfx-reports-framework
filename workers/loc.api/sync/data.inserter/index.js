@@ -24,9 +24,9 @@ const {
   checkCollPermission
 } = require('../helpers')
 const {
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl,
+  isInsertableArrObj,
+  isUpdatableArrObj,
+  isUpdatableArr,
   isUpdatable,
   isPublic
 } = require('../schema/utils')
@@ -285,7 +285,7 @@ class DataInserter extends EventEmitter {
       const { type, start } = schema ?? {}
 
       for (const syncUserStepData of start) {
-        if (isInsertableArrObjTypeOfColl(schema, true)) {
+        if (isInsertableArrObj(schema?.type, { isPublic: true })) {
           await this._insertApiData(
             method,
             schema,
@@ -483,8 +483,9 @@ class DataInserter extends EventEmitter {
       !apiSecret ||
       typeof apiSecret !== 'string'
     )
+    const isPrivate = !isPublic
 
-    if (!isInsertableArrObjTypeOfColl(schema, isPublic)) {
+    if (!isInsertableArrObj(schema?.type, { isPublic, isPrivate })) {
       return
     }
 
@@ -731,7 +732,7 @@ class DataInserter extends EventEmitter {
   ) {
     if (
       this._isInterrupted ||
-      !isUpdatableArrTypeOfColl(schema, true)
+      !isUpdatableArr(schema?.type, { isPublic: true })
     ) {
       return
     }
@@ -784,7 +785,7 @@ class DataInserter extends EventEmitter {
   ) {
     if (
       this._isInterrupted ||
-      !isUpdatableArrObjTypeOfColl(schema, true)
+      !isUpdatableArrObj(schema?.type, { isPublic: true })
     ) {
       return
     }
