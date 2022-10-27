@@ -1,5 +1,7 @@
 'use strict'
 
+const TABLES_NAMES = require('./tables-names')
+
 /*
  * NOTE: For this triggers there is required
  * `createdAt` and `updatedAt` and `_id` DB fields
@@ -23,7 +25,16 @@ const CREATE_UPDATE_MTS_TRIGGERS = [
         WHERE _id = NEW._id;
     END`
 ]
+const DELETE_SUB_USERS_TRIGGER = `\
+delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
+  AFTER DELETE ON #{tableName}
+  FOR EACH ROW
+  BEGIN
+    DELETE FROM ${TABLES_NAMES.USERS}
+      WHERE _id = OLD.subUserId;
+  END`
 
 module.exports = {
-  CREATE_UPDATE_MTS_TRIGGERS
+  CREATE_UPDATE_MTS_TRIGGERS,
+  DELETE_SUB_USERS_TRIGGER
 }
