@@ -19,6 +19,9 @@ const {
   ID_PRIMARY_KEY
 } = require('./const')
 const {
+  CREATE_UPDATE_MTS_TRIGGERS
+} = require('./common.triggers')
+const {
   getModelsMap: _getModelsMap,
   getModelOf: _getModelOf
 } = require('./helpers')
@@ -55,25 +58,7 @@ const _models = new Map([
       updatedAt: 'BIGINT',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['email', 'username'],
-      [TRIGGER_FIELD_NAME]: [
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
-      ]
+      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ],
   [
@@ -105,23 +90,7 @@ const _models = new Map([
             DELETE FROM ${TABLES_NAMES.USERS}
               WHERE _id = OLD.subUserId;
           END`,
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
+        ...CREATE_UPDATE_MTS_TRIGGERS
       ]
     }
   ],
@@ -851,25 +820,7 @@ const _models = new Map([
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
-      [TRIGGER_FIELD_NAME]: [
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
-      ]
+      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ],
   [
@@ -880,25 +831,7 @@ const _models = new Map([
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
-      [TRIGGER_FIELD_NAME]: [
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
-      ]
+      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ],
   [
@@ -909,25 +842,7 @@ const _models = new Map([
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
-      [TRIGGER_FIELD_NAME]: [
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
-      ]
+      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ],
   [
@@ -941,26 +856,7 @@ const _models = new Map([
       ownerUserId: 'INT',
       isOwnerScheduler: 'INT',
 
-      [TRIGGER_FIELD_NAME]: [
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          WHEN NEW.state != OLD.state
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
-      ]
+      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ],
   [
@@ -1004,25 +900,7 @@ const _models = new Map([
         ON UPDATE CASCADE
         ON DELETE CASCADE`
       ],
-      [TRIGGER_FIELD_NAME]: [
-        `insert_#{tableName}_createdAt_and_updatedAt
-          AFTER INSERT ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-                updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`,
-        `update_#{tableName}_updatedAt
-          AFTER UPDATE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            UPDATE #{tableName}
-              SET updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)
-              WHERE _id = NEW._id;
-          END`
-      ]
+      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ]
 ])
