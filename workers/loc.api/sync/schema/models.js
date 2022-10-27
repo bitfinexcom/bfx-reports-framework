@@ -19,6 +19,7 @@ const {
   ID_PRIMARY_KEY
 } = require('./const')
 const {
+  DELETE_SUB_USERS_TRIGGER,
   CREATE_UPDATE_MTS_TRIGGERS
 } = require('./common.triggers')
 const {
@@ -80,13 +81,7 @@ const _models = new Map([
         SUB_USER_ID_CONSTRAINT
       ],
       [TRIGGER_FIELD_NAME]: [
-        `delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
-          AFTER DELETE ON #{tableName}
-          FOR EACH ROW
-          BEGIN
-            DELETE FROM ${TABLES_NAMES.USERS}
-              WHERE _id = OLD.subUserId;
-          END`,
+        DELETE_SUB_USERS_TRIGGER,
         ...CREATE_UPDATE_MTS_TRIGGERS
       ]
     }
