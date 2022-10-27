@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 30
+const SUPPORTED_DB_VERSION = 31
 
 const TABLES_NAMES = require('./tables-names')
 const {
