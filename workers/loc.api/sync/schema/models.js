@@ -23,6 +23,7 @@ const {
 } = require('./common.triggers')
 const {
   USER_ID_CONSTRAINT,
+  MASTER_USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT
 } = require('./common.constraints')
 const {
@@ -75,11 +76,7 @@ const _models = new Map([
       updatedAt: 'BIGINT',
 
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_masterUserId
-        FOREIGN KEY (masterUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
+        MASTER_USER_ID_CONSTRAINT,
         SUB_USER_ID_CONSTRAINT
       ],
       [TRIGGER_FIELD_NAME]: [
