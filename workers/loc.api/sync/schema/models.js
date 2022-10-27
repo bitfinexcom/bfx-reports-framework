@@ -22,6 +22,10 @@ const {
   CREATE_UPDATE_MTS_TRIGGERS
 } = require('./common.triggers')
 const {
+  USER_ID_CONSTRAINT,
+  SUB_USER_ID_CONSTRAINT
+} = require('./common.constraints')
+const {
   getModelsMap: _getModelsMap,
   getModelOf: _getModelOf
 } = require('./helpers')
@@ -76,11 +80,7 @@ const _models = new Map([
         REFERENCES ${TABLES_NAMES.USERS}(_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        SUB_USER_ID_CONSTRAINT
       ],
       [TRIGGER_FIELD_NAME]: [
         `delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
@@ -136,16 +136,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -178,16 +170,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -214,16 +198,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -284,16 +260,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -326,16 +294,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -371,16 +331,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -417,16 +369,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -464,16 +408,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -510,16 +446,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -554,16 +482,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -585,16 +505,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -616,16 +528,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -661,16 +565,8 @@ const _models = new Map([
           'WHERE subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ]
     }
   ],
@@ -724,11 +620,7 @@ const _models = new Map([
       [UNIQUE_INDEX_FIELD_NAME]: [
         'symbol', 'user_id', 'confName', 'timeframe'
       ],
-      [CONSTR_FIELD_NAME]: `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+      [CONSTR_FIELD_NAME]: USER_ID_CONSTRAINT
     }
   ],
   [
@@ -889,16 +781,8 @@ const _models = new Map([
           'WHERE user_id IS NOT NULL AND subUserId IS NOT NULL']
       ],
       [CONSTR_FIELD_NAME]: [
-        `CONSTRAINT #{tableName}_fk_user_id
-        FOREIGN KEY (user_id)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`,
-        `CONSTRAINT #{tableName}_fk_subUserId
-        FOREIGN KEY (subUserId)
-        REFERENCES ${TABLES_NAMES.USERS}(_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE`
+        USER_ID_CONSTRAINT,
+        SUB_USER_ID_CONSTRAINT
       ],
       [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
