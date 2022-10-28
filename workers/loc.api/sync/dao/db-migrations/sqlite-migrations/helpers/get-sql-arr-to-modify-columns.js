@@ -1,7 +1,9 @@
 'use strict'
 
-const CONSTR_FIELD_NAME = '__constraints__'
-const TRIGGER_FIELD_NAME = '__triggers__'
+const {
+  CONSTR_FIELD_NAME,
+  TRIGGER_FIELD_NAME
+} = require('./const')
 
 module.exports = (
   tableName,
