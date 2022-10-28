@@ -28,13 +28,27 @@ const CREATE_UPDATE_MTS_TRIGGERS = [
         WHERE _id = NEW._id;
     END`
 ]
+const QUERY_TO_SET_FRESH_MTS = `UPDATE #{tableName}
+SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+  updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)`
+
+const _replacePlaceholder = (sql, tableName) => {
+  return sql.replace(/#{tableName\}/g, tableName)
+}
 
 const _getCreateUpdateMtsTriggers = (tableName) => {
   return CREATE_UPDATE_MTS_TRIGGERS.map((item) => {
-    const sql = item.replace(/#{tableName\}/g, tableName)
+    const sql = _replacePlaceholder(item, tableName)
 
     return `CREATE TRIGGER IF NOT EXISTS ${sql}`
   })
+}
+
+const _getQueryToSetFreshMts = (tableName) => {
+  return _replacePlaceholder(
+    QUERY_TO_SET_FRESH_MTS,
+    tableName
+  )
 }
 
 class MigrationV31 extends AbstractMigration {
@@ -46,16 +60,12 @@ class MigrationV31 extends AbstractMigration {
       'ALTER TABLE users ADD COLUMN createdAt BIGINT',
       'ALTER TABLE users ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('users'),
-      `UPDATE users
-        SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-          updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)`,
+      _getQueryToSetFreshMts('users'),
 
       'ALTER TABLE subAccounts ADD COLUMN createdAt BIGINT',
       'ALTER TABLE subAccounts ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('subAccounts'),
-      `UPDATE subAccounts
-        SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
-          updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)`
+      _getQueryToSetFreshMts('subAccounts')
     ]
 
     this.addSql(sqlArr)
