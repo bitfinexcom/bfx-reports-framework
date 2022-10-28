@@ -3,7 +3,12 @@
 const AbstractMigration = require('./abstract.migration')
 const { getSqlArrToModifyColumns } = require('./helpers')
 
-const ID_PRIMARY_KEY = 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT'
+const {
+  CONSTR_FIELD_NAME,
+  TRIGGER_FIELD_NAME,
+  ID_PRIMARY_KEY
+} = require('./helpers/const')
+
 const CREATE_UPDATE_MTS_TRIGGERS = [
   `insert_#{tableName}_createdAt_and_updatedAt
     AFTER INSERT ON #{tableName}
@@ -43,6 +48,13 @@ class MigrationV31 extends AbstractMigration {
       ..._getCreateUpdateMtsTriggers('users'),
       `UPDATE users
         SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
+          updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)`,
+
+      'ALTER TABLE subAccounts ADD COLUMN createdAt BIGINT',
+      'ALTER TABLE subAccounts ADD COLUMN updatedAt BIGINT',
+      ..._getCreateUpdateMtsTriggers('subAccounts'),
+      `UPDATE subAccounts
+        SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
           updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)`
     ]
 
@@ -72,6 +84,37 @@ class MigrationV31 extends AbstractMigration {
           isNotProtected: 'INT',
           isSubAccount: 'INT',
           isSubUser: 'INT'
+        }
+      ),
+
+      'DROP TRIGGER insert_subAccounts_createdAt_and_updatedAt',
+      'DROP TRIGGER update_subAccounts_updatedAt',
+      ...getSqlArrToModifyColumns(
+        'subAccounts',
+        {
+          _id: ID_PRIMARY_KEY,
+          masterUserId: 'INT NOT NULL',
+          subUserId: 'INT NOT NULL',
+
+          [CONSTR_FIELD_NAME]: [
+            `CONSTRAINT #{tableName}_fk_masterUserId
+            FOREIGN KEY (masterUserId)
+            REFERENCES users(_id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE`,
+            `CONSTRAINT #{tableName}_fk_subUserId
+            FOREIGN KEY (subUserId)
+            REFERENCES users(_id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE`
+          ],
+          [TRIGGER_FIELD_NAME]: `delete_#{tableName}_subUsers_from_users
+            AFTER DELETE ON #{tableName}
+            FOR EACH ROW
+            BEGIN
+              DELETE FROM users
+                WHERE _id = OLD.subUserId;
+            END`
         }
       )
     ]
