@@ -47,7 +47,7 @@ module.exports = (
     }
 
     const stm = item.replace(/#{tableName\}/g, tableName)
-    const trigger = `CREATE TRIGGER ${stm}`
+    const trigger = `CREATE TRIGGER IF NOT EXISTS ${stm}`
 
     accum.push(trigger)
 
