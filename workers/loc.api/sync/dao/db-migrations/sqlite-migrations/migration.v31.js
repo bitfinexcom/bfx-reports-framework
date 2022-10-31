@@ -68,7 +68,12 @@ class MigrationV31 extends AbstractMigration {
       _getQueryToSetFreshMts('subAccounts'),
 
       'DROP INDEX IF EXISTS statusMessages_timestamp_key__type',
-      'DROP INDEX IF EXISTS mapSymbols_key_value'
+      'DROP INDEX IF EXISTS mapSymbols_key_value',
+
+      'ALTER TABLE scheduler ADD COLUMN createdAt BIGINT',
+      'ALTER TABLE scheduler ADD COLUMN updatedAt BIGINT',
+      ..._getCreateUpdateMtsTriggers('scheduler'),
+      _getQueryToSetFreshMts('scheduler')
     ]
 
     this.addSql(sqlArr)
@@ -136,7 +141,17 @@ class MigrationV31 extends AbstractMigration {
       'DROP INDEX IF EXISTS mapSymbols_key',
       'DROP INDEX IF EXISTS inactiveCurrencies_pairs',
       'DROP INDEX IF EXISTS inactiveSymbols_pairs',
-      'DROP INDEX IF EXISTS futures_pairs'
+      'DROP INDEX IF EXISTS futures_pairs',
+
+      'DROP TRIGGER insert_scheduler_createdAt_and_updatedAt',
+      'DROP TRIGGER update_scheduler_updatedAt',
+      ...getSqlArrToModifyColumns(
+        'scheduler',
+        {
+          _id: ID_PRIMARY_KEY,
+          isEnable: 'INT'
+        }
+      )
     ]
 
     this.addSql(sqlArr)
