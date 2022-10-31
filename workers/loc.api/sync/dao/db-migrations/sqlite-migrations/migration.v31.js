@@ -85,7 +85,35 @@ class MigrationV31 extends AbstractMigration {
       'ALTER TABLE syncQueue ADD COLUMN ownerUserId INT',
       'ALTER TABLE syncQueue ADD COLUMN isOwnerScheduler INT',
       ..._getCreateUpdateMtsTriggers('syncQueue'),
-      'DELETE FROM syncQueue'
+      'DELETE FROM syncQueue',
+
+      'DROP TABLE IF EXISTS completedOnFirstSyncColls',
+      `CREATE TABLE syncUserSteps (
+        _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        collName VARCHAR(255) NOT NULL,
+        syncedAt BIGINT,
+        baseStart BIGINT,
+        baseEnd BIGINT,
+        isBaseStepReady INT,
+        currStart BIGINT,
+        currEnd BIGINT,
+        isCurrStepReady INT,
+        createdAt BIGINT,
+        updatedAt BIGINT,
+        subUserId INT,
+        user_id INT,
+        syncQueueId INT,
+        CONSTRAINT syncUserSteps_fk_user_id
+          FOREIGN KEY(user_id)
+          REFERENCES users(_id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE,
+        CONSTRAINT syncUserSteps_fk_subUserId
+          FOREIGN KEY(subUserId)
+          REFERENCES users(_id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE
+      )`
     ]
 
     this.addSql(sqlArr)
@@ -185,7 +213,26 @@ class MigrationV31 extends AbstractMigration {
           state: 'VARCHAR(255)'
         }
       ),
-      'DELETE FROM syncQueue'
+      'DELETE FROM syncQueue',
+
+      'DROP TABLE IF EXISTS syncUserSteps',
+      `CREATE TABLE completedOnFirstSyncColls (
+        _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        collName VARCHAR(255) NOT NULL,
+        mts BIGINT,
+        subUserId INT,
+        user_id INT,
+        CONSTRAINT completedOnFirstSyncColls_fk_user_id
+          FOREIGN KEY(user_id)
+          REFERENCES users(_id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE,
+        CONSTRAINT completedOnFirstSyncColls_fk_subUserId
+          FOREIGN KEY(subUserId)
+          REFERENCES users(_id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE
+      )`
     ]
 
     this.addSql(sqlArr)
