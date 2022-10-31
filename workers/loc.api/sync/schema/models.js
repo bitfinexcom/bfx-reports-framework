@@ -734,7 +734,7 @@ const _models = new Map([
     TABLES_NAMES.SYNC_QUEUE,
     {
       _id: ID_PRIMARY_KEY,
-      collName: 'VARCHAR(255)',
+      collName: 'VARCHAR(255) NOT NULL',
       state: 'VARCHAR(255)',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',

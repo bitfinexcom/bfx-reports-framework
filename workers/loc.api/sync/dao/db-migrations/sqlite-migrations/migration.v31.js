@@ -80,16 +80,25 @@ class MigrationV31 extends AbstractMigration {
       ..._getCreateUpdateMtsTriggers('progress'),
       _getQueryToSetFreshMts('progress'),
 
-      'ALTER TABLE syncQueue ADD COLUMN createdAt BIGINT',
-      'ALTER TABLE syncQueue ADD COLUMN updatedAt BIGINT',
-      'ALTER TABLE syncQueue ADD COLUMN ownerUserId INT',
-      'ALTER TABLE syncQueue ADD COLUMN isOwnerScheduler INT',
-      ..._getCreateUpdateMtsTriggers('syncQueue'),
-      'DELETE FROM syncQueue',
+      'DROP TABLE IF EXISTS syncQueue',
+      `CREATE TABLE syncQueue (
+        _id ${ID_PRIMARY_KEY},
+        collName VARCHAR(255) NOT NULL,
+        state VARCHAR(255),
+        createdAt BIGINT,
+        updatedAt BIGINT,
+        ownerUserId INT,
+        isOwnerScheduler INT,
+        CONSTRAINT syncQueue_fk_ownerUserId
+          FOREIGN KEY(ownerUserId)
+          REFERENCES users(_id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE
+      )`,
 
       'DROP TABLE IF EXISTS completedOnFirstSyncColls',
       `CREATE TABLE syncUserSteps (
-        _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        _id ${ID_PRIMARY_KEY},
         collName VARCHAR(255) NOT NULL,
         syncedAt BIGINT,
         baseStart BIGINT,
@@ -203,21 +212,16 @@ class MigrationV31 extends AbstractMigration {
         }
       ),
 
-      'DROP TRIGGER insert_syncQueue_createdAt_and_updatedAt',
-      'DROP TRIGGER update_syncQueue_updatedAt',
-      ...getSqlArrToModifyColumns(
-        'syncQueue',
-        {
-          _id: ID_PRIMARY_KEY,
-          collName: 'VARCHAR(255)',
-          state: 'VARCHAR(255)'
-        }
-      ),
-      'DELETE FROM syncQueue',
+      'DROP TABLE IF EXISTS syncQueue',
+      `CREATE TABLE syncQueue (
+        _id ${ID_PRIMARY_KEY},
+        collName VARCHAR(255),
+        state VARCHAR(255)
+      )`,
 
       'DROP TABLE IF EXISTS syncUserSteps',
       `CREATE TABLE completedOnFirstSyncColls (
-        _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        _id ${ID_PRIMARY_KEY},
         collName VARCHAR(255) NOT NULL,
         mts BIGINT,
         subUserId INT,
