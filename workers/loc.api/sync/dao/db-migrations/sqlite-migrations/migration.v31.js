@@ -73,7 +73,12 @@ class MigrationV31 extends AbstractMigration {
       'ALTER TABLE scheduler ADD COLUMN createdAt BIGINT',
       'ALTER TABLE scheduler ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('scheduler'),
-      _getQueryToSetFreshMts('scheduler')
+      _getQueryToSetFreshMts('scheduler'),
+
+      'ALTER TABLE progress ADD COLUMN createdAt BIGINT',
+      'ALTER TABLE progress ADD COLUMN updatedAt BIGINT',
+      ..._getCreateUpdateMtsTriggers('progress'),
+      _getQueryToSetFreshMts('progress')
     ]
 
     this.addSql(sqlArr)
@@ -150,6 +155,16 @@ class MigrationV31 extends AbstractMigration {
         {
           _id: ID_PRIMARY_KEY,
           isEnable: 'INT'
+        }
+      ),
+
+      'DROP TRIGGER insert_progress_createdAt_and_updatedAt',
+      'DROP TRIGGER update_progress_updatedAt',
+      ...getSqlArrToModifyColumns(
+        'progress',
+        {
+          _id: ID_PRIMARY_KEY,
+          value: 'VARCHAR(255)'
         }
       )
     ]
