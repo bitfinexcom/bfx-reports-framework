@@ -78,7 +78,14 @@ class MigrationV31 extends AbstractMigration {
       'ALTER TABLE progress ADD COLUMN createdAt BIGINT',
       'ALTER TABLE progress ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('progress'),
-      _getQueryToSetFreshMts('progress')
+      _getQueryToSetFreshMts('progress'),
+
+      'ALTER TABLE syncQueue ADD COLUMN createdAt BIGINT',
+      'ALTER TABLE syncQueue ADD COLUMN updatedAt BIGINT',
+      'ALTER TABLE syncQueue ADD COLUMN ownerUserId INT',
+      'ALTER TABLE syncQueue ADD COLUMN isOwnerScheduler INT',
+      ..._getCreateUpdateMtsTriggers('syncQueue'),
+      'DELETE FROM syncQueue'
     ]
 
     this.addSql(sqlArr)
@@ -166,7 +173,19 @@ class MigrationV31 extends AbstractMigration {
           _id: ID_PRIMARY_KEY,
           value: 'VARCHAR(255)'
         }
-      )
+      ),
+
+      'DROP TRIGGER insert_syncQueue_createdAt_and_updatedAt',
+      'DROP TRIGGER update_syncQueue_updatedAt',
+      ...getSqlArrToModifyColumns(
+        'syncQueue',
+        {
+          _id: ID_PRIMARY_KEY,
+          collName: 'VARCHAR(255)',
+          state: 'VARCHAR(255)'
+        }
+      ),
+      'DELETE FROM syncQueue'
     ]
 
     this.addSql(sqlArr)
