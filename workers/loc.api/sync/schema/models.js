@@ -25,6 +25,7 @@ const {
 const {
   USER_ID_CONSTRAINT,
   MASTER_USER_ID_CONSTRAINT,
+  OWNER_USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT
 } = require('./common.constraints')
 const {
@@ -740,6 +741,7 @@ const _models = new Map([
       ownerUserId: 'INT',
       isOwnerScheduler: 'INT',
 
+      [CONSTR_FIELD_NAME]: OWNER_USER_ID_CONSTRAINT,
       [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
     }
   ],
