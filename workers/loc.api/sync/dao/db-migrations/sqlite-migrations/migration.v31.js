@@ -65,7 +65,10 @@ class MigrationV31 extends AbstractMigration {
       'ALTER TABLE subAccounts ADD COLUMN createdAt BIGINT',
       'ALTER TABLE subAccounts ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('subAccounts'),
-      _getQueryToSetFreshMts('subAccounts')
+      _getQueryToSetFreshMts('subAccounts'),
+
+      'DROP INDEX IF EXISTS statusMessages_timestamp_key__type',
+      'DROP INDEX IF EXISTS mapSymbols_key_value'
     ]
 
     this.addSql(sqlArr)
@@ -126,7 +129,14 @@ class MigrationV31 extends AbstractMigration {
                 WHERE _id = OLD.subUserId;
             END`
         }
-      )
+      ),
+
+      'DROP INDEX IF EXISTS statusMessages_key__type',
+      'DROP INDEX IF EXISTS symbols_pairs',
+      'DROP INDEX IF EXISTS mapSymbols_key',
+      'DROP INDEX IF EXISTS inactiveCurrencies_pairs',
+      'DROP INDEX IF EXISTS inactiveSymbols_pairs',
+      'DROP INDEX IF EXISTS futures_pairs'
     ]
 
     this.addSql(sqlArr)
