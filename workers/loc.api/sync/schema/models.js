@@ -747,7 +747,7 @@ const _models = new Map([
     TABLES_NAMES.SYNC_USER_STEPS,
     {
       _id: ID_PRIMARY_KEY,
-      collName: 'VARCHAR(255)',
+      collName: 'VARCHAR(255) NOT NULL',
       syncedAt: 'BIGINT',
       baseStart: 'BIGINT',
       baseEnd: 'BIGINT',
