@@ -56,6 +56,9 @@ const QUERIES_TO_DELETE_DATA = [
   'DELETE FROM currencies',
   'DELETE FROM candles'
 ]
+const QUERY_TO_SET_INITIAL_SYNC_PROGRESS_STATE = `\
+UPDATE progress
+  SET value = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'`
 
 const _replacePlaceholder = (sql, tableName) => {
   return sql.replace(/#{tableName\}/g, tableName)
@@ -158,7 +161,8 @@ class MigrationV31 extends AbstractMigration {
        * Delete data to start the sync from scratch to avoid inconsistency
        * if the previous sync step has not been finished successfully
        */
-      ...QUERIES_TO_DELETE_DATA
+      ...QUERIES_TO_DELETE_DATA,
+      QUERY_TO_SET_INITIAL_SYNC_PROGRESS_STATE
     ]
 
     this.addSql(sqlArr)
@@ -278,7 +282,8 @@ class MigrationV31 extends AbstractMigration {
        * Delete data to start the sync from scratch to avoid inconsistency
        * if the previous sync step has not been finished successfully
        */
-      ...QUERIES_TO_DELETE_DATA
+      ...QUERIES_TO_DELETE_DATA,
+      QUERY_TO_SET_INITIAL_SYNC_PROGRESS_STATE
     ]
 
     this.addSql(sqlArr)
