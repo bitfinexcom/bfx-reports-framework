@@ -55,6 +55,11 @@ class MigrationV31 extends AbstractMigration {
   /**
    * @override
    */
+  before () { return this.dao.disableForeignKeys() }
+
+  /**
+   * @override
+   */
   up () {
     const sqlArr = [
       'ALTER TABLE users ADD COLUMN createdAt BIGINT',
@@ -241,6 +246,11 @@ class MigrationV31 extends AbstractMigration {
 
     this.addSql(sqlArr)
   }
+
+  /**
+   * @override
+   */
+  after () { return this.dao.enableForeignKeys() }
 }
 
 module.exports = MigrationV31
