@@ -31,6 +31,31 @@ const CREATE_UPDATE_MTS_TRIGGERS = [
 const QUERY_TO_SET_FRESH_MTS = `UPDATE #{tableName}
 SET createdAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT),
   updatedAt = CAST((julianday('now') - 2440587.5) * 86400000.0 as INT)`
+const QUERIES_TO_DELETE_DATA = [
+  'DELETE FROM ledgers',
+  'DELETE FROM trades',
+  'DELETE FROM fundingTrades',
+  'DELETE FROM publicTrades',
+  'DELETE FROM orders',
+  'DELETE FROM movements',
+  'DELETE FROM fundingOfferHistory',
+  'DELETE FROM fundingLoanHistory',
+  'DELETE FROM fundingCreditHistory',
+  'DELETE FROM positionsHistory',
+  'DELETE FROM positionsSnapshot',
+  'DELETE FROM logins',
+  'DELETE FROM changeLogs',
+  'DELETE FROM payInvoiceList',
+  'DELETE FROM tickersHistory',
+  'DELETE FROM statusMessages',
+  'DELETE FROM symbols',
+  'DELETE FROM mapSymbols',
+  'DELETE FROM inactiveCurrencies',
+  'DELETE FROM inactiveSymbols',
+  'DELETE FROM futures',
+  'DELETE FROM currencies',
+  'DELETE FROM candles'
+]
 
 const _replacePlaceholder = (sql, tableName) => {
   return sql.replace(/#{tableName\}/g, tableName)
@@ -127,7 +152,13 @@ class MigrationV31 extends AbstractMigration {
           REFERENCES users(_id)
           ON UPDATE CASCADE
           ON DELETE CASCADE
-      )`
+      )`,
+
+      /*
+       * Delete data to start the sync from scratch to avoid inconsistency
+       * if the previous sync step has not been finished successfully
+       */
+      ...QUERIES_TO_DELETE_DATA
     ]
 
     this.addSql(sqlArr)
@@ -241,7 +272,13 @@ class MigrationV31 extends AbstractMigration {
           REFERENCES users(_id)
           ON UPDATE CASCADE
           ON DELETE CASCADE
-      )`
+      )`,
+
+      /*
+       * Delete data to start the sync from scratch to avoid inconsistency
+       * if the previous sync step has not been finished successfully
+       */
+      ...QUERIES_TO_DELETE_DATA
     ]
 
     this.addSql(sqlArr)
