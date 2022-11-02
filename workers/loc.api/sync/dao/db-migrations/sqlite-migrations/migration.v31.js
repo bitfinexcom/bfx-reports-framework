@@ -108,6 +108,11 @@ class MigrationV31 extends AbstractMigration {
       ..._getCreateUpdateMtsTriggers('scheduler'),
       _getQueryToSetFreshMts('scheduler'),
 
+      'ALTER TABLE syncMode ADD COLUMN createdAt BIGINT',
+      'ALTER TABLE syncMode ADD COLUMN updatedAt BIGINT',
+      ..._getCreateUpdateMtsTriggers('syncMode'),
+      _getQueryToSetFreshMts('syncMode'),
+
       'ALTER TABLE progress ADD COLUMN createdAt BIGINT',
       'ALTER TABLE progress ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('progress'),
@@ -236,6 +241,16 @@ class MigrationV31 extends AbstractMigration {
       'DROP TRIGGER update_scheduler_updatedAt',
       ...getSqlArrToModifyColumns(
         'scheduler',
+        {
+          _id: ID_PRIMARY_KEY,
+          isEnable: 'INT'
+        }
+      ),
+
+      'DROP TRIGGER insert_syncMode_createdAt_and_updatedAt',
+      'DROP TRIGGER update_syncMode_updatedAt',
+      ...getSqlArrToModifyColumns(
+        'syncMode',
         {
           _id: ID_PRIMARY_KEY,
           isEnable: 'INT'
