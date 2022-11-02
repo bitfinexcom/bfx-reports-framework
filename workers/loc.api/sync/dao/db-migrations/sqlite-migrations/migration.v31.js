@@ -103,6 +103,11 @@ class MigrationV31 extends AbstractMigration {
       'DROP INDEX IF EXISTS statusMessages_timestamp_key__type',
       'DROP INDEX IF EXISTS mapSymbols_key_value',
 
+      'ALTER TABLE publicСollsСonf ADD COLUMN createdAt BIGINT',
+      'ALTER TABLE publicСollsСonf ADD COLUMN updatedAt BIGINT',
+      ..._getCreateUpdateMtsTriggers('publicСollsСonf'),
+      _getQueryToSetFreshMts('publicСollsСonf'),
+
       'ALTER TABLE scheduler ADD COLUMN createdAt BIGINT',
       'ALTER TABLE scheduler ADD COLUMN updatedAt BIGINT',
       ..._getCreateUpdateMtsTriggers('scheduler'),
@@ -210,15 +215,15 @@ class MigrationV31 extends AbstractMigration {
 
           [CONSTR_FIELD_NAME]: [
             `CONSTRAINT #{tableName}_fk_masterUserId
-            FOREIGN KEY (masterUserId)
-            REFERENCES users(_id)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE`,
+              FOREIGN KEY (masterUserId)
+              REFERENCES users(_id)
+              ON UPDATE CASCADE
+              ON DELETE CASCADE`,
             `CONSTRAINT #{tableName}_fk_subUserId
-            FOREIGN KEY (subUserId)
-            REFERENCES users(_id)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE`
+              FOREIGN KEY (subUserId)
+              REFERENCES users(_id)
+              ON UPDATE CASCADE
+              ON DELETE CASCADE`
           ],
           [TRIGGER_FIELD_NAME]: `delete_#{tableName}_subUsers_from_users
             AFTER DELETE ON #{tableName}
@@ -236,6 +241,27 @@ class MigrationV31 extends AbstractMigration {
       'DROP INDEX IF EXISTS inactiveCurrencies_pairs',
       'DROP INDEX IF EXISTS inactiveSymbols_pairs',
       'DROP INDEX IF EXISTS futures_pairs',
+
+      'DROP TRIGGER insert_publicСollsСonf_createdAt_and_updatedAt',
+      'DROP TRIGGER update_publicСollsСonf_updatedAt',
+      ...getSqlArrToModifyColumns(
+        'publicСollsСonf',
+        {
+          _id: ID_PRIMARY_KEY,
+          confName: 'VARCHAR(255)',
+          symbol: 'VARCHAR(255)',
+          start: 'BIGINT',
+          timeframe: 'VARCHAR(255)',
+          user_id: 'INT NOT NULL',
+
+          [CONSTR_FIELD_NAME]: `\
+          CONSTRAINT #{tableName}_fk_user_id
+            FOREIGN KEY (user_id)
+            REFERENCES users(_id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE`
+        }
+      ),
 
       'DROP TRIGGER insert_scheduler_createdAt_and_updatedAt',
       'DROP TRIGGER update_scheduler_updatedAt',
