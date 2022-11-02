@@ -181,6 +181,9 @@ class DataInserter extends EventEmitter {
       return
     }
 
+    await this.syncTempTablesManager
+      .cleanUpTempDBStructure()
+
     const syncedUsersMap = new Map()
     let count = 0
     let progress = 0
