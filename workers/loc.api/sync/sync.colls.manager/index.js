@@ -121,14 +121,7 @@ class SyncCollsManager {
             completedColl?.subUserId === subUser._id
           ))
         ))
-        const isLedgerMovementsDone = !isDone
-          ? await this._haveLedgerMovementsBeenSyncedAtLeastOnce(
-              args,
-              { method, completedColls }
-            )
-          : false
-
-        checkingRes.push(isDone || isLedgerMovementsDone)
+        checkingRes.push(isDone)
 
         continue
       }
@@ -138,14 +131,7 @@ class SyncCollsManager {
         completedColl?.collName === method &&
         completedColl?.user_id === userId
       ))
-      const isLedgerMovementsDone = !isDone
-        ? await this._haveLedgerMovementsBeenSyncedAtLeastOnce(
-            args,
-            { method, completedColls }
-          )
-        : false
-
-      checkingRes.push(isDone || isLedgerMovementsDone)
+      checkingRes.push(isDone)
     }
 
     return checkingRes.every((res) => res)
@@ -231,61 +217,6 @@ class SyncCollsManager {
     }
 
     return true
-  }
-
-  async _haveLedgerMovementsBeenSyncedAtLeastOnce (args, opts) {
-    const {
-      _id: userId,
-      subUsers,
-      isSubAccount
-    } = args?.auth ?? {}
-    const {
-      method,
-      completedColls = []
-    } = opts ?? {}
-
-    if (method !== this.SYNC_API_METHODS.MOVEMENTS) {
-      return false
-    }
-
-    if (isSubAccount) {
-      const isLedgersCollDone = subUsers.every((subUser) => (
-        Number.isInteger(subUser?._id) &&
-        completedColls.some((completedColl) => (
-          completedColl?.isBaseStepReady &&
-          completedColl?.collName === this.SYNC_API_METHODS.LEDGERS &&
-          completedColl?.user_id === userId &&
-          completedColl?.subUserId === subUser._id
-        ))
-      ))
-
-      if (!isLedgersCollDone) {
-        return false
-      }
-    }
-
-    const isLedgersCollDone = completedColls.some((completedColl) => (
-      completedColl?.isBaseStepReady &&
-      completedColl?.collName === this.SYNC_API_METHODS.LEDGERS
-    ))
-
-    if (!isLedgersCollDone) {
-      return false
-    }
-
-    const subAccountFilter = isSubAccount
-      ? { $in: { subUserId: subUsers } }
-      : {}
-    const ledger = await this.dao.getElemInCollBy(
-      this.TABLES_NAMES.LEDGERS,
-      {
-        $eq: { _isSubAccountsTransfer: 1 },
-        user_id: userId,
-        ...subAccountFilter
-      }
-    )
-
-    return Number.isInteger(ledger?._id)
   }
 
   _getSchemaNodes (schema) {
