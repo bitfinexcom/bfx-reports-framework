@@ -4,6 +4,8 @@ const { decorateInjectable } = require('../../../di/utils')
 
 const { SyncQueueIDSettingError } = require('../../../errors')
 
+const BASE_NAME_PREFIX = 'temp_s'
+
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
@@ -91,6 +93,7 @@ class SyncTempTablesManager {
       .map(({ _id }) => this.getCurrNamePrefix(_id))
 
     await this.dao.dropAllTables({
+      expectations: [BASE_NAME_PREFIX],
       exceptions,
       isNotStrictEqual: true
     })
@@ -109,7 +112,7 @@ class SyncTempTablesManager {
   }
 
   static getNamePrefix (id) {
-    return `temp_s${id}_`
+    return `${BASE_NAME_PREFIX}${id}_`
   }
 }
 
