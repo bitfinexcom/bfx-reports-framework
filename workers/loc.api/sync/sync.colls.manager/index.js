@@ -196,6 +196,10 @@ class SyncCollsManager {
           completedColl.collName === collName
         ))
 
+      if (completedCollsForCurrNode.length === 0) {
+        return false
+      }
+
       const isOk = completedCollsForCurrNode
         .every((completedColl) => (
           completedCollsForAllNodes.every(({ _id, syncedAt }) => (
