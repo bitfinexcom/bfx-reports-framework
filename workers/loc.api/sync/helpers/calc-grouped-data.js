@@ -1,5 +1,7 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
 const { pick, omit } = require('lodash')
 
 const getBackIterable = require('../helpers/get-back-iterable')
@@ -133,6 +135,8 @@ const _getReducer = (
   calcDataItem
 ) => {
   return async (asyncAccum, item, i, arr) => {
+    await setImmediatePromise()
+
     const accum = await asyncAccum
     const res = await calcDataItem(item, i, arr, accum)
 
