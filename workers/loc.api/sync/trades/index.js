@@ -79,14 +79,15 @@ class Trades {
   }
 
   _calcAmounts (data = []) {
-    return data.map((trade = {}) => {
+    return data.map((trade) => {
+      const _trade = trade ?? {}
       const {
         execAmount,
         execPrice,
         fee,
         feeCurrency,
         symbol
-      } = { ...trade }
+      } = _trade
       const symb = splitSymbolPairs(symbol)[1]
       const isFeeInUsd = feeCurrency === 'USD'
       const isPriceInUsd = symb === 'USD'
@@ -127,30 +128,27 @@ class Trades {
         ? _feeForCurrConv * execPrice
         : _feeForCurrConv
 
-      return {
-        ...trade,
-        calcAmount,
-        feeUsd,
-        feeForCurrConv
-      }
-    }, {})
+      _trade.calcAmount = calcAmount
+      _trade.feeUsd = feeUsd
+      _trade.feeForCurrConv = feeForCurrConv
+
+      return _trade
+    })
   }
 
   _calcTrades (fieldName) {
     return (data = []) => data.reduce((accum, trade = {}) => {
-      const _trade = { ...trade }
-      const value = _trade[fieldName]
+      const value = trade?.[fieldName]
 
       if (!Number.isFinite(value)) {
-        return { ...accum }
+        return accum
       }
 
-      return {
-        ...accum,
-        USD: Number.isFinite(accum.USD)
-          ? accum.USD + value
-          : value
-      }
+      accum.USD = Number.isFinite(accum?.USD)
+        ? accum.USD + value
+        : value
+
+      return accum
     }, {})
   }
 
@@ -170,13 +168,12 @@ class Trades {
           symb !== 'USD' ||
           !Number.isFinite(amount)
         ) {
-          return { ...accum }
+          return accum
         }
 
-        return {
-          ...accum,
-          [symb]: amount
-        }
+        accum[symb] = amount
+
+        return accum
       }, {})
 
       return res
@@ -193,7 +190,7 @@ class Trades {
       start = 0,
       end = Date.now(),
       symbol: symbs
-    } = { ...params }
+    } = params ?? {}
     const _symbol = Array.isArray(symbs)
       ? symbs
       : [symbs]
@@ -245,15 +242,13 @@ class Trades {
     if (
       Array.isArray(groupedTrades) &&
       groupedTrades.length > 0 &&
-      groupedTrades[groupedTrades.length - 1] &&
-      typeof groupedTrades[groupedTrades.length - 1] === 'object' &&
-      Number.isInteger(groupedTrades[groupedTrades.length - 1].mts)
+      Number.isInteger(groupedTrades[groupedTrades.length - 1]?.mts)
     ) {
       return groupedTrades[groupedTrades.length - 1].mts
     }
 
-    const { params } = { ...args }
-    const { start = 0 } = { ...params }
+    const { params } = args ?? {}
+    const { start = 0 } = params ?? {}
 
     return start
   }
@@ -269,7 +264,7 @@ class Trades {
       start = 0,
       end = Date.now(),
       timeframe = 'day'
-    } = { ...params }
+    } = params ?? {}
     const {
       symbolFieldName: tradesSymbolFieldName
     } = this.tradesMethodColl
