@@ -340,13 +340,19 @@ class BetterSqliteDAO extends DAO {
   }
 
   async dropAllTables (opts = {}) {
-    const { isNotInTrans } = opts ?? {}
+    const {
+      isNotInTrans,
+      shouldWalCheckpointAndVacuumBeExecuted
+    } = opts ?? {}
     const filteredTableNames = await this.getFilteredTablesNames(opts)
 
     const sqlArr = filteredTableNames.map((name) => (
       `DROP TABLE IF EXISTS ${name}`
     ))
 
+    if (sqlArr.length === 0) {
+      return []
+    }
     if (isNotInTrans) {
       const res = []
 
@@ -356,6 +362,13 @@ class BetterSqliteDAO extends DAO {
         res.push(oneRes)
       }
 
+      if (!shouldWalCheckpointAndVacuumBeExecuted) {
+        return res
+      }
+
+      await this._walCheckpoint()
+      await this._vacuum()
+
       return res
     }
 
@@ -364,6 +377,10 @@ class BetterSqliteDAO extends DAO {
       sql: sqlArr,
       params: { transVersion: 'exclusive' }
     }, { withoutWorkerThreads: true })
+
+    if (!shouldWalCheckpointAndVacuumBeExecuted) {
+      return res
+    }
 
     await this._walCheckpoint()
     await this._vacuum()
