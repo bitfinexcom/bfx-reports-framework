@@ -345,7 +345,10 @@ class SubAccount {
     )
     await this.sync.stop()
 
-    const res = await this.dao.executeQueriesInTrans(async () => {
+    const {
+      subAccountUser,
+      res
+    } = await this.dao.executeQueriesInTrans(async () => {
       const subAccountUser = await this.authenticator
         .signIn(
           {
@@ -553,9 +556,12 @@ class SubAccount {
       })
 
       return {
-        email,
-        isSubAccount: true,
-        token
+        subAccountUser,
+        res: {
+          email,
+          isSubAccount: true,
+          token
+        }
       }
     }, { withoutWorkerThreads: true })
 
@@ -565,7 +571,7 @@ class SubAccount {
     )
     await this.sync.start({
       isSolveAfterRedirToApi: true,
-      ownerUserId: subAccountAuth?._id
+      ownerUserId: subAccountUser?._id
     })
 
     return res
