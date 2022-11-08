@@ -397,8 +397,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.PUBLIC_TRADES,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editPublicTradesConf', args, cb)
@@ -415,8 +418,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.TICKERS_HISTORY,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editTickersHistoryConf', args, cb)
@@ -433,8 +439,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.STATUS_MESSAGES,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editStatusMessagesConf', args, cb)
@@ -451,8 +460,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.CANDLES)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.CANDLES,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editCandlesConf', args, cb)
