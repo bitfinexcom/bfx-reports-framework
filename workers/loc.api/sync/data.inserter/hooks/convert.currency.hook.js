@@ -101,12 +101,14 @@ class ConvertCurrencyHook extends DataInserterHook {
 
           return accum
         }, [])
-      const tableName = Number.isInteger(this._opts.syncQueueId)
-        ? SyncTempTablesManager.getTempTableName(
-            collName,
-            this._opts.syncQueueId
-          )
-        : collName
+      const tableName = this._getTableName(collName)
+
+      if (
+        this._shouldTempTableBeUsed() &&
+        !(await this.dao.hasTable(tableName))
+      ) {
+        return
+      }
 
       while (true) {
         count += 1
@@ -145,6 +147,21 @@ class ConvertCurrencyHook extends DataInserterHook {
         _id = elems[elems.length - 1]._id
       }
     }
+  }
+
+  _getTableName (collName) {
+    const tableName = this._shouldTempTableBeUsed()
+      ? SyncTempTablesManager.getTempTableName(
+          collName,
+          this._opts.syncQueueId
+        )
+      : collName
+
+    return tableName
+  }
+
+  _shouldTempTableBeUsed () {
+    return Number.isInteger(this._opts.syncQueueId)
   }
 }
 
