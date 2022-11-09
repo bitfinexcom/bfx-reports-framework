@@ -557,19 +557,24 @@ class DataChecker {
     const firstElemFilter = { $not: { currency: 'USD' } }
     const firstElemOrder = [['mts', 1]]
 
+    const tempLedgersTableName = SyncTempTablesManager.getTempTableName(
+      this.ALLOWED_COLLS.LEDGERS,
+      this.syncQueueId
+    )
+    const hasTempTable = await this.dao.hasTable(tempLedgersTableName)
+
     const firstMainElemLedgersPromise = this.dao.getElemInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       firstElemFilter,
       firstElemOrder
     )
-    const firstTempElemLedgersPromise = this.dao.getElemInCollBy(
-      SyncTempTablesManager.getTempTableName(
-        this.ALLOWED_COLLS.LEDGERS,
-        this.syncQueueId
-      ),
-      firstElemFilter,
-      firstElemOrder
-    )
+    const firstTempElemLedgersPromise = hasTempTable
+      ? this.dao.getElemInCollBy(
+          tempLedgersTableName,
+          firstElemFilter,
+          firstElemOrder
+        )
+      : null
 
     const [
       firstMainElemLedgers,
@@ -594,17 +599,22 @@ class DataChecker {
       projection: ['currency']
     }
 
+    const tempLedgersTableName = SyncTempTablesManager.getTempTableName(
+      this.ALLOWED_COLLS.LEDGERS,
+      this.syncQueueId
+    )
+    const hasTempTable = await this.dao.hasTable(tempLedgersTableName)
+
     const uniqueMainLedgersSymbsPromise = this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       ledgerParams
     )
-    const uniqueTempLedgersSymbsPromise = this.dao.getElemsInCollBy(
-      SyncTempTablesManager.getTempTableName(
-        this.ALLOWED_COLLS.LEDGERS,
-        this.syncQueueId
-      ),
-      ledgerParams
-    )
+    const uniqueTempLedgersSymbsPromise = hasTempTable
+      ? this.dao.getElemsInCollBy(
+          tempLedgersTableName,
+          ledgerParams
+        )
+      : []
     const currenciesSynonymousPromise = await this.currencyConverter
       .getCurrenciesSynonymous()
 
