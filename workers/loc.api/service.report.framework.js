@@ -570,7 +570,7 @@ class FrameworkReportService extends ReportService {
       return {
         pairs,
         currencies,
-        mapSymbols,
+        mapSymbols: mapSymbols.map((map) => [map?.key, map?.value]),
         inactiveCurrencies,
         inactiveSymbols
       }
