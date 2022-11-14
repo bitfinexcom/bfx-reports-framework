@@ -552,7 +552,10 @@ class SubAccount {
 
       this.authenticator.setUserSession({
         ...subAccountUser,
-        subUsers: processedSubUsers
+        subUsers: [
+          ...(subAccountUser?.subUsers ?? []),
+          ...processedSubUsers
+        ]
       })
 
       return {
