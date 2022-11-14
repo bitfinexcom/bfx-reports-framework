@@ -1,5 +1,8 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
+
 const {
   orderBy,
   merge
@@ -329,6 +332,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
     }
 
     while (true) {
+      await setImmediatePromise()
+
       count += 1
 
       if (count > 1000) break
