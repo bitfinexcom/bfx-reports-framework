@@ -140,6 +140,15 @@ class DataInserter extends EventEmitter {
       this.convertCurrencyHook,
       this.recalcSubAccountLedgersBalancesHook
     ])
+
+    /*
+     * This hook, without `syncQueueId`, covers sub-account recalc
+     * for non-temp ledgers table in cases when sub-users being added/removed
+     */
+    this._addAfterAllInsertsHooks(
+      this.recalcSubAccountLedgersBalancesHook,
+      { syncQueueId: null }
+    )
     this.syncUserStepManager.init({ syncQueueId: this.syncQueueId })
     this.dataChecker.init({
       methodCollMap: this._methodCollMap,
@@ -907,7 +916,7 @@ class DataInserter extends EventEmitter {
     }, { withoutWorkerThreads: true })
   }
 
-  _addAfterAllInsertsHooks (hook) {
+  _addAfterAllInsertsHooks (hook, opts) {
     const hookArr = Array.isArray(hook)
       ? hook
       : [hook]
@@ -923,7 +932,8 @@ class DataInserter extends EventEmitter {
       hook.setDataInserter(this)
       hook.init({
         syncColls: this.syncColls,
-        syncQueueId: this.syncQueueId
+        syncQueueId: this.syncQueueId,
+        ...opts
       })
     })
 
