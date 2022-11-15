@@ -1,5 +1,8 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
+
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const { CONVERT_TO } = require('../const')
 const DataInserterHook = require('./data.inserter.hook')
@@ -111,6 +114,8 @@ class ConvertCurrencyHook extends DataInserterHook {
       }
 
       while (true) {
+        await setImmediatePromise()
+
         count += 1
 
         if (count > 1000) break
