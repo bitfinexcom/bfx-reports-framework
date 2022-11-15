@@ -13,6 +13,9 @@ const {
   SubAccountUpdatingError,
   UserRemovingError
 } = require('../../errors')
+const SyncTempTablesManager = require(
+  '../data.inserter/sync.temp.tables.manager'
+)
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -548,6 +551,17 @@ class SubAccount {
           { _isBalanceRecalced: null },
           { withoutWorkerThreads: true }
         )
+
+        const tempTableNames = await this._getTempTableNames()
+
+        for (const ledgersTempTableName of tempTableNames) {
+          await this.dao.updateCollBy(
+            ledgersTempTableName,
+            { user_id: _id },
+            { _isBalanceRecalced: null },
+            { withoutWorkerThreads: true }
+          )
+        }
       }
 
       this.authenticator.setUserSession({
@@ -578,6 +592,21 @@ class SubAccount {
     })
 
     return res
+  }
+
+  async _getTempTableNames () {
+    const tempTableNamePattern = SyncTempTablesManager.getTempTableName(
+      this.TABLES_NAMES.LEDGERS,
+      '\\d+'
+    )
+    const regExp = new RegExp(tempTableNamePattern)
+
+    const tableNames = await this.dao.getTablesNames()
+    const tempTableNames = tableNames.filter((name) => (
+      regExp.test(name)
+    ))
+
+    return tempTableNames
   }
 }
 
