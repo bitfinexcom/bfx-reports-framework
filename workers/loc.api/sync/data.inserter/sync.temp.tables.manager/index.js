@@ -114,6 +114,23 @@ class SyncTempTablesManager {
   static getNamePrefix (id) {
     return `${BASE_NAME_PREFIX}${id}_`
   }
+
+  static async _getTempTableNamesByPattern (pattern, deps) {
+    const { dao } = deps ?? {}
+
+    const tempTableNamePattern = this.getTempTableName(
+      pattern,
+      '\\d+'
+    )
+    const regExp = new RegExp(tempTableNamePattern)
+
+    const tableNames = await dao.getTablesNames()
+    const tempTableNames = tableNames.filter((name) => (
+      regExp.test(name)
+    ))
+
+    return tempTableNames
+  }
 }
 
 decorateInjectable(SyncTempTablesManager, depsTypes)
