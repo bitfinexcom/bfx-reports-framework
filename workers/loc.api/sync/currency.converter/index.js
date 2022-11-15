@@ -419,16 +419,10 @@ class CurrencyConverter {
       return candle?.close
     }
 
-    const tempTableNamePattern = SyncTempTablesManager.getTempTableName(
+    const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
       this.candlesSchema.name,
-      '\\d+'
+      { dao: this.dao }
     )
-    const regExp = new RegExp(tempTableNamePattern)
-
-    const tableNames = await this.dao.getTablesNames()
-    const tempTableNames = tableNames.filter((name) => (
-      regExp.test(name)
-    ))
     const candles = Number.isInteger(candle?.[this.candlesSchema.dateFieldName])
       ? [candle]
       : []

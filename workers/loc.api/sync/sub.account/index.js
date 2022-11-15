@@ -552,7 +552,10 @@ class SubAccount {
           { withoutWorkerThreads: true }
         )
 
-        const tempTableNames = await this._getTempTableNames()
+        const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
+          this.TABLES_NAMES.LEDGERS,
+          { dao: this.dao }
+        )
 
         for (const ledgersTempTableName of tempTableNames) {
           await this.dao.updateCollBy(
@@ -592,21 +595,6 @@ class SubAccount {
     })
 
     return res
-  }
-
-  async _getTempTableNames () {
-    const tempTableNamePattern = SyncTempTablesManager.getTempTableName(
-      this.TABLES_NAMES.LEDGERS,
-      '\\d+'
-    )
-    const regExp = new RegExp(tempTableNamePattern)
-
-    const tableNames = await this.dao.getTablesNames()
-    const tempTableNames = tableNames.filter((name) => (
-      regExp.test(name)
-    ))
-
-    return tempTableNames
   }
 }
 
