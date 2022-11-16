@@ -248,7 +248,7 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  _setAnalysisLimit (limit = 1000) {
+  _setAnalysisLimit (limit = 400) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `analysis_limit = ${limit}`
