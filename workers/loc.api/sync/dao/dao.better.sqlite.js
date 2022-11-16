@@ -441,6 +441,8 @@ class BetterSqliteDAO extends DAO {
       }
 
       for (const sql of sqlArr) {
+        await setImmediatePromise()
+
         this.db.prepare(sql).run()
       }
     }, { isNotInTrans })
