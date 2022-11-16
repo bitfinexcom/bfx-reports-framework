@@ -73,8 +73,7 @@ class SubAccount {
             'isNotProtected'
           ],
           isDecryptedApiKeys: true,
-          isReturnedPassword: true,
-          withoutWorkerThreads: true
+          isReturnedPassword: true
         }
       )
 
@@ -115,8 +114,7 @@ class SubAccount {
             isReturnedFullUserData: true,
             isNotSetSession: true,
             isSubAccount: true,
-            isNotInTrans: true,
-            withoutWorkerThreads: true
+            isNotInTrans: true
           }
         )
       const { _id, email, token } = subAccountUser
@@ -172,8 +170,7 @@ class SubAccount {
                   'username'
                 ],
                 isDecryptedApiKeys: true,
-                isNotInTrans: true,
-                withoutWorkerThreads: true
+                isNotInTrans: true
               }
             )
           : { apiKey, apiSecret }
@@ -211,8 +208,7 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
-              masterUserId: masterUser.id,
-              withoutWorkerThreads: true
+              masterUserId: masterUser.id
             }
           )
 
@@ -223,8 +219,7 @@ class SubAccount {
           {
             masterUserId: _id,
             subUserId: subUser._id
-          },
-          { withoutWorkerThreads: true }
+          }
         )
 
         if (
@@ -243,7 +238,7 @@ class SubAccount {
         isSubAccount: true,
         token
       }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   async recoverPassword (args) {
@@ -273,8 +268,7 @@ class SubAccount {
           args,
           {
             isReturnedUser: true,
-            isNotInTrans: true,
-            withoutWorkerThreads: true
+            isNotInTrans: true
           }
         )
       const {
@@ -314,8 +308,7 @@ class SubAccount {
             {
               isReturnedUser: true,
               isNotInTrans: true,
-              isSubUser: true,
-              withoutWorkerThreads: true
+              isSubUser: true
             }
           )
         const isNotExistInDb = subUsers.every((subUser) => {
@@ -334,7 +327,7 @@ class SubAccount {
         isSubAccount,
         token
       }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   async updateSubAccount (args) {
@@ -365,8 +358,7 @@ class SubAccount {
           {
             isReturnedUser: true,
             isNotInTrans: true,
-            isNotSetSession: true,
-            withoutWorkerThreads: true
+            isNotSetSession: true
           }
         )
 
@@ -444,8 +436,7 @@ class SubAccount {
                   'username'
                 ],
                 isDecryptedApiKeys: true,
-                isNotInTrans: true,
-                withoutWorkerThreads: true
+                isNotInTrans: true
               }
             )
           : { apiKey, apiSecret }
@@ -493,8 +484,7 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
-              masterUserId: masterUser.id,
-              withoutWorkerThreads: true
+              masterUserId: masterUser.id
             }
           )
 
@@ -503,8 +493,7 @@ class SubAccount {
           {
             masterUserId: _id,
             subUserId: subUser._id
-          },
-          { withoutWorkerThreads: true }
+          }
         )
 
         processedSubUsers.push(subUser)
@@ -526,8 +515,7 @@ class SubAccount {
             $in: {
               _id: removingSubUsers.map(({ _id }) => _id)
             }
-          },
-          { withoutWorkerThreads: true }
+          }
         )
 
         if (
@@ -544,8 +532,7 @@ class SubAccount {
         await this.dao.updateCollBy(
           this.TABLES_NAMES.LEDGERS,
           { user_id: _id },
-          { _isBalanceRecalced: null },
-          { withoutWorkerThreads: true }
+          { _isBalanceRecalced: null }
         )
 
         const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
@@ -557,8 +544,7 @@ class SubAccount {
           await this.dao.updateCollBy(
             ledgersTempTableName,
             { user_id: _id },
-            { _isBalanceRecalced: null },
-            { withoutWorkerThreads: true }
+            { _isBalanceRecalced: null }
           )
         }
       }
@@ -585,7 +571,7 @@ class SubAccount {
           token
         }
       }
-    }, { withoutWorkerThreads: true })
+    })
 
     await this.dao.updateRecordOf(
       this.TABLES_NAMES.SCHEDULER,

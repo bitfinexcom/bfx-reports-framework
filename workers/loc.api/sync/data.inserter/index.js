@@ -913,7 +913,7 @@ class DataInserter extends EventEmitter {
 
       await this.syncTempTablesManager
         .removeTempDBStructureForCurrSync({ isNotInTrans: true })
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   _addAfterAllInsertsHooks (hook, opts) {

@@ -104,13 +104,13 @@ class BetterSqliteDAO extends DAO {
   }
 
   query (args, opts) {
-    const { withoutWorkerThreads } = { ...opts }
+    const { withWorkerThreads } = opts ?? {}
 
-    if (withoutWorkerThreads) {
-      return dbWorkerActions(this.db, args)
+    if (withWorkerThreads) {
+      return this.asyncQuery(args)
     }
 
-    return this.asyncQuery(args)
+    return dbWorkerActions(this.db, args)
   }
 
   async _proccesTrans (
@@ -183,7 +183,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   _createTriggerIfNotExists (opts = {}) {
@@ -197,7 +197,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   _createIndexisIfNotExists (opts = {}) {
@@ -211,7 +211,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   async getTablesNames () {
@@ -286,14 +286,14 @@ class BetterSqliteDAO extends DAO {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = ON'
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   disableForeignKeys () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = OFF'
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   async hasTable (name) {
@@ -376,7 +376,7 @@ class BetterSqliteDAO extends DAO {
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql: sqlArr,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
 
     if (!shouldWalCheckpointAndVacuumBeExecuted) {
       return res
@@ -556,7 +556,7 @@ class BetterSqliteDAO extends DAO {
     const {
       beforeTransFn,
       afterTransFn,
-      withoutWorkerThreads
+      withWorkerThreads
     } = { ...opts }
     const isArray = Array.isArray(sql)
     const sqlArr = isArray ? sql : [sql]
@@ -564,7 +564,7 @@ class BetterSqliteDAO extends DAO {
     if (sqlArr.length === 0) {
       return
     }
-    if (withoutWorkerThreads) {
+    if (!withWorkerThreads) {
       return this._beginTrans(async () => {
         const res = []
 
@@ -590,7 +590,7 @@ class BetterSqliteDAO extends DAO {
               action: MAIN_DB_WORKER_ACTIONS.RUN,
               sql,
               params: values
-            }, { withoutWorkerThreads }))
+            }))
           }
           if (hasExecQueryFn) {
             res.push(await execQueryFn())
@@ -640,7 +640,7 @@ class BetterSqliteDAO extends DAO {
         action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
         sql: isArray ? query : query[0],
         params: isArray ? params : params[0]
-      })
+      }, { withWorkerThreads })
 
       if (typeof afterTransFn === 'function') {
         await afterTransFn()
@@ -666,7 +666,7 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       isReplacedIfExists,
-      withoutWorkerThreads = true
+      withWorkerThreads
     } = { ...opts }
 
     const keys = Object.keys(obj)
@@ -687,7 +687,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads })
   }
 
   /**
@@ -852,7 +852,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: sqlParams
-    })
+    }, { withWorkerThreads: true })
     const res = isNotDataConverted
       ? _res
       : await convertData(_res, methodColl)
@@ -880,7 +880,7 @@ class BetterSqliteDAO extends DAO {
       haveSubUsers,
       isFilledSubUsers,
       sort = ['_id'],
-      withoutWorkerThreads
+      withWorkerThreads
     } = {}
   ) {
     return this.query({
@@ -896,7 +896,7 @@ class BetterSqliteDAO extends DAO {
           sort
         }
       }
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads })
   }
 
   /**
@@ -926,7 +926,7 @@ class BetterSqliteDAO extends DAO {
           limit
         }
       }
-    })
+    }, { withWorkerThreads: true })
   }
 
   /**
@@ -986,7 +986,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: { ...values, ...limitVal }
-    })
+    }, { withWorkerThreads: true })
   }
 
   /**
@@ -1011,7 +1011,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.GET,
       sql,
       params
-    })
+    }, { withWorkerThreads: true })
   }
 
   /**
@@ -1024,7 +1024,7 @@ class BetterSqliteDAO extends DAO {
     opts
   ) {
     const {
-      withoutWorkerThreads = true
+      withWorkerThreads
     } = opts ?? {}
     const {
       where,
@@ -1046,7 +1046,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads })
   }
 
   /**
@@ -1108,7 +1108,7 @@ class BetterSqliteDAO extends DAO {
     const res = await this.query({
       action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
       params: { data, name }
-    }, { withoutWorkerThreads: true })
+    })
 
     if (shouldNotThrowError) {
       return res
@@ -1138,7 +1138,7 @@ class BetterSqliteDAO extends DAO {
     }
 
     const {
-      withoutWorkerThreads = true
+      withWorkerThreads
     } = { ...opts }
     const {
       where,
@@ -1151,7 +1151,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads })
   }
 
   /**
@@ -1196,7 +1196,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params: { ...values, ...limitVal }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   /**
@@ -1230,7 +1230,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads: true })
+    })
   }
 }
 

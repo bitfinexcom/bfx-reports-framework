@@ -72,7 +72,7 @@ class Authenticator {
       isNotSetSession = false,
       isNotInTrans = false,
       masterUserId,
-      withoutWorkerThreads = true
+      withWorkerThreads = false
     } = { ...params }
 
     if (
@@ -117,7 +117,7 @@ class Authenticator {
       ? null
       : await this.getUser(
         { email, username, isSubAccount, isSubUser },
-        { isNotInTrans, withoutWorkerThreads }
+        { isNotInTrans, withWorkerThreads }
       )
 
     if (
@@ -153,7 +153,7 @@ class Authenticator {
         passwordHash,
         isNotProtected: serializeVal(isNotProtected)
       },
-      { isNotInTrans, withoutWorkerThreads }
+      { isNotInTrans, withWorkerThreads }
     )
 
     const token = uuidv4()
@@ -199,7 +199,7 @@ class Authenticator {
       isReturnedUser,
       isNotInTrans,
       isNotSetSession,
-      withoutWorkerThreads = true
+      withWorkerThreads = false
     } = { ...params }
 
     const user = await this.verifyUser(
@@ -216,7 +216,7 @@ class Authenticator {
         isFilledSubUsers: true,
         isReturnedPassword: true,
         isNotInTrans,
-        withoutWorkerThreads
+        withWorkerThreads
       }
     )
     const {
@@ -270,7 +270,7 @@ class Authenticator {
         active: freshUserData.active,
         isDataFromDb: freshUserData.isDataFromDb
       },
-      { withoutWorkerThreads }
+      { withWorkerThreads }
     )
 
     if (res && res.changes < 1) {
@@ -380,7 +380,7 @@ class Authenticator {
       isReturnedUser = false,
       isNotInTrans = false,
       isSubUser = false,
-      withoutWorkerThreads = true
+      withWorkerThreads = false
     } = { ...params }
 
     if (
@@ -418,7 +418,7 @@ class Authenticator {
       {
         isFilledSubUsers: true,
         isNotInTrans,
-        withoutWorkerThreads
+        withWorkerThreads
       }
     )
 
@@ -470,7 +470,7 @@ class Authenticator {
         isDataFromDb: freshUserData.isDataFromDb,
         isNotProtected: isNotProtected
       },
-      { withoutWorkerThreads }
+      { withWorkerThreads }
     )
 
     if (res && res.changes < 1) {
@@ -532,7 +532,7 @@ class Authenticator {
       isNotInTrans,
       isAppliedProjectionToSubUser,
       subUsersProjection,
-      withoutWorkerThreads
+      withWorkerThreads
     } = { ...params }
 
     if (
@@ -549,7 +549,7 @@ class Authenticator {
         {
           isNotInTrans,
           isFilledSubUsers,
-          withoutWorkerThreads,
+          withWorkerThreads,
           ...pwdParam
         }
       )
@@ -748,13 +748,13 @@ class Authenticator {
   async createUser (data, params) {
     const {
       isNotInTrans,
-      withoutWorkerThreads
+      withWorkerThreads
     } = { ...params }
 
     const { lastInsertRowid } = await this.dao.insertElemToDb(
       this.TABLES_NAMES.USERS,
       data,
-      { withoutWorkerThreads }
+      { withWorkerThreads }
     )
 
     if (!Number.isInteger(lastInsertRowid)) {
@@ -763,7 +763,7 @@ class Authenticator {
 
     const user = await this.getUser(
       { _id: lastInsertRowid },
-      { isNotInTrans, withoutWorkerThreads }
+      { isNotInTrans, withWorkerThreads }
     )
 
     if (

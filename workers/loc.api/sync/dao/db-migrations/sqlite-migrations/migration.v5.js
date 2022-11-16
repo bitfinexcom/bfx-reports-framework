@@ -11,8 +11,7 @@ class MigrationV5 extends AbstractMigration {
     await this.dao.executeQueriesInTrans(
       'DELETE FROM users',
       {
-        beforeTransFn: () => this.dao.enableForeignKeys(),
-        withoutWorkerThreads: true
+        beforeTransFn: () => this.dao.enableForeignKeys()
       }
     )
     await this.dao.disableForeignKeys()
