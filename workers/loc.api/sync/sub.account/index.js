@@ -1,5 +1,7 @@
 'use strict'
 
+const { orderBy } = require('lodash')
+
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
@@ -336,11 +338,11 @@ class SubAccount {
   }
 
   async updateSubAccount (args) {
-    const { auth: subAccountAuth, params } = { ...args }
+    const { auth: subAccountAuth, params } = args ?? {}
     const {
       addingSubUsers = [],
       removingSubUsersByEmails = []
-    } = { ...params }
+    } = params ?? {}
 
     await this.dao.updateRecordOf(
       this.TABLES_NAMES.SCHEDULER,
@@ -378,9 +380,7 @@ class SubAccount {
         ) ||
         addingSubUsers.some(isSubAccountApiKeys) ||
         removingSubUsersByEmails.some((user) => (
-          !user ||
-          typeof user !== 'object' ||
-          typeof user.email !== 'string'
+          typeof user?.email !== 'string'
         ))
       ) {
         throw new SubAccountUpdatingError()
@@ -394,11 +394,9 @@ class SubAccount {
         isNotProtected
       } = subAccountUser
 
-      const masterUser = subUsers.find((subUser) => {
-        const { email: _email } = { ...subUser }
-
-        return _email === email
-      })
+      const masterUser = subUsers.find((subUser) => (
+        subUser?.email === email
+      ))
 
       const addingSubUsersAuth = [
         ...addingSubUsers,
@@ -414,7 +412,7 @@ class SubAccount {
           password,
           email,
           token
-        } = { ...subUserAuth }
+        } = subUserAuth ?? {}
 
         const isAuthCheckedInDb = (
           (
@@ -515,11 +513,9 @@ class SubAccount {
 
       const removingSubUsers = subUsers.filter((subUser) => (
         Array.isArray(removingSubUsersByEmails) &&
-        removingSubUsersByEmails.some((removingSubUserByEmail) => {
-          const { email } = { ...removingSubUserByEmail }
-
-          return email === subUser.email
-        })
+        removingSubUsersByEmails.some((removingSubUserByEmail) => (
+          removingSubUserByEmail?.email === subUser.email
+        ))
       ))
 
       if (removingSubUsers.length > 0) {
@@ -567,16 +563,22 @@ class SubAccount {
         }
       }
 
-      this.authenticator.setUserSession({
+      const refreshedSubUsers = orderBy(
+        [...subUsers, ...addedSubUsers],
+        ['_id'],
+        ['asc']
+      ).filter((subUser) => (
+        removingSubUsers.every(({ _id }) => _id !== subUser?._id)
+      ))
+      const refreshedSubAccountUser = {
         ...subAccountUser,
-        subUsers: [
-          ...(subAccountUser?.subUsers ?? []),
-          ...processedSubUsers
-        ]
-      })
+        subUsers: refreshedSubUsers
+      }
+
+      this.authenticator.setUserSession(refreshedSubAccountUser)
 
       return {
-        subAccountUser,
+        subAccountUser: refreshedSubAccountUser,
         res: {
           email,
           isSubAccount: true,
