@@ -46,7 +46,8 @@ module.exports = (
       ...params,
       limit,
       end,
-      start
+      start,
+      isSyncRequest: true
     }
   }
 }
