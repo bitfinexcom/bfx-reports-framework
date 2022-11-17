@@ -250,6 +250,7 @@ module.exports = ({
           searchClosePriceAndSumAmount,
           [
             TYPES.RService,
+            TYPES.GetDataFromApi,
             TYPES.DAO,
             TYPES.ALLOWED_COLLS
           ]

@@ -28,6 +28,7 @@ const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
   TYPES.RService,
+  TYPES.GetDataFromApi,
   TYPES.Crypto,
   TYPES.SyncFactory
 ]
@@ -36,12 +37,14 @@ class Authenticator {
     dao,
     TABLES_NAMES,
     rService,
+    getDataFromApi,
     crypto,
     syncFactory
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.rService = rService
+    this.getDataFromApi = getDataFromApi
     this.crypto = crypto
     this.syncFactory = syncFactory
 
@@ -98,7 +101,14 @@ class Authenticator {
       id
     } = isDisabledApiKeysVerification
       ? { ...auth }
-      : await this.rService._checkAuthInApi(args)
+      : await this.getDataFromApi({
+        getData: (s, args) => this.rService._checkAuthInApi(args),
+        args,
+        callerName: 'AUTHENTICATOR',
+        eNetErrorAttemptsTimeframeMin: 10 / 60,
+        eNetErrorAttemptsTimeoutMs: 1000,
+        shouldNotInterrupt: true
+      })
 
     if (
       !email ||
@@ -400,7 +410,14 @@ class Authenticator {
       email,
       timezone,
       username: uName
-    } = await this.rService._checkAuthInApi(args)
+    } = await this.getDataFromApi({
+      getData: (s, args) => this.rService._checkAuthInApi(args),
+      args,
+      callerName: 'AUTHENTICATOR',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
 
     if (
       !email ||

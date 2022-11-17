@@ -25,6 +25,7 @@ const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.RService,
+  TYPES.GetDataFromApi,
   TYPES.DAO,
   TYPES.SyncSchema,
   TYPES.FOREX_SYMBS,
@@ -34,6 +35,7 @@ const depsTypes = (TYPES) => [
 class CurrencyConverter {
   constructor (
     rService,
+    getDataFromApi,
     dao,
     syncSchema,
     FOREX_SYMBS,
@@ -41,6 +43,7 @@ class CurrencyConverter {
     SYNC_API_METHODS
   ) {
     this.rService = rService
+    this.getDataFromApi = getDataFromApi
     this.dao = dao
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
@@ -58,9 +61,22 @@ class CurrencyConverter {
     this.currenciesUpdatedAt = new Date()
     this.currencies = []
     this.currenciesSynonymous = new Map()
+  }
 
-    this._getPublicTrades = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+  async _getPublicTrades (args) {
+    const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
       .bind(this.rService)
+
+    const res = await this.getDataFromApi({
+      getData: (s, args) => getDataFn(args),
+      args,
+      callerName: 'CURRENCY_CONVERTER',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
+
+    return res
   }
 
   async getCurrenciesSynonymous () {
@@ -83,7 +99,13 @@ class CurrencyConverter {
       this.currencies.length === 0
     ) {
       try {
-        this.currencies = await this.rService._getCurrencies()
+        this.currencies = await this.getDataFromApi({
+          getData: this.rService._getCurrencies.bind(this.rService),
+          callerName: 'CURRENCY_CONVERTER',
+          eNetErrorAttemptsTimeframeMin: 10 / 60,
+          eNetErrorAttemptsTimeoutMs: 1000,
+          shouldNotInterrupt: true
+        })
 
         if (
           !Array.isArray(this.currencies) ||
