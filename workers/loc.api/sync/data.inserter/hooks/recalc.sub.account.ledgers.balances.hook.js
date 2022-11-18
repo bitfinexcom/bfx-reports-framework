@@ -202,7 +202,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
     firstGroupedRecords = [],
     tempTableName
   ) {
-    const order = [['mts', -1], ['_id', 1]]
+    const order = [['mts', -1], ['id', -1]]
     const res = []
 
     for (const elem of firstGroupedRecords) {
@@ -260,14 +260,16 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
               filter,
               order
             )
-          : emptyRes
+          : null
+        const itemsFromDb = [itemFromMainTable, itemFromTempTable]
+          .filter((item) => (
+            Number.isFinite(item?.mts) &&
+            Number.isFinite(item?.id)
+          ))
         const itemFromDb = orderBy(
-          [
-            (itemFromMainTable ?? emptyRes),
-            (itemFromTempTable ?? emptyRes)
-          ],
-          ['mts'],
-          ['desc']
+          itemsFromDb,
+          ['mts', 'id'],
+          ['desc', 'desc']
         )[0]
 
         res.push({
@@ -320,7 +322,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         $isNotNull: 'subUserId',
         $isNull: '_isBalanceRecalced'
       },
-      [['mts', 1], ['_id', -1]]
+      [['mts', 1], ['id', 1]]
     )
 
     let { mts } = firstNotRecalcedElem ?? {}
@@ -346,7 +348,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
             $nin: { _id: skipedIds },
             $isNotNull: 'subUserId'
           },
-          sort: [['mts', 1], ['_id', -1]],
+          sort: [['mts', 1], ['id', 1]],
           limit: 20000
         }
       )
