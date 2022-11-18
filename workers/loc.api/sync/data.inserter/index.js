@@ -42,16 +42,13 @@ const MESS_ERR_UNAUTH = 'ERR_AUTH_UNAUTHORIZED'
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.RService,
   TYPES.DAO,
   TYPES.ApiMiddleware,
   TYPES.SyncSchema,
-  TYPES.TABLES_NAMES,
   TYPES.ALLOWED_COLLS,
-  TYPES.SYNC_API_METHODS,
-  TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.ConvertCurrencyHook,
+  TYPES.RecalcSubAccountLedgersBalancesHook,
   TYPES.RecalcSubAccountLedgersBalancesHook,
   TYPES.DataChecker,
   TYPES.SyncInterrupter,
@@ -62,17 +59,14 @@ const depsTypes = (TYPES) => [
 ]
 class DataInserter extends EventEmitter {
   constructor (
-    rService,
     dao,
     apiMiddleware,
     syncSchema,
-    TABLES_NAMES,
     ALLOWED_COLLS,
-    SYNC_API_METHODS,
-    FOREX_SYMBS,
     authenticator,
     convertCurrencyHook,
     recalcSubAccountLedgersBalancesHook,
+    recalcSubAccountLedgersBalancesHookWithoutTempTable,
     dataChecker,
     syncInterrupter,
     wsEventEmitter,
@@ -82,17 +76,14 @@ class DataInserter extends EventEmitter {
   ) {
     super()
 
-    this.rService = rService
     this.dao = dao
     this.apiMiddleware = apiMiddleware
     this.syncSchema = syncSchema
-    this.TABLES_NAMES = TABLES_NAMES
     this.ALLOWED_COLLS = ALLOWED_COLLS
-    this.SYNC_API_METHODS = SYNC_API_METHODS
-    this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
+    this.recalcSubAccountLedgersBalancesHookWithoutTempTable = recalcSubAccountLedgersBalancesHookWithoutTempTable
     this.dataChecker = dataChecker
     this.syncInterrupter = syncInterrupter
     this.wsEventEmitter = wsEventEmitter
@@ -146,7 +137,7 @@ class DataInserter extends EventEmitter {
      * for non-temp ledgers table in cases when sub-users being added/removed
      */
     this._addAfterAllInsertsHooks(
-      this.recalcSubAccountLedgersBalancesHook,
+      this.recalcSubAccountLedgersBalancesHookWithoutTempTable,
       { syncQueueId: null }
     )
     this.syncUserStepManager.init({ syncQueueId: this.syncQueueId })
