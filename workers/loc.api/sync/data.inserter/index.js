@@ -211,8 +211,6 @@ class DataInserter extends EventEmitter {
         methodCollMap
       })
 
-      await this._optimizeDb()
-
       progress = currProgress
       count += 1
     }
@@ -221,8 +219,6 @@ class DataInserter extends EventEmitter {
       methodCollMap: pubMethodCollMap
     } = await this._insertNewPublicDataToDb(progress)
 
-    await this.wsEventEmitter
-      .emitSyncingStep('DB_PREPARATION')
     await this._afterAllInserts({
       syncedUsersMap,
       pubMethodCollMap
@@ -249,6 +245,9 @@ class DataInserter extends EventEmitter {
     ) {
       return
     }
+
+    await this.wsEventEmitter
+      .emitSyncingStep('DB_PREPARATION')
 
     for (const hook of this._afterAllInsertsHooks) {
       if (this._isInterrupted) {
@@ -839,6 +838,9 @@ class DataInserter extends EventEmitter {
   }
 
   async _updateSyncInfo (params) {
+    await this.wsEventEmitter
+      .emitSyncingStep('MOVING_DATA_FROM_TEMP_TABLES')
+
     await this.dao.executeQueriesInTrans(async () => {
       await this.syncTempTablesManager
         .moveTempTableDataToMain({ isNotInTrans: true })
