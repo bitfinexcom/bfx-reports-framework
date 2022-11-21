@@ -211,6 +211,8 @@ class DataInserter extends EventEmitter {
         methodCollMap
       })
 
+      await this._optimizeDb()
+
       progress = currProgress
       count += 1
     }
@@ -226,9 +228,7 @@ class DataInserter extends EventEmitter {
       pubMethodCollMap
     })
 
-    if (typeof this.dao.optimize === 'function') {
-      await this.dao.optimize()
-    }
+    await this._optimizeDb()
 
     if (this._isInterrupted) {
       return
@@ -951,6 +951,16 @@ class DataInserter extends EventEmitter {
     }
 
     this.emit('progress', progress)
+  }
+
+  async _optimizeDb () {
+    if (typeof this.dao.optimize !== 'function') {
+      return
+    }
+
+    await this.wsEventEmitter
+      .emitSyncingStep('DB_OPTIMIZATION')
+    await this.dao.optimize()
   }
 
   _getUserIds (auth) {
