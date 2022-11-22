@@ -1,5 +1,8 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
+
 const EventEmitter = require('events')
 const {
   cloneDeep
@@ -855,6 +858,8 @@ class DataInserter extends EventEmitter {
       for (const [, { auth, methodCollMap }] of syncedUsersMap) {
         const { userId, subUserId } = this._getUserIds(auth)
         const updatesForOneUserPromises = []
+
+        updatesForOneUserPromises.push(setImmediatePromise())
 
         for (const [collName, schema] of methodCollMap) {
           if (
