@@ -49,24 +49,30 @@ class SyncTempTablesManager {
   }
 
   async removeTempDBStructureForCurrSync (opts) {
-    const { isNotInTrans } = opts ?? {}
+    const {
+      isNotInTrans,
+      doNotQueueQuery
+    } = opts ?? {}
 
     await this.dao.dropAllTables({
       expectations: [this.getCurrNamePrefix()],
       isNotStrictEqual: true,
-      isNotInTrans
+      isNotInTrans,
+      doNotQueueQuery
     })
   }
 
   async moveTempTableDataToMain (opts) {
     const {
       isNotInTrans,
+      doNotQueueQuery,
       isStrictEqual
     } = opts ?? {}
 
     await this.dao.moveTempTableDataToMain({
       namePrefix: this.getCurrNamePrefix(),
       isNotInTrans,
+      doNotQueueQuery,
       isStrictEqual
     })
   }
@@ -115,8 +121,9 @@ class SyncTempTablesManager {
     return `${BASE_NAME_PREFIX}${id}_`
   }
 
-  static async _getTempTableNamesByPattern (pattern, deps) {
+  static async _getTempTableNamesByPattern (pattern, deps, opts) {
     const { dao } = deps ?? {}
+    const { doNotQueueQuery } = opts ?? {}
 
     const tempTableNamePattern = this.getTempTableName(
       pattern,
@@ -124,7 +131,7 @@ class SyncTempTablesManager {
     )
     const regExp = new RegExp(tempTableNamePattern)
 
-    const tableNames = await dao.getTablesNames()
+    const tableNames = await dao.getTablesNames({ doNotQueueQuery })
     const tempTableNames = tableNames.filter((name) => (
       regExp.test(name)
     ))

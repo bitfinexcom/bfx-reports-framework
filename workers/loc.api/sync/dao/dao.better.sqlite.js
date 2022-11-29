@@ -83,6 +83,9 @@ class BetterSqliteDAO extends DAO {
     this.asyncQuery = dbFac.asyncQuery.bind(dbFac)
     this._initializeWalCheckpointRestart = dbFac
       .initializeWalCheckpointRestart.bind(dbFac)
+
+    this._querySet = new Set()
+    this._transQuerySet = new Set()
   }
 
   async restartDb (opts = {}) {
@@ -103,14 +106,39 @@ class BetterSqliteDAO extends DAO {
     await this._vacuum()
   }
 
-  query (args, opts) {
-    const { withWorkerThreads } = opts ?? {}
+  async query (args, opts) {
+    const {
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
 
     if (withWorkerThreads) {
-      return this.asyncQuery(args)
+      return await this.asyncQuery(args)
+    }
+    if (!doNotQueueQuery) {
+      await Promise.allSettled(this._transQuerySet)
     }
 
-    return dbWorkerActions(this.db, args)
+    const newQueryPromise = (async () => {
+      return await dbWorkerActions(this.db, args)
+    })()
+
+    if (doNotQueueQuery) {
+      return await newQueryPromise
+    }
+
+    this._querySet.add(newQueryPromise)
+
+    try {
+      const res = await newQueryPromise
+      this._querySet.delete(newQueryPromise)
+
+      return res
+    } catch (err) {
+      this._querySet.delete(newQueryPromise)
+
+      throw err
+    }
   }
 
   async _proccesTrans (
@@ -135,6 +163,7 @@ class BetterSqliteDAO extends DAO {
       const res = await asyncExecQuery()
 
       this.db.prepare('COMMIT').run()
+      isTransBegun = false
 
       if (typeof afterTransFn === 'function') {
         await afterTransFn()
@@ -142,8 +171,13 @@ class BetterSqliteDAO extends DAO {
 
       return res
     } catch (err) {
+      // Transaction was forcefully rolled back
+      if (!this.db.inTransaction) {
+        throw err
+      }
       if (isTransBegun) {
         this.db.prepare('ROLLBACK').run()
+        isTransBegun = false
       }
       if (typeof afterTransFn === 'function') {
         await afterTransFn()
@@ -157,15 +191,39 @@ class BetterSqliteDAO extends DAO {
     asyncExecQuery,
     opts = {}
   ) {
-    const { isNotInTrans } = opts ?? {}
+    const {
+      isNotInTrans,
+      doNotQueueQuery
+    } = opts ?? {}
 
-    if (isNotInTrans) {
-      return await asyncExecQuery()
+    await Promise.allSettled(this._querySet)
+
+    const newTransQueryPromise = (async () => {
+      if (isNotInTrans) {
+        return await asyncExecQuery()
+      }
+
+      return await manageTransaction(
+        () => this._proccesTrans(asyncExecQuery, opts)
+      )
+    })()
+
+    if (doNotQueueQuery) {
+      return await newTransQueryPromise
     }
 
-    return await manageTransaction(
-      () => this._proccesTrans(asyncExecQuery, opts)
-    )
+    this._transQuerySet.add(newTransQueryPromise)
+
+    try {
+      const res = await newTransQueryPromise
+      this._transQuerySet.delete(newTransQueryPromise)
+
+      return res
+    } catch (err) {
+      this._transQuerySet.delete(newTransQueryPromise)
+
+      throw err
+    }
   }
 
   _createTablesIfNotExists (opts = {}) {
@@ -214,12 +272,13 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  async getTablesNames () {
+  async getTablesNames (opts) {
+    const { doNotQueueQuery } = opts ?? {}
     const sql = getTablesNamesQuery()
     const data = await this.query({
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql
-    })
+    }, { doNotQueueQuery })
 
     if (!Array.isArray(data)) {
       return []
@@ -255,9 +314,12 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  _tryToExecuteRollback () {
+  async _tryToExecuteRollback () {
     try {
-      this.db.prepare('ROLLBACK').run()
+      await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.RUN,
+        sql: 'ROLLBACK'
+      })
     } catch (err) {}
   }
 
@@ -312,7 +374,8 @@ class BetterSqliteDAO extends DAO {
     const {
       exceptions = [],
       expectations = [],
-      isNotStrictEqual = false
+      isNotStrictEqual,
+      doNotQueueQuery
     } = opts ?? {}
 
     const _exceptions = Array.isArray(exceptions)
@@ -321,7 +384,7 @@ class BetterSqliteDAO extends DAO {
     const _expectations = Array.isArray(expectations)
       ? expectations
       : []
-    const tableNames = await this.getTablesNames()
+    const tableNames = await this.getTablesNames({ doNotQueueQuery })
     const filteredTableNames = tableNames.filter((name) => (
       _exceptions.every((exc) => (
         name !== exc &&
@@ -342,6 +405,7 @@ class BetterSqliteDAO extends DAO {
   async dropAllTables (opts = {}) {
     const {
       isNotInTrans,
+      doNotQueueQuery,
       shouldWalCheckpointAndVacuumBeExecuted
     } = opts ?? {}
     const filteredTableNames = await this.getFilteredTablesNames(opts)
@@ -357,7 +421,10 @@ class BetterSqliteDAO extends DAO {
       const res = []
 
       for (const sql of sqlArr) {
-        const oneRes = this.db.prepare(sql).run()
+        const oneRes = await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql
+        }, { doNotQueueQuery })
 
         res.push(oneRes)
       }
@@ -395,6 +462,7 @@ class BetterSqliteDAO extends DAO {
     const {
       namePrefix,
       isNotInTrans,
+      doNotQueueQuery,
       isStrictEqual
     } = opts ?? {}
 
@@ -416,7 +484,7 @@ class BetterSqliteDAO extends DAO {
     })
 
     await this._beginTrans(async () => {
-      const tableNames = await this.getTablesNames()
+      const tableNames = await this.getTablesNames({ doNotQueueQuery })
       const filteredTempTableNames = tableNames.filter((name) => (
         name.includes(namePrefix)
       ))
@@ -443,7 +511,10 @@ class BetterSqliteDAO extends DAO {
       for (const sql of sqlArr) {
         await setImmediatePromise()
 
-        this.db.prepare(sql).run()
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql
+        }, { doNotQueueQuery })
       }
     }, { isNotInTrans })
 
@@ -461,7 +532,7 @@ class BetterSqliteDAO extends DAO {
 
     // In case if the app is closed with non-finished transaction
     // try to execute `ROLLBACK` sql query to avoid locking the DB
-    this._tryToExecuteRollback()
+    await this._tryToExecuteRollback()
   }
 
   /**
@@ -590,7 +661,7 @@ class BetterSqliteDAO extends DAO {
               action: MAIN_DB_WORKER_ACTIONS.RUN,
               sql,
               params: values
-            }))
+            }, { doNotQueueQuery: true }))
           }
           if (hasExecQueryFn) {
             res.push(await execQueryFn())
@@ -666,8 +737,9 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       isReplacedIfExists,
-      withWorkerThreads
-    } = { ...opts }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
 
     const keys = Object.keys(obj)
     const projection = getProjectionQuery(keys)
@@ -687,7 +759,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
@@ -738,7 +810,7 @@ class BetterSqliteDAO extends DAO {
         sql: `INSERT${replace}
           INTO ${name}(${projection})
           VALUES (${placeholders})`,
-        param: placeholderVal
+        params: placeholderVal
       })
     }
 
@@ -747,23 +819,20 @@ class BetterSqliteDAO extends DAO {
     }
 
     await this._beginTrans(async () => {
-      for (const { sql, param } of queries) {
+      for (const { sql, params } of queries) {
         await setImmediatePromise()
 
-        const stm = this.db.prepare(sql)
-
-        if (typeof param === 'undefined') {
-          stm.run()
-
-          continue
-        }
-
-        stm.run(param)
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql,
+          params
+        }, { doNotQueueQuery: true })
       }
     })
   }
 
   /**
+   * TODO: redundant, it can be removed
    * To prevent blocking the Event Loop applies setImmediate
    * and handles a transaction manually
    * @override
@@ -872,17 +941,17 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
-  getUser (
-    filter,
-    {
+  getUser (filter, opts) {
+    const {
       isNotInTrans,
       haveNotSubUsers,
       haveSubUsers,
       isFilledSubUsers,
       sort = ['_id'],
-      withWorkerThreads
-    } = {}
-  ) {
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
+
     return this.query({
       action: DB_WORKER_ACTIONS.GET_USERS,
       params: {
@@ -896,7 +965,7 @@ class BetterSqliteDAO extends DAO {
           sort
         }
       }
-    }, { withWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
@@ -1024,7 +1093,8 @@ class BetterSqliteDAO extends DAO {
     opts
   ) {
     const {
-      withWorkerThreads
+      withWorkerThreads,
+      doNotQueueQuery
     } = opts ?? {}
     const {
       where,
@@ -1046,7 +1116,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
@@ -1088,10 +1158,14 @@ class BetterSqliteDAO extends DAO {
     }
 
     await this._beginTrans(async () => {
-      for (const [i, param] of params.entries()) {
+      for (const [i, paramsItem] of params.entries()) {
         await setImmediatePromise()
 
-        this.db.prepare(sql[i]).run(param)
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql: sql[i],
+          params: paramsItem
+        }, { doNotQueueQuery: true })
       }
     })
   }
@@ -1124,26 +1198,29 @@ class BetterSqliteDAO extends DAO {
   async removeElemsFromDb (
     name,
     auth,
-    data = {},
+    data,
     opts
   ) {
+    const _data = data ?? {}
+
     if (auth) {
-      const { _id } = { ...auth }
+      const { _id } = auth ?? {}
 
       if (!Number.isInteger(_id)) {
         throw new AuthError()
       }
 
-      data.user_id = _id
+      _data.user_id = _id
     }
 
     const {
-      withWorkerThreads
-    } = { ...opts }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
     const {
       where,
       values: params
-    } = getWhereQuery(data)
+    } = getWhereQuery(_data)
 
     const sql = `DELETE FROM ${name} ${where}`
 
@@ -1151,7 +1228,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**

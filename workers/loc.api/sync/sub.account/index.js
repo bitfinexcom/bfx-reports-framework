@@ -41,16 +41,15 @@ class SubAccount {
   }
 
   async createSubAccount (args) {
-    const { auth, params } = { ...args }
     const {
       email,
       password,
       token
-    } = { ...auth }
+    } = args?.auth ?? {}
     const {
       subAccountPassword,
       subAccountApiKeys
-    } = { ...params }
+    } = args?.params ?? {}
 
     const masterUser = await this.authenticator
       .verifyUser(
@@ -114,7 +113,8 @@ class SubAccount {
             isReturnedFullUserData: true,
             isNotSetSession: true,
             isSubAccount: true,
-            isNotInTrans: true
+            isNotInTrans: true,
+            doNotQueueQuery: true
           }
         )
       const { _id, email, token } = subAccountUser
@@ -138,7 +138,7 @@ class SubAccount {
           password,
           email,
           token
-        } = { ...subUserAuth }
+        } = subUserAuth ?? {}
 
         const isAuthCheckedInDb = (
           (
@@ -170,7 +170,8 @@ class SubAccount {
                   'username'
                 ],
                 isDecryptedApiKeys: true,
-                isNotInTrans: true
+                isNotInTrans: true,
+                doNotQueueQuery: true
               }
             )
           : { apiKey, apiSecret }
@@ -208,6 +209,7 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
+              doNotQueueQuery: true,
               masterUserId: masterUser.id
             }
           )
@@ -219,7 +221,8 @@ class SubAccount {
           {
             masterUserId: _id,
             subUserId: subUser._id
-          }
+          },
+          { doNotQueueQuery: true }
         )
 
         if (
@@ -242,17 +245,16 @@ class SubAccount {
   }
 
   async recoverPassword (args) {
-    const { auth, params } = { ...args }
     const {
       apiKey,
       apiSecret,
       newPassword,
       isSubAccount,
       isNotProtected
-    } = { ...auth }
+    } = args?.auth ?? {}
     const {
       subAccountApiKeys
-    } = { ...params }
+    } = args?.params ?? {}
 
     if (
       !isSubAccount ||
@@ -268,7 +270,8 @@ class SubAccount {
           args,
           {
             isReturnedUser: true,
-            isNotInTrans: true
+            isNotInTrans: true,
+            doNotQueueQuery: true
           }
         )
       const {
@@ -276,7 +279,7 @@ class SubAccount {
         email,
         isSubAccount,
         token
-      } = { ...subAccount }
+      } = subAccount ?? {}
 
       if (
         !Array.isArray(subUsers) ||
@@ -294,7 +297,7 @@ class SubAccount {
         const {
           apiKey,
           apiSecret
-        } = { ...subUserAuth }
+        } = subUserAuth ?? {}
         const refreshedSubUser = await this.authenticator
           .recoverPassword(
             {
@@ -308,6 +311,7 @@ class SubAccount {
             {
               isReturnedUser: true,
               isNotInTrans: true,
+              doNotQueueQuery: true,
               isSubUser: true
             }
           )
@@ -358,6 +362,7 @@ class SubAccount {
           {
             isReturnedUser: true,
             isNotInTrans: true,
+            doNotQueueQuery: true,
             isNotSetSession: true
           }
         )
@@ -436,7 +441,8 @@ class SubAccount {
                   'username'
                 ],
                 isDecryptedApiKeys: true,
-                isNotInTrans: true
+                isNotInTrans: true,
+                doNotQueueQuery: true
               }
             )
           : { apiKey, apiSecret }
@@ -484,6 +490,7 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
+              doNotQueueQuery: true,
               masterUserId: masterUser.id
             }
           )
@@ -493,7 +500,8 @@ class SubAccount {
           {
             masterUserId: _id,
             subUserId: subUser._id
-          }
+          },
+          { doNotQueueQuery: true }
         )
 
         processedSubUsers.push(subUser)
@@ -515,7 +523,8 @@ class SubAccount {
             $in: {
               _id: removingSubUsers.map(({ _id }) => _id)
             }
-          }
+          },
+          { doNotQueueQuery: true }
         )
 
         if (
@@ -532,19 +541,22 @@ class SubAccount {
         await this.dao.updateCollBy(
           this.TABLES_NAMES.LEDGERS,
           { user_id: _id },
-          { _isBalanceRecalced: null }
+          { _isBalanceRecalced: null },
+          { doNotQueueQuery: true }
         )
 
         const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
           this.TABLES_NAMES.LEDGERS,
-          { dao: this.dao }
+          { dao: this.dao },
+          { doNotQueueQuery: true }
         )
 
         for (const ledgersTempTableName of tempTableNames) {
           await this.dao.updateCollBy(
             ledgersTempTableName,
             { user_id: _id },
-            { _isBalanceRecalced: null }
+            { _isBalanceRecalced: null },
+            { doNotQueueQuery: true }
           )
         }
       }

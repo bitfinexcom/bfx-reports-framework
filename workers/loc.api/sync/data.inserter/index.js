@@ -846,7 +846,10 @@ class DataInserter extends EventEmitter {
 
     await this.dao.executeQueriesInTrans(async () => {
       await this.syncTempTablesManager
-        .moveTempTableDataToMain({ isNotInTrans: true })
+        .moveTempTableDataToMain({
+          isNotInTrans: true,
+          doNotQueueQuery: true
+        })
 
       const {
         syncedUsersMap,
@@ -878,7 +881,7 @@ class DataInserter extends EventEmitter {
               schema.start,
               { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
             )
-          })
+          }, { doNotQueueQuery: true })
           updatesForOneUserPromises.push(promise)
         }
 
@@ -902,7 +905,7 @@ class DataInserter extends EventEmitter {
               shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
             }
           )
-        })
+        }, { doNotQueueQuery: true })
 
         updatesForPubCollsPromises.push(promise)
       }
@@ -910,7 +913,10 @@ class DataInserter extends EventEmitter {
       await Promise.all(updatesForPubCollsPromises)
 
       await this.syncTempTablesManager
-        .removeTempDBStructureForCurrSync({ isNotInTrans: true })
+        .removeTempDBStructureForCurrSync({
+          isNotInTrans: true,
+          doNotQueueQuery: true
+        })
     })
   }
 

@@ -126,13 +126,14 @@ class SyncUserStepManager {
     }
   }
 
-  async updateOrInsertSyncInfoForCurrColl (params) {
+  async updateOrInsertSyncInfoForCurrColl (params, opts) {
     const {
       collName,
       subUserId,
       userId,
       syncUserStepData
     } = params ?? {}
+    const { doNotQueueQuery } = opts ?? {}
     const hasUserIdField = Number.isInteger(userId)
     const hasSubUserIdField = Number.isInteger(subUserId)
 
@@ -168,7 +169,8 @@ class SyncUserStepManager {
     const updateRes = await this.dao.updateCollBy(
       this.TABLES_NAMES.SYNC_USER_STEPS,
       filter,
-      syncInfo
+      syncInfo,
+      { doNotQueueQuery }
     )
 
     if (updateRes?.changes > 0) {
@@ -178,7 +180,7 @@ class SyncUserStepManager {
     await this.dao.insertElemToDb(
       this.TABLES_NAMES.SYNC_USER_STEPS,
       syncInfo,
-      { isReplacedIfExists: true }
+      { isReplacedIfExists: true, doNotQueueQuery }
     )
   }
 
