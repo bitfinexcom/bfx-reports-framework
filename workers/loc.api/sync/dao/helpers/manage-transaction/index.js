@@ -1,9 +1,9 @@
 'use strict'
 
-const _transactionPromises = []
+const _transactionPromisesSet = new Set()
 
 const _manageTrans = async (proccesTransFn, ...args) => {
-  await Promise.allSettled(_transactionPromises)
+  await Promise.allSettled(_transactionPromisesSet)
 
   return proccesTransFn(...args)
 }
@@ -16,17 +16,16 @@ module.exports = async (
     proccesTransFn,
     ...args
   )
-  const length = _transactionPromises
-    .push(_transactionPromise)
-  const index = length - 1
+
+  _transactionPromisesSet.add(_transactionPromise)
 
   try {
     const res = await _transactionPromise
-    _transactionPromises.splice(index, 1)
+    _transactionPromisesSet.delete(_transactionPromise)
 
     return res
   } catch (err) {
-    _transactionPromises.splice(index, 1)
+    _transactionPromisesSet.delete(_transactionPromise)
 
     throw err
   }
