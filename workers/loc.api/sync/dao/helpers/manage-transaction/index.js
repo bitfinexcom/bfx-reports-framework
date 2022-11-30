@@ -2,30 +2,27 @@
 
 const _transactionPromisesSet = new Set()
 
-const _manageTrans = async (proccesTransFn, ...args) => {
-  await Promise.allSettled(_transactionPromisesSet)
-
-  return proccesTransFn(...args)
-}
-
 module.exports = async (
   proccesTransFn,
   ...args
 ) => {
-  const _transactionPromise = _manageTrans(
-    proccesTransFn,
-    ...args
-  )
+  const transactionPromises = [..._transactionPromisesSet]
 
-  _transactionPromisesSet.add(_transactionPromise)
+  const newTransQueryPromise = (async () => {
+    await Promise.allSettled(transactionPromises)
+
+    return await proccesTransFn(...args)
+  })()
+
+  _transactionPromisesSet.add(newTransQueryPromise)
 
   try {
-    const res = await _transactionPromise
-    _transactionPromisesSet.delete(_transactionPromise)
+    const res = await newTransQueryPromise
+    _transactionPromisesSet.delete(newTransQueryPromise)
 
     return res
   } catch (err) {
-    _transactionPromisesSet.delete(_transactionPromise)
+    _transactionPromisesSet.delete(newTransQueryPromise)
 
     throw err
   }

@@ -114,17 +114,15 @@ class BetterSqliteDAO extends DAO {
     if (withWorkerThreads) {
       return await this.asyncQuery(args)
     }
-    if (!doNotQueueQuery) {
-      await Promise.allSettled(this._transQuerySet)
+    if (doNotQueueQuery) {
+      return await dbWorkerActions(this.db, args)
     }
 
     const newQueryPromise = (async () => {
+      await Promise.allSettled(this._transQuerySet)
+
       return await dbWorkerActions(this.db, args)
     })()
-
-    if (doNotQueueQuery) {
-      return await newQueryPromise
-    }
 
     this._querySet.add(newQueryPromise)
 
@@ -191,25 +189,20 @@ class BetterSqliteDAO extends DAO {
     opts = {}
   ) {
     const {
-      isNotInTrans,
-      doNotQueueQuery
+      isNotInTrans
     } = opts ?? {}
 
-    await Promise.allSettled(this._querySet)
+    if (isNotInTrans) {
+      return await asyncExecQuery()
+    }
 
     const newTransQueryPromise = (async () => {
-      if (isNotInTrans) {
-        return await asyncExecQuery()
-      }
+      await Promise.allSettled(this._querySet)
 
       return await manageTransaction(
         () => this._proccesTrans(asyncExecQuery, opts)
       )
     })()
-
-    if (doNotQueueQuery) {
-      return await newTransQueryPromise
-    }
 
     this._transQuerySet.add(newTransQueryPromise)
 
