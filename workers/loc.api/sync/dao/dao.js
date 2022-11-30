@@ -163,17 +163,7 @@ class DAO {
   /**
    * @abstract
    */
-  async insertElemsToDbIfNotExists () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
   async removeElemsLeaveLastNRecords () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
-  async removeElemsFromDbIfNotInLists () { throw new ImplementationError() }
 }
 
 decorateInjectable(DAO)

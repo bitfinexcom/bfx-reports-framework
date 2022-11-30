@@ -31,12 +31,6 @@ class AfterAllInsertsHookIsNotHookError extends BaseError {
   }
 }
 
-class RemoveListElemsError extends BaseError {
-  constructor (message = 'ERR_LIST_IS_NOT_ARRAY') {
-    super(message)
-  }
-}
-
 class RemoveElemsLeaveLastNRecordsError extends BaseError {
   constructor (message = 'ERR_STORE_ROWS_LIMIT_MUST_BE_MORE_THAN_0') {
     super(message)
@@ -223,7 +217,6 @@ module.exports = {
   UpdateSyncQueueJobError,
   AsyncProgressHandlerIsNotFnError,
   AfterAllInsertsHookIsNotHookError,
-  RemoveListElemsError,
   RemoveElemsLeaveLastNRecordsError,
   UpdateRecordError,
   DAOInitializationError,

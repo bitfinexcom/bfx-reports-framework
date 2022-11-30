@@ -36,7 +36,6 @@ const {
 const {
   DbVersionTypeError,
   SqlCorrectnessError,
-  RemoveListElemsError,
   UpdateRecordError,
   RemoveElemsLeaveLastNRecordsError
 } = require('../../errors')
@@ -832,64 +831,6 @@ class BetterSqliteDAO extends DAO {
   }
 
   /**
-   * TODO: redundant, it can be removed
-   * To prevent blocking the Event Loop applies setImmediate
-   * and handles a transaction manually
-   * @override
-   */
-  async insertElemsToDbIfNotExists (
-    name,
-    auth,
-    data = []
-  ) {
-    const sql = []
-    const params = []
-
-    for (const obj of data) {
-      await setImmediatePromise()
-
-      const _obj = mixUserIdToArrData(
-        auth,
-        obj
-      )
-      const keys = Object.keys(_obj)
-
-      if (keys.length === 0) {
-        continue
-      }
-
-      const item = serializeObj(_obj, keys)
-      const projection = getProjectionQuery(keys)
-      const {
-        where,
-        values
-      } = getWhereQuery(item)
-      const {
-        placeholders,
-        placeholderVal
-      } = getPlaceholdersQuery(item, keys)
-
-      sql.push(
-        `INSERT INTO ${name}(${projection}) SELECT ${placeholders}
-          WHERE NOT EXISTS(SELECT 1 FROM ${name} ${where})`
-      )
-      params.push({ ...values, ...placeholderVal })
-    }
-
-    if (sql.length === 0) {
-      return
-    }
-
-    await this._beginTrans(async () => {
-      for (const [i, param] of params.entries()) {
-        await setImmediatePromise()
-
-        this.db.prepare(sql[i]).run(param)
-      }
-    })
-  }
-
-  /**
    * @override
    */
   async findInCollBy (
@@ -1273,40 +1214,6 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params: { ...values, ...limitVal }
-    })
-  }
-
-  /**
-   * @override
-   */
-  async removeElemsFromDbIfNotInLists (name, lists) {
-    const areAllListsNotArr = Object.keys(lists)
-      .every(key => !Array.isArray(lists[key]))
-
-    if (areAllListsNotArr) {
-      throw new RemoveListElemsError()
-    }
-
-    const $or = Object.entries(lists)
-      .reduce((accum, [key, val]) => {
-        return {
-          $not: {
-            ...accum.$not,
-            [key]: val
-          }
-        }
-      }, { $not: {} })
-    const {
-      where,
-      values: params
-    } = getWhereQuery({ $or })
-
-    const sql = `DELETE FROM ${name} ${where}`
-
-    return this.query({
-      action: MAIN_DB_WORKER_ACTIONS.RUN,
-      sql,
-      params
     })
   }
 }
