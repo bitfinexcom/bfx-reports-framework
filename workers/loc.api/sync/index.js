@@ -32,14 +32,14 @@ class Sync {
     this.syncInterrupter = syncInterrupter
   }
 
-  async _sync (error) {
+  async _sync (error, params) {
     let errorForInterrupter = null
     let progressForInterrupter = this.syncInterrupter
       .INITIAL_PROGRESS
 
     if (!error) {
       try {
-        progressForInterrupter = await this.syncQueue.process()
+        progressForInterrupter = await this.syncQueue.process(params)
       } catch (err) {
         errorForInterrupter = err
 
@@ -83,6 +83,10 @@ class Sync {
       ownerUserId = null,
       isOwnerScheduler = false
     } = params ?? {}
+    const syncParams = {
+      ownerUserId,
+      isOwnerScheduler
+    }
 
     let error = null
 
@@ -129,12 +133,12 @@ class Sync {
     }
 
     if (!error && isSolveAfterRedirToApi) {
-      this._sync(error).then(() => {}, () => {})
+      this._sync(error, syncParams).then(() => {}, () => {})
 
       return 'SYNCHRONIZATION_IS_STARTED'
     }
 
-    return this._sync(error)
+    return this._sync(error, syncParams)
   }
 
   async stop () {

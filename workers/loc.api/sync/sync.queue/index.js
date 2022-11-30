@@ -96,9 +96,18 @@ class SyncQueue extends EventEmitter {
       : [syncColls]
     checkCollPermission(_syncColls, this.ALLOWED_COLLS)
 
-    const allSyncs = await this._getAll(
-      { state: [NEW_JOB_STATE, ERROR_JOB_STATE] }
-    )
+    const ownerUserIdFilter = Number.isInteger(ownerUserId)
+      ? { ownerUserId }
+      : {}
+    const isOwnerSchedulerFilter = isOwnerScheduler
+      ? { isOwnerScheduler: 1 }
+      : {}
+
+    const allSyncs = await this._getAll({
+      state: [NEW_JOB_STATE, ERROR_JOB_STATE],
+      ...ownerUserIdFilter,
+      ...isOwnerSchedulerFilter
+    })
     const hasALLInDB = allSyncs.some(item => {
       return item.collName === this.ALLOWED_COLLS.ALL
     })
@@ -124,7 +133,7 @@ class SyncQueue extends EventEmitter {
     )
   }
 
-  async process () {
+  async process (params) {
     this._progress = this.syncInterrupter.INITIAL_PROGRESS
 
     let count = 0
@@ -137,7 +146,7 @@ class SyncQueue extends EventEmitter {
 
       count += 1
 
-      const nextSync = await this._getNext()
+      const nextSync = await this._getNext(params)
 
       if (
         !nextSync ||
@@ -315,7 +324,19 @@ class SyncQueue extends EventEmitter {
     }, [])
   }
 
-  _getNext () {
+  _getNext (params) {
+    const {
+      ownerUserId,
+      isOwnerScheduler
+    } = params ?? {}
+
+    const ownerUserIdFilter = Number.isInteger(ownerUserId)
+      ? { ownerUserId }
+      : {}
+    const isOwnerSchedulerFilter = isOwnerScheduler
+      ? { isOwnerScheduler: 1 }
+      : {}
+
     const state = [NEW_JOB_STATE, ERROR_JOB_STATE]
 
     if (this._isFirstSync) {
@@ -326,7 +347,7 @@ class SyncQueue extends EventEmitter {
 
     return this.dao.getElemInCollBy(
       this.name,
-      { state },
+      { state, ...ownerUserIdFilter, ...isOwnerSchedulerFilter },
       this._sort
     )
   }
