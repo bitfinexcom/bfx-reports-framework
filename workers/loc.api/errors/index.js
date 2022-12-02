@@ -165,7 +165,7 @@ class DataConsistencyWhileSyncingError extends DataConsistencyError {
   constructor (message = 'ERR_COLLECTIONS_DATA_IS_NOT_CONSISTENT_WHILE_SYNCING') {
     super(message)
 
-    this.statusMessage = 'This particular endpoints are not available for the selected time frame while DB is being synced'
+    this.statusMessage = 'This particular endpoints are not available for the selected time frame while DB is being synced for the first time'
   }
 }
 
