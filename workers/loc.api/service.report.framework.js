@@ -1104,7 +1104,7 @@ class FrameworkReportService extends ReportService {
           'fees_funding_total_30d', arrRes),
         makerFee: pickLowerObjectsNumbers(
           'makerFee', arrRes),
-        derivMakerRebate: sumObjectsNumbers(
+        derivMakerRebate: pickLowerObjectsNumbers(
           'derivMakerRebate', arrRes),
         takerFeeToCrypto: pickLowerObjectsNumbers(
           'takerFeeToCrypto', arrRes),
