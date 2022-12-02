@@ -43,8 +43,8 @@ const _execTransaction = (trx, params) => {
 }
 
 const _getInfo = (newInfo, oldInfo) => {
-  const { changes: newChanges = 0 } = { ...newInfo }
-  const { changes: oldChanges = 0 } = { ...oldInfo }
+  const { changes: newChanges = 0 } = newInfo ?? {}
+  const { changes: oldChanges = 0 } = oldInfo ?? {}
 
   const changes = newChanges + oldChanges
 
@@ -63,6 +63,10 @@ module.exports = (db, sql, params) => {
   const isSqlArray = Array.isArray(sql)
   const sqlArr = isSqlArray ? sql : [sql]
   const stms = sqlArr.map((sql) => db.prepare(sql))
+
+  if (stms.length === 0) {
+    return { changes: 0 }
+  }
 
   const trx = db.transaction((items) => {
     let info = { changes: 0 }

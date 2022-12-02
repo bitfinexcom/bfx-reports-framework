@@ -40,7 +40,17 @@ class DAO {
   /**
    * @abstract
    */
+  async moveTempTableDataToMain () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async beforeMigrationHook () {}
+
+  /**
+   * @abstract
+   */
+  async createDBStructure () { throw new ImplementationError() }
 
   /**
    * @abstract
@@ -66,6 +76,8 @@ class DAO {
     }
 
     await pmmJob.promise
+
+    await this.createDBStructure()
   }
 
   /**
@@ -151,12 +163,7 @@ class DAO {
   /**
    * @abstract
    */
-  async insertElemsToDbIfNotExists () { throw new ImplementationError() }
-
-  /**
-   * @abstract
-   */
-  async removeElemsFromDbIfNotInLists () { throw new ImplementationError() }
+  async removeElemsLeaveLastNRecords () { throw new ImplementationError() }
 }
 
 decorateInjectable(DAO)

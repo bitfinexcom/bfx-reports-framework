@@ -62,5 +62,9 @@ module.exports = {
   DBBackupManager: Symbol.for('DBBackupManager'),
   ProcessMessageManager: Symbol.for('ProcessMessageManager'),
   ProcessMessageManagerFactory: Symbol.for('ProcessMessageManagerFactory'),
-  TotalFeesReport: Symbol.for('TotalFeesReport')
+  TotalFeesReport: Symbol.for('TotalFeesReport'),
+  SyncTempTablesManager: Symbol.for('SyncTempTablesManager'),
+  SyncUserStepManager: Symbol.for('SyncUserStepManager'),
+  SyncUserStepData: Symbol.for('SyncUserStepData'),
+  SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory')
 }

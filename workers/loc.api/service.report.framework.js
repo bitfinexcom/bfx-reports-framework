@@ -209,11 +209,12 @@ class FrameworkReportService extends ReportService {
 
   enableSyncMode (space, args, cb) {
     return this._responder(async () => {
-      await this._authenticator.signIn(
+      const user = await this._authenticator.signIn(
         args,
         {
           active: null,
-          isDataFromDb: true
+          isDataFromDb: true,
+          isReturnedUser: true
         }
       )
       await this._dao.updateRecordOf(
@@ -225,7 +226,10 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync.start(true)
+      await this._sync.start({
+        isSolveAfterRedirToApi: true,
+        ownerUserId: user?._id
+      })
 
       return true
     }, 'enableSyncMode', args, cb)
@@ -281,7 +285,10 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync.start(true)
+      await this._sync.start({
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'enableScheduler', args, cb)
@@ -337,12 +344,11 @@ class FrameworkReportService extends ReportService {
 
   syncNow (space, args = {}, cb) {
     return this._privResponder(() => {
-      const { params } = { ...args }
-      const {
-        syncColls = this._ALLOWED_COLLS.ALL
-      } = { ...params }
-
-      return this._sync.start(true, syncColls)
+      return this._sync.start({
+        syncColls: args?.params?.syncColls ?? this._ALLOWED_COLLS.ALL,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
     }, 'syncNow', args, cb)
   }
 
@@ -391,8 +397,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.PUBLIC_TRADES)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.PUBLIC_TRADES,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editPublicTradesConf', args, cb)
@@ -409,8 +418,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.TICKERS_HISTORY)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.TICKERS_HISTORY,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editTickersHistoryConf', args, cb)
@@ -427,8 +439,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.STATUS_MESSAGES)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.STATUS_MESSAGES,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editStatusMessagesConf', args, cb)
@@ -445,8 +460,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync
-        .start(true, this._ALLOWED_COLLS.CANDLES)
+      await this._sync.start({
+        syncColls: this._ALLOWED_COLLS.CANDLES,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editCandlesConf', args, cb)
@@ -463,7 +481,11 @@ class FrameworkReportService extends ReportService {
         return true
       }
 
-      await this._sync.start(true, syncedColls)
+      await this._sync.start({
+        syncColls: syncedColls,
+        isSolveAfterRedirToApi: true,
+        ownerUserId: args?.auth?._id
+      })
 
       return true
     }, 'editCandlesConf', args, cb)
@@ -520,17 +542,12 @@ class FrameworkReportService extends ReportService {
           { isPublic: true }
         )
 
-        if (method === this._SYNC_API_METHODS.CURRENCIES) {
-          return res
-        }
-        if (method === this._SYNC_API_METHODS.MAP_SYMBOLS) {
-          return res.map((row) => ([row.key, row.value]))
-        }
+        const {
+          projection,
+          type
+        } = this._syncSchema.getMethodCollMap().get(method)
 
-        const { field } = this._syncSchema.getMethodCollMap()
-          .get(method)
-
-        return collObjToArr(res, field)
+        return collObjToArr(res, { projection, type })
       })
 
       const res = await Promise.all(promises)
@@ -553,7 +570,7 @@ class FrameworkReportService extends ReportService {
       return {
         pairs,
         currencies,
-        mapSymbols,
+        mapSymbols: mapSymbols.map((map) => [map?.key, map?.value]),
         inactiveCurrencies,
         inactiveSymbols
       }

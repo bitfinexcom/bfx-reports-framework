@@ -1263,6 +1263,8 @@ module.exports = (
     assert.isArray(res.body.result.pairs)
     assert.isArray(res.body.result.currencies)
     assert.isArray(res.body.result.inactiveSymbols)
+    assert.isArray(res.body.result.mapSymbols)
+    assert.isArray(res.body.result.inactiveCurrencies)
     assert.lengthOf(res.body.result.pairs, 13)
     assert.lengthOf(res.body.result.currencies, 11)
     assert.lengthOf(res.body.result.inactiveSymbols, 2)
@@ -1270,9 +1272,16 @@ module.exports = (
     assert.lengthOf(res.body.result.inactiveCurrencies, 2)
 
     res.body.result.mapSymbols.forEach(item => {
+      assert.isArray(item)
       assert.lengthOf(item, 2)
     })
     res.body.result.pairs.forEach(item => {
+      assert.isString(item)
+    })
+    res.body.result.inactiveSymbols.forEach(item => {
+      assert.isString(item)
+    })
+    res.body.result.inactiveCurrencies.forEach(item => {
       assert.isString(item)
     })
     res.body.result.currencies.forEach(item => {

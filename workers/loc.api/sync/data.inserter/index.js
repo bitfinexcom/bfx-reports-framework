@@ -1,8 +1,10 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
+
 const EventEmitter = require('events')
 const {
-  isEmpty,
   cloneDeep
 } = require('lodash')
 const {
@@ -10,8 +12,7 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 
 const {
-  CANDLES_SECTION,
-  ALL_SYMBOLS_TO_SYNC
+  CANDLES_SECTION
 } = require('./const')
 const {
   filterMethodCollMapByList,
@@ -26,9 +27,11 @@ const {
   checkCollPermission
 } = require('../helpers')
 const {
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl
+  isInsertableArrObj,
+  isUpdatableArrObj,
+  isUpdatableArr,
+  isUpdatable,
+  isPublic
 } = require('../schema/utils')
 const {
   AsyncProgressHandlerIsNotFnError,
@@ -42,64 +45,57 @@ const MESS_ERR_UNAUTH = 'ERR_AUTH_UNAUTHORIZED'
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.RService,
   TYPES.DAO,
   TYPES.ApiMiddleware,
   TYPES.SyncSchema,
-  TYPES.TABLES_NAMES,
   TYPES.ALLOWED_COLLS,
-  TYPES.SYNC_API_METHODS,
-  TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.ConvertCurrencyHook,
+  TYPES.RecalcSubAccountLedgersBalancesHook,
   TYPES.RecalcSubAccountLedgersBalancesHook,
   TYPES.DataChecker,
   TYPES.SyncInterrupter,
   TYPES.WSEventEmitter,
-  TYPES.SyncCollsManager,
-  TYPES.GetDataFromApi
+  TYPES.GetDataFromApi,
+  TYPES.SyncTempTablesManager,
+  TYPES.SyncUserStepManager
 ]
 class DataInserter extends EventEmitter {
   constructor (
-    rService,
     dao,
     apiMiddleware,
     syncSchema,
-    TABLES_NAMES,
     ALLOWED_COLLS,
-    SYNC_API_METHODS,
-    FOREX_SYMBS,
     authenticator,
     convertCurrencyHook,
     recalcSubAccountLedgersBalancesHook,
+    recalcSubAccountLedgersBalancesHookWithoutTempTable,
     dataChecker,
     syncInterrupter,
     wsEventEmitter,
-    syncCollsManager,
-    getDataFromApi
+    getDataFromApi,
+    syncTempTablesManager,
+    syncUserStepManager
   ) {
     super()
 
-    this.rService = rService
     this.dao = dao
     this.apiMiddleware = apiMiddleware
     this.syncSchema = syncSchema
-    this.TABLES_NAMES = TABLES_NAMES
     this.ALLOWED_COLLS = ALLOWED_COLLS
-    this.SYNC_API_METHODS = SYNC_API_METHODS
-    this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
+    this.recalcSubAccountLedgersBalancesHookWithoutTempTable = recalcSubAccountLedgersBalancesHookWithoutTempTable
     this.dataChecker = dataChecker
     this.syncInterrupter = syncInterrupter
     this.wsEventEmitter = wsEventEmitter
-    this.syncCollsManager = syncCollsManager
     this.getDataFromApi = getDataFromApi
+    this.syncTempTablesManager = syncTempTablesManager
+    this.syncUserStepManager = syncUserStepManager
 
     this._asyncProgressHandlers = []
     this._auth = null
-    this._syncedSubUsers = new Set()
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
     )
@@ -108,11 +104,20 @@ class DataInserter extends EventEmitter {
     this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
-  init (syncColls = this.ALLOWED_COLLS.ALL) {
+  init (params) {
     this.syncInterrupter.onceInterrupt(() => {
       this._isInterrupted = true
     })
 
+    const {
+      syncColls = this.ALLOWED_COLLS.ALL,
+      syncQueueId,
+      ownerUserId,
+      isOwnerScheduler
+    } = params ?? {}
+    this.syncQueueId = syncQueueId
+    this.ownerUserId = ownerUserId
+    this.isOwnerScheduler = isOwnerScheduler
     this.syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
@@ -125,13 +130,28 @@ class DataInserter extends EventEmitter {
       this.syncColls,
       this._allowedCollsNames
     )
-    this.convertCurrencyHook.init({ syncColls: this.syncColls })
-    this.addAfterAllInsertsHooks([
+    this._addAfterAllInsertsHooks([
       this.convertCurrencyHook,
       this.recalcSubAccountLedgersBalancesHook
     ])
-    this.dataChecker.init({ methodCollMap: this._methodCollMap })
+
+    /*
+     * This hook, without `syncQueueId`, covers sub-account recalc
+     * for non-temp ledgers table in cases when sub-users being added/removed
+     */
+    this._addAfterAllInsertsHooks(
+      this.recalcSubAccountLedgersBalancesHookWithoutTempTable,
+      { syncQueueId: null }
+    )
+    this.syncUserStepManager.init({ syncQueueId: this.syncQueueId })
+    this.dataChecker.init({
+      methodCollMap: this._methodCollMap,
+      syncQueueId: this.syncQueueId
+    })
+    this.syncTempTablesManager.init({ syncQueueId: this.syncQueueId })
   }
+
+  getAuth () { return this._auth }
 
   addAsyncProgressHandler (handler) {
     if (typeof handler !== 'function') {
@@ -141,35 +161,33 @@ class DataInserter extends EventEmitter {
     this._asyncProgressHandlers.push(handler)
   }
 
-  async setProgress (progress) {
-    for (const handler of this._asyncProgressHandlers) {
-      await handler(progress)
-    }
-
-    this.emit('progress', progress)
-  }
-
-  getAuth () {
-    return this._auth
-  }
-
   async insertNewDataToDbMultiUser () {
     if (this._isInterrupted) {
       return
     }
 
-    this._auth = await getAuthFromDb(this.authenticator)
+    this._auth = await getAuthFromDb(
+      this.authenticator,
+      {
+        ownerUserId: this.ownerUserId,
+        isOwnerScheduler: this.isOwnerScheduler
+      }
+    )
 
     if (
       !this._auth ||
       !(this._auth instanceof Map) ||
       this._auth.size === 0
     ) {
-      await this.setProgress(MESS_ERR_UNAUTH)
+      await this._setProgress(MESS_ERR_UNAUTH)
 
       return
     }
 
+    await this.syncTempTablesManager
+      .cleanUpTempDBStructure()
+
+    const syncedUsersMap = new Map()
     let count = 0
     let progress = 0
 
@@ -187,28 +205,38 @@ class DataInserter extends EventEmitter {
 
       const userProgress = (count / this._auth.size) * 100
 
-      progress = await this.insertNewDataToDb(authItem[1], userProgress)
+      const {
+        progress: currProgress,
+        methodCollMap
+      } = await this._insertNewDataToDb(authItem[1], userProgress)
+      syncedUsersMap.set(authItem[0], {
+        auth: authItem[1],
+        methodCollMap
+      })
+
+      progress = currProgress
       count += 1
     }
 
-    await this.insertNewPublicDataToDb(progress)
+    const {
+      methodCollMap: pubMethodCollMap
+    } = await this._insertNewPublicDataToDb(progress)
 
-    await this.wsEventEmitter
-      .emitSyncingStep('DB_PREPARATION')
-    await this._afterAllInserts()
+    await this._afterAllInserts({
+      syncedUsersMap,
+      pubMethodCollMap
+    })
 
-    if (typeof this.dao.optimize === 'function') {
-      await this.dao.optimize()
-    }
+    await this._optimizeDb()
 
     if (this._isInterrupted) {
       return
     }
 
-    await this.setProgress(100)
+    await this._setProgress(100)
   }
 
-  async _afterAllInserts () {
+  async _afterAllInserts (params) {
     if (this._isInterrupted) {
       return
     }
@@ -221,6 +249,9 @@ class DataInserter extends EventEmitter {
       return
     }
 
+    await this.wsEventEmitter
+      .emitSyncingStep('DB_PREPARATION')
+
     for (const hook of this._afterAllInsertsHooks) {
       if (this._isInterrupted) {
         return
@@ -228,57 +259,55 @@ class DataInserter extends EventEmitter {
 
       await hook.execute()
     }
+
+    await this._updateSyncInfo(params)
   }
 
-  addAfterAllInsertsHooks (hook) {
-    const hookArr = Array.isArray(hook)
-      ? hook
-      : [hook]
-
-    if (hookArr.some((h) => !(h instanceof DataInserterHook))) {
-      throw new AfterAllInsertsHookIsNotHookError()
-    }
-    if (!Array.isArray(this._afterAllInsertsHooks)) {
-      this._afterAllInsertsHooks = []
-    }
-
-    hookArr.forEach((hook) => {
-      hook.setDataInserter(this)
-      hook.init()
-    })
-
-    this._afterAllInsertsHooks.push(...hookArr)
-  }
-
-  async insertNewPublicDataToDb (prevProgress) {
+  async _insertNewPublicDataToDb (prevProgress) {
     if (this._isInterrupted) {
-      return
+      return { methodCollMap: new Map() }
     }
 
     await this.wsEventEmitter
       .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
       .checkNewPublicData()
+    await this.syncTempTablesManager
+      .createTempDBStructureForCurrSync(methodCollMap)
     const size = methodCollMap.size
 
     let count = 0
     let progress = 0
 
-    for (const [method, item] of methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
-        return
+        return { methodCollMap: new Map() }
       }
 
       await this.wsEventEmitter
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
-      await this._updateApiDataArrObjTypeToDb(method, item)
-      await this._updateApiDataArrTypeToDb(method, item)
-      await this._insertApiDataPublicArrObjTypeToDb(method, item)
+      const { type, start } = schema ?? {}
 
-      await this.syncCollsManager.setCollAsSynced({
-        collName: method
-      })
+      for (const syncUserStepData of start) {
+        if (isInsertableArrObj(schema?.type, { isPublic: true })) {
+          await this._insertApiData(
+            method,
+            schema,
+            syncUserStepData
+          )
+        }
+        if (
+          isUpdatable(type) &&
+          isPublic(type)
+        ) {
+          await this._updateApiData(
+            method,
+            schema,
+            syncUserStepData
+          )
+        }
+      }
 
       count += 1
       progress = Math.round(
@@ -286,22 +315,30 @@ class DataInserter extends EventEmitter {
       )
 
       if (progress < 100) {
-        await this.setProgress(progress)
+        await this._setProgress(progress)
       }
     }
+
+    return { methodCollMap }
   }
 
-  async insertNewDataToDb (auth, userProgress = 0) {
+  async _insertNewDataToDb (auth, userProgress = 0) {
     if (this._isInterrupted) {
-      return userProgress
+      return {
+        progress: userProgress,
+        methodCollMap: new Map()
+      }
     }
     if (
       typeof auth.apiKey !== 'string' ||
       typeof auth.apiSecret !== 'string'
     ) {
-      await this.setProgress(MESS_ERR_UNAUTH)
+      await this._setProgress(MESS_ERR_UNAUTH)
 
-      return userProgress
+      return {
+        progress: userProgress,
+        methodCollMap: new Map()
+      }
     }
 
     await this.wsEventEmitter.emitSyncingStepToOne(
@@ -310,21 +347,19 @@ class DataInserter extends EventEmitter {
     )
     const methodCollMap = await this.dataChecker
       .checkNewData(auth)
+    await this.syncTempTablesManager
+      .createTempDBStructureForCurrSync(methodCollMap)
     const size = this._methodCollMap.size
-    const {
-      _id: userId,
-      subUser,
-      isSubAccount
-    } = auth ?? {}
-    const { _id: subUserId } = subUser ?? {}
-    const isLastSubUser = this._isLastSubUser(auth)
 
     let count = 0
     let progress = 0
 
     for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
-        return userProgress
+        return {
+          progress: userProgress,
+          methodCollMap: new Map()
+        }
       }
 
       await this.wsEventEmitter.emitSyncingStepToOne(
@@ -332,35 +367,16 @@ class DataInserter extends EventEmitter {
         auth
       )
 
-      const { start } = schema
+      const { start } = schema ?? {}
 
-      for (const [symbol, dates] of start) {
-        const { baseStartFrom = 0 } = { ...dates }
-        const addApiParams = (
-          !symbol ||
-          symbol === ALL_SYMBOLS_TO_SYNC ||
-          (
-            Array.isArray(symbol) &&
-            symbol.length === 0
-          )
-        )
-          ? {}
-          : { symbol }
-
-        await this._insertConfigurableApiData(
+      for (const syncUserStepData of start) {
+        await this._insertApiData(
           method,
           schema,
-          { ...dates, baseStartFrom },
-          addApiParams,
+          syncUserStepData,
           auth
         )
       }
-
-      await this.prepareData({ method }, { isLastSubUser })
-
-      await this.syncCollsManager.setCollAsSynced({
-        collName: method, userId, subUserId
-      })
 
       count += 1
       progress = Math.round(
@@ -368,198 +384,90 @@ class DataInserter extends EventEmitter {
       )
 
       if (progress < 100) {
-        await this.setProgress(progress)
+        await this._setProgress(progress)
       }
     }
 
-    // After whole sync prepare collections if it's not done earlier
-    await this.prepareData({ methodCollMap }, { isLastSubUser })
-
-    if (isSubAccount) {
-      this._setSyncedSubUser(userId, subUserId)
-    }
-
-    return progress
+    return { progress, methodCollMap }
   }
 
-  async prepareData (args = {}, opts = {}) {
-    await this._prepareLedgers(args, opts)
-    await this._prepareMovements(args, opts)
-  }
-
-  /* If ledgers are syncing
-    sync candles,
-    convert currency,
-    recalc sub-account */
-  async _prepareLedgers (args = {}, opts = {}) {
-    const {
-      method = this.SYNC_API_METHODS.LEDGERS,
-      methodCollMap
-    } = args ?? {}
-    const { isLastSubUser } = opts ?? {}
-
-    if (
-      method !== this.SYNC_API_METHODS.LEDGERS ||
-      (
-        methodCollMap instanceof Map &&
-        methodCollMap.has(this.SYNC_API_METHODS.LEDGERS)
-      )
-    ) {
-      return
-    }
-
-    const candlesSchema = this.syncSchema
-      .getMethodCollMap().get(this.SYNC_API_METHODS.CANDLES)
-
-    await this.dataChecker.checkNewCandlesData(
-      this.SYNC_API_METHODS.CANDLES,
-      candlesSchema
-    )
-    await this._insertApiDataPublicArrObjTypeToDb(
-      this.SYNC_API_METHODS.CANDLES,
-      candlesSchema
-    )
-    await this.syncCollsManager.setCollAsSynced({
-      collName: this.SYNC_API_METHODS.CANDLES
-    })
-
-    candlesSchema.isSyncDoneForCurrencyConv = true
-
-    await this.convertCurrencyHook.execute(
-      this.ALLOWED_COLLS.LEDGERS
-    )
-
-    if (!isLastSubUser) {
-      return
-    }
-
-    await this.recalcSubAccountLedgersBalancesHook.execute()
-  }
-
-  /* If movements are syncing
-    convert currency */
-  async _prepareMovements (args = {}) {
-    const {
-      method = this.SYNC_API_METHODS.MOVEMENTS,
-      methodCollMap
-    } = args ?? {}
-
-    if (
-      method !== this.SYNC_API_METHODS.MOVEMENTS ||
-      (
-        methodCollMap instanceof Map &&
-        methodCollMap.has(this.SYNC_API_METHODS.MOVEMENTS)
-      )
-    ) {
-      return
-    }
-
-    await this.convertCurrencyHook.execute(
-      this.ALLOWED_COLLS.MOVEMENTS
-    )
-  }
-
-  _getDataFromApi (methodApi, args, isCheckCall) {
-    if (!this.apiMiddleware.hasMethod(methodApi)) {
-      throw new FindMethodError()
-    }
-
-    return this.getDataFromApi({
-      getData: methodApi,
-      args,
-      middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
-      middlewareParams: isCheckCall,
-      callerName: 'DATA_SYNCER'
-    })
-  }
-
-  async _insertApiDataPublicArrObjTypeToDb (
-    methodApi,
-    schema
-  ) {
-    if (
-      this._isInterrupted ||
-      !isInsertableArrObjTypeOfColl(schema, true)
-    ) {
-      return
-    }
-
-    const { name, start } = { ...schema }
-
-    if (
-      name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-      name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
-      name === this.ALLOWED_COLLS.CANDLES
-    ) {
-      for (const [symbol, dates, timeframe] of start) {
-        if (this._isInterrupted) {
-          return
-        }
-
-        const addApiParams = name === this.ALLOWED_COLLS.CANDLES
-          ? {
-              symbol,
-              timeframe,
-              section: CANDLES_SECTION
-            }
-          : { symbol }
-
-        await this._insertConfigurableApiData(
-          methodApi,
-          schema,
-          dates,
-          addApiParams
-        )
-      }
-    }
-  }
-
-  async _insertConfigurableApiData (
+  async _insertApiData (
     methodApi,
     schema,
-    dates,
-    addApiParams = {},
+    syncUserStepData,
     auth = {}
   ) {
     if (this._isInterrupted) {
       return
     }
 
+    const { userId, subUserId } = this._getUserIds(auth)
+    await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+      collName: methodApi,
+      userId,
+      subUserId,
+      syncUserStepData
+    })
+
     const {
-      baseStartFrom,
-      baseStartTo,
-      currStart
-    } = { ...dates }
+      symbol,
+      timeframe,
+      baseStart,
+      baseEnd,
+      currStart,
+      currEnd,
+      hasSymbol,
+      hasTimeframe,
+      areAllSymbolsRequired
+    } = syncUserStepData
+    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
+
+    const params = {}
 
     if (
-      Number.isInteger(baseStartFrom) &&
-      Number.isInteger(baseStartTo)
+      hasSymbol &&
+      !areAllSymbolsRequired
     ) {
+      params.symbol = symbol
+    }
+    if (hasTimeframe) {
+      params.timeframe = timeframe
+    }
+    if (hasCandlesSection) {
+      params.section = CANDLES_SECTION
+    }
+
+    if (this.syncUserStepManager.shouldBaseStepBeSynced(syncUserStepData)) {
       const args = this._getMethodArgMap(
         schema,
         {
           auth,
           limit: 10000000,
-          start: baseStartFrom,
-          end: baseStartTo,
-          params: { ...addApiParams }
+          start: baseStart,
+          end: baseEnd,
+          params
         }
       )
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
+
+      syncUserStepData.wasBaseStepsBeSynced = true
     }
-    if (Number.isInteger(currStart)) {
+    if (this.syncUserStepManager.shouldCurrStepBeSynced(syncUserStepData)) {
       const args = this._getMethodArgMap(
         schema,
         {
           auth,
           limit: 10000000,
           start: currStart,
-          params: { ...addApiParams }
+          end: currEnd,
+          params
         }
       )
 
       await this._insertApiDataArrObjTypeToDb(args, methodApi, schema)
+
+      syncUserStepData.wasCurrStepsBeSynced = true
     }
   }
 
@@ -572,16 +480,17 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const { auth } = { ...args }
-    const { apiKey, apiSecret } = { ...auth }
+    const { auth } = args ?? {}
+    const { apiKey, apiSecret } = auth ?? {}
     const isPublic = (
       !apiKey ||
       typeof apiKey !== 'string' ||
       !apiSecret ||
       typeof apiSecret !== 'string'
     )
+    const isPrivate = !isPublic
 
-    if (!isInsertableArrObjTypeOfColl(schema, isPublic)) {
+    if (!isInsertableArrObj(schema?.type, { isPublic, isPrivate })) {
       return
     }
 
@@ -595,13 +504,13 @@ class DataInserter extends EventEmitter {
     _args.params.notThrowError = true
     const currIterationArgs = cloneDeep(_args)
 
-    const { subUserId } = { ...model }
+    const { subUserId } = model ?? {}
     const hasNotSubUserField = (
       !subUserId ||
       typeof subUserId !== 'string'
     )
-    const { auth: _auth } = { ..._args }
-    const { session } = { ..._auth }
+    const { auth: _auth } = _args ?? {}
+    const { session } = _auth ?? {}
     const sessionAuth = isPublic || hasNotSubUserField
       ? null
       : { ...session }
@@ -701,7 +610,8 @@ class DataInserter extends EventEmitter {
       prevRes = normalizedApiData
 
       await this.dao.insertElemsToDb(
-        collName,
+        this.syncTempTablesManager.constructor
+          .getTempTableName(collName, this.syncQueueId),
         sessionAuth,
         normalizedApiData,
         { isReplacedIfExists: true }
@@ -725,21 +635,121 @@ class DataInserter extends EventEmitter {
     }
   }
 
+  async _updateApiData (
+    methodApi,
+    schema,
+    syncUserStepData
+  ) {
+    if (this._isInterrupted) {
+      return
+    }
+
+    await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+      collName: methodApi,
+      syncUserStepData
+    })
+
+    const {
+      symbol,
+      timeframe,
+      baseStart,
+      currStart,
+      hasSymbol,
+      hasTimeframe,
+      areAllSymbolsRequired
+    } = syncUserStepData
+    const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+
+    const checkOpts = {
+      shouldNotMtsBeChecked: true,
+      shouldStartMtsBeChecked: hasStatusMessagesSection
+    }
+    const params = {}
+
+    if (
+      hasSymbol &&
+      !areAllSymbolsRequired
+    ) {
+      params.symbol = symbol
+    }
+    if (hasTimeframe) {
+      params.timeframe = timeframe
+    }
+    if (hasStatusMessagesSection) {
+      params.type = 'deriv'
+    }
+
+    if (this.syncUserStepManager
+      .shouldBaseStepBeSynced(syncUserStepData, checkOpts)) {
+      const statusMessagesParams = {
+        ...params,
+        filter: {
+          $gte: { [schema?.dateFieldName]: baseStart }
+        }
+      }
+
+      const args = this._getMethodArgMap(
+        schema,
+        {
+          start: null,
+          end: null,
+          params: hasStatusMessagesSection
+            ? statusMessagesParams
+            : params
+        }
+      )
+
+      await this._updateApiDataArrObjTypeToDb(args, methodApi, schema)
+      await this._updateApiDataArrTypeToDb(methodApi, schema)
+
+      syncUserStepData.wasBaseStepsBeSynced = true
+    }
+    if (this.syncUserStepManager
+      .shouldCurrStepBeSynced(syncUserStepData, checkOpts)) {
+      const statusMessagesParams = {
+        ...params,
+        filter: {
+          $gte: { [schema?.dateFieldName]: currStart }
+        }
+      }
+
+      const args = this._getMethodArgMap(
+        schema,
+        {
+          start: null,
+          end: null,
+          params: hasStatusMessagesSection
+            ? statusMessagesParams
+            : params
+        }
+      )
+
+      await this._updateApiDataArrObjTypeToDb(args, methodApi, schema)
+      await this._updateApiDataArrTypeToDb(methodApi, schema)
+
+      syncUserStepData.wasCurrStepsBeSynced = true
+    }
+  }
+
   async _updateApiDataArrTypeToDb (
     methodApi,
     schema
   ) {
     if (
       this._isInterrupted ||
-      !isUpdatableArrTypeOfColl(schema, true)
+      !isUpdatableArr(schema?.type, { isPublic: true })
     ) {
       return
     }
 
     const {
       name: collName,
-      field
+      projection
     } = schema
+    const _projection = Array.isArray(projection)
+      ? projection
+      : [projection]
+    const fieldName = _projection[0]
 
     const args = this._getMethodArgMap(
       schema,
@@ -753,155 +763,43 @@ class DataInserter extends EventEmitter {
     ) {
       return
     }
-    if (
-      Array.isArray(elemsFromApi) &&
-      elemsFromApi.length > 0
-    ) {
-      await this.dao.removeElemsFromDbIfNotInLists(
-        collName,
-        { [field]: elemsFromApi }
-      )
-      await this.dao.insertElemsToDbIfNotExists(
-        collName,
-        null,
-        elemsFromApi.map(item => ({ [field]: item }))
-      )
-    }
-  }
 
-  async _updateConfigurableApiDataArrObjTypeToDb (
-    methodApi,
-    schema
-  ) {
-    if (this._isInterrupted) {
+    if (
+      !Array.isArray(elemsFromApi) ||
+      elemsFromApi.length === 0
+    ) {
       return
     }
 
-    const {
-      dateFieldName,
-      name: collName,
-      fields,
-      model
-    } = { ...schema }
-
-    const publicСollsСonf = await this.dao.getElemsInCollBy(
-      this.TABLES_NAMES.PUBLIC_COLLS_CONF,
+    await this.dao.insertElemsToDb(
+      this.syncTempTablesManager.constructor
+        .getTempTableName(collName, this.syncQueueId),
+      null,
+      elemsFromApi.map((item) => ({ [fieldName]: item })),
       {
-        filter: { confName: schema.confName },
-        minPropName: 'start',
-        groupPropName: 'symbol'
+        isReplacedIfExists: true,
+        isStrictEqual: true
       }
     )
-
-    if (isEmpty(publicСollsСonf)) {
-      return
-    }
-
-    const syncingTypes = ['deriv']
-    const elemsFromApi = []
-
-    for (const { symbol, start } of publicСollsСonf) {
-      if (this._isInterrupted) {
-        return
-      }
-
-      for (const type of syncingTypes) {
-        if (this._isInterrupted) {
-          return
-        }
-
-        const args = this._getMethodArgMap(
-          schema,
-          {
-            start: null,
-            end: null,
-            params: {
-              symbol,
-              filter: {
-                $gte: { [dateFieldName]: start }
-              },
-              type
-            }
-          }
-        )
-        const apiRes = await this._getDataFromApi(methodApi, args)
-        const isApiResObj = (
-          apiRes &&
-          typeof apiRes === 'object'
-        )
-
-        if (
-          isApiResObj &&
-          apiRes.isInterrupted
-        ) {
-          return
-        }
-
-        const oneSymbElemsFromApi = (
-          isApiResObj &&
-          !Array.isArray(apiRes) &&
-          Array.isArray(apiRes.res)
-        )
-          ? apiRes.res
-          : apiRes
-
-        if (!Array.isArray(oneSymbElemsFromApi)) {
-          continue
-        }
-
-        elemsFromApi.push(...oneSymbElemsFromApi)
-      }
-    }
-
-    if (elemsFromApi.length > 0) {
-      const lists = fields.reduce((obj, curr) => {
-        obj[curr] = elemsFromApi.map(item => item[curr])
-
-        return obj
-      }, {})
-
-      await this.dao.removeElemsFromDbIfNotInLists(
-        collName,
-        lists
-      )
-      await this.dao.insertElemsToDbIfNotExists(
-        collName,
-        null,
-        normalizeApiData(elemsFromApi, model)
-      )
-    }
   }
 
   async _updateApiDataArrObjTypeToDb (
+    args,
     methodApi,
     schema
   ) {
     if (
       this._isInterrupted ||
-      !isUpdatableArrObjTypeOfColl(schema, true)
+      !isUpdatableArrObj(schema?.type, { isPublic: true })
     ) {
       return
     }
 
     const {
       name: collName,
-      fields,
       model
-    } = { ...schema }
+    } = schema ?? {}
 
-    if (collName === this.ALLOWED_COLLS.STATUS_MESSAGES) {
-      await this._updateConfigurableApiDataArrObjTypeToDb(
-        methodApi,
-        schema
-      )
-
-      return
-    }
-
-    const args = this._getMethodArgMap(
-      schema,
-      { start: null, end: null }
-    )
     const apiRes = await this._getDataFromApi(methodApi, args)
     const isApiResObj = (
       apiRes &&
@@ -924,26 +822,168 @@ class DataInserter extends EventEmitter {
       : apiRes
 
     if (
-      Array.isArray(elemsFromApi) &&
-      elemsFromApi.length > 0
+      !Array.isArray(elemsFromApi) ||
+      elemsFromApi.length === 0
     ) {
-      const lists = fields.reduce((obj, curr) => {
-        obj[curr] = elemsFromApi.map(item => item[curr])
-
-        return obj
-      }, {})
-
-      await this.dao.removeElemsFromDbIfNotInLists(
-        collName,
-        lists
-      )
-      await this.dao.insertElemsToDb(
-        collName,
-        null,
-        normalizeApiData(elemsFromApi, model),
-        { isReplacedIfExists: true }
-      )
+      return
     }
+
+    await this.dao.insertElemsToDb(
+      this.syncTempTablesManager.constructor
+        .getTempTableName(collName, this.syncQueueId),
+      null,
+      normalizeApiData(elemsFromApi, model),
+      {
+        isReplacedIfExists: true,
+        isStrictEqual: true
+      }
+    )
+  }
+
+  async _updateSyncInfo (params) {
+    await this.wsEventEmitter
+      .emitSyncingStep('MOVING_DATA_FROM_TEMP_TABLES')
+
+    await this.dao.executeQueriesInTrans(async () => {
+      await this.syncTempTablesManager
+        .moveTempTableDataToMain({
+          isNotInTrans: true,
+          doNotQueueQuery: true
+        })
+
+      const {
+        syncedUsersMap,
+        pubMethodCollMap
+      } = params
+      const syncedAt = Date.now()
+      const updatesForPubCollsPromises = []
+
+      for (const [, { auth, methodCollMap }] of syncedUsersMap) {
+        const { userId, subUserId } = this._getUserIds(auth)
+        const updatesForOneUserPromises = []
+
+        updatesForOneUserPromises.push(setImmediatePromise())
+
+        for (const [collName, schema] of methodCollMap) {
+          if (
+            !Array.isArray(schema?.start) ||
+            schema.start.length === 0
+          ) {
+            continue
+          }
+
+          const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+            collName,
+            userId,
+            subUserId,
+            syncedAt,
+            ...this.syncUserStepManager.wereStepsSynced(
+              schema.start,
+              { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
+            )
+          }, { doNotQueueQuery: true })
+          updatesForOneUserPromises.push(promise)
+        }
+
+        await Promise.all(updatesForOneUserPromises)
+      }
+      for (const [collName, schema] of pubMethodCollMap) {
+        if (
+          !Array.isArray(schema?.start) ||
+          schema.start.length === 0
+        ) {
+          continue
+        }
+
+        const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+          collName,
+          syncedAt,
+          ...this.syncUserStepManager.wereStepsSynced(
+            schema.start,
+            {
+              shouldNotMtsBeChecked: isUpdatable(schema?.type),
+              shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+            }
+          )
+        }, { doNotQueueQuery: true })
+
+        updatesForPubCollsPromises.push(promise)
+      }
+
+      await Promise.all(updatesForPubCollsPromises)
+
+      await this.syncTempTablesManager
+        .removeTempDBStructureForCurrSync({
+          isNotInTrans: true,
+          doNotQueueQuery: true
+        })
+    })
+  }
+
+  _addAfterAllInsertsHooks (hook, opts) {
+    const hookArr = Array.isArray(hook)
+      ? hook
+      : [hook]
+
+    if (hookArr.some((h) => !(h instanceof DataInserterHook))) {
+      throw new AfterAllInsertsHookIsNotHookError()
+    }
+    if (!Array.isArray(this._afterAllInsertsHooks)) {
+      this._afterAllInsertsHooks = []
+    }
+
+    hookArr.forEach((hook) => {
+      hook.setDataInserter(this)
+      hook.init({
+        syncColls: this.syncColls,
+        syncQueueId: this.syncQueueId,
+        ...opts
+      })
+    })
+
+    this._afterAllInsertsHooks.push(...hookArr)
+  }
+
+  _getDataFromApi (methodApi, args, isCheckCall) {
+    if (!this.apiMiddleware.hasMethod(methodApi)) {
+      throw new FindMethodError()
+    }
+
+    return this.getDataFromApi({
+      getData: methodApi,
+      args,
+      middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
+      middlewareParams: isCheckCall,
+      callerName: 'DATA_SYNCER'
+    })
+  }
+
+  async _setProgress (progress) {
+    for (const handler of this._asyncProgressHandlers) {
+      await handler(progress)
+    }
+
+    this.emit('progress', progress)
+  }
+
+  async _optimizeDb () {
+    if (typeof this.dao.optimize !== 'function') {
+      return
+    }
+
+    await this.wsEventEmitter
+      .emitSyncingStep('DB_OPTIMIZATION')
+    await this.dao.optimize()
+  }
+
+  _getUserIds (auth) {
+    const {
+      _id: userId,
+      subUser
+    } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+
+    return { userId, subUserId }
   }
 
   _getMethodArgMap (method, opts) {
@@ -956,42 +996,6 @@ class DataInserter extends EventEmitter {
 
   _getMethodCollMap () {
     return new Map(this._methodCollMap)
-  }
-
-  _isLastSubUser (auth = {}) {
-    const {
-      _id: userId,
-      subUser,
-      subUsers,
-      isSubAccount
-    } = auth ?? {}
-    const { _id: subUserId } = subUser ?? {}
-    const restSubUsers = subUsers.filter((user) => (
-      user?._id !== subUserId
-    ))
-    const currSubUser = this._getSyncedSubUser(userId, subUserId)
-
-    return (
-      isSubAccount &&
-      !this._syncedSubUsers.has(currSubUser) &&
-      restSubUsers.every((subUser) => (
-        this._syncedSubUsers
-          .has(this._getSyncedSubUser(userId, subUser?._id))
-      ))
-    )
-  }
-
-  _setSyncedSubUser (userId, subUserId) {
-    if (!(this._syncedSubUsers instanceof Set)) {
-      this._syncedSubUsers = new Set()
-    }
-
-    this._syncedSubUsers
-      .add(this._getSyncedSubUser(userId, subUserId))
-  }
-
-  _getSyncedSubUser (userId, subUserId) {
-    return `${userId}-${subUserId}`
   }
 }
 

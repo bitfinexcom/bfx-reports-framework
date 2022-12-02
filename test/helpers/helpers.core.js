@@ -13,7 +13,9 @@ const emptyDB = async () => {
   const dao = container.get(TYPES.DAO)
 
   if (dbDriver === 'better-sqlite') {
-    await dao.dropAllTables()
+    await dao.dropAllTables({
+      shouldWalCheckpointAndVacuumBeExecuted: true
+    })
     await rService._initialize(dao.db)
 
     return

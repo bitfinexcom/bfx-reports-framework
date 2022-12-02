@@ -1,36 +1,31 @@
 'use strict'
 
 const {
-  isEmpty
+  isEmpty,
+  min
 } = require('lodash')
 const moment = require('moment')
-const {
-  FindMethodError
-} = require('bfx-report/workers/loc.api/errors')
 
+const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const {
-  getMethodArgMap
-} = require('../helpers')
+  SyncQueueIDSettingError
+} = require('../../../errors')
 const {
-  isInsertableArrObjTypeOfColl
+  isInsertableArrObj,
+  isUpdatable,
+  isPublic
 } = require('../../schema/utils')
 const {
-  filterMethodCollMap,
-  pushConfigurableDataStartConf,
-  invertSort,
-  compareElemsDbAndApi
+  filterMethodCollMap
 } = require('./helpers')
 const {
   CONVERT_TO,
-  CANDLES_TIMEFRAME,
-  CANDLES_SECTION,
-  ALL_SYMBOLS_TO_SYNC
+  CANDLES_TIMEFRAME
 } = require('../const')
 
 const { decorateInjectable } = require('../../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.RService,
   TYPES.DAO,
   TYPES.SyncSchema,
   TYPES.TABLES_NAMES,
@@ -38,12 +33,11 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.CurrencyConverter,
   TYPES.SyncInterrupter,
-  TYPES.SyncCollsManager,
-  TYPES.GetDataFromApi
+  TYPES.SyncUserStepManager,
+  TYPES.SyncUserStepDataFactory
 ]
 class DataChecker {
   constructor (
-    rService,
     dao,
     syncSchema,
     TABLES_NAMES,
@@ -51,10 +45,9 @@ class DataChecker {
     FOREX_SYMBS,
     currencyConverter,
     syncInterrupter,
-    syncCollsManager,
-    getDataFromApi
+    syncUserStepManager,
+    syncUserStepDataFactory
   ) {
-    this.rService = rService
     this.dao = dao
     this.syncSchema = syncSchema
     this.TABLES_NAMES = TABLES_NAMES
@@ -62,24 +55,36 @@ class DataChecker {
     this.FOREX_SYMBS = FOREX_SYMBS
     this.currencyConverter = currencyConverter
     this.syncInterrupter = syncInterrupter
-    this.syncCollsManager = syncCollsManager
-    this.getDataFromApi = getDataFromApi
+    this.syncUserStepManager = syncUserStepManager
+    this.syncUserStepDataFactory = syncUserStepDataFactory
 
     this._methodCollMap = new Map()
 
     this._isInterrupted = this.syncInterrupter.hasInterrupted()
   }
 
-  init ({ methodCollMap }) {
+  init (params = {}) {
     this.syncInterrupter.onceInterrupt(() => {
       this._isInterrupted = true
     })
 
-    this.setMethodCollMap(methodCollMap)
+    const {
+      syncQueueId,
+      methodCollMap
+    } = params ?? {}
+
+    if (!Number.isInteger(syncQueueId)) {
+      throw new SyncQueueIDSettingError()
+    }
+
+    this.syncQueueId = syncQueueId
+    this._setMethodCollMap(methodCollMap)
+
+    this.syncUserStepManager.init({ syncQueueId: this.syncQueueId })
   }
 
   async checkNewData (auth) {
-    const methodCollMap = this.getMethodCollMap()
+    const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap)
@@ -91,29 +96,32 @@ class DataChecker {
   }
 
   async checkNewPublicData () {
-    const methodCollMap = this.getMethodCollMap()
+    const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
     }
 
     await this._checkNewDataPublicArrObjType(methodCollMap)
+    await this._checkNewPublicUpdatableData(methodCollMap)
 
     return filterMethodCollMap(methodCollMap, true)
   }
 
   async _checkNewDataArrObjType (auth, methodCollMap) {
-    for (const [method, item] of methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObjTypeOfColl(item)) {
+      if (!isInsertableArrObj(schema?.type, { isPrivate: true })) {
         continue
       }
 
+      this._resetSyncSchemaProps(schema)
+
       await this._checkItemNewDataArrObjType(
         method,
-        item,
+        schema,
         auth
       )
     }
@@ -128,121 +136,47 @@ class DataChecker {
       return
     }
 
-    this._resetSyncSchemaProps(schema)
+    const { _id: userId, subUser } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
 
-    const args = this._getMethodArgMap(schema, { auth, limit: 1 })
-    args.params.notThrowError = true
-    args.params.notCheckNextPage = true
-
-    const { _id, subUser } = { ...auth }
-    const { _id: subUserId } = { ...subUser }
-    const hasSubUserIdField = (
-      schema.model &&
-      typeof schema.model === 'object' &&
-      typeof schema.model.subUserId === 'string' &&
-      Number.isInteger(subUserId)
-    )
-    const subUserIdFilter = hasSubUserIdField
-      ? { $eq: { subUserId } }
-      : {}
-    const lastElemFromDb = await this.dao.getElemInCollBy(
-      schema.name,
-      {
-        user_id: _id,
-        ...subUserIdFilter
-      },
-      schema.sort
-    )
+    const currMts = Date.now()
     const {
-      res: lastElemFromApi,
-      isInterrupted
-    } = await this._getDataFromApi(
-      method,
-      args,
-      true
+      syncUserStepData,
+      lastElemMtsFromTables
+    } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+      schema,
+      {
+        collName: method,
+        userId,
+        subUserId
+      }
     )
 
     if (
-      isInterrupted ||
-      isEmpty(lastElemFromApi)
+      !syncUserStepData.isBaseStepReady ||
+      !syncUserStepData.isCurrStepReady
     ) {
-      return
-    }
-
-    if (isEmpty(lastElemFromDb)) {
       schema.hasNewData = true
-      pushConfigurableDataStartConf(
-        schema,
-        ALL_SYMBOLS_TO_SYNC,
-        {
-          baseStartFrom: 0,
-          baseStartTo: Date.now()
-        }
-      )
-      return
+      schema.start.push(syncUserStepData)
     }
 
-    const lastDateInDb = compareElemsDbAndApi(
-      schema.dateFieldName,
-      lastElemFromDb,
-      lastElemFromApi
+    const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
+      syncUserStepData,
+      currMts
     )
 
-    const startConf = {
-      baseStartFrom: 0,
-      baseStartTo: null,
-      currStart: null
-    }
-
-    if (lastDateInDb) {
-      schema.hasNewData = true
-      startConf.currStart = lastDateInDb + 1
-    }
-
-    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
-      .hasCollBeenSyncedAtLeastOnce({
-        userId: _id,
-        subUserId,
-        collName: method
-      })
-
-    if (hasCollBeenSyncedAtLeastOnce) {
-      pushConfigurableDataStartConf(
-        schema,
-        ALL_SYMBOLS_TO_SYNC,
-        startConf
-      )
-
-      if (!schema.hasNewData) {
-        await this.syncCollsManager.setCollAsSynced({
-          collName: method, userId: _id, subUserId
-        })
-      }
-
+    if (!shouldFreshSyncBeAdded) {
       return
     }
 
-    const firstElemFromDb = await this.dao.getElemInCollBy(
-      schema.name,
-      {
-        user_id: _id,
-        ...subUserIdFilter
-      },
-      invertSort(schema.sort)
-    )
-
-    if (isEmpty(firstElemFromDb)) {
-      return
-    }
-
+    const freshSyncUserStepData = this.syncUserStepDataFactory({
+      ...syncUserStepData.getParams(),
+      currStart: lastElemMtsFromTables,
+      currEnd: currMts,
+      isCurrStepReady: false
+    })
     schema.hasNewData = true
-    startConf.baseStartTo = firstElemFromDb[schema.dateFieldName]
-
-    pushConfigurableDataStartConf(
-      schema,
-      ALL_SYMBOLS_TO_SYNC,
-      startConf
-    )
+    schema.start.push(freshSyncUserStepData)
   }
 
   async _checkNewDataPublicArrObjType (methodCollMap) {
@@ -250,24 +184,20 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObjTypeOfColl(schema, true)) {
+      if (!isInsertableArrObj(schema?.type, { isPublic: true })) {
         continue
+      }
+
+      this._resetSyncSchemaProps(schema)
+
+      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+        await this._checkNewCandlesData(method, schema)
       }
       if (
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-        schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY
+        schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
+        schema.name === this.ALLOWED_COLLS.CANDLES
       ) {
-        await this._checkNewConfigurablePublicData(method, schema)
-
-        continue
-      }
-      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        if (!schema.isSyncDoneForCurrencyConv) {
-          await this.checkNewCandlesData(method, schema)
-
-          schema.isSyncDoneForCurrencyConv = true
-        }
-
         await this._checkNewConfigurablePublicData(method, schema)
 
         continue
@@ -280,45 +210,32 @@ class DataChecker {
       return
     }
 
-    this._resetSyncSchemaProps(schema)
-
+    const currMts = Date.now()
     const {
+      type,
       confName,
-      symbolFieldName,
-      timeframeFieldName,
-      dateFieldName,
-      name,
-      sort
-    } = { ...schema }
+      timeframeFieldName
+    } = schema ?? {}
     const groupResBy = (
       timeframeFieldName &&
       typeof timeframeFieldName === 'string'
     )
       ? ['symbol', 'timeframe']
       : ['symbol']
+
     const publicСollsСonf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName },
         subQuery: { sort: [['start', 1]] },
-        groupResBy
+        groupResBy,
+        groupFns: ['min(start)']
       }
     )
 
     if (isEmpty(publicСollsСonf)) {
       return
     }
-
-    const params = name === this.ALLOWED_COLLS.CANDLES
-      ? {
-          section: CANDLES_SECTION,
-          notThrowError: true,
-          notCheckNextPage: true
-        }
-      : {
-          notThrowError: true,
-          notCheckNextPage: true
-        }
 
     for (const confs of publicСollsСonf) {
       if (this._isInterrupted) {
@@ -327,140 +244,97 @@ class DataChecker {
 
       const {
         symbol,
-        start,
-        timeframe
-      } = confs
-      const timeframeParam = (
-        timeframe &&
-        typeof timeframe === 'string'
-      )
-        ? { timeframe }
-        : {}
-      const args = this._getMethodArgMap(
+        timeframe,
+        start
+      } = confs ?? {}
+
+      const {
+        syncUserStepData,
+        lastElemMtsFromTables
+      } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
         schema,
         {
-          limit: 1,
-          params: {
-            ...params,
-            ...timeframeParam,
-            symbol
-          }
+          collName: method,
+          symbol,
+          timeframe,
+          defaultStart: start,
+          currMts: isUpdatable(type)
+            ? null
+            : currMts
         }
       )
-      const timeframeFilter = (
-        timeframe &&
-        typeof timeframe === 'string' &&
-        timeframeFieldName &&
-        typeof timeframeFieldName === 'string'
-      )
-        ? { [timeframeFieldName]: timeframe }
-        : {}
-      const filter = {
-        ...timeframeFilter,
-        [symbolFieldName]: symbol
+
+      if (
+        !syncUserStepData.isBaseStepReady ||
+        !syncUserStepData.isCurrStepReady
+      ) {
+        schema.hasNewData = true
+        schema.start.push(syncUserStepData)
+
+        if (isUpdatable(type)) {
+          continue
+        }
       }
-      const lastElemFromDb = await this.dao.getElemInCollBy(
-        name,
-        filter,
-        sort
+
+      if (isUpdatable(type)) {
+        const freshSyncUserStepData = this.syncUserStepDataFactory({
+          ...syncUserStepData.getParams(),
+          currStart: start,
+          isCurrStepReady: false
+        })
+
+        schema.hasNewData = true
+        schema.start.push(freshSyncUserStepData)
+
+        continue
+      }
+
+      const wasStartPointChanged = this._wasStartPointChanged(
+        syncUserStepData,
+        start
       )
-      const {
-        res: lastElemFromApi,
-        isInterrupted
-      } = await this._getDataFromApi(
-        method,
-        args,
-        true
+      const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
+        syncUserStepData,
+        currMts
       )
 
-      if (isInterrupted) {
-        return
-      }
       if (
-        isEmpty(lastElemFromApi) ||
-        (
-          Array.isArray(lastElemFromApi) &&
-          lastElemFromApi[0][symbolFieldName] &&
-          typeof lastElemFromApi[0][symbolFieldName] === 'string' &&
-          lastElemFromApi[0][symbolFieldName] !== symbol
-        )
+        !wasStartPointChanged &&
+        !shouldFreshSyncBeAdded
       ) {
         continue
       }
-      if (isEmpty(lastElemFromDb)) {
-        schema.hasNewData = true
-        pushConfigurableDataStartConf(
-          schema,
-          symbol,
-          { currStart: start },
-          timeframe
-        )
 
-        continue
+      const freshSyncUserStepData = this.syncUserStepDataFactory({
+        ...syncUserStepData.getParams(),
+        isBaseStepReady: true,
+        isCurrStepReady: true
+      })
+
+      if (wasStartPointChanged) {
+        freshSyncUserStepData.setParams({
+          baseStart: start,
+          baseEnd: syncUserStepData.baseStart,
+          isBaseStepReady: false
+        })
+      }
+      if (shouldFreshSyncBeAdded) {
+        freshSyncUserStepData.setParams({
+          currStart: lastElemMtsFromTables,
+          currEnd: currMts,
+          isCurrStepReady: false
+        })
       }
 
-      const lastDateInDb = compareElemsDbAndApi(
-        dateFieldName,
-        lastElemFromDb,
-        lastElemFromApi
-      )
-
-      const startConf = {
-        baseStartFrom: null,
-        baseStartTo: null,
-        currStart: null
-      }
-
-      if (lastDateInDb) {
-        schema.hasNewData = true
-        startConf.currStart = lastDateInDb + 1
-      }
-
-      const firstElemFromDb = await this.dao.getElemInCollBy(
-        name,
-        filter,
-        invertSort(sort)
-      )
-
-      if (!isEmpty(firstElemFromDb)) {
-        const isChangedBaseStart = compareElemsDbAndApi(
-          dateFieldName,
-          { [dateFieldName]: start },
-          firstElemFromDb
-        )
-
-        if (isChangedBaseStart) {
-          schema.hasNewData = true
-          startConf.baseStartFrom = start
-          startConf.baseStartTo = firstElemFromDb[dateFieldName] - 1
-        }
-      }
-
-      pushConfigurableDataStartConf(
-        schema,
-        symbol,
-        startConf,
-        timeframe
-      )
+      schema.hasNewData = true
+      schema.start.push(freshSyncUserStepData)
     }
-
-    if (schema.hasNewData) {
-      return
-    }
-
-    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
-      .hasCollBeenSyncedAtLeastOnce({ collName: method })
-
-    if (!hasCollBeenSyncedAtLeastOnce) {
-      return
-    }
-
-    await this.syncCollsManager.setCollAsSynced({
-      collName: method
-    })
   }
 
-  async checkNewCandlesData (
+  /*
+   * This step is used for the currency converter
+   */
+  async _checkNewCandlesData (
     method,
     schema
   ) {
@@ -468,51 +342,298 @@ class DataChecker {
       return
     }
 
-    this._resetSyncSchemaProps(schema)
+    const currMts = Date.now()
+    const firstLedgerMts = await this._getFirstLedgerMts()
 
-    const {
-      symbolFieldName,
-      timeframeFieldName,
-      dateFieldName,
-      name,
-      sort
-    } = { ...schema }
-
-    const lastElemLedgers = await this.dao.getElemInCollBy(
-      this.ALLOWED_COLLS.LEDGERS,
-      { $not: { currency: this.FOREX_SYMBS } },
-      [['mts', 1]]
-    )
-
-    if (
-      !lastElemLedgers ||
-      typeof lastElemLedgers !== 'object' ||
-      !Number.isInteger(lastElemLedgers.mts)
-    ) {
+    if (!Number.isInteger(firstLedgerMts)) {
       return
     }
 
-    const uniqueLedgersSymbs = await this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.LEDGERS,
-      {
-        filter: { $not: { currency: this.FOREX_SYMBS } },
-        isDistinct: true,
-        projection: ['currency']
+    const uniqueSymbsSet = await this._getUniqueSymbsFromLedgers()
+    const candlesPairsSet = new Set()
+
+    for (const symbol of uniqueSymbsSet) {
+      const currency = typeof symbol === 'string'
+        ? symbol.replace(/F0$/i, '')
+        : symbol
+      const separator = (
+        typeof currency === 'string' &&
+        currency.length > 3
+      )
+        ? ':'
+        : ''
+
+      if (currency) {
+        candlesPairsSet.add(`t${currency}${separator}${CONVERT_TO}`)
       }
-    )
+    }
+    for (const forexSymbol of this.FOREX_SYMBS) {
+      candlesPairsSet.add(`tBTC${forexSymbol}`)
+    }
 
-    if (
-      !Array.isArray(uniqueLedgersSymbs) ||
-      uniqueLedgersSymbs.length === 0
-    ) {
+    if (candlesPairsSet.size === 0) {
       return
     }
 
-    const currenciesSynonymous = await this.currencyConverter
+    for (const symbol of candlesPairsSet) {
+      if (this._isInterrupted) {
+        return
+      }
+
+      const {
+        syncUserStepData,
+        lastElemMtsFromTables
+      } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+        schema,
+        {
+          collName: method,
+          symbol,
+          timeframe: CANDLES_TIMEFRAME,
+          defaultStart: firstLedgerMts
+        }
+      )
+
+      if (
+        !syncUserStepData.isBaseStepReady ||
+        !syncUserStepData.isCurrStepReady
+      ) {
+        schema.hasNewData = true
+        schema.start.push(syncUserStepData)
+      }
+
+      const wasStartPointChanged = this._wasStartPointChanged(
+        syncUserStepData,
+        firstLedgerMts
+      )
+      const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
+        syncUserStepData,
+        currMts
+      )
+
+      if (
+        !wasStartPointChanged &&
+        !shouldFreshSyncBeAdded
+      ) {
+        continue
+      }
+
+      const freshSyncUserStepData = this.syncUserStepDataFactory({
+        ...syncUserStepData.getParams(),
+        isBaseStepReady: true,
+        isCurrStepReady: true
+      })
+
+      if (wasStartPointChanged) {
+        freshSyncUserStepData.setParams({
+          baseStart: firstLedgerMts,
+          baseEnd: syncUserStepData.baseStart,
+          isBaseStepReady: false
+        })
+      }
+      if (shouldFreshSyncBeAdded) {
+        freshSyncUserStepData.setParams({
+          currStart: lastElemMtsFromTables,
+          currEnd: currMts,
+          isCurrStepReady: false
+        })
+      }
+
+      schema.hasNewData = true
+      schema.start.push(freshSyncUserStepData)
+    }
+  }
+
+  async _checkNewPublicUpdatableData (methodCollMap) {
+    for (const [method, schema] of methodCollMap) {
+      if (this._isInterrupted) {
+        return
+      }
+      if (
+        !isUpdatable(schema?.type) ||
+        !isPublic(schema?.type)
+      ) {
+        continue
+      }
+
+      this._resetSyncSchemaProps(schema)
+
+      const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+
+      if (hasStatusMessagesSection) {
+        await this._checkNewConfigurablePublicData(method, schema)
+
+        continue
+      }
+
+      const {
+        syncUserStepData
+      } = await this.syncUserStepManager.getLastSyncedInfoForCurrColl(
+        schema,
+        {
+          collName: method,
+          defaultStart: null,
+          currMts: null
+        }
+      )
+
+      if (
+        !syncUserStepData.isBaseStepReady ||
+        !syncUserStepData.isCurrStepReady
+      ) {
+        schema.hasNewData = true
+        schema.start.push(syncUserStepData)
+
+        continue
+      }
+
+      const freshSyncUserStepData = this.syncUserStepDataFactory({
+        ...syncUserStepData.getParams(),
+        isCurrStepReady: false
+      })
+      schema.hasNewData = true
+      schema.start.push(freshSyncUserStepData)
+    }
+  }
+
+  _shouldFreshSyncBeAdded (
+    syncUserStepData,
+    currMts = Date.now(),
+    allowedDiff
+  ) {
+    const {
+      measure = 'minutes',
+      allowedTimeDiff = 60
+    } = allowedDiff ?? {}
+
+    const baseEnd = (
+      !syncUserStepData.isBaseStepReady &&
+      syncUserStepData.hasBaseStep
+    )
+      ? syncUserStepData.baseEnd
+      : 0
+    const currEnd = (
+      !syncUserStepData.isCurrStepReady &&
+      syncUserStepData.hasCurrStep
+    )
+      ? syncUserStepData.currEnd
+      : 0
+
+    const momentBaseEnd = moment.utc(baseEnd)
+    const momentCurrEnd = moment.utc(currEnd)
+    const momentCurrMts = moment.utc(currMts)
+
+    const momentMaxEnd = moment.max(momentBaseEnd, momentCurrEnd)
+    const momentDiff = momentCurrMts.diff(momentMaxEnd, measure)
+
+    return momentDiff > allowedTimeDiff
+  }
+
+  _wasStartPointChanged (
+    syncUserStepData,
+    startMts = 0,
+    allowedDiff
+  ) {
+    const {
+      measure = 'minutes',
+      allowedTimeDiff = 5
+    } = allowedDiff ?? {}
+
+    const baseStart = (
+      syncUserStepData.isBaseStepReady &&
+      syncUserStepData.hasBaseStep
+    )
+      ? syncUserStepData.baseStart
+      : 0
+
+    const momentBaseStart = moment.utc(baseStart)
+    const momentStartMts = moment.utc(startMts)
+
+    const momentDiff = momentBaseStart.diff(momentStartMts, measure)
+
+    return momentDiff > allowedTimeDiff
+  }
+
+  async _getFirstLedgerMts () {
+    const firstElemFilter = { $not: { currency: 'USD' } }
+    const firstElemOrder = [['mts', 1]]
+
+    const tempLedgersTableName = SyncTempTablesManager.getTempTableName(
+      this.ALLOWED_COLLS.LEDGERS,
+      this.syncQueueId
+    )
+    const hasTempTable = await this.dao.hasTable(tempLedgersTableName)
+
+    const firstMainElemLedgersPromise = this.dao.getElemInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      firstElemFilter,
+      firstElemOrder
+    )
+    const firstTempElemLedgersPromise = hasTempTable
+      ? this.dao.getElemInCollBy(
+          tempLedgersTableName,
+          firstElemFilter,
+          firstElemOrder
+        )
+      : null
+
+    const [
+      firstMainElemLedgers,
+      firstTempElemLedgers
+    ] = await Promise.all([
+      firstMainElemLedgersPromise,
+      firstTempElemLedgersPromise
+    ])
+
+    const firstElemMts = min([
+      firstMainElemLedgers?.mts,
+      firstTempElemLedgers?.mts
+    ])
+
+    return firstElemMts
+  }
+
+  async _getUniqueSymbsFromLedgers () {
+    const ledgerParams = {
+      filter: { $not: { currency: this.FOREX_SYMBS } },
+      isDistinct: true,
+      projection: ['currency']
+    }
+
+    const tempLedgersTableName = SyncTempTablesManager.getTempTableName(
+      this.ALLOWED_COLLS.LEDGERS,
+      this.syncQueueId
+    )
+    const hasTempTable = await this.dao.hasTable(tempLedgersTableName)
+
+    const uniqueMainLedgersSymbsPromise = this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      ledgerParams
+    )
+    const uniqueTempLedgersSymbsPromise = hasTempTable
+      ? this.dao.getElemsInCollBy(
+          tempLedgersTableName,
+          ledgerParams
+        )
+      : []
+    const currenciesSynonymousPromise = await this.currencyConverter
       .getCurrenciesSynonymous()
 
-    const uniqueSymbs = uniqueLedgersSymbs.reduce((accum, ledger) => {
-      const { currency } = { ...ledger }
+    const [
+      uniqueMainLedgersSymbs,
+      uniqueTempLedgersSymbs,
+      currenciesSynonymous
+    ] = await Promise.all([
+      uniqueMainLedgersSymbsPromise,
+      uniqueTempLedgersSymbsPromise,
+      currenciesSynonymousPromise
+    ])
+    const ledgers = [
+      ...uniqueMainLedgersSymbs,
+      ...uniqueTempLedgersSymbs
+    ]
+
+    const uniqueSymbs = ledgers.reduce((accum, ledger) => {
+      const { currency } = ledger ?? {}
 
       if (!currency) {
         return accum
@@ -537,194 +658,7 @@ class DataChecker {
       return accum
     }, new Set())
 
-    const _collСonfig = []
-
-    for (const currency of uniqueSymbs) {
-      const _currency = typeof currency === 'string'
-        ? currency.replace(/F0$/i, '')
-        : currency
-      const separator = (
-        typeof _currency === 'string' &&
-        _currency.length > 3
-      )
-        ? ':'
-        : ''
-
-      _collСonfig.push({
-        symbol: `t${_currency}${separator}${CONVERT_TO}`,
-        start: lastElemLedgers.mts
-      })
-    }
-
-    const collСonfig = this.FOREX_SYMBS.reduce((accum, convertTo) => {
-      const _symb = `tBTC${convertTo}`
-
-      if (accum.every(({ symbol }) => symbol !== _symb)) {
-        accum.push({
-          symbol: _symb,
-          start: lastElemLedgers.mts
-        })
-      }
-
-      return accum
-    }, _collСonfig)
-
-    for (const { symbol, start: configStart } of collСonfig) {
-      if (this._isInterrupted) {
-        return
-      }
-
-      const mtsMoment = moment.utc(configStart)
-        .add(-1, 'days')
-        .valueOf()
-      const _start = configStart
-        ? mtsMoment
-        : configStart
-      const params = {
-        timeframe: CANDLES_TIMEFRAME,
-        section: CANDLES_SECTION,
-        notThrowError: true,
-        notCheckNextPage: true,
-        symbol
-      }
-      const argsForLastElem = this._getMethodArgMap(
-        schema,
-        { limit: 1, params }
-      )
-      const argsForReceivingStart = this._getMethodArgMap(
-        schema,
-        { limit: 1, end: _start, params }
-      )
-
-      const filter = {
-        [symbolFieldName]: symbol,
-        [timeframeFieldName]: CANDLES_TIMEFRAME
-      }
-      const lastElemFromDb = await this.dao.getElemInCollBy(
-        name,
-        filter,
-        sort
-      )
-      const {
-        res: lastElemFromApi,
-        isInterrupted: isInterruptedForLast
-      } = await this._getDataFromApi(method, argsForLastElem)
-
-      if (isInterruptedForLast) {
-        return
-      }
-
-      const {
-        res: startElemFromApi,
-        isInterrupted: isInterruptedForStart
-      } = await this._getDataFromApi(method, argsForReceivingStart)
-
-      if (isInterruptedForStart) {
-        return
-      }
-      if (
-        isEmpty(lastElemFromApi) ||
-        (
-          Array.isArray(lastElemFromApi) &&
-          lastElemFromApi[0][symbolFieldName] &&
-          typeof lastElemFromApi[0][symbolFieldName] === 'string' &&
-          lastElemFromApi[0][symbolFieldName] !== symbol
-        )
-      ) {
-        continue
-      }
-
-      const start = (
-        Array.isArray(startElemFromApi) &&
-        startElemFromApi[startElemFromApi.length - 1] &&
-        typeof startElemFromApi[startElemFromApi.length - 1] === 'object' &&
-        Number.isInteger(
-          startElemFromApi[startElemFromApi.length - 1][dateFieldName]
-        )
-      )
-        ? startElemFromApi[startElemFromApi.length - 1][dateFieldName]
-        : _start
-
-      if (isEmpty(lastElemFromDb)) {
-        schema.hasNewData = true
-        pushConfigurableDataStartConf(
-          schema,
-          symbol,
-          { currStart: start },
-          CANDLES_TIMEFRAME
-        )
-
-        continue
-      }
-
-      const lastDateInDb = compareElemsDbAndApi(
-        dateFieldName,
-        lastElemFromDb,
-        lastElemFromApi
-      )
-
-      const startConf = {
-        baseStartFrom: null,
-        baseStartTo: null,
-        currStart: null
-      }
-
-      if (lastDateInDb) {
-        schema.hasNewData = true
-        startConf.currStart = lastDateInDb + 1
-      }
-
-      const firstElemFromDb = await this.dao.getElemInCollBy(
-        name,
-        filter,
-        invertSort(sort)
-      )
-
-      if (!isEmpty(firstElemFromDb)) {
-        const isChangedBaseStart = compareElemsDbAndApi(
-          dateFieldName,
-          { [dateFieldName]: start },
-          firstElemFromDb
-        )
-
-        if (isChangedBaseStart) {
-          schema.hasNewData = true
-          startConf.baseStartFrom = start
-          startConf.baseStartTo = firstElemFromDb[dateFieldName] - 1
-        }
-      }
-
-      pushConfigurableDataStartConf(
-        schema,
-        symbol,
-        startConf,
-        CANDLES_TIMEFRAME
-      )
-    }
-
-    if (schema.hasNewData) {
-      return
-    }
-
-    const hasCollBeenSyncedAtLeastOnce = await this.syncCollsManager
-      .hasCollBeenSyncedAtLeastOnce({ collName: method })
-
-    if (!hasCollBeenSyncedAtLeastOnce) {
-      return
-    }
-
-    await this.syncCollsManager.setCollAsSynced({
-      collName: method
-    })
-  }
-
-  getMethodCollMap () {
-    return new Map(this._methodCollMap)
-  }
-
-  setMethodCollMap (methodCollMap) {
-    this._methodCollMap = this.syncSchema
-      .getMethodCollMap(methodCollMap)
+    return uniqueSymbs
   }
 
   _resetSyncSchemaProps (schema) {
@@ -732,25 +666,14 @@ class DataChecker {
     schema.start = []
   }
 
-  _getMethodArgMap (method, opts) {
-    const schema = typeof method === 'string'
-      ? this._methodCollMap.get(method)
-      : method
-
-    return getMethodArgMap(schema, opts)
+  _getMethodCollMap () {
+    return this.syncSchema
+      .getMethodCollMap(this._methodCollMap)
   }
 
-  _getDataFromApi (methodApi, args) {
-    if (typeof this.rService[methodApi] !== 'function') {
-      throw new FindMethodError()
-    }
-
-    return this.getDataFromApi({
-      getData: (space, args) => this.rService[methodApi]
-        .bind(this.rService)(args),
-      args,
-      callerName: 'DATA_SYNCER'
-    })
+  _setMethodCollMap (methodCollMap) {
+    this._methodCollMap = this.syncSchema
+      .getMethodCollMap(methodCollMap)
   }
 }
 

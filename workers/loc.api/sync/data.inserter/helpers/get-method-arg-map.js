@@ -14,13 +14,17 @@ module.exports = (
     start = 0,
     end = Date.now(),
     params = {}
-  } = { ...opts }
+  } = opts ?? {}
 
-  const { apiKey = '', apiSecret = '', subUser } = { ...reqAuth }
+  const {
+    apiKey = '',
+    apiSecret = '',
+    subUser
+  } = reqAuth ?? {}
   const {
     apiKey: subUserApiKey,
     apiSecret: subUserApiSecret
-  } = { ...subUser }
+  } = subUser ?? {}
   const auth = (
     subUserApiKey &&
     typeof subUserApiKey === 'string' &&
@@ -42,7 +46,8 @@ module.exports = (
       ...params,
       limit,
       end,
-      start
+      start,
+      isSyncRequest: true
     }
   }
 }

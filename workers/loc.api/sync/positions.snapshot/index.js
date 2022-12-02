@@ -14,6 +14,7 @@ const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.RService,
+  TYPES.GetDataFromApi,
   TYPES.DAO,
   TYPES.ALLOWED_COLLS,
   TYPES.SYNC_API_METHODS,
@@ -25,6 +26,7 @@ const depsTypes = (TYPES) => [
 class PositionsSnapshot {
   constructor (
     rService,
+    getDataFromApi,
     dao,
     ALLOWED_COLLS,
     SYNC_API_METHODS,
@@ -34,6 +36,7 @@ class PositionsSnapshot {
     authenticator
   ) {
     this.rService = rService
+    this.getDataFromApi = getDataFromApi
     this.dao = dao
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.SYNC_API_METHODS = SYNC_API_METHODS
@@ -349,10 +352,14 @@ class PositionsSnapshot {
       let serialRequestsCount = 0
 
       while (true) {
-        const _res = await this.rService.getPositionsAudit(
-          null,
-          { auth, params: { id: [id], end, limit: 250 } }
-        )
+        const _res = await this.getDataFromApi({
+          getData: this.rService.getPositionsAudit.bind(this.rService),
+          args: { auth, params: { id: [id], end, limit: 250 } },
+          callerName: 'POSITIONS_SNAPSHOT',
+          eNetErrorAttemptsTimeframeMin: 10 / 60,
+          eNetErrorAttemptsTimeoutMs: 1000,
+          shouldNotInterrupt: true
+        })
 
         const { res, nextPage } = (
           Object.keys({ ..._res }).every(key => key !== 'nextPage')
@@ -435,10 +442,14 @@ class PositionsSnapshot {
     auth,
     end
   ) {
-    const activePositions = await this.rService.getActivePositions(
-      null,
-      { auth }
-    )
+    const activePositions = await this.getDataFromApi({
+      getData: this.rService.getActivePositions.bind(this.rService),
+      args: { auth },
+      callerName: 'POSITIONS_SNAPSHOT',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
 
     if (
       !Array.isArray(activePositions) ||

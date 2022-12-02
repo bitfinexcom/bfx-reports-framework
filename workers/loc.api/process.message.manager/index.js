@@ -173,6 +173,7 @@ class ProcessMessageManager {
     }
 
     await this.dao.dropAllTables({
+      shouldWalCheckpointAndVacuumBeExecuted: true,
       exceptions: [
         this.TABLES_NAMES.USERS,
         this.TABLES_NAMES.SUB_ACCOUNTS
@@ -192,7 +193,9 @@ class ProcessMessageManager {
     await this.dao.disableForeignKeys()
 
     try {
-      await this.dao.dropAllTables()
+      await this.dao.dropAllTables({
+        shouldWalCheckpointAndVacuumBeExecuted: true
+      })
       await this.dao.setCurrDbVer(0)
     } catch (err) {
       await this.dao.enableForeignKeys()

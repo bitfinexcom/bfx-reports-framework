@@ -12,6 +12,7 @@ const _isContainedPosStatus = (positions, status) => {
 
 module.exports = (
   rService,
+  getDataFromApi,
   dao,
   ALLOWED_COLLS
 ) => async ({
@@ -54,9 +55,9 @@ module.exports = (
 
   const {
     res: positionsAudit
-  } = await rService.getPositionsAudit(
-    null,
-    {
+  } = await getDataFromApi({
+    getData: rService.getPositionsAudit.bind(rService),
+    args: {
       auth: _auth,
       params: {
         id: [id],
@@ -64,8 +65,9 @@ module.exports = (
         notThrowError: true,
         notCheckNextPage: true
       }
-    }
-  )
+    },
+    callerName: 'DATA_SYNCER'
+  })
 
   if (
     !Array.isArray(trades) ||

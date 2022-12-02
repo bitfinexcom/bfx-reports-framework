@@ -1,5 +1,7 @@
 'use strict'
 
+const { orderBy } = require('lodash')
+
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
@@ -13,6 +15,9 @@ const {
   SubAccountUpdatingError,
   UserRemovingError
 } = require('../../errors')
+const SyncTempTablesManager = require(
+  '../data.inserter/sync.temp.tables.manager'
+)
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -36,16 +41,15 @@ class SubAccount {
   }
 
   async createSubAccount (args) {
-    const { auth, params } = { ...args }
     const {
       email,
       password,
       token
-    } = { ...auth }
+    } = args?.auth ?? {}
     const {
       subAccountPassword,
       subAccountApiKeys
-    } = { ...params }
+    } = args?.params ?? {}
 
     const masterUser = await this.authenticator
       .verifyUser(
@@ -68,8 +72,7 @@ class SubAccount {
             'isNotProtected'
           ],
           isDecryptedApiKeys: true,
-          isReturnedPassword: true,
-          withoutWorkerThreads: true
+          isReturnedPassword: true
         }
       )
 
@@ -111,7 +114,7 @@ class SubAccount {
             isNotSetSession: true,
             isSubAccount: true,
             isNotInTrans: true,
-            withoutWorkerThreads: true
+            doNotQueueQuery: true
           }
         )
       const { _id, email, token } = subAccountUser
@@ -135,7 +138,7 @@ class SubAccount {
           password,
           email,
           token
-        } = { ...subUserAuth }
+        } = subUserAuth ?? {}
 
         const isAuthCheckedInDb = (
           (
@@ -168,7 +171,7 @@ class SubAccount {
                 ],
                 isDecryptedApiKeys: true,
                 isNotInTrans: true,
-                withoutWorkerThreads: true
+                doNotQueueQuery: true
               }
             )
           : { apiKey, apiSecret }
@@ -206,8 +209,8 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
-              masterUserId: masterUser.id,
-              withoutWorkerThreads: true
+              doNotQueueQuery: true,
+              masterUserId: masterUser.id
             }
           )
 
@@ -219,7 +222,7 @@ class SubAccount {
             masterUserId: _id,
             subUserId: subUser._id
           },
-          { withoutWorkerThreads: true }
+          { doNotQueueQuery: true }
         )
 
         if (
@@ -238,21 +241,20 @@ class SubAccount {
         isSubAccount: true,
         token
       }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   async recoverPassword (args) {
-    const { auth, params } = { ...args }
     const {
       apiKey,
       apiSecret,
       newPassword,
       isSubAccount,
       isNotProtected
-    } = { ...auth }
+    } = args?.auth ?? {}
     const {
       subAccountApiKeys
-    } = { ...params }
+    } = args?.params ?? {}
 
     if (
       !isSubAccount ||
@@ -269,7 +271,7 @@ class SubAccount {
           {
             isReturnedUser: true,
             isNotInTrans: true,
-            withoutWorkerThreads: true
+            doNotQueueQuery: true
           }
         )
       const {
@@ -277,7 +279,7 @@ class SubAccount {
         email,
         isSubAccount,
         token
-      } = { ...subAccount }
+      } = subAccount ?? {}
 
       if (
         !Array.isArray(subUsers) ||
@@ -295,7 +297,7 @@ class SubAccount {
         const {
           apiKey,
           apiSecret
-        } = { ...subUserAuth }
+        } = subUserAuth ?? {}
         const refreshedSubUser = await this.authenticator
           .recoverPassword(
             {
@@ -309,8 +311,8 @@ class SubAccount {
             {
               isReturnedUser: true,
               isNotInTrans: true,
-              isSubUser: true,
-              withoutWorkerThreads: true
+              doNotQueueQuery: true,
+              isSubUser: true
             }
           )
         const isNotExistInDb = subUsers.every((subUser) => {
@@ -329,15 +331,15 @@ class SubAccount {
         isSubAccount,
         token
       }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   async updateSubAccount (args) {
-    const { auth: subAccountAuth, params } = { ...args }
+    const { auth: subAccountAuth, params } = args ?? {}
     const {
       addingSubUsers = [],
       removingSubUsersByEmails = []
-    } = { ...params }
+    } = params ?? {}
 
     await this.dao.updateRecordOf(
       this.TABLES_NAMES.SCHEDULER,
@@ -345,7 +347,10 @@ class SubAccount {
     )
     await this.sync.stop()
 
-    const res = await this.dao.executeQueriesInTrans(async () => {
+    const {
+      subAccountUser,
+      res
+    } = await this.dao.executeQueriesInTrans(async () => {
       const subAccountUser = await this.authenticator
         .signIn(
           {
@@ -357,8 +362,8 @@ class SubAccount {
           {
             isReturnedUser: true,
             isNotInTrans: true,
-            isNotSetSession: true,
-            withoutWorkerThreads: true
+            doNotQueueQuery: true,
+            isNotSetSession: true
           }
         )
 
@@ -372,9 +377,7 @@ class SubAccount {
         ) ||
         addingSubUsers.some(isSubAccountApiKeys) ||
         removingSubUsersByEmails.some((user) => (
-          !user ||
-          typeof user !== 'object' ||
-          typeof user.email !== 'string'
+          typeof user?.email !== 'string'
         ))
       ) {
         throw new SubAccountUpdatingError()
@@ -388,11 +391,9 @@ class SubAccount {
         isNotProtected
       } = subAccountUser
 
-      const masterUser = subUsers.find((subUser) => {
-        const { email: _email } = { ...subUser }
-
-        return _email === email
-      })
+      const masterUser = subUsers.find((subUser) => (
+        subUser?.email === email
+      ))
 
       const addingSubUsersAuth = [
         ...addingSubUsers,
@@ -408,7 +409,7 @@ class SubAccount {
           password,
           email,
           token
-        } = { ...subUserAuth }
+        } = subUserAuth ?? {}
 
         const isAuthCheckedInDb = (
           (
@@ -441,7 +442,7 @@ class SubAccount {
                 ],
                 isDecryptedApiKeys: true,
                 isNotInTrans: true,
-                withoutWorkerThreads: true
+                doNotQueueQuery: true
               }
             )
           : { apiKey, apiSecret }
@@ -489,8 +490,8 @@ class SubAccount {
               isNotSetSession: true,
               isSubUser: true,
               isNotInTrans: true,
-              masterUserId: masterUser.id,
-              withoutWorkerThreads: true
+              doNotQueueQuery: true,
+              masterUserId: masterUser.id
             }
           )
 
@@ -500,7 +501,7 @@ class SubAccount {
             masterUserId: _id,
             subUserId: subUser._id
           },
-          { withoutWorkerThreads: true }
+          { doNotQueueQuery: true }
         )
 
         processedSubUsers.push(subUser)
@@ -509,11 +510,9 @@ class SubAccount {
 
       const removingSubUsers = subUsers.filter((subUser) => (
         Array.isArray(removingSubUsersByEmails) &&
-        removingSubUsersByEmails.some((removingSubUserByEmail) => {
-          const { email } = { ...removingSubUserByEmail }
-
-          return email === subUser.email
-        })
+        removingSubUsersByEmails.some((removingSubUserByEmail) => (
+          removingSubUserByEmail?.email === subUser.email
+        ))
       ))
 
       if (removingSubUsers.length > 0) {
@@ -525,7 +524,7 @@ class SubAccount {
               _id: removingSubUsers.map(({ _id }) => _id)
             }
           },
-          { withoutWorkerThreads: true }
+          { doNotQueueQuery: true }
         )
 
         if (
@@ -543,27 +542,57 @@ class SubAccount {
           this.TABLES_NAMES.LEDGERS,
           { user_id: _id },
           { _isBalanceRecalced: null },
-          { withoutWorkerThreads: true }
+          { doNotQueueQuery: true }
         )
+
+        const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
+          this.TABLES_NAMES.LEDGERS,
+          { dao: this.dao },
+          { doNotQueueQuery: true }
+        )
+
+        for (const ledgersTempTableName of tempTableNames) {
+          await this.dao.updateCollBy(
+            ledgersTempTableName,
+            { user_id: _id },
+            { _isBalanceRecalced: null },
+            { doNotQueueQuery: true }
+          )
+        }
       }
 
-      this.authenticator.setUserSession({
+      const refreshedSubUsers = orderBy(
+        [...subUsers, ...addedSubUsers],
+        ['_id'],
+        ['asc']
+      ).filter((subUser) => (
+        removingSubUsers.every(({ _id }) => _id !== subUser?._id)
+      ))
+      const refreshedSubAccountUser = {
         ...subAccountUser,
-        subUsers: processedSubUsers
-      })
+        subUsers: refreshedSubUsers
+      }
+
+      this.authenticator.setUserSession(refreshedSubAccountUser)
 
       return {
-        email,
-        isSubAccount: true,
-        token
+        subAccountUser: refreshedSubAccountUser,
+        res: {
+          email,
+          isSubAccount: true,
+          token
+        }
       }
-    }, { withoutWorkerThreads: true })
+    })
 
     await this.dao.updateRecordOf(
       this.TABLES_NAMES.SCHEDULER,
       { isEnable: true }
     )
-    await this.sync.start(true)
+    await this.sync.start({
+      isSolveAfterRedirToApi: true,
+      ownerUserId: subAccountUser?._id
+    })
 
     return res
   }

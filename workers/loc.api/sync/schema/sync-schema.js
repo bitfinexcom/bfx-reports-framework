@@ -79,19 +79,10 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.STATUS_MESSAGES,
       maxLimit: 5000,
-      fields: [
-        'key',
-        'timestamp',
-        'price',
-        'priceSpot',
-        'fundBal',
-        'fundingAccrued',
-        'fundingStep'
-      ],
       dateFieldName: 'timestamp',
       symbolFieldName: 'key',
       sort: [['timestamp', -1]],
-      hasNewData: true,
+      hasNewData: false,
       confName: 'statusMessagesConf',
       isSyncRequiredAtLeastOnce: false,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
@@ -302,9 +293,9 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.SYMBOLS,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.SYMBOLS)
@@ -315,9 +306,9 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.MAP_SYMBOLS,
       maxLimit: 10000,
-      fields: ['key', 'value'],
+      projection: ['key', 'value'],
       sort: [['key', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.MAP_SYMBOLS)
@@ -328,9 +319,9 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.INACTIVE_CURRENCIES,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.INACTIVE_CURRENCIES)
@@ -341,9 +332,9 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
@@ -354,9 +345,9 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.FUTURES,
       maxLimit: 10000,
-      field: 'pairs',
+      projection: 'pairs',
       sort: [['pairs', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
       model: getModelOf(TABLES_NAMES.FUTURES)
@@ -367,9 +358,9 @@ const _methodCollMap = new Map([
     {
       name: ALLOWED_COLLS.CURRENCIES,
       maxLimit: 10000,
-      fields: ['id'],
+      projection: null,
       sort: [['name', 1]],
-      hasNewData: true,
+      hasNewData: false,
       isSyncRequiredAtLeastOnce: true,
       type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.CURRENCIES)
@@ -387,7 +378,6 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       confName: 'candlesConf',
-      isSyncDoneForCurrencyConv: false,
       isSyncRequiredAtLeastOnce: true,
       additionalApiCallArgs: { isNotMoreThanInnerMax: true },
       type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,

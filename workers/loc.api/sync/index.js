@@ -1,6 +1,9 @@
 'use strict'
 
-const { CollSyncPermissionError } = require('../errors')
+const {
+  CollSyncPermissionError,
+  SyncQueueOwnerSettingError
+} = require('../errors')
 
 const { decorateInjectable } = require('../di/utils')
 
@@ -29,14 +32,14 @@ class Sync {
     this.syncInterrupter = syncInterrupter
   }
 
-  async _sync (error) {
+  async _sync (error, params) {
     let errorForInterrupter = null
     let progressForInterrupter = this.syncInterrupter
       .INITIAL_PROGRESS
 
     if (!error) {
       try {
-        progressForInterrupter = await this.syncQueue.process()
+        progressForInterrupter = await this.syncQueue.process(params)
       } catch (err) {
         errorForInterrupter = err
 
@@ -73,18 +76,37 @@ class Sync {
     return currProgress
   }
 
-  async start (
-    isSolveAfterRedirToApi,
-    syncColls = this.ALLOWED_COLLS.ALL
-  ) {
+  async start (params = {}) {
+    const {
+      isSolveAfterRedirToApi = false,
+      syncColls = this.ALLOWED_COLLS.ALL,
+      ownerUserId = null,
+      isOwnerScheduler = false
+    } = params ?? {}
+    const syncParams = {
+      ownerUserId,
+      isOwnerScheduler
+    }
+
     let error = null
 
     try {
+      if (
+        !Number.isInteger(ownerUserId) &&
+        !isOwnerScheduler
+      ) {
+        throw new SyncQueueOwnerSettingError()
+      }
+
       const isEnable = await this.rService.isSchedulerEnabled()
       const currProgress = await this.progress.getProgress()
 
       if (isEnable) {
-        await this.syncQueue.add(syncColls)
+        await this.syncQueue.add({
+          syncColls,
+          ownerUserId,
+          isOwnerScheduler
+        })
       }
       if (
         (currProgress < 100) ||
@@ -96,7 +118,10 @@ class Sync {
       await this.rService.pingApi()
 
       await this.progress.setProgress(0)
-      await this.redirectRequestsToApi({ isRedirected: true })
+      await this.redirectRequestsToApi({
+        isRedirected: true,
+        ownerUserId
+      })
     } catch (err) {
       if (err instanceof CollSyncPermissionError) {
         throw err
@@ -108,12 +133,12 @@ class Sync {
     }
 
     if (!error && isSolveAfterRedirToApi) {
-      this._sync(error).then(() => {}, () => {})
+      this._sync(error, syncParams).then(() => {}, () => {})
 
       return 'SYNCHRONIZATION_IS_STARTED'
     }
 
-    return this._sync(error)
+    return this._sync(error, syncParams)
   }
 
   async stop () {

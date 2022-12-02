@@ -1,6 +1,7 @@
 'use strict'
 
 const moment = require('moment')
+const { orderBy } = require('lodash')
 
 const {
   FindMethodError
@@ -16,11 +17,15 @@ const {
   isForexSymb
 } = require('../helpers')
 const { tryParseJSON } = require('../../helpers')
+const SyncTempTablesManager = require(
+  '../data.inserter/sync.temp.tables.manager'
+)
 
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.RService,
+  TYPES.GetDataFromApi,
   TYPES.DAO,
   TYPES.SyncSchema,
   TYPES.FOREX_SYMBS,
@@ -30,6 +35,7 @@ const depsTypes = (TYPES) => [
 class CurrencyConverter {
   constructor (
     rService,
+    getDataFromApi,
     dao,
     syncSchema,
     FOREX_SYMBS,
@@ -37,6 +43,7 @@ class CurrencyConverter {
     SYNC_API_METHODS
   ) {
     this.rService = rService
+    this.getDataFromApi = getDataFromApi
     this.dao = dao
     this.syncSchema = syncSchema
     this.FOREX_SYMBS = FOREX_SYMBS
@@ -54,9 +61,22 @@ class CurrencyConverter {
     this.currenciesUpdatedAt = new Date()
     this.currencies = []
     this.currenciesSynonymous = new Map()
+  }
 
-    this._getPublicTrades = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+  async _getPublicTrades (args) {
+    const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
       .bind(this.rService)
+
+    const res = await this.getDataFromApi({
+      getData: (s, args) => getDataFn(args),
+      args,
+      callerName: 'CURRENCY_CONVERTER',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
+
+    return res
   }
 
   async getCurrenciesSynonymous () {
@@ -79,7 +99,13 @@ class CurrencyConverter {
       this.currencies.length === 0
     ) {
       try {
-        this.currencies = await this.rService._getCurrencies()
+        this.currencies = await this.getDataFromApi({
+          getData: this.rService._getCurrencies.bind(this.rService),
+          callerName: 'CURRENCY_CONVERTER',
+          eNetErrorAttemptsTimeframeMin: 10 / 60,
+          eNetErrorAttemptsTimeoutMs: 1000,
+          shouldNotInterrupt: true
+        })
 
         if (
           !Array.isArray(this.currencies) ||
@@ -386,7 +412,8 @@ class CurrencyConverter {
 
   async _getCandleClosedPrice (
     reqSymb,
-    end
+    end,
+    opts
   ) {
     if (
       !reqSymb ||
@@ -394,6 +421,10 @@ class CurrencyConverter {
     ) {
       return null
     }
+
+    const {
+      shouldTempTablesBeIncluded
+    } = opts ?? {}
 
     const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
@@ -405,9 +436,46 @@ class CurrencyConverter {
       },
       this.candlesSchema.sort
     )
-    const { close } = { ...candle }
 
-    return close
+    if (!shouldTempTablesBeIncluded) {
+      return candle?.close
+    }
+
+    const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
+      this.candlesSchema.name,
+      { dao: this.dao }
+    )
+    const candles = Number.isInteger(candle?.[this.candlesSchema.dateFieldName])
+      ? [candle]
+      : []
+
+    for (const candlesTempTableName of tempTableNames) {
+      const candleFromTempTable = await this.dao.getElemInCollBy(
+        candlesTempTableName,
+        {
+          [this.candlesSchema.symbolFieldName]: symbol,
+          end,
+          _dateFieldName: [this.candlesSchema.dateFieldName]
+        },
+        this.candlesSchema.sort
+      )
+
+      if (Number.isInteger(candleFromTempTable?.[this.candlesSchema.dateFieldName])) {
+        candles.push(candleFromTempTable)
+      }
+    }
+
+    if (candles.length === 0) {
+      return null
+    }
+
+    const orderedCandles = orderBy(
+      candles,
+      [this.candlesSchema.dateFieldName],
+      ['desc']
+    )
+
+    return orderedCandles[0]?.close
   }
 
   _getPriceMethodName (collName) {
@@ -434,7 +502,8 @@ class CurrencyConverter {
       convertTo,
       symbolFieldName,
       dateFieldName,
-      mts
+      mts,
+      shouldTempTablesBeIncluded
     }
   ) {
     const end = Number.isInteger(mts)
@@ -453,11 +522,13 @@ class CurrencyConverter {
     if (isRequiredConvFromForex) {
       const btcPriceIn = await _getPrice(
         `tBTC${item[symbolFieldName]}`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
       const btcPriceOut = await _getPrice(
         `tBTC${convertTo}`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
 
       if (
@@ -474,11 +545,13 @@ class CurrencyConverter {
     if (!isRequiredConvToForex) {
       const usdPriceIn = await _getPrice(
         `t${item[symbolFieldName]}USD`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
       const usdPriceOut = await _getPrice(
         `t${convertTo}USD`,
-        end
+        end,
+        { shouldTempTablesBeIncluded }
       )
 
       if (
@@ -501,7 +574,8 @@ class CurrencyConverter {
           symbolFieldName
         }
       ),
-      end
+      end,
+      { shouldTempTablesBeIncluded }
     )
 
     return Number.isFinite(price)

@@ -5,8 +5,12 @@ const { TRIGGER_FIELD_NAME } = require('../../schema/const')
 const _getTriggersQuery = (
   name,
   model,
-  isCreatedIfNotExists
+  opts
 ) => {
+  const {
+    shouldNotAddIfNotExistsStm
+  } = opts ?? {}
+
   const triggersArr = Array.isArray(model[TRIGGER_FIELD_NAME])
     ? model[TRIGGER_FIELD_NAME]
     : [model[TRIGGER_FIELD_NAME]]
@@ -20,9 +24,9 @@ const _getTriggersQuery = (
     }
 
     const stm = item.replace(/#{tableName\}/g, name)
-    const condition = isCreatedIfNotExists
-      ? ' IF NOT EXISTS'
-      : ''
+    const condition = shouldNotAddIfNotExistsStm
+      ? ''
+      : ' IF NOT EXISTS'
     const trigger = `CREATE TRIGGER${condition} ${stm}`
 
     accum.push(trigger)
@@ -31,7 +35,11 @@ const _getTriggersQuery = (
   }, [])
 }
 
-module.exports = (models = [], isCreatedIfNotExists) => {
+module.exports = (models = [], opts = {}) => {
+  const {
+    namePrefix
+  } = opts ?? {}
+
   const _models = models instanceof Map
     ? [...models]
     : models
@@ -40,10 +48,14 @@ module.exports = (models = [], isCreatedIfNotExists) => {
     : [_models]
 
   return _modelsArr.reduce((accum, [name, model]) => {
+    const prefix = typeof namePrefix === 'function'
+      ? namePrefix(name, model)
+      : namePrefix ?? ''
+    const _name = `${prefix}${name}`
     const triggers = _getTriggersQuery(
-      name,
+      _name,
       model,
-      isCreatedIfNotExists
+      opts
     )
 
     accum.push(...triggers)

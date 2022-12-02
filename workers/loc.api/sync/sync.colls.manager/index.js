@@ -32,50 +32,6 @@ class SyncCollsManager {
     this._methodCollMap = this.syncSchema.getMethodCollMap()
   }
 
-  _getCompletedCollBy (filter = {}) {
-    return this.dao.getElemInCollBy(
-      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-      filter
-    )
-  }
-
-  _getCompletedCollsBy (filter = {}) {
-    return this.dao.getElemsInCollBy(
-      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-      { filter }
-    )
-  }
-
-  _getSchemaNodes (schema) {
-    if (Array.isArray(schema)) {
-      if (schema.length === 0) {
-        return []
-      }
-
-      return schema.map((item) => {
-        if (typeof item === 'string') {
-          return [item, { allowedDiffInMs: null }]
-        }
-        if (
-          Array.isArray(item) &&
-          item[0] &&
-          typeof item[0] === 'string'
-        ) {
-          return [
-            item[0],
-            Number.isInteger(item[1])
-              ? { allowedDiffInMs: item[1] }
-              : item[1]
-          ]
-        }
-
-        return []
-      })
-    }
-
-    return Object.entries(schema)
-  }
-
   async hasCollBeenSyncedAtLeastOnce (params) {
     const {
       userId,
@@ -88,6 +44,7 @@ class SyncCollsManager {
       : {}
 
     const completedColl = await this._getCompletedCollBy({
+      isBaseStepReady: true,
       user_id: userId,
       collName,
       ...subUserIdFilter
@@ -98,59 +55,6 @@ class SyncCollsManager {
       typeof completedColl === 'object' &&
       completedColl.collName === collName
     )
-  }
-
-  async _haveLedgerMovementsBeenSyncedAtLeastOnce (args, opts) {
-    const {
-      _id: userId,
-      subUsers,
-      isSubAccount
-    } = args?.auth ?? {}
-    const {
-      method,
-      completedColls = []
-    } = opts ?? {}
-
-    if (method !== this.SYNC_API_METHODS.MOVEMENTS) {
-      return false
-    }
-
-    if (isSubAccount) {
-      const isLedgersCollDone = subUsers.every((subUser) => (
-        Number.isInteger(subUser?._id) &&
-        completedColls.some((completedColl) => (
-          completedColl?.collName === this.SYNC_API_METHODS.LEDGERS &&
-          completedColl?.user_id === userId &&
-          completedColl?.subUserId === subUser._id
-        ))
-      ))
-
-      if (!isLedgersCollDone) {
-        return false
-      }
-    }
-
-    const isLedgersCollDone = completedColls.some((completedColl) => (
-      completedColl?.collName === this.SYNC_API_METHODS.LEDGERS
-    ))
-
-    if (!isLedgersCollDone) {
-      return false
-    }
-
-    const subAccountFilter = isSubAccount
-      ? { $in: { subUserId: subUsers } }
-      : {}
-    const ledger = await this.dao.getElemInCollBy(
-      this.TABLES_NAMES.LEDGERS,
-      {
-        $eq: { _isSubAccountsTransfer: 1 },
-        user_id: userId,
-        ...subAccountFilter
-      }
-    )
-
-    return Number.isInteger(ledger?._id)
   }
 
   async haveCollsBeenSyncedAtLeastOnce (args) {
@@ -199,6 +103,7 @@ class SyncCollsManager {
       }
       if (isPublic(type)) {
         const isDone = completedColls.some((completedColl) => (
+          completedColl?.isBaseStepReady &&
           completedColl?.collName === method
         ))
 
@@ -210,35 +115,23 @@ class SyncCollsManager {
         const isDone = subUsers.every((subUser) => (
           Number.isInteger(subUser?._id) &&
           completedColls.some((completedColl) => (
+            completedColl?.isBaseStepReady &&
             completedColl?.collName === method &&
             completedColl?.user_id === userId &&
             completedColl?.subUserId === subUser._id
           ))
         ))
-        const isLedgerMovementsDone = !isDone
-          ? await this._haveLedgerMovementsBeenSyncedAtLeastOnce(
-              args,
-              { method, completedColls }
-            )
-          : false
-
-        checkingRes.push(isDone || isLedgerMovementsDone)
+        checkingRes.push(isDone)
 
         continue
       }
 
       const isDone = completedColls.some((completedColl) => (
+        completedColl?.isBaseStepReady &&
         completedColl?.collName === method &&
         completedColl?.user_id === userId
       ))
-      const isLedgerMovementsDone = !isDone
-        ? await this._haveLedgerMovementsBeenSyncedAtLeastOnce(
-            args,
-            { method, completedColls }
-          )
-        : false
-
-      checkingRes.push(isDone || isLedgerMovementsDone)
+      checkingRes.push(isDone)
     }
 
     return checkingRes.every((res) => res)
@@ -278,6 +171,7 @@ class SyncCollsManager {
       .filter((completedColl) => (
         completedColl &&
         typeof completedColl === 'object' &&
+        completedColl?.isBaseStepReady &&
         schemaNodes.some(([collName]) => (
           completedColl.collName === collName
         ))
@@ -302,17 +196,21 @@ class SyncCollsManager {
           completedColl.collName === collName
         ))
 
+      if (completedCollsForCurrNode.length === 0) {
+        return false
+      }
+
       const isOk = completedCollsForCurrNode
         .every((completedColl) => (
-          completedCollsForAllNodes.every(({ _id, mts }) => (
+          completedCollsForAllNodes.every(({ _id, syncedAt }) => (
             (
               _id &&
               completedColl._id === _id
             ) ||
             (
-              Number.isInteger(mts) &&
-              Number.isInteger(completedColl.mts) &&
-              Math.abs(completedColl.mts - mts) <= _allowedDiffInMs
+              Number.isInteger(syncedAt) &&
+              Number.isInteger(completedColl.syncedAt) &&
+              Math.abs(completedColl.syncedAt - syncedAt) <= _allowedDiffInMs
             )
           ))
         ))
@@ -325,22 +223,47 @@ class SyncCollsManager {
     return true
   }
 
-  setCollAsSynced (params) {
-    const {
-      userId,
-      subUserId,
-      collName
-    } = { ...params }
+  _getSchemaNodes (schema) {
+    if (Array.isArray(schema)) {
+      if (schema.length === 0) {
+        return []
+      }
 
-    return this.dao.insertElemToDb(
-      this.TABLES_NAMES.COMPLETED_ON_FIRST_SYNC_COLLS,
-      {
-        collName,
-        mts: Date.now(),
-        subUserId,
-        user_id: userId
-      },
-      { isReplacedIfExists: true }
+      return schema.map((item) => {
+        if (typeof item === 'string') {
+          return [item, { allowedDiffInMs: null }]
+        }
+        if (
+          Array.isArray(item) &&
+          item[0] &&
+          typeof item[0] === 'string'
+        ) {
+          return [
+            item[0],
+            Number.isInteger(item[1])
+              ? { allowedDiffInMs: item[1] }
+              : item[1]
+          ]
+        }
+
+        return []
+      })
+    }
+
+    return Object.entries(schema)
+  }
+
+  _getCompletedCollBy (filter = {}) {
+    return this.dao.getElemInCollBy(
+      this.TABLES_NAMES.SYNC_USER_STEPS,
+      filter
+    )
+  }
+
+  _getCompletedCollsBy (filter = {}) {
+    return this.dao.getElemsInCollBy(
+      this.TABLES_NAMES.SYNC_USER_STEPS,
+      { filter }
     )
   }
 }

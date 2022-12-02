@@ -1,5 +1,9 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
+
+const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const { CONVERT_TO } = require('../const')
 const DataInserterHook = require('./data.inserter.hook')
 
@@ -84,7 +88,12 @@ class ConvertCurrencyHook extends DataInserterHook {
       let count = 0
       let _id = 0
 
-      const { convFields } = { ...schema }
+      const _schema = {
+        shouldTempTablesBeIncluded: true,
+        convertTo: CONVERT_TO,
+        ...schema
+      }
+      const { convFields } = schema ?? {}
       const updatedFieldNames = convFields
         .reduce((accum, { outputField }) => {
           const _outputField = Array.isArray(outputField)
@@ -95,14 +104,24 @@ class ConvertCurrencyHook extends DataInserterHook {
 
           return accum
         }, [])
+      const tableName = this._getTableName(collName)
+
+      if (
+        this._shouldTempTableBeUsed() &&
+        !(await this.dao.hasTable(tableName))
+      ) {
+        return
+      }
 
       while (true) {
+        await setImmediatePromise()
+
         count += 1
 
-        if (count > 100) break
+        if (count > 1000) break
 
         const elems = await this.dao.getElemsInCollBy(
-          collName,
+          tableName,
           {
             filter: {
               $gt: { _id },
@@ -120,14 +139,11 @@ class ConvertCurrencyHook extends DataInserterHook {
         const convElems = await this.currencyConverter
           .convertByCandles(
             elems,
-            {
-              convertTo: CONVERT_TO,
-              ...schema
-            }
+            _schema
           )
 
         await this.dao.updateElemsInCollBy(
-          collName,
+          tableName,
           convElems,
           ['_id'],
           updatedFieldNames
@@ -136,6 +152,21 @@ class ConvertCurrencyHook extends DataInserterHook {
         _id = elems[elems.length - 1]._id
       }
     }
+  }
+
+  _getTableName (collName) {
+    const tableName = this._shouldTempTableBeUsed()
+      ? SyncTempTablesManager.getTempTableName(
+          collName,
+          this._opts.syncQueueId
+        )
+      : collName
+
+    return tableName
+  }
+
+  _shouldTempTableBeUsed () {
+    return Number.isInteger(this._opts.syncQueueId)
   }
 }
 

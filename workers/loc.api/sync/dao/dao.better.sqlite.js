@@ -36,11 +36,12 @@ const {
 const {
   DbVersionTypeError,
   SqlCorrectnessError,
-  RemoveListElemsError,
-  UpdateRecordError
+  UpdateRecordError,
+  RemoveElemsLeaveLastNRecordsError
 } = require('../../errors')
 
 const {
+  CONSTR_FIELD_NAME,
   TRIGGER_FIELD_NAME,
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
@@ -81,6 +82,9 @@ class BetterSqliteDAO extends DAO {
     this.asyncQuery = dbFac.asyncQuery.bind(dbFac)
     this._initializeWalCheckpointRestart = dbFac
       .initializeWalCheckpointRestart.bind(dbFac)
+
+    this._querySet = new Set()
+    this._transQuerySet = new Set()
   }
 
   async restartDb (opts = {}) {
@@ -101,14 +105,37 @@ class BetterSqliteDAO extends DAO {
     await this._vacuum()
   }
 
-  query (args, opts) {
-    const { withoutWorkerThreads } = { ...opts }
+  async query (args, opts) {
+    const {
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
 
-    if (withoutWorkerThreads) {
-      return dbWorkerActions(this.db, args)
+    if (withWorkerThreads) {
+      return await this.asyncQuery(args)
+    }
+    if (doNotQueueQuery) {
+      return await dbWorkerActions(this.db, args)
     }
 
-    return this.asyncQuery(args)
+    const newQueryPromise = (async () => {
+      await Promise.allSettled(this._transQuerySet)
+
+      return await dbWorkerActions(this.db, args)
+    })()
+
+    this._querySet.add(newQueryPromise)
+
+    try {
+      const res = await newQueryPromise
+      this._querySet.delete(newQueryPromise)
+
+      return res
+    } catch (err) {
+      this._querySet.delete(newQueryPromise)
+
+      throw err
+    }
   }
 
   async _proccesTrans (
@@ -133,6 +160,7 @@ class BetterSqliteDAO extends DAO {
       const res = await asyncExecQuery()
 
       this.db.prepare('COMMIT').run()
+      isTransBegun = false
 
       if (typeof afterTransFn === 'function') {
         await afterTransFn()
@@ -140,8 +168,13 @@ class BetterSqliteDAO extends DAO {
 
       return res
     } catch (err) {
+      // Transaction was forcefully rolled back
+      if (!this.db.inTransaction) {
+        throw err
+      }
       if (isTransBegun) {
         this.db.prepare('ROLLBACK').run()
+        isTransBegun = false
       }
       if (typeof afterTransFn === 'function') {
         await afterTransFn()
@@ -155,56 +188,89 @@ class BetterSqliteDAO extends DAO {
     asyncExecQuery,
     opts = {}
   ) {
-    return manageTransaction(
-      () => this._proccesTrans(asyncExecQuery, opts)
-    )
+    const {
+      isNotInTrans
+    } = opts ?? {}
+
+    if (isNotInTrans) {
+      return await asyncExecQuery()
+    }
+
+    const newTransQueryPromise = (async () => {
+      await Promise.allSettled(this._querySet)
+
+      return await manageTransaction(
+        () => this._proccesTrans(asyncExecQuery, opts)
+      )
+    })()
+
+    this._transQuerySet.add(newTransQueryPromise)
+
+    try {
+      const res = await newTransQueryPromise
+      this._transQuerySet.delete(newTransQueryPromise)
+
+      return res
+    } catch (err) {
+      this._transQuerySet.delete(newTransQueryPromise)
+
+      throw err
+    }
   }
 
-  _createTablesIfNotExists () {
+  _createTablesIfNotExists (opts = {}) {
     const models = this._getModelsMap({
+      models: opts?.models,
       omittedFields: [
         TRIGGER_FIELD_NAME,
         INDEX_FIELD_NAME,
         UNIQUE_INDEX_FIELD_NAME
       ]
     })
-    const sql = getTableCreationQuery(models, true)
+    const sql = getTableCreationQuery(models, opts)
 
     return this.query({
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
-  _createTriggerIfNotExists () {
-    const models = this._getModelsMap({ omittedFields: [] })
-    const sql = getTriggerCreationQuery(models, true)
+  _createTriggerIfNotExists (opts = {}) {
+    const models = this._getModelsMap({
+      models: opts?.models,
+      omittedFields: []
+    })
+    const sql = getTriggerCreationQuery(models, opts)
 
     return this.query({
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
-  _createIndexisIfNotExists () {
-    const models = this._getModelsMap({ omittedFields: [] })
-    const sql = getIndexCreationQuery(models)
+  _createIndexisIfNotExists (opts = {}) {
+    const models = this._getModelsMap({
+      models: opts?.models,
+      omittedFields: []
+    })
+    const sql = getIndexCreationQuery(models, opts)
 
     return this.query({
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
       sql,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
   }
 
-  async _getTablesNames () {
+  async getTablesNames (opts) {
+    const { doNotQueueQuery } = opts ?? {}
     const sql = getTablesNamesQuery()
     const data = await this.query({
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql
-    })
+    }, { doNotQueueQuery })
 
     if (!Array.isArray(data)) {
       return []
@@ -233,16 +299,19 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  _setAnalysisLimit (limit = 1000) {
+  _setAnalysisLimit (limit = 400) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `analysis_limit = ${limit}`
     })
   }
 
-  _tryToExecuteRollback () {
+  async _tryToExecuteRollback () {
     try {
-      this.db.prepare('ROLLBACK').run()
+      await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.RUN,
+        sql: 'ROLLBACK'
+      })
     } catch (err) {}
   }
 
@@ -271,42 +340,177 @@ class BetterSqliteDAO extends DAO {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = ON'
-    }, { withoutWorkerThreads: true })
+    })
   }
 
   disableForeignKeys () {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: 'foreign_keys = OFF'
-    }, { withoutWorkerThreads: true })
+    })
   }
 
-  async dropAllTables (opts = {}) {
+  async hasTable (name) {
+    const names = Array.isArray(name)
+      ? name
+      : [name]
+
+    const tableNames = await this.getTablesNames()
+
+    return names.every((name) => (
+      tableNames.some((tName) => name === tName)
+    ))
+  }
+
+  async getFilteredTablesNames (opts) {
     const {
-      exceptions = []
-    } = opts
+      exceptions = [],
+      expectations = [],
+      isNotStrictEqual,
+      doNotQueueQuery
+    } = opts ?? {}
 
     const _exceptions = Array.isArray(exceptions)
       ? exceptions
       : []
-    const tableNames = await this._getTablesNames()
+    const _expectations = Array.isArray(expectations)
+      ? expectations
+      : []
+    const tableNames = await this.getTablesNames({ doNotQueueQuery })
     const filteredTableNames = tableNames.filter((name) => (
-      !_exceptions.includes(name)
+      _exceptions.every((exc) => (
+        name !== exc &&
+        (!isNotStrictEqual || !name.includes(exc)))
+      ) &&
+      (
+        _expectations.length === 0 ||
+        _expectations.some((exp) => (
+          name === exp ||
+          (isNotStrictEqual && name.includes(exp)))
+        )
+      )
     ))
-    const sql = filteredTableNames.map((name) => (
+
+    return filteredTableNames
+  }
+
+  async dropAllTables (opts = {}) {
+    const {
+      isNotInTrans,
+      doNotQueueQuery,
+      shouldWalCheckpointAndVacuumBeExecuted
+    } = opts ?? {}
+    const filteredTableNames = await this.getFilteredTablesNames(opts)
+
+    const sqlArr = filteredTableNames.map((name) => (
       `DROP TABLE IF EXISTS ${name}`
     ))
 
+    if (sqlArr.length === 0) {
+      return []
+    }
+    if (isNotInTrans) {
+      const res = []
+
+      for (const sql of sqlArr) {
+        const oneRes = await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql
+        }, { doNotQueueQuery })
+
+        res.push(oneRes)
+      }
+
+      if (!shouldWalCheckpointAndVacuumBeExecuted) {
+        return res
+      }
+
+      await this._walCheckpoint()
+      await this._vacuum()
+
+      return res
+    }
+
     const res = await this.query({
       action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
-      sql,
+      sql: sqlArr,
       params: { transVersion: 'exclusive' }
-    }, { withoutWorkerThreads: true })
+    })
+
+    if (!shouldWalCheckpointAndVacuumBeExecuted) {
+      return res
+    }
 
     await this._walCheckpoint()
     await this._vacuum()
 
     return res
+  }
+
+  /**
+   * @override
+   */
+  async moveTempTableDataToMain (opts = {}) {
+    const {
+      namePrefix,
+      isNotInTrans,
+      doNotQueueQuery,
+      isStrictEqual
+    } = opts ?? {}
+
+    if (
+      !namePrefix ||
+      typeof namePrefix !== 'string'
+    ) {
+      return false
+    }
+
+    const modelsMap = this._getModelsMap({
+      omittedFields: [
+        '_id',
+        CONSTR_FIELD_NAME,
+        TRIGGER_FIELD_NAME,
+        INDEX_FIELD_NAME,
+        UNIQUE_INDEX_FIELD_NAME
+      ]
+    })
+
+    await this._beginTrans(async () => {
+      const tableNames = await this.getTablesNames({ doNotQueueQuery })
+      const filteredTempTableNames = tableNames.filter((name) => (
+        name.includes(namePrefix)
+      ))
+
+      const sqlArr = []
+
+      for (const tempName of filteredTempTableNames) {
+        const name = tempName.replace(namePrefix, '')
+        const model = modelsMap.get(name)
+        const projection = Object.keys(model).join(', ')
+
+        if (!model) {
+          continue
+        }
+        if (isStrictEqual) {
+          sqlArr.push(`DELETE FROM ${name}`)
+        }
+
+        sqlArr.push(`INSERT OR REPLACE
+          INTO ${name}(${projection})
+          SELECT ${projection} FROM ${tempName}`)
+      }
+
+      for (const sql of sqlArr) {
+        await setImmediatePromise()
+
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql
+        }, { doNotQueueQuery })
+      }
+    }, { isNotInTrans })
+
+    return true
   }
 
   /**
@@ -320,7 +524,16 @@ class BetterSqliteDAO extends DAO {
 
     // In case if the app is closed with non-finished transaction
     // try to execute `ROLLBACK` sql query to avoid locking the DB
-    this._tryToExecuteRollback()
+    await this._tryToExecuteRollback()
+  }
+
+  /**
+   * @override
+   */
+  async createDBStructure (opts = {}) {
+    await this._createTablesIfNotExists(opts)
+    await this._createIndexisIfNotExists(opts)
+    await this._createTriggerIfNotExists(opts)
   }
 
   /**
@@ -329,9 +542,6 @@ class BetterSqliteDAO extends DAO {
   async databaseInitialize (db) {
     await super.databaseInitialize(db)
 
-    await this._createTablesIfNotExists()
-    await this._createIndexisIfNotExists()
-    await this._createTriggerIfNotExists()
     await this._walCheckpoint()
     await this._vacuum()
     await this.setCurrDbVer(this.syncSchema.SUPPORTED_DB_VERSION)
@@ -341,7 +551,7 @@ class BetterSqliteDAO extends DAO {
    * @override
    */
   async isDBEmpty () {
-    const tableNames = await this._getTablesNames()
+    const tableNames = await this.getTablesNames()
 
     return (
       !Array.isArray(tableNames) ||
@@ -409,7 +619,7 @@ class BetterSqliteDAO extends DAO {
     const {
       beforeTransFn,
       afterTransFn,
-      withoutWorkerThreads
+      withWorkerThreads
     } = { ...opts }
     const isArray = Array.isArray(sql)
     const sqlArr = isArray ? sql : [sql]
@@ -417,7 +627,7 @@ class BetterSqliteDAO extends DAO {
     if (sqlArr.length === 0) {
       return
     }
-    if (withoutWorkerThreads) {
+    if (!withWorkerThreads) {
       return this._beginTrans(async () => {
         const res = []
 
@@ -443,7 +653,7 @@ class BetterSqliteDAO extends DAO {
               action: MAIN_DB_WORKER_ACTIONS.RUN,
               sql,
               params: values
-            }, { withoutWorkerThreads }))
+            }, { doNotQueueQuery: true }))
           }
           if (hasExecQueryFn) {
             res.push(await execQueryFn())
@@ -493,7 +703,7 @@ class BetterSqliteDAO extends DAO {
         action: DB_WORKER_ACTIONS.RUN_IN_TRANS,
         sql: isArray ? query : query[0],
         params: isArray ? params : params[0]
-      })
+      }, { withWorkerThreads })
 
       if (typeof afterTransFn === 'function') {
         await afterTransFn()
@@ -519,8 +729,9 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       isReplacedIfExists,
-      withoutWorkerThreads = true
-    } = { ...opts }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
 
     const keys = Object.keys(obj)
     const projection = getProjectionQuery(keys)
@@ -540,7 +751,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
@@ -555,11 +766,15 @@ class BetterSqliteDAO extends DAO {
     opts = {}
   ) {
     const {
-      isReplacedIfExists
-    } = { ...opts }
+      isReplacedIfExists,
+      isStrictEqual
+    } = opts ?? {}
 
-    const sql = []
-    const params = []
+    const queries = []
+
+    if (isStrictEqual) {
+      queries.push({ sql: `DELETE FROM ${name}` })
+    }
 
     for (const obj of data) {
       await setImmediatePromise()
@@ -583,80 +798,27 @@ class BetterSqliteDAO extends DAO {
         ? ' OR REPLACE'
         : ''
 
-      sql.push(
-        `INSERT${replace}
+      queries.push({
+        sql: `INSERT${replace}
           INTO ${name}(${projection})
-          VALUES (${placeholders})`
-      )
-      params.push(placeholderVal)
+          VALUES (${placeholders})`,
+        params: placeholderVal
+      })
     }
 
-    if (sql.length === 0) {
+    if (queries.length === 0) {
       return
     }
 
     await this._beginTrans(async () => {
-      for (const [i, param] of params.entries()) {
+      for (const { sql, params } of queries) {
         await setImmediatePromise()
 
-        this.db.prepare(sql[i]).run(param)
-      }
-    })
-  }
-
-  /**
-   * To prevent blocking the Event Loop applies setImmediate
-   * and handles a transaction manually
-   * @override
-   */
-  async insertElemsToDbIfNotExists (
-    name,
-    auth,
-    data = []
-  ) {
-    const sql = []
-    const params = []
-
-    for (const obj of data) {
-      await setImmediatePromise()
-
-      const _obj = mixUserIdToArrData(
-        auth,
-        obj
-      )
-      const keys = Object.keys(_obj)
-
-      if (keys.length === 0) {
-        continue
-      }
-
-      const item = serializeObj(_obj, keys)
-      const projection = getProjectionQuery(keys)
-      const {
-        where,
-        values
-      } = getWhereQuery(item)
-      const {
-        placeholders,
-        placeholderVal
-      } = getPlaceholdersQuery(item, keys)
-
-      sql.push(
-        `INSERT INTO ${name}(${projection}) SELECT ${placeholders}
-          WHERE NOT EXISTS(SELECT 1 FROM ${name} ${where})`
-      )
-      params.push({ ...values, ...placeholderVal })
-    }
-
-    if (sql.length === 0) {
-      return
-    }
-
-    await this._beginTrans(async () => {
-      for (const [i, param] of params.entries()) {
-        await setImmediatePromise()
-
-        this.db.prepare(sql[i]).run(param)
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql,
+          params
+        }, { doNotQueueQuery: true })
       }
     })
   }
@@ -693,7 +855,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: sqlParams
-    })
+    }, { withWorkerThreads: true })
     const res = isNotDataConverted
       ? _res
       : await convertData(_res, methodColl)
@@ -713,17 +875,17 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
-  getUser (
-    filter,
-    {
+  getUser (filter, opts) {
+    const {
       isNotInTrans,
       haveNotSubUsers,
       haveSubUsers,
       isFilledSubUsers,
       sort = ['_id'],
-      withoutWorkerThreads
-    } = {}
-  ) {
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
+
     return this.query({
       action: DB_WORKER_ACTIONS.GET_USERS,
       params: {
@@ -737,7 +899,7 @@ class BetterSqliteDAO extends DAO {
           sort
         }
       }
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
@@ -767,7 +929,7 @@ class BetterSqliteDAO extends DAO {
           limit
         }
       }
-    })
+    }, { withWorkerThreads: true })
   }
 
   /**
@@ -827,7 +989,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: { ...values, ...limitVal }
-    })
+    }, { withWorkerThreads: true })
   }
 
   /**
@@ -852,7 +1014,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.GET,
       sql,
       params
-    })
+    }, { withWorkerThreads: true })
   }
 
   /**
@@ -865,15 +1027,19 @@ class BetterSqliteDAO extends DAO {
     opts
   ) {
     const {
-      withoutWorkerThreads = true
-    } = { ...opts }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
     const {
       where,
       values: params
     } = getWhereQuery(filter)
-    const fields = Object.keys(data).map((item) => {
+
+    const dataKeys = Object.keys(data)
+    const serializedData = serializeObj(data, dataKeys)
+    const fields = dataKeys.map((item) => {
       const key = `new_${item}`
-      params[key] = data[item]
+      params[key] = serializedData[item]
 
       return `${item} = $${key}`
     }).join(', ')
@@ -884,7 +1050,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
@@ -926,10 +1092,14 @@ class BetterSqliteDAO extends DAO {
     }
 
     await this._beginTrans(async () => {
-      for (const [i, param] of params.entries()) {
+      for (const [i, paramsItem] of params.entries()) {
         await setImmediatePromise()
 
-        this.db.prepare(sql[i]).run(param)
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql: sql[i],
+          params: paramsItem
+        }, { doNotQueueQuery: true })
       }
     })
   }
@@ -937,16 +1107,21 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
-  async updateRecordOf (name, record) {
+  async updateRecordOf (name, record, opts) {
+    const {
+      shouldNotThrowError = false
+    } = opts ?? {}
     const data = serializeObj(record)
 
     const res = await this.query({
       action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
       params: { data, name }
-    }, { withoutWorkerThreads: true })
-    const { changes } = { ...res }
+    })
 
-    if (changes < 1) {
+    if (shouldNotThrowError) {
+      return res
+    }
+    if (res?.changes < 1) {
       throw new UpdateRecordError()
     }
   }
@@ -957,26 +1132,29 @@ class BetterSqliteDAO extends DAO {
   async removeElemsFromDb (
     name,
     auth,
-    data = {},
+    data,
     opts
   ) {
+    const _data = data ?? {}
+
     if (auth) {
-      const { _id } = { ...auth }
+      const { _id } = auth ?? {}
 
       if (!Number.isInteger(_id)) {
         throw new AuthError()
       }
 
-      data.user_id = _id
+      _data.user_id = _id
     }
 
     const {
-      withoutWorkerThreads = true
-    } = { ...opts }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
     const {
       where,
       values: params
-    } = getWhereQuery(data)
+    } = getWhereQuery(_data)
 
     const sql = `DELETE FROM ${name} ${where}`
 
@@ -984,41 +1162,52 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
       params
-    }, { withoutWorkerThreads })
+    }, { withWorkerThreads, doNotQueueQuery })
   }
 
   /**
    * @override
    */
-  async removeElemsFromDbIfNotInLists (name, lists) {
-    const areAllListsNotArr = Object.keys(lists)
-      .every(key => !Array.isArray(lists[key]))
+  async removeElemsLeaveLastNRecords (name, params = {}) {
+    const {
+      filter,
+      limit,
+      sort
+    } = params ?? {}
 
-    if (areAllListsNotArr) {
-      throw new RemoveListElemsError()
+    if (
+      !Number.isInteger(limit) ||
+      limit < 0
+    ) {
+      throw new RemoveElemsLeaveLastNRecordsError()
     }
 
-    const $or = Object.entries(lists)
-      .reduce((accum, [key, val]) => {
-        return {
-          $not: {
-            ...accum.$not,
-            [key]: val
-          }
-        }
-      }, { $not: {} })
     const {
       where,
-      values: params
-    } = getWhereQuery({ $or })
+      values
+    } = getWhereQuery(
+      filter,
+      { isNotSetWhereClause: true }
+    )
+    const _sort = getOrderQuery(sort)
+    const {
+      limit: _limit,
+      limitVal
+    } = getLimitQuery({ limit })
+    const limitRestrictionQuery = `WHERE _id NOT IN
+      (SELECT _id FROM ${name} WHERE ${where} ${_sort} ${_limit})`
+    const _where = [
+      limitRestrictionQuery,
+      where
+    ].filter((query) => query).join(' AND ')
 
-    const sql = `DELETE FROM ${name} ${where}`
+    const sql = `DELETE FROM ${name} ${_where}`
 
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql,
-      params
-    }, { withoutWorkerThreads: true })
+      params: { ...values, ...limitVal }
+    })
   }
 }
 

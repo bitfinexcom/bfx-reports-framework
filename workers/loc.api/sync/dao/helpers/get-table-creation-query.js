@@ -21,7 +21,12 @@ const _getConstraintsQuery = (name, model) => {
   }, '')
 }
 
-module.exports = (models = [], isCreatedIfNotExists) => {
+module.exports = (models = [], opts = {}) => {
+  const {
+    shouldNotAddIfNotExistsStm,
+    namePrefix
+  } = opts ?? {}
+
   const _models = models instanceof Map
     ? [...models]
     : models
@@ -30,7 +35,11 @@ module.exports = (models = [], isCreatedIfNotExists) => {
     : [_models]
 
   return _modelsArr.map(([name, model]) => {
-    const constraints = _getConstraintsQuery(name, model)
+    const prefix = typeof namePrefix === 'function'
+      ? namePrefix(name, model)
+      : namePrefix ?? ''
+    const _name = `${prefix}${name}`
+    const constraints = _getConstraintsQuery(_name, model)
 
     const keys = Object.keys(model)
       .filter((field) => field !== CONSTR_FIELD_NAME)
@@ -40,10 +49,10 @@ module.exports = (models = [], isCreatedIfNotExists) => {
 
       return `${accum}${field} ${type}${isLast ? '' : ', \n  '}`
     }, '')
-    const condition = isCreatedIfNotExists
-      ? ' IF NOT EXISTS'
-      : ''
+    const condition = shouldNotAddIfNotExistsStm
+      ? ''
+      : ' IF NOT EXISTS'
 
-    return `CREATE TABLE${condition} ${name}\n(\n  ${columnDefs}${constraints}\n)`
+    return `CREATE TABLE${condition} ${_name}\n(\n  ${columnDefs}${constraints}\n)`
   })
 }
