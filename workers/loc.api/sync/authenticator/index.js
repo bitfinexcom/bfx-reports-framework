@@ -354,7 +354,7 @@ class Authenticator {
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
-      { active: active }
+      { active }
     )
 
     if (res && res.changes < 1) {
@@ -487,7 +487,7 @@ class Authenticator {
         ...freshUserData,
         active: freshUserData.active,
         isDataFromDb: freshUserData.isDataFromDb,
-        isNotProtected: isNotProtected
+        isNotProtected
       },
       { withWorkerThreads, doNotQueueQuery }
     )

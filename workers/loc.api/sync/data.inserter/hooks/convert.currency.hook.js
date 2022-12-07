@@ -157,9 +157,9 @@ class ConvertCurrencyHook extends DataInserterHook {
   _getTableName (collName) {
     const tableName = this._shouldTempTableBeUsed()
       ? SyncTempTablesManager.getTempTableName(
-          collName,
-          this._opts.syncQueueId
-        )
+        collName,
+        this._opts.syncQueueId
+      )
       : collName
 
     return tableName

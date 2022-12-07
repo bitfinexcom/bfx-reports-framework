@@ -45,9 +45,9 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
   const auth = new Map()
   const sessions = shouldGetEveryone
     ? await authenticator.getUsers(
-        { isSubAccount: true, isSubUser: false },
-        { isFilledSubUsers: true }
-      )
+      { isSubAccount: true, isSubUser: false },
+      { isFilledSubUsers: true }
+    )
     : authenticator.getUserSessions()
 
   if (sessions.size === 0) {

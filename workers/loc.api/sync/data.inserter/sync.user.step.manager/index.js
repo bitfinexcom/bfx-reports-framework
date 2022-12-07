@@ -266,37 +266,37 @@ class SyncUserStepManager {
     )
     const lastElemFromMainTablePromise = shouldTableDataBeFetched
       ? this.dao.getElemInCollBy(
-          tableName,
-          dataFilter,
-          tableOrder
-        )
+        tableName,
+        dataFilter,
+        tableOrder
+      )
       : null
     const firstElemFromMainTablePromise = shouldTableDataBeFetched
       ? this.dao.getElemInCollBy(
-          tableName,
-          dataFilter,
-          invertOrders(tableOrder)
-        )
+        tableName,
+        dataFilter,
+        invertOrders(tableOrder)
+      )
       : null
     const lastElemFromTempTablePromise = (
       hasTempTable &&
       shouldTableDataBeFetched
     )
       ? this.dao.getElemInCollBy(
-          tempTableName,
-          dataFilter,
-          tableOrder
-        )
+        tempTableName,
+        dataFilter,
+        tableOrder
+      )
       : null
     const firstElemFromTempTablePromise = (
       hasTempTable &&
       shouldTableDataBeFetched
     )
       ? this.dao.getElemInCollBy(
-          tempTableName,
-          dataFilter,
-          invertOrders(tableOrder)
-        )
+        tempTableName,
+        dataFilter,
+        invertOrders(tableOrder)
+      )
       : null
 
     const [
