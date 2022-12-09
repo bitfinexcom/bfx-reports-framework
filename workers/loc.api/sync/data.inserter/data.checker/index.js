@@ -570,10 +570,10 @@ class DataChecker {
     )
     const firstTempElemLedgersPromise = hasTempTable
       ? this.dao.getElemInCollBy(
-          tempLedgersTableName,
-          firstElemFilter,
-          firstElemOrder
-        )
+        tempLedgersTableName,
+        firstElemFilter,
+        firstElemOrder
+      )
       : null
 
     const [
@@ -611,9 +611,9 @@ class DataChecker {
     )
     const uniqueTempLedgersSymbsPromise = hasTempTable
       ? this.dao.getElemsInCollBy(
-          tempLedgersTableName,
-          ledgerParams
-        )
+        tempLedgersTableName,
+        ledgerParams
+      )
       : []
     const currenciesSynonymousPromise = await this.currencyConverter
       .getCurrenciesSynonymous()

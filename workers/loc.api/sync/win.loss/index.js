@@ -272,11 +272,11 @@ class WinLoss {
     })
     const subAccountsTransferLedgersPromise = isSubAccountsTransferLedgersAdded
       ? this.movements.getSubAccountsTransferLedgers({
-          auth,
-          start,
-          end,
-          sort: [['mts', -1], ['id', -1]]
-        })
+        auth,
+        start,
+        end,
+        sort: [['mts', -1], ['id', -1]]
+      })
       : null
 
     const [
@@ -307,14 +307,14 @@ class WinLoss {
     )
     const subAccountsTransferLedgersGroupedByTimeframePromise = isSubAccountsTransferLedgersAdded
       ? groupByTimeframe(
-          subAccountsTransferLedgers,
-          { timeframe, start, end },
-          this.FOREX_SYMBS,
-          'mts',
-          this.ledgersSymbolFieldName,
-          // NOTE: The movements fn may be used to calc ledgers
-          this._calcMovements.bind(this)
-        )
+        subAccountsTransferLedgers,
+        { timeframe, start, end },
+        this.FOREX_SYMBS,
+        'mts',
+        this.ledgersSymbolFieldName,
+        // NOTE: The movements fn may be used to calc ledgers
+        this._calcMovements.bind(this)
+      )
       : null
 
     const [

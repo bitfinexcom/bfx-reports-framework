@@ -256,10 +256,10 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         )
         const itemFromTempTable = Number.isInteger(this._opts.syncQueueId)
           ? await this.dao.getElemInCollBy(
-              tempTableName,
-              filter,
-              order
-            )
+            tempTableName,
+            filter,
+            order
+          )
           : null
         const itemsFromDb = [itemFromMainTable, itemFromTempTable]
           .filter((item) => (
@@ -410,9 +410,9 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
   _getTableName () {
     const tableName = this._shouldTempTableBeUsed()
       ? SyncTempTablesManager.getTempTableName(
-          this.TABLES_NAMES.LEDGERS,
-          this._opts.syncQueueId
-        )
+        this.TABLES_NAMES.LEDGERS,
+        this._opts.syncQueueId
+      )
       : this.TABLES_NAMES.LEDGERS
 
     return tableName

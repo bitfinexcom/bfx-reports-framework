@@ -152,28 +152,28 @@ class SubAccount {
         )
         const auth = isAuthCheckedInDb
           ? await this.authenticator.verifyUser(
-              {
-                auth: {
-                  email,
-                  password,
-                  token
-                }
-              },
-              {
-                projection: [
-                  '_id',
-                  'id',
-                  'email',
-                  'apiKey',
-                  'apiSecret',
-                  'timezone',
-                  'username'
-                ],
-                isDecryptedApiKeys: true,
-                isNotInTrans: true,
-                doNotQueueQuery: true
+            {
+              auth: {
+                email,
+                password,
+                token
               }
-            )
+            },
+            {
+              projection: [
+                '_id',
+                'id',
+                'email',
+                'apiKey',
+                'apiSecret',
+                'timezone',
+                'username'
+              ],
+              isDecryptedApiKeys: true,
+              isNotInTrans: true,
+              doNotQueueQuery: true
+            }
+          )
           : { apiKey, apiSecret }
 
         if (
@@ -423,28 +423,28 @@ class SubAccount {
         )
         const auth = isAuthCheckedInDb
           ? await this.authenticator.verifyUser(
-              {
-                auth: {
-                  email,
-                  password,
-                  token
-                }
-              },
-              {
-                projection: [
-                  '_id',
-                  'id',
-                  'email',
-                  'apiKey',
-                  'apiSecret',
-                  'timezone',
-                  'username'
-                ],
-                isDecryptedApiKeys: true,
-                isNotInTrans: true,
-                doNotQueueQuery: true
+            {
+              auth: {
+                email,
+                password,
+                token
               }
-            )
+            },
+            {
+              projection: [
+                '_id',
+                'id',
+                'email',
+                'apiKey',
+                'apiSecret',
+                'timezone',
+                'username'
+              ],
+              isDecryptedApiKeys: true,
+              isNotInTrans: true,
+              doNotQueueQuery: true
+            }
+          )
           : { apiKey, apiSecret }
 
         const existedSubUser = subUsers.find((subUser) => (
