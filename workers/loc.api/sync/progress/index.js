@@ -70,6 +70,48 @@ class Progress extends EventEmitter {
       ? tryParseJSON(progress.value, true)
       : 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
   }
+
+  async _estimateSyncTime (params) {
+    const {
+      progress,
+      syncStartedAt
+    } = params ?? {}
+
+    const nowMts = Date.now()
+
+    if (
+      !Number.isFinite(syncStartedAt) ||
+      syncStartedAt > nowMts
+    ) {
+      return {
+        syncStartedAt: null,
+        spentTime: null,
+        leftTime: null
+      }
+    }
+
+    const spentTime = nowMts - syncStartedAt
+
+    if (
+      !Number.isFinite(progress) ||
+      progress <= 0 ||
+      progress > 100
+    ) {
+      return {
+        syncStartedAt,
+        spentTime,
+        leftTime: null
+      }
+    }
+
+    const leftTime = (spentTime / progress) * (100 - progress)
+
+    return {
+      syncStartedAt,
+      spentTime,
+      leftTime
+    }
+  }
 }
 
 decorateInjectable(Progress, depsTypes)
