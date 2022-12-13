@@ -9,7 +9,8 @@ const {
   checkCollPermission
 } = require('../helpers')
 const {
-  UpdateSyncQueueJobError
+  UpdateSyncQueueJobError,
+  SyncQueueOwnerSettingError
 } = require('../../errors')
 
 const {
@@ -76,15 +77,37 @@ class SyncQueue extends EventEmitter {
     this.name = name
   }
 
-  async add (syncColls) {
+  async add (params) {
+    const {
+      syncColls,
+      ownerUserId,
+      isOwnerScheduler
+    } = params ?? {}
+
+    if (
+      !Number.isInteger(ownerUserId) &&
+      !isOwnerScheduler
+    ) {
+      throw new SyncQueueOwnerSettingError()
+    }
+
     const _syncColls = Array.isArray(syncColls)
       ? syncColls
       : [syncColls]
     checkCollPermission(_syncColls, this.ALLOWED_COLLS)
 
-    const allSyncs = await this._getAll(
-      { state: [NEW_JOB_STATE, ERROR_JOB_STATE] }
-    )
+    const ownerUserIdFilter = Number.isInteger(ownerUserId)
+      ? { ownerUserId }
+      : {}
+    const isOwnerSchedulerFilter = isOwnerScheduler
+      ? { isOwnerScheduler: 1 }
+      : {}
+
+    const allSyncs = await this._getAll({
+      state: [NEW_JOB_STATE, ERROR_JOB_STATE],
+      ...ownerUserIdFilter,
+      ...isOwnerSchedulerFilter
+    })
     const hasALLInDB = allSyncs.some(item => {
       return item.collName === this.ALLOWED_COLLS.ALL
     })
@@ -97,7 +120,9 @@ class SyncQueue extends EventEmitter {
     const data = uSyncColls.map(collName => {
       return {
         collName,
-        state: NEW_JOB_STATE
+        state: NEW_JOB_STATE,
+        ownerUserId,
+        isOwnerScheduler
       }
     })
 
@@ -108,7 +133,7 @@ class SyncQueue extends EventEmitter {
     )
   }
 
-  async process () {
+  async process (params) {
     this._progress = this.syncInterrupter.INITIAL_PROGRESS
 
     let count = 0
@@ -121,7 +146,7 @@ class SyncQueue extends EventEmitter {
 
       count += 1
 
-      const nextSync = await this._getNext()
+      const nextSync = await this._getNext(params)
 
       if (
         !nextSync ||
@@ -145,6 +170,10 @@ class SyncQueue extends EventEmitter {
       await this._updateStateById(_id, FINISHED_JOB_STATE)
     }
 
+    /*
+     * Remove finished sync jobs from the queue
+     * leaving the last 100 for debug purposes
+     */
     await this._removeByState(FINISHED_JOB_STATE)
 
     if (!this.syncInterrupter.hasInterrupted()) {
@@ -155,11 +184,21 @@ class SyncQueue extends EventEmitter {
   }
 
   async _subProcess (nextSync, multiplier) {
-    const { _id, collName } = nextSync
+    const {
+      _id,
+      collName,
+      ownerUserId,
+      isOwnerScheduler
+    } = nextSync
     let currMultiplier = 0
 
     try {
-      const dataInserter = this.dataInserterFactory(collName)
+      const dataInserter = this.dataInserterFactory({
+        syncColls: collName,
+        syncQueueId: _id,
+        ownerUserId,
+        isOwnerScheduler
+      })
 
       dataInserter.addAsyncProgressHandler(async (progress) => {
         currMultiplier = await this._getMultiplier(collName)
@@ -285,7 +324,19 @@ class SyncQueue extends EventEmitter {
     }, [])
   }
 
-  _getNext () {
+  _getNext (params) {
+    const {
+      ownerUserId,
+      isOwnerScheduler
+    } = params ?? {}
+
+    const ownerUserIdFilter = Number.isInteger(ownerUserId)
+      ? { ownerUserId }
+      : {}
+    const isOwnerSchedulerFilter = isOwnerScheduler
+      ? { isOwnerScheduler: 1 }
+      : {}
+
     const state = [NEW_JOB_STATE, ERROR_JOB_STATE]
 
     if (this._isFirstSync) {
@@ -296,16 +347,19 @@ class SyncQueue extends EventEmitter {
 
     return this.dao.getElemInCollBy(
       this.name,
-      { state },
+      { state, ...ownerUserIdFilter, ...isOwnerSchedulerFilter },
       this._sort
     )
   }
 
   _removeByState (state) {
-    return this.dao.removeElemsFromDb(
+    return this.dao.removeElemsLeaveLastNRecords(
       this.name,
-      null,
-      { state }
+      {
+        filter: { state },
+        limit: 100,
+        sort: [['updatedAt', -1], ['_id', -1]]
+      }
     )
   }
 

@@ -180,7 +180,7 @@ describe('Update sub-account', () => {
       .send({
         auth: {
           email: masterUserEmail,
-          password: password,
+          password,
           isSubAccount: false
         },
         method: 'signIn',

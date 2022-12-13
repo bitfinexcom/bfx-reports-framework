@@ -1,7 +1,14 @@
 'use strict'
 
-const { orderBy } = require('lodash')
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
 
+const {
+  orderBy,
+  merge
+} = require('lodash')
+
+const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const DataInserterHook = require('./data.inserter.hook')
 const { getAuthFromDb } = require('../helpers/utils')
 const {
@@ -39,8 +46,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
           _id: masterUserId,
           isSubAccount,
           subUser
-        } = { ...payload }
-        const { _id } = { ...subUser }
+        } = payload ?? {}
+        const { _id } = subUser ?? {}
 
         if (
           isSubAccount &&
@@ -63,7 +70,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       user_id: userId,
       _nativeBalance,
       _nativeBalanceUsd
-    } = { ...item }
+    } = item ?? {}
     const subUsersIds = this._getSubUsersIdsByMasterUserId(
       auth,
       userId
@@ -104,7 +111,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       const {
         _nativeBalance: balance,
         _nativeBalanceUsd: balanceUsd
-      } = { ..._item }
+      } = _item ?? {}
 
       if (Number.isFinite(balance)) {
         subUsersBalances.push(balance)
@@ -169,7 +176,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         currency,
         user_id: userId,
         subUserId
-      } = { ...curr }
+      } = curr ?? {}
       const hasNotGroup = accum.every(({
         wallet: _wallet,
         currency: _currency,
@@ -192,8 +199,10 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
 
   async _getInitialElems (
     auth,
-    firstGroupedRecords = []
+    firstGroupedRecords = [],
+    tempTableName
   ) {
+    const order = [['mts', -1], ['id', -1]]
     const res = []
 
     for (const elem of firstGroupedRecords) {
@@ -203,7 +212,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         currency,
         user_id: id,
         subUserId: _subUserId
-      } = { ...elem }
+      } = elem ?? {}
       const subUsersIds = this._getSubUsersIdsByMasterUserId(auth, id)
 
       if (
@@ -221,25 +230,47 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         _nativeBalance: null,
         _nativeBalanceUsd: null
       }
+      const mainFilter = {
+        $eq: {
+          wallet,
+          currency,
+          user_id: id
+        },
+        $lte: { mts }
+      }
 
       for (const subUserId of subUsersIds) {
         if (subUserId === _subUserId) {
           continue
         }
 
-        const itemFromDb = await this.dao.getElemInCollBy(
-          this.TABLES_NAMES.LEDGERS,
-          {
-            $eq: {
-              wallet,
-              currency,
-              user_id: id,
-              subUserId
-            },
-            $lte: { mts }
-          },
-          [['mts', -1], ['_id', 1]]
+        const filter = merge(
+          { $eq: { subUserId } },
+          mainFilter
         )
+
+        const itemFromMainTable = await this.dao.getElemInCollBy(
+          this.TABLES_NAMES.LEDGERS,
+          filter,
+          order
+        )
+        const itemFromTempTable = Number.isInteger(this._opts.syncQueueId)
+          ? await this.dao.getElemInCollBy(
+            tempTableName,
+            filter,
+            order
+          )
+          : null
+        const itemsFromDb = [itemFromMainTable, itemFromTempTable]
+          .filter((item) => (
+            Number.isFinite(item?.mts) &&
+            Number.isFinite(item?.id)
+          ))
+        const itemFromDb = orderBy(
+          itemsFromDb,
+          ['mts', 'id'],
+          ['desc', 'desc']
+        )[0]
 
         res.push({
           ...emptyRes,
@@ -276,16 +307,25 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       throw new SubAccountLedgersBalancesRecalcError()
     }
 
+    const tableName = this._getTableName()
+
+    if (
+      this._shouldTempTableBeUsed() &&
+      !(await this.dao.hasTable(tableName))
+    ) {
+      return
+    }
+
     const firstNotRecalcedElem = await this.dao.getElemInCollBy(
-      this.TABLES_NAMES.LEDGERS,
+      tableName,
       {
         $isNotNull: 'subUserId',
         $isNull: '_isBalanceRecalced'
       },
-      [['mts', 1], ['_id', -1]]
+      [['mts', 1], ['id', 1]]
     )
 
-    let { mts } = { ...firstNotRecalcedElem }
+    let { mts } = firstNotRecalcedElem ?? {}
     let count = 0
     let skipedIds = []
 
@@ -294,19 +334,21 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
     }
 
     while (true) {
+      await setImmediatePromise()
+
       count += 1
 
-      if (count > 100) break
+      if (count > 1000) break
 
       const elems = await this.dao.getElemsInCollBy(
-        this.TABLES_NAMES.LEDGERS,
+        tableName,
         {
           filter: {
             $gte: { mts },
             $nin: { _id: skipedIds },
             $isNotNull: 'subUserId'
           },
-          sort: [['mts', 1], ['_id', -1]],
+          sort: [['mts', 1], ['id', 1]],
           limit: 20000
         }
       )
@@ -321,7 +363,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       const firstGroupedRecords = this._getFirstGroupedRecords(elems)
       const initialElems = await this._getInitialElems(
         auth,
-        firstGroupedRecords
+        firstGroupedRecords,
+        tableName
       )
       const recordsToGetBalances = orderBy(
         [...initialElems, ...elems],
@@ -331,25 +374,25 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       const recalcElems = []
 
       for (const elem of elems) {
+        const _elem = elem ?? {}
         const {
           balance,
           balanceUsd
         } = await this._getRecalcBalanceAsync(
           auth,
           recordsToGetBalances,
-          elem
+          _elem
         )
 
-        recalcElems.push({
-          ...elem,
+        recalcElems.push(Object.assign(_elem, {
           balance,
           balanceUsd,
           _isBalanceRecalced: 1
-        })
+        }))
       }
 
       await this.dao.updateElemsInCollBy(
-        this.TABLES_NAMES.LEDGERS,
+        tableName,
         recalcElems,
         ['_id'],
         ['balance', 'balanceUsd', '_isBalanceRecalced']
@@ -362,6 +405,21 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         .filter(({ mts: _mts }) => mts === _mts)
         .map(({ _id }) => _id)
     }
+  }
+
+  _getTableName () {
+    const tableName = this._shouldTempTableBeUsed()
+      ? SyncTempTablesManager.getTempTableName(
+        this.TABLES_NAMES.LEDGERS,
+        this._opts.syncQueueId
+      )
+      : this.TABLES_NAMES.LEDGERS
+
+    return tableName
+  }
+
+  _shouldTempTableBeUsed () {
+    return Number.isInteger(this._opts.syncQueueId)
   }
 }
 

@@ -39,10 +39,7 @@ class MigrationV28 extends AbstractMigration {
       )`
     ]
 
-    await this.dao.executeQueriesInTrans(
-      usersSqlArr,
-      { withoutWorkerThreads: true }
-    )
+    await this.dao.executeQueriesInTrans(usersSqlArr)
 
     const sqlArr = this._getRemappingSubUserIdSQL([
       'ledgers',

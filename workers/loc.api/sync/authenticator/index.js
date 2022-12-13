@@ -28,6 +28,7 @@ const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
   TYPES.RService,
+  TYPES.GetDataFromApi,
   TYPES.Crypto,
   TYPES.SyncFactory
 ]
@@ -36,12 +37,14 @@ class Authenticator {
     dao,
     TABLES_NAMES,
     rService,
+    getDataFromApi,
     crypto,
     syncFactory
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
     this.rService = rService
+    this.getDataFromApi = getDataFromApi
     this.crypto = crypto
     this.syncFactory = syncFactory
 
@@ -51,14 +54,14 @@ class Authenticator {
     this.userSessions = new Map()
   }
 
-  async signUp (args, params) {
-    const { auth } = { ...args }
+  async signUp (args, opts) {
+    const { auth } = args ?? {}
     const {
       apiKey,
       apiSecret,
       password: userPwd,
       isNotProtected = false
-    } = { ...auth }
+    } = auth ?? {}
     const password = isNotProtected
       ? this.crypto.getSecretKey()
       : userPwd
@@ -71,9 +74,10 @@ class Authenticator {
       isReturnedFullUserData = false,
       isNotSetSession = false,
       isNotInTrans = false,
+      doNotQueueQuery,
       masterUserId,
-      withoutWorkerThreads = true
-    } = { ...params }
+      withWorkerThreads = false
+    } = opts ?? {}
 
     if (
       !apiKey ||
@@ -98,7 +102,14 @@ class Authenticator {
       id
     } = isDisabledApiKeysVerification
       ? { ...auth }
-      : await this.rService._checkAuthInApi(args)
+      : await this.getDataFromApi({
+        getData: (s, args) => this.rService._checkAuthInApi(args),
+        args,
+        callerName: 'AUTHENTICATOR',
+        eNetErrorAttemptsTimeframeMin: 10 / 60,
+        eNetErrorAttemptsTimeoutMs: 1000,
+        shouldNotInterrupt: true
+      })
 
     if (
       !email ||
@@ -117,7 +128,7 @@ class Authenticator {
       ? null
       : await this.getUser(
         { email, username, isSubAccount, isSubUser },
-        { isNotInTrans, withoutWorkerThreads }
+        { isNotInTrans, withWorkerThreads, doNotQueueQuery }
       )
 
     if (
@@ -153,7 +164,7 @@ class Authenticator {
         passwordHash,
         isNotProtected: serializeVal(isNotProtected)
       },
-      { isNotInTrans, withoutWorkerThreads }
+      { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
 
     const token = uuidv4()
@@ -185,22 +196,22 @@ class Authenticator {
     return { ...userParam }
   }
 
-  async signIn (args, params) {
-    const { auth } = { ...args }
+  async signIn (args, opts) {
     const {
       email,
       password,
       isSubAccount,
       token
-    } = { ...auth }
+    } = args?.auth ?? {}
     const {
       active = true,
       isDataFromDb = true,
       isReturnedUser,
       isNotInTrans,
+      doNotQueueQuery,
       isNotSetSession,
-      withoutWorkerThreads = true
-    } = { ...params }
+      withWorkerThreads = false
+    } = opts ?? {}
 
     const user = await this.verifyUser(
       {
@@ -216,7 +227,8 @@ class Authenticator {
         isFilledSubUsers: true,
         isReturnedPassword: true,
         isNotInTrans,
-        withoutWorkerThreads
+        withWorkerThreads,
+        doNotQueueQuery
       }
     )
     const {
@@ -225,7 +237,7 @@ class Authenticator {
       isSubAccount: isSubAccountFromDb,
       apiKey,
       apiSecret
-    } = { ...user }
+    } = user ?? {}
 
     let userData = user
 
@@ -244,7 +256,7 @@ class Authenticator {
       timezone,
       username: uName,
       email: emailFromApi
-    } = { ...userData }
+    } = userData ?? {}
     const username = generateSubUserName(
       { username: uName },
       isSubAccountFromDb
@@ -267,10 +279,10 @@ class Authenticator {
       { _id, email: emailFromDb },
       {
         ...freshUserData,
-        active: serializeVal(freshUserData.active),
-        isDataFromDb: serializeVal(freshUserData.isDataFromDb)
+        active: freshUserData.active,
+        isDataFromDb: freshUserData.isDataFromDb
       },
-      { withoutWorkerThreads }
+      { withWorkerThreads, doNotQueueQuery }
     )
 
     if (res && res.changes < 1) {
@@ -310,15 +322,14 @@ class Authenticator {
     }
   }
 
-  async signOut (args, params) {
-    const { auth } = { ...args }
+  async signOut (args, opts) {
     const {
       email,
       password,
       isSubAccount,
       token
-    } = { ...auth }
-    const { active = false } = { ...params }
+    } = args?.auth ?? {}
+    const { active = false } = opts ?? {}
 
     const user = await this.verifyUser(
       {
@@ -330,7 +341,7 @@ class Authenticator {
         }
       }
     )
-    const { _id, email: emailFromDb } = { ...user }
+    const { _id, email: emailFromDb } = user ?? {}
 
     const isSchedulerEnabled = await this.rService
       .isSchedulerEnabled()
@@ -343,7 +354,7 @@ class Authenticator {
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
-      { active: serializeVal(active) }
+      { active }
     )
 
     if (res && res.changes < 1) {
@@ -362,15 +373,14 @@ class Authenticator {
     return true
   }
 
-  async recoverPassword (args, params) {
-    const { auth } = { ...args }
+  async recoverPassword (args, opts) {
     const {
       apiKey,
       apiSecret,
       newPassword,
       isSubAccount = false,
       isNotProtected = false
-    } = { ...auth }
+    } = args?.auth ?? {}
     const password = isNotProtected
       ? this.crypto.getSecretKey()
       : newPassword
@@ -380,8 +390,9 @@ class Authenticator {
       isReturnedUser = false,
       isNotInTrans = false,
       isSubUser = false,
-      withoutWorkerThreads = true
-    } = { ...params }
+      withWorkerThreads = false,
+      doNotQueueQuery
+    } = opts ?? {}
 
     if (
       !apiKey ||
@@ -400,7 +411,14 @@ class Authenticator {
       email,
       timezone,
       username: uName
-    } = await this.rService._checkAuthInApi(args)
+    } = await this.getDataFromApi({
+      getData: (s, args) => this.rService._checkAuthInApi(args),
+      args,
+      callerName: 'AUTHENTICATOR',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
 
     if (
       !email ||
@@ -418,7 +436,8 @@ class Authenticator {
       {
         isFilledSubUsers: true,
         isNotInTrans,
-        withoutWorkerThreads
+        withWorkerThreads,
+        doNotQueueQuery
       }
     )
 
@@ -466,11 +485,11 @@ class Authenticator {
       { _id: userFromDb._id, email },
       {
         ...freshUserData,
-        active: serializeVal(freshUserData.active),
-        isDataFromDb: serializeVal(freshUserData.isDataFromDb),
-        isNotProtected: serializeVal(isNotProtected)
+        active: freshUserData.active,
+        isDataFromDb: freshUserData.isDataFromDb,
+        isNotProtected
       },
-      { withoutWorkerThreads }
+      { withWorkerThreads, doNotQueueQuery }
     )
 
     if (res && res.changes < 1) {
@@ -509,14 +528,13 @@ class Authenticator {
     }
   }
 
-  async verifyUser (args, params) {
-    const { auth } = { ...args }
+  async verifyUser (args, opts) {
     const {
       email,
       password: userPwd,
       isSubAccount = false,
       token
-    } = { ...auth }
+    } = args?.auth ?? {}
     const password = (
       userPwd &&
       typeof userPwd === 'string'
@@ -532,8 +550,9 @@ class Authenticator {
       isNotInTrans,
       isAppliedProjectionToSubUser,
       subUsersProjection,
-      withoutWorkerThreads
-    } = { ...params }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
 
     if (
       email &&
@@ -549,11 +568,12 @@ class Authenticator {
         {
           isNotInTrans,
           isFilledSubUsers,
-          withoutWorkerThreads,
+          withWorkerThreads,
+          doNotQueueQuery,
           ...pwdParam
         }
       )
-      const { passwordHash } = { ..._user }
+      const { passwordHash } = _user ?? {}
 
       await this.crypto.verifyPassword(
         password,
@@ -610,9 +630,9 @@ class Authenticator {
     args,
     opts
   ) {
-    const { isForcedVerification } = { ...opts }
-    const { auth } = { ...args }
-    const { _id } = { ...auth }
+    const { isForcedVerification } = opts ?? {}
+    const { auth } = args ?? {}
+    const { _id } = auth ?? {}
     const params = {
       isFilledSubUsers: true,
       isDecryptedApiKeys: true,
@@ -636,16 +656,16 @@ class Authenticator {
     return user
   }
 
-  async getUser (filter, params) {
+  async getUser (filter, opts) {
     const {
       isFilledSubUsers,
       projection,
       password,
       isAppliedProjectionToSubUser,
       subUsersProjection
-    } = { ...params }
+    } = opts ?? {}
 
-    const _user = await this.dao.getUser(filter, params)
+    const _user = await this.dao.getUser(filter, opts)
     const user = pickProps(
       _user,
       projection,
@@ -669,7 +689,7 @@ class Authenticator {
       return decryptedUser
     }
 
-    const { subUsers } = { ...decryptedUser }
+    const { subUsers } = decryptedUser ?? {}
 
     const decryptedSubUsers = await this
       .decryptApiKeys(password, subUsers)
@@ -680,7 +700,7 @@ class Authenticator {
     }
   }
 
-  async getUsers (filter, params) {
+  async getUsers (filter, opts) {
     const {
       isFilledSubUsers,
       password,
@@ -688,13 +708,13 @@ class Authenticator {
       projection,
       isAppliedProjectionToSubUser,
       subUsersProjection
-    } = { ...params }
+    } = opts ?? {}
     const _emailPasswordsMap = Array.isArray(emailPasswordsMap)
       ? emailPasswordsMap
       : [emailPasswordsMap]
     const filteredEmailPwdsMap = _emailPasswordsMap
       .filter((emailPwd) => {
-        const { password, email } = { ...emailPwd }
+        const { password, email } = emailPwd ?? {}
 
         return (
           password &&
@@ -704,7 +724,7 @@ class Authenticator {
         )
       })
 
-    const _users = await this.dao.getUsers(filter, params)
+    const _users = await this.dao.getUsers(filter, opts)
     const users = pickProps(
       _users,
       projection,
@@ -729,7 +749,7 @@ class Authenticator {
     }
 
     const promises = decryptedUsers.map((user) => {
-      const { subUsers, email } = { ...user }
+      const { subUsers, email } = user ?? {}
       const { password } = filteredEmailPwdsMap
         .find(({ email: pwdEmail }) => pwdEmail === email)
 
@@ -745,16 +765,17 @@ class Authenticator {
     })
   }
 
-  async createUser (data, params) {
+  async createUser (data, opts) {
     const {
       isNotInTrans,
-      withoutWorkerThreads
-    } = { ...params }
+      withWorkerThreads,
+      doNotQueueQuery
+    } = opts ?? {}
 
     const { lastInsertRowid } = await this.dao.insertElemToDb(
       this.TABLES_NAMES.USERS,
       data,
-      { withoutWorkerThreads }
+      { withWorkerThreads, doNotQueueQuery }
     )
 
     if (!Number.isInteger(lastInsertRowid)) {
@@ -763,7 +784,7 @@ class Authenticator {
 
     const user = await this.getUser(
       { _id: lastInsertRowid },
-      { isNotInTrans, withoutWorkerThreads }
+      { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
 
     if (
@@ -778,13 +799,12 @@ class Authenticator {
   }
 
   async removeUser (args) {
-    const { auth } = { ...args }
     const {
       email,
       password,
       isSubAccount,
       token
-    } = { ...auth }
+    } = args?.auth ?? {}
 
     const {
       _id,
@@ -816,7 +836,7 @@ class Authenticator {
   }
 
   setUserSession (user) {
-    const { token } = { ...user }
+    const { token } = user ?? {}
 
     this.userSessions.set(token, { ...user })
   }
@@ -831,7 +851,7 @@ class Authenticator {
     const {
       email,
       isSubAccount = false
-    } = { ...args }
+    } = args ?? {}
     const keyVal = [...this.userSessions].find(([, session]) => {
       return (
         email === session.email &&
@@ -862,7 +882,7 @@ class Authenticator {
     const _users = isArray ? users : [users]
 
     const promises = _users.reduce((accum, user) => {
-      const { apiKey, apiSecret } = { ...user }
+      const { apiKey, apiSecret } = user ?? {}
 
       return [
         ...accum,

@@ -59,11 +59,11 @@ class WinLossVSAccountBalance {
 
     const getWinLossPercByTimeframe = isVSPrevDayBalance
       ? this._getWinLossPrevDayBalanceByTimeframe(
-          {
-            isUnrealizedProfitExcluded,
-            firstWalletsVals
-          }
-        )
+        {
+          isUnrealizedProfitExcluded,
+          firstWalletsVals
+        }
+      )
       : this._getWinLossVSAccountBalanceByTimeframe(
         {
           isUnrealizedProfitExcluded,

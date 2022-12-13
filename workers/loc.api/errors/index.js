@@ -31,8 +31,8 @@ class AfterAllInsertsHookIsNotHookError extends BaseError {
   }
 }
 
-class RemoveListElemsError extends BaseError {
-  constructor (message = 'ERR_LIST_IS_NOT_ARRAY') {
+class RemoveElemsLeaveLastNRecordsError extends BaseError {
+  constructor (message = 'ERR_STORE_ROWS_LIMIT_MUST_BE_MORE_THAN_0') {
     super(message)
   }
 }
@@ -165,7 +165,7 @@ class DataConsistencyWhileSyncingError extends DataConsistencyError {
   constructor (message = 'ERR_COLLECTIONS_DATA_IS_NOT_CONSISTENT_WHILE_SYNCING') {
     super(message)
 
-    this.statusMessage = 'This particular endpoints are not available for the selected time frame while DB is being synced'
+    this.statusMessage = 'This particular endpoints are not available for the selected time frame while DB is being synced for the first time'
   }
 }
 
@@ -187,13 +187,37 @@ class TotalFeesParamsFlagError extends ArgsParamsError {
   }
 }
 
+class SyncQueueOwnerSettingError extends BaseError {
+  constructor (message = 'ERR_NO_PROVIDED_SYNC_QUEUE_OWNER') {
+    super(message)
+  }
+}
+
+class SyncQueueIDSettingError extends BaseError {
+  constructor (message = 'ERR_SYNC_QUEUE_ID_MUST_BE_INTEGER') {
+    super(message)
+  }
+}
+
+class LastSyncedInfoGettingError extends BaseError {
+  constructor (message = 'ERR_LAST_SYNCED_INFO_GETTING_FOR_UNAVAILABLE_COLLECTION_TYPE') {
+    super(message)
+  }
+}
+
+class SyncInfoUpdatingError extends BaseError {
+  constructor (message = 'ERR_SYNC_INFO_UPDATING_HAS_BEEN_FAILED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
   UpdateSyncQueueJobError,
   AsyncProgressHandlerIsNotFnError,
   AfterAllInsertsHookIsNotHookError,
-  RemoveListElemsError,
+  RemoveElemsLeaveLastNRecordsError,
   UpdateRecordError,
   DAOInitializationError,
   ServerAvailabilityError,
@@ -215,5 +239,9 @@ module.exports = {
   DataConsistencyWhileSyncingError,
   ProcessStateSendingError,
   DbRestoringError,
-  TotalFeesParamsFlagError
+  TotalFeesParamsFlagError,
+  SyncQueueOwnerSettingError,
+  SyncQueueIDSettingError,
+  LastSyncedInfoGettingError,
+  SyncInfoUpdatingError
 }

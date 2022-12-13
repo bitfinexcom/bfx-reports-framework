@@ -7,8 +7,9 @@ module.exports = (obj, keys) => {
     ? keys
     : Object.keys(obj)
 
-  return _keys.reduce((accum, key) => ({
-    ...accum,
-    [key]: serializeVal(obj[key])
-  }), {})
+  return _keys.reduce((accum, key) => {
+    accum[key] = serializeVal(obj[key])
+
+    return accum
+  }, {})
 }

@@ -37,10 +37,7 @@ class AbstractMigration extends Migration {
       ? 0
       : _version
 
-    await this.dao.executeQueriesInTrans(
-      this.sqlArr,
-      { withoutWorkerThreads: true }
-    )
+    await this.dao.executeQueriesInTrans(this.sqlArr)
     await this.dao.setCurrDbVer(verNoLessZero)
   }
 

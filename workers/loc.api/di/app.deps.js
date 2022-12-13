@@ -33,6 +33,15 @@ const Sync = require('../sync')
 const SyncInterrupter = require('../sync/sync.interrupter')
 const SyncQueue = require('../sync/sync.queue')
 const SyncCollsManager = require('../sync/sync.colls.manager')
+const SyncTempTablesManager = require(
+  '../sync/data.inserter/sync.temp.tables.manager'
+)
+const SyncUserStepManager = require(
+  '../sync/data.inserter/sync.user.step.manager'
+)
+const SyncUserStepData = require(
+  '../sync/data.inserter/sync.user.step.manager/sync.user.step.data'
+)
 const Checkers = require(
   '../sync/data.consistency.checker/checkers'
 )
@@ -95,7 +104,8 @@ const {
   dbMigratorFactory,
   dataInserterFactory,
   syncFactory,
-  processMessageManagerFactory
+  processMessageManagerFactory,
+  syncUserStepDataFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -240,18 +250,24 @@ module.exports = ({
           searchClosePriceAndSumAmount,
           [
             TYPES.RService,
+            TYPES.GetDataFromApi,
             TYPES.DAO,
             TYPES.ALLOWED_COLLS
           ]
         )
       )
+    bind(TYPES.SyncCollsManager)
+      .to(SyncCollsManager)
+      .inSingletonScope()
     bind(TYPES.RedirectRequestsToApi).toConstantValue(
       bindDepsToFn(
         redirectRequestsToApi,
         [
           TYPES.DAO,
           TYPES.TABLES_NAMES,
-          TYPES.WSEventEmitter
+          TYPES.WSEventEmitter,
+          TYPES.Authenticator,
+          TYPES.SyncCollsManager
         ]
       )
     )
@@ -274,9 +290,14 @@ module.exports = ({
     bind(TYPES.SyncQueue)
       .to(SyncQueue)
       .inSingletonScope()
-    bind(TYPES.SyncCollsManager)
-      .to(SyncCollsManager)
-      .inSingletonScope()
+    bind(TYPES.SyncTempTablesManager)
+      .to(SyncTempTablesManager)
+    bind(TYPES.SyncUserStepManager)
+      .to(SyncUserStepManager)
+    bind(TYPES.SyncUserStepData)
+      .to(SyncUserStepData)
+    bind(TYPES.SyncUserStepDataFactory)
+      .toFactory(syncUserStepDataFactory)
     bind(TYPES.Checkers)
       .to(Checkers)
       .inSingletonScope()

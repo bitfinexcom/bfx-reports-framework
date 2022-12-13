@@ -1,21 +1,19 @@
 'use strict'
 
 const {
-  checkCollType,
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl,
-  isInsertableArrObjAnyProtection,
+  isInsertableArrObj,
+  isUpdatableArrObj,
+  isUpdatableArr,
   isPublic,
-  isHidden
+  isHidden,
+  isUpdatable
 } = require('./check-coll-type')
 
 module.exports = {
-  checkCollType,
-  isInsertableArrObjTypeOfColl,
-  isUpdatableArrObjTypeOfColl,
-  isUpdatableArrTypeOfColl,
-  isInsertableArrObjAnyProtection,
+  isInsertableArrObj,
+  isUpdatableArrObj,
+  isUpdatableArr,
   isPublic,
-  isHidden
+  isHidden,
+  isUpdatable
 }

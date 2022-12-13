@@ -1,5 +1,8 @@
 'use strict'
 
+const { promisify } = require('util')
+const setImmediatePromise = promisify(setImmediate)
+
 const getStartMtsByTimeframe = require(
   './get-start-mts-by-timeframe'
 )
@@ -167,6 +170,8 @@ module.exports = async (
   const subRes = []
 
   for (let i = data.length - 1; i >= 0; i -= 1) {
+    await setImmediatePromise()
+
     const item = data[i]
     const isLastIter = i === 0
     const nextItem = data[i - 1]
