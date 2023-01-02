@@ -119,7 +119,7 @@ class Sync {
         (currProgress < 100) ||
         !isEnable
       ) {
-        return this.progress.getProgress()?.progress
+        return (await this.progress.getProgress())?.progress
       }
 
       await this.rService.pingApi()
