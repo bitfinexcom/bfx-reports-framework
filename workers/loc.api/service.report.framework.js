@@ -331,7 +331,12 @@ class FrameworkReportService extends ReportService {
         isSchedulerEnabled
       )
         ? this._progress.getProgress()
-        : false
+        : {
+            progress: false,
+            syncStartedAt: null,
+            spentTime: null,
+            leftTime: null
+          }
     }, 'getSyncProgress', args, cb)
   }
 
