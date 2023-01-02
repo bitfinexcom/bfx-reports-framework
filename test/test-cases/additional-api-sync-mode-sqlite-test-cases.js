@@ -10,12 +10,13 @@ const {
 } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
-  delay,
   getParamsArrToTestTimeframeGrouping
 } = require('../helpers/helpers.core')
 const {
   testCsvPathHasCommonFolder
 } = require('../helpers/helpers.tests')
+
+const getSyncProgressTestCase = require('./get-sync-progress-test-case')
 
 module.exports = (
   agent,
@@ -123,35 +124,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getBalanceHistory method', async function () {
     this.timeout(5000)
