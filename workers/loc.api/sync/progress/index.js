@@ -1,7 +1,6 @@
 'use strict'
 
 const EventEmitter = require('events')
-const { isEmpty } = require('lodash')
 
 const {
   tryParseJSON
@@ -44,8 +43,12 @@ class Progress extends EventEmitter {
         this.TABLES_NAMES.PROGRESS,
         { value: JSON.stringify(_progress) }
       )
-      this.emit(_progress)
-      await this.wsEventEmitter.emitProgress(() => _progress)
+      const estimatedSyncTime = this._estimateSyncTime({
+        progress: _progress
+      })
+
+      this.emit(estimatedSyncTime)
+      await this.wsEventEmitter.emitProgress(() => estimatedSyncTime)
     } catch (e) {
       this.logger.error(
         `PROGRESS:SYNC:SET: ${e.stack || e}`
@@ -60,23 +63,23 @@ class Progress extends EventEmitter {
   }
 
   async getProgress () {
-    const progress = await this.dao
+    const progressObj = await this.dao
       .getElemInCollBy(this.TABLES_NAMES.PROGRESS)
 
-    return (
-      !isEmpty(progress) &&
-      typeof progress.value === 'string'
-    )
-      ? tryParseJSON(progress.value, true)
+    const progress = typeof progressObj?.value === 'string'
+      ? tryParseJSON(progressObj.value, true)
       : 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+    const estimatedSyncTime = this._estimateSyncTime({ progress })
+
+    return estimatedSyncTime
   }
 
   async _estimateSyncTime (params) {
     const {
-      progress,
-      syncStartedAt
+      progress
     } = params ?? {}
 
+    const syncStartedAt = this._getSyncStartedAt()
     const nowMts = Date.now()
 
     if (
@@ -84,6 +87,7 @@ class Progress extends EventEmitter {
       syncStartedAt > nowMts
     ) {
       return {
+        progress,
         syncStartedAt: null,
         spentTime: null,
         leftTime: null
@@ -98,6 +102,7 @@ class Progress extends EventEmitter {
       progress > 100
     ) {
       return {
+        progress,
         syncStartedAt,
         spentTime,
         leftTime: null
@@ -107,10 +112,16 @@ class Progress extends EventEmitter {
     const leftTime = (spentTime / progress) * (100 - progress)
 
     return {
+      progress,
       syncStartedAt,
       spentTime,
       leftTime
     }
+  }
+
+  // TODO:
+  _getSyncStartedAt () {
+    return Date.now()
   }
 }
 
