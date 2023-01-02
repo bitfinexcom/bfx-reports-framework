@@ -27,6 +27,8 @@ class Progress extends EventEmitter {
     this.TABLES_NAMES = TABLES_NAMES
     this.wsEventEmitter = wsEventEmitter
     this.logger = logger
+
+    this._syncStartedAt = null
   }
 
   async setProgress (progress) {
@@ -74,6 +76,14 @@ class Progress extends EventEmitter {
     return estimatedSyncTime
   }
 
+  activateSyncTimeEstimate () {
+    this._syncStartedAt = Date.now()
+  }
+
+  deactivateSyncTimeEstimate () {
+    this._syncStartedAt = null
+  }
+
   async _estimateSyncTime (params) {
     const {
       progress
@@ -119,9 +129,8 @@ class Progress extends EventEmitter {
     }
   }
 
-  // TODO:
   _getSyncStartedAt () {
-    return Date.now()
+    return this._syncStartedAt ?? null
   }
 }
 
