@@ -67,7 +67,9 @@ class Sync {
       )
     }
 
-    const currProgress = await this.progress.getProgress()
+    const {
+      progress: currProgress
+    } = await this.progress.getProgress()
 
     if (this.syncInterrupter.hasInterrupted()) {
       this.syncInterrupter.emitInterrupted(
@@ -102,7 +104,9 @@ class Sync {
       }
 
       const isEnable = await this.rService.isSchedulerEnabled()
-      const currProgress = await this.progress.getProgress()
+      const {
+        progress: currProgress
+      } = await this.progress.getProgress()
 
       if (isEnable) {
         await this.syncQueue.add({
@@ -115,7 +119,7 @@ class Sync {
         (currProgress < 100) ||
         !isEnable
       ) {
-        return this.progress.getProgress()
+        return this.progress.getProgress()?.progress
       }
 
       await this.rService.pingApi()
@@ -145,7 +149,9 @@ class Sync {
   }
 
   async stop () {
-    const currProgress = await this.progress
+    const {
+      progress: currProgress
+    } = await this.progress
       .deactivateSyncTimeEstimate()
       .getProgress()
 
