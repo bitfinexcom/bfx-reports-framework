@@ -40,7 +40,9 @@ class DataConsistencyChecker {
     const isValid = await check(auth)
 
     if (!isValid) {
-      const currProgress = await this.progress.getProgress()
+      const {
+        progress: currProgress
+      } = await this.progress.getProgress()
       const isDBSyncing = currProgress < 100
 
       if (isDBSyncing) {
