@@ -78,10 +78,14 @@ class Progress extends EventEmitter {
 
   activateSyncTimeEstimate () {
     this._syncStartedAt = Date.now()
+
+    return this
   }
 
   deactivateSyncTimeEstimate () {
     this._syncStartedAt = null
+
+    return this
   }
 
   async _estimateSyncTime (params) {
