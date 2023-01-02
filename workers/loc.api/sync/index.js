@@ -37,8 +37,11 @@ class Sync {
     let progressForInterrupter = this.syncInterrupter
       .INITIAL_PROGRESS
 
+    this.progress.deactivateSyncTimeEstimate()
+
     if (!error) {
       try {
+        this.progress.activateSyncTimeEstimate()
         progressForInterrupter = await this.syncQueue.process(params)
       } catch (err) {
         errorForInterrupter = err
@@ -142,7 +145,9 @@ class Sync {
   }
 
   async stop () {
-    const currProgress = await this.progress.getProgress()
+    const currProgress = await this.progress
+      .deactivateSyncTimeEstimate()
+      .getProgress()
 
     if (currProgress < 100) {
       return this.syncInterrupter.interrupt()
