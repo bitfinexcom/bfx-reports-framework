@@ -93,6 +93,7 @@ const {
   fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
+const WeightedAveragesReport = require('../sync/weighted.averages.report')
 const SqliteDbMigrator = require(
   '../sync/dao/db-migrations/sqlite.db.migrator'
 )
@@ -152,6 +153,7 @@ module.exports = ({
           ['_syncCollsManager', TYPES.SyncCollsManager],
           ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
           ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance],
+          ['_weightedAveragesReport', TYPES.WeightedAveragesReport],
           ['_getDataFromApi', TYPES.GetDataFromApi]
         ]
       })
@@ -360,6 +362,8 @@ module.exports = ({
       )
     bind(TYPES.FullTaxReport)
       .to(FullTaxReport)
+    bind(TYPES.WeightedAveragesReport)
+      .to(WeightedAveragesReport)
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)
       .inSingletonScope()
