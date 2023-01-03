@@ -66,5 +66,6 @@ module.exports = {
   SyncTempTablesManager: Symbol.for('SyncTempTablesManager'),
   SyncUserStepManager: Symbol.for('SyncUserStepManager'),
   SyncUserStepData: Symbol.for('SyncUserStepData'),
-  SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory')
+  SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory'),
+  WeightedAveragesReport: Symbol.for('WeightedAveragesReport')
 }
