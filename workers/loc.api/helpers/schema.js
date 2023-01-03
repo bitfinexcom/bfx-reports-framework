@@ -259,6 +259,21 @@ const paramsSchemaForWinLossVSAccountBalanceApi = {
   }
 }
 
+const paramsSchemaForWeightedAveragesReportApi = {
+  type: 'object',
+  properties: {
+    start: {
+      type: 'integer'
+    },
+    end: {
+      type: 'integer'
+    },
+    symbol: {
+      type: ['string', 'array']
+    }
+  }
+}
+
 const paramsSchemaForTradedVolumeApi = {
   type: 'object',
   properties: {
@@ -445,6 +460,7 @@ module.exports = {
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
   paramsSchemaForWinLossVSAccountBalanceApi,
+  paramsSchemaForWeightedAveragesReportApi,
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
