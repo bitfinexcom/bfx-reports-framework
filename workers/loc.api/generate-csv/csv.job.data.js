@@ -20,18 +20,21 @@ const { decorateInjectable } = require('../di/utils')
 const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.FullSnapshotReportCsvWriter,
-  TYPES.FullTaxReportCsvWriter
+  TYPES.FullTaxReportCsvWriter,
+  TYPES.WeightedAveragesReportCsv
 ]
 class CsvJobData extends BaseCsvJobData {
   constructor (
     rService,
     fullSnapshotReportCsvWriter,
-    fullTaxReportCsvWriter
+    fullTaxReportCsvWriter,
+    weightedAveragesReportCsv
   ) {
     super(rService)
 
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
     this.fullTaxReportCsvWriter = fullTaxReportCsvWriter
+    this.weightedAveragesReportCsv = weightedAveragesReportCsv
   }
 
   _addColumnsBySchema (columnsCsv = {}, schema = {}) {
@@ -663,6 +666,54 @@ class CsvJobData extends BaseCsvJobData {
       formatSettings: {
         mts: 'date'
       }
+    }
+
+    return jobData
+  }
+
+  async getWeightedAveragesReportCsvJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForWeightedAveragesReportApiCsv')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      uId,
+      uInfo
+    )
+
+    const csvArgs = getCsvArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getWeightedAveragesReport',
+      fileNamesMap: [['getWeightedAveragesReport', 'weighted-averages-report']],
+      args: csvArgs,
+      columnsCsv: {
+        symbol: 'PAIR',
+        final: {
+          weightedPrice: 'WEIGHTED PRICE',
+          amount: 'AMOUNT'
+        },
+        buying: {
+          weightedPrice: 'WEIGHTED PRICE',
+          amount: 'AMOUNT'
+        },
+        selling: {
+          weightedPrice: 'WEIGHTED PRICE',
+          amount: 'AMOUNT'
+        }
+      },
+      formatSettings: {
+        symbol: 'symbol'
+      },
+      csvCustomWriter: this.weightedAveragesReportCsvWriter
     }
 
     return jobData
