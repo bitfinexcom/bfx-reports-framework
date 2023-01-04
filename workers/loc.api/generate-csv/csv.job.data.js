@@ -21,20 +21,20 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.FullSnapshotReportCsvWriter,
   TYPES.FullTaxReportCsvWriter,
-  TYPES.WeightedAveragesReportCsv
+  TYPES.WeightedAveragesReportCsvWriter
 ]
 class CsvJobData extends BaseCsvJobData {
   constructor (
     rService,
     fullSnapshotReportCsvWriter,
     fullTaxReportCsvWriter,
-    weightedAveragesReportCsv
+    weightedAveragesReportCsvWriter
   ) {
     super(rService)
 
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
     this.fullTaxReportCsvWriter = fullTaxReportCsvWriter
-    this.weightedAveragesReportCsv = weightedAveragesReportCsv
+    this.weightedAveragesReportCsvWriter = weightedAveragesReportCsvWriter
   }
 
   _addColumnsBySchema (columnsCsv = {}, schema = {}) {
@@ -697,18 +697,12 @@ class CsvJobData extends BaseCsvJobData {
       args: csvArgs,
       columnsCsv: {
         symbol: 'PAIR',
-        final: {
-          weightedPrice: 'WEIGHTED PRICE',
-          amount: 'AMOUNT'
-        },
-        buying: {
-          weightedPrice: 'WEIGHTED PRICE',
-          amount: 'AMOUNT'
-        },
-        selling: {
-          weightedPrice: 'WEIGHTED PRICE',
-          amount: 'AMOUNT'
-        }
+        finalWeightedPrice: 'WEIGHTED PRICE',
+        finalAmount: 'AMOUNT',
+        buyingWeightedPrice: 'WEIGHTED PRICE',
+        buyingAmount: 'AMOUNT',
+        sellingWeightedPrice: 'WEIGHTED PRICE',
+        sellingAmount: 'AMOUNT'
       },
       formatSettings: {
         symbol: 'symbol'
