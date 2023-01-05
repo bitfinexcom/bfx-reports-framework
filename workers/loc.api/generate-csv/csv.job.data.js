@@ -697,12 +697,12 @@ class CsvJobData extends BaseCsvJobData {
       args: csvArgs,
       columnsCsv: {
         symbol: 'PAIR',
-        finalWeightedPrice: 'WEIGHTED PRICE',
-        finalAmount: 'AMOUNT',
         buyingWeightedPrice: 'WEIGHTED PRICE',
         buyingAmount: 'AMOUNT',
         sellingWeightedPrice: 'WEIGHTED PRICE',
-        sellingAmount: 'AMOUNT'
+        sellingAmount: 'AMOUNT',
+        cumulativeWeightedPrice: 'WEIGHTED PRICE',
+        cumulativeAmount: 'AMOUNT'
       },
       formatSettings: {
         symbol: 'symbol'
