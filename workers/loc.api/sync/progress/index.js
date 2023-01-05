@@ -1,7 +1,6 @@
 'use strict'
 
 const EventEmitter = require('events')
-const { isEmpty } = require('lodash')
 
 const {
   tryParseJSON
@@ -28,6 +27,8 @@ class Progress extends EventEmitter {
     this.TABLES_NAMES = TABLES_NAMES
     this.wsEventEmitter = wsEventEmitter
     this.logger = logger
+
+    this._syncStartedAt = null
   }
 
   async setProgress (progress) {
@@ -44,8 +45,12 @@ class Progress extends EventEmitter {
         this.TABLES_NAMES.PROGRESS,
         { value: JSON.stringify(_progress) }
       )
-      this.emit(_progress)
-      await this.wsEventEmitter.emitProgress(() => _progress)
+      const estimatedSyncTime = this._estimateSyncTime({
+        progress: _progress
+      })
+
+      this.emit(estimatedSyncTime)
+      await this.wsEventEmitter.emitProgress(() => estimatedSyncTime)
     } catch (e) {
       this.logger.error(
         `PROGRESS:SYNC:SET: ${e.stack || e}`
@@ -60,15 +65,76 @@ class Progress extends EventEmitter {
   }
 
   async getProgress () {
-    const progress = await this.dao
+    const progressObj = await this.dao
       .getElemInCollBy(this.TABLES_NAMES.PROGRESS)
 
-    return (
-      !isEmpty(progress) &&
-      typeof progress.value === 'string'
-    )
-      ? tryParseJSON(progress.value, true)
+    const progress = typeof progressObj?.value === 'string'
+      ? tryParseJSON(progressObj.value, true)
       : 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+    const estimatedSyncTime = this._estimateSyncTime({ progress })
+
+    return estimatedSyncTime
+  }
+
+  activateSyncTimeEstimate () {
+    this._syncStartedAt = Date.now()
+
+    return this
+  }
+
+  deactivateSyncTimeEstimate () {
+    this._syncStartedAt = null
+
+    return this
+  }
+
+  async _estimateSyncTime (params) {
+    const {
+      progress
+    } = params ?? {}
+
+    const syncStartedAt = this._getSyncStartedAt()
+    const nowMts = Date.now()
+
+    if (
+      !Number.isFinite(syncStartedAt) ||
+      syncStartedAt > nowMts
+    ) {
+      return {
+        progress,
+        syncStartedAt: null,
+        spentTime: null,
+        leftTime: null
+      }
+    }
+
+    const spentTime = nowMts - syncStartedAt
+
+    if (
+      !Number.isFinite(progress) ||
+      progress <= 0 ||
+      progress > 100
+    ) {
+      return {
+        progress,
+        syncStartedAt,
+        spentTime,
+        leftTime: null
+      }
+    }
+
+    const leftTime = (spentTime / progress) * (100 - progress)
+
+    return {
+      progress,
+      syncStartedAt,
+      spentTime,
+      leftTime
+    }
+  }
+
+  _getSyncStartedAt () {
+    return this._syncStartedAt ?? null
   }
 }
 
