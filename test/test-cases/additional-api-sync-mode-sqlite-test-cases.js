@@ -554,6 +554,50 @@ module.exports = (
     }
   })
 
+  it('it should be successfully performed by the getWeightedAveragesReport method', async function () {
+    this.timeout(120000)
+
+    const paramsArr = [
+      { end, start },
+      {
+        end,
+        start: end - (10 * 60 * 60 * 1000),
+        symbol: ['tBTCUSD']
+      }
+    ]
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getWeightedAveragesReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      const resItem = res.body.result[0]
+
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'symbol',
+        'buyingWeightedPrice',
+        'buyingAmount',
+        'sellingWeightedPrice',
+        'sellingAmount',
+        'cumulativeWeightedPrice',
+        'cumulativeAmount'
+      ])
+    }
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
