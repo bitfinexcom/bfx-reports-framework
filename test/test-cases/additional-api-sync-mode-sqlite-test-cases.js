@@ -983,4 +983,29 @@ module.exports = (
 
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
+
+  it('it should be successfully performed by the getWeightedAveragesReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getWeightedAveragesReportCsv',
+        params: {
+          end,
+          start,
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
 }
