@@ -1322,6 +1322,15 @@ class FrameworkReportService extends ReportService {
     }, 'getWinLossVSAccountBalance', args, cb)
   }
 
+  getWeightedAveragesReport (space, args, cb) {
+    return this._privResponder(async () => {
+      checkParams(args, 'paramsSchemaForWeightedAveragesReportApi')
+
+      return this._weightedAveragesReport
+        .getWeightedAveragesReport(args)
+    }, 'getWeightedAveragesReport', args, cb)
+  }
+
   /**
    * @override
    */
@@ -1425,6 +1434,15 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getWinLossVSAccountBalanceCsv', args, cb)
+  }
+
+  getWeightedAveragesReportCsv (space, args, cb) {
+    return this._responder(() => {
+      return this._generateCsv(
+        'getWeightedAveragesReportCsvJobData',
+        args
+      )
+    }, 'getWeightedAveragesReportCsv', args, cb)
   }
 }
 
