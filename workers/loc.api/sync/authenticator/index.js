@@ -303,7 +303,7 @@ class Authenticator {
       typeof token === 'string'
     )
       ? token
-      : this.getUserSessionByEmail({ email, isSubAccount }).token
+      : this.getUserSessionByEmail({ email, isSubAccount })?.token
     const createdToken = (
       existedToken &&
       typeof existedToken === 'string'
@@ -515,7 +515,7 @@ class Authenticator {
 
     const existedToken = this.getUserSessionByEmail(
       { email, isSubAccount }
-    ).token
+    )?.token
     const createdToken = (
       existedToken &&
       typeof existedToken === 'string'
@@ -607,7 +607,7 @@ class Authenticator {
         token,
         isReturnedPassword
       )
-      const { apiKey, apiSecret } = { ...session }
+      const { apiKey, apiSecret } = session ?? {}
 
       if (
         !apiKey ||
@@ -860,7 +860,8 @@ class Authenticator {
 
   getUserSessionByEmail (user, isReturnedPassword) {
     const tokenKey = this._getTokenKeyByEmailField(user)
-    const session = this.userTokenMapByEmail.get(tokenKey)
+    const token = this.userTokenMapByEmail.get(tokenKey)
+    const session = this.userSessions.get(token)
 
     return pickSessionProps(session, isReturnedPassword)
   }
