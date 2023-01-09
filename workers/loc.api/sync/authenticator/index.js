@@ -513,7 +513,6 @@ class Authenticator {
       return returnedUser
     }
 
-    // TODO:
     const existedToken = this.getUserSessionByEmail(
       { email, isSubAccount }
     ).token
@@ -534,7 +533,6 @@ class Authenticator {
     }
   }
 
-  // TODO:
   async verifyUser (args, opts) {
     const {
       email,
@@ -860,18 +858,9 @@ class Authenticator {
     return pickSessionProps(session, isReturnedPassword)
   }
 
-  getUserSessionByEmail (args, isReturnedPassword) {
-    const {
-      email,
-      isSubAccount = false
-    } = args ?? {}
-    const keyVal = [...this.userSessions].find(([, session]) => {
-      return (
-        email === session.email &&
-        isSubAccount === session.isSubAccount
-      )
-    })
-    const session = Array.isArray(keyVal) ? keyVal[1] : {}
+  getUserSessionByEmail (user, isReturnedPassword) {
+    const tokenKey = this._getTokenKeyByEmailField(user)
+    const session = this.userTokenMapByEmail.get(tokenKey)
 
     return pickSessionProps(session, isReturnedPassword)
   }
