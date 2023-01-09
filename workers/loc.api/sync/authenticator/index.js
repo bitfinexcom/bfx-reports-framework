@@ -362,7 +362,11 @@ class Authenticator {
       throw new AuthError()
     }
 
-    this.removeUserSessionByToken(token)
+    this.removeUserSession({
+      email,
+      isSubAccount,
+      token
+    })
 
     if (isSchedulerEnabled) {
       await this.dao.updateRecordOf(
@@ -833,15 +837,17 @@ class Authenticator {
       throw new UserRemovingError()
     }
 
-    this.removeUserSessionByToken(token)
+    this.removeUserSession({
+      email,
+      isSubAccount,
+      token
+    })
 
     return true
   }
 
   setUserSession (user) {
-    const {
-      token
-    } = user ?? {}
+    const { token } = user ?? {}
     const tokenKey = this._getTokenKeyByEmailField(user)
 
     this.userSessions.set(token, { ...user })
@@ -880,7 +886,12 @@ class Authenticator {
     return new Map(sessionsMap)
   }
 
-  removeUserSessionByToken (token) {
+  removeUserSession (user) {
+    const { token } = user ?? {}
+    const tokenKey = this._getTokenKeyByEmailField(user)
+
+    this.userTokenMapByEmail.delete(tokenKey)
+
     return this.userSessions.delete(token)
   }
 
