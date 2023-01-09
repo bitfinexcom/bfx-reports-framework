@@ -52,6 +52,7 @@ class Authenticator {
      * It may only work for one grenache worker instance
      */
     this.userSessions = new Map()
+    this.userTokenMapByEmail = new Map()
   }
 
   async signUp (args, opts) {
@@ -508,6 +509,7 @@ class Authenticator {
       return returnedUser
     }
 
+    // TODO:
     const existedToken = this.getUserSessionByEmail(
       { email, isSubAccount }
     ).token
@@ -528,6 +530,7 @@ class Authenticator {
     }
   }
 
+  // TODO:
   async verifyUser (args, opts) {
     const {
       email,
@@ -836,9 +839,13 @@ class Authenticator {
   }
 
   setUserSession (user) {
-    const { token } = user ?? {}
+    const {
+      token
+    } = user ?? {}
+    const tokenKey = this._getTokenKeyByEmailField(user)
 
     this.userSessions.set(token, { ...user })
+    this.userTokenMapByEmail.set(tokenKey, token)
   }
 
   getUserSessionByToken (token, isReturnedPassword) {
@@ -904,6 +911,18 @@ class Authenticator {
     })
 
     return isArray ? res : res[0]
+  }
+
+  _getTokenKeyByEmailField (user) {
+    const {
+      email,
+      isSubAccount
+    } = user ?? {}
+    const suffix = isSubAccount
+      ? ':sub-account'
+      : ''
+
+    return `${email}${suffix}`
   }
 }
 
