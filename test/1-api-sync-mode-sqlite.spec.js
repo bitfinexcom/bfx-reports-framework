@@ -27,7 +27,8 @@ const agent = request.agent(app)
 
 const {
   apiSyncModeSqliteTestCases,
-  signUpTestCase
+  signUpTestCase,
+  removeUserTestCases
 } = require('./test-cases')
 
 let wrkReportServiceApi = null
@@ -94,4 +95,6 @@ describe('Sync mode API with SQLite', () => {
 
   signUpTestCase(agent, params)
   apiSyncModeSqliteTestCases(agent, params)
+  signUpTestCase(agent, params)
+  removeUserTestCases(agent, params)
 })
