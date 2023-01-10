@@ -879,10 +879,16 @@ class Authenticator {
   removeUserSession (user) {
     const { token } = user ?? {}
     const tokenKey = this._getTokenKeyByEmailField(user)
+    const _token = (
+      token &&
+      typeof token === 'string'
+    )
+      ? token
+      : this.userTokenMapByEmail.get(tokenKey)
 
     this.userTokenMapByEmail.delete(tokenKey)
 
-    return this.userSessions.delete(token)
+    return this.userSessions.delete(_token)
   }
 
   async decryptApiKeys (password, users) {
