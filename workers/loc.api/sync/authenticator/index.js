@@ -52,6 +52,7 @@ class Authenticator {
      * It may only work for one grenache worker instance
      */
     this.userSessions = new Map()
+    this.userTokenMapByEmail = new Map()
   }
 
   async signUp (args, opts) {
@@ -302,7 +303,7 @@ class Authenticator {
       typeof token === 'string'
     )
       ? token
-      : this.getUserSessionByEmail({ email, isSubAccount }).token
+      : this.getUserSessionByEmail({ email, isSubAccount })?.token
     const createdToken = (
       existedToken &&
       typeof existedToken === 'string'
@@ -361,7 +362,11 @@ class Authenticator {
       throw new AuthError()
     }
 
-    this.removeUserSessionByToken(token)
+    this.removeUserSession({
+      email,
+      isSubAccount,
+      token
+    })
 
     if (isSchedulerEnabled) {
       await this.dao.updateRecordOf(
@@ -510,7 +515,7 @@ class Authenticator {
 
     const existedToken = this.getUserSessionByEmail(
       { email, isSubAccount }
-    ).token
+    )?.token
     const createdToken = (
       existedToken &&
       typeof existedToken === 'string'
@@ -602,7 +607,7 @@ class Authenticator {
         token,
         isReturnedPassword
       )
-      const { apiKey, apiSecret } = { ...session }
+      const { apiKey, apiSecret } = session ?? {}
 
       if (
         !apiKey ||
@@ -830,15 +835,21 @@ class Authenticator {
       throw new UserRemovingError()
     }
 
-    this.removeUserSessionByToken(token)
+    this.removeUserSession({
+      email,
+      isSubAccount,
+      token
+    })
 
     return true
   }
 
   setUserSession (user) {
     const { token } = user ?? {}
+    const tokenKey = this._getTokenKeyByEmailField(user)
 
     this.userSessions.set(token, { ...user })
+    this.userTokenMapByEmail.set(tokenKey, token)
   }
 
   getUserSessionByToken (token, isReturnedPassword) {
@@ -847,18 +858,10 @@ class Authenticator {
     return pickSessionProps(session, isReturnedPassword)
   }
 
-  getUserSessionByEmail (args, isReturnedPassword) {
-    const {
-      email,
-      isSubAccount = false
-    } = args ?? {}
-    const keyVal = [...this.userSessions].find(([, session]) => {
-      return (
-        email === session.email &&
-        isSubAccount === session.isSubAccount
-      )
-    })
-    const session = Array.isArray(keyVal) ? keyVal[1] : {}
+  getUserSessionByEmail (user, isReturnedPassword) {
+    const tokenKey = this._getTokenKeyByEmailField(user)
+    const token = this.userTokenMapByEmail.get(tokenKey)
+    const session = this.userSessions.get(token)
 
     return pickSessionProps(session, isReturnedPassword)
   }
@@ -873,8 +876,19 @@ class Authenticator {
     return new Map(sessionsMap)
   }
 
-  removeUserSessionByToken (token) {
-    return this.userSessions.delete(token)
+  removeUserSession (user) {
+    const { token } = user ?? {}
+    const tokenKey = this._getTokenKeyByEmailField(user)
+    const _token = (
+      token &&
+      typeof token === 'string'
+    )
+      ? token
+      : this.userTokenMapByEmail.get(tokenKey)
+
+    this.userTokenMapByEmail.delete(tokenKey)
+
+    return this.userSessions.delete(_token)
   }
 
   async decryptApiKeys (password, users) {
@@ -904,6 +918,18 @@ class Authenticator {
     })
 
     return isArray ? res : res[0]
+  }
+
+  _getTokenKeyByEmailField (user) {
+    const {
+      email,
+      isSubAccount
+    } = user ?? {}
+    const suffix = isSubAccount
+      ? ':sub-account'
+      : ''
+
+    return `${email}${suffix}`
   }
 }
 

@@ -3354,7 +3354,7 @@ module.exports = (
     assert.isNotOk(res.body.result)
   })
 
-  it('it should be successfully performed by the removeUser method', async function () {
+  it('it should be successfully performed by the removeUser method with token', async function () {
     this.timeout(5000)
 
     const res = await agent
