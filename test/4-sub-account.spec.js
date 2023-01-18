@@ -32,7 +32,8 @@ const agent = request.agent(app)
 const {
   apiSyncModeSqliteTestCases,
   additionalApiSyncModeSqliteTestCases,
-  signUpTestCase
+  signUpTestCase,
+  removeUserTestCases
 } = require('./test-cases')
 
 let wrkReportServiceApi = null
@@ -428,6 +429,11 @@ describe('Sub-account', () => {
       before(beforeFn)
 
       additionalApiSyncModeSqliteTestCases(agent, params)
+    })
+    describe('Removing sub-account API', () => {
+      before(beforeFn)
+
+      removeUserTestCases(agent, params)
     })
   })
 })

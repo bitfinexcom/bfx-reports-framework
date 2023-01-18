@@ -10,12 +10,13 @@ const {
 } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
-  delay,
   getParamsArrToTestTimeframeGrouping
 } = require('../helpers/helpers.core')
 const {
   testCsvPathHasCommonFolder
 } = require('../helpers/helpers.tests')
+
+const getSyncProgressTestCase = require('./get-sync-progress-test-case')
 
 module.exports = (
   agent,
@@ -123,35 +124,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getBalanceHistory method', async function () {
     this.timeout(5000)
@@ -581,6 +554,50 @@ module.exports = (
     }
   })
 
+  it('it should be successfully performed by the getWeightedAveragesReport method', async function () {
+    this.timeout(120000)
+
+    const paramsArr = [
+      { end, start },
+      {
+        end,
+        start: end - (10 * 60 * 60 * 1000),
+        symbol: ['tBTCUSD']
+      }
+    ]
+
+    for (const params of paramsArr) {
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth,
+          method: 'getWeightedAveragesReport',
+          params,
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      const resItem = res.body.result[0]
+
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'symbol',
+        'buyingWeightedPrice',
+        'buyingAmount',
+        'sellingWeightedPrice',
+        'sellingAmount',
+        'cumulativeWeightedPrice',
+        'cumulativeAmount'
+      ])
+    }
+  })
+
   it('it should be successfully performed by the getMultipleCsv method', async function () {
     this.timeout(60000)
 
@@ -957,6 +974,31 @@ module.exports = (
           end,
           start,
           timeframe: 'day',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+  })
+
+  it('it should be successfully performed by the getWeightedAveragesReportCsv method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getWeightedAveragesReportCsv',
+        params: {
+          end,
+          start,
           email
         },
         id: 5

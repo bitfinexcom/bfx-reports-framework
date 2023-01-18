@@ -17,8 +17,7 @@ const {
 } = require('./helpers/helpers.boot')
 const {
   emptyDB,
-  getRServiceProxy,
-  delay
+  getRServiceProxy
 } = require('./helpers/helpers.core')
 const {
   createMockRESTv2SrvWithDate,
@@ -31,7 +30,8 @@ const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
 const {
-  signUpTestCase
+  signUpTestCase,
+  getSyncProgressTestCase
 } = require('./test-cases')
 
 let wrkReportServiceApi = null
@@ -289,35 +289,7 @@ describe('Update sub-account', () => {
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: subAccountAuth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth: subAccountAuth })
 
   it('it should be successfully performed by the getLedgers method, without params', async function () {
     this.timeout(5000)
@@ -517,35 +489,7 @@ describe('Update sub-account', () => {
     assert.isString(res.body.result.token)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: subAccountAuth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth: subAccountAuth })
 
   it('it should be successfully performed by the getUsers method', async function () {
     this.timeout(5000)
@@ -587,35 +531,7 @@ describe('Update sub-account', () => {
     })
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: subAccountAuth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth: subAccountAuth })
 
   it('it should be successfully performed by the getLedgers method, without params', async function () {
     this.timeout(5000)

@@ -11,7 +11,7 @@ const {
   testProcQueue
 } = require('bfx-report/test/helpers/helpers.tests')
 
-const { delay } = require('../helpers/helpers.core')
+const getSyncProgressTestCase = require('./get-sync-progress-test-case')
 const { getMockData } = require('../helpers/helpers.mock-rest-v2')
 
 module.exports = (
@@ -414,35 +414,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the haveCollsBeenSyncedAtLeastOnce method, returns true', async function () {
     this.timeout(60000)
@@ -488,35 +460,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the editPublicTradesConf method', async function () {
     this.timeout(5000)
@@ -548,35 +492,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getPublicTradesConf method', async function () {
     this.timeout(5000)
@@ -630,35 +546,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the editTickersHistoryConf method', async function () {
     this.timeout(5000)
@@ -690,35 +578,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getTickersHistoryConf method', async function () {
     this.timeout(5000)
@@ -774,35 +634,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getStatusMessagesConf method', async function () {
     this.timeout(5000)
@@ -855,35 +687,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getCandlesConf method', async function () {
     this.timeout(5000)
@@ -965,35 +769,7 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the getAllPublicСollsСonfs method', async function () {
     this.timeout(5000)
@@ -1116,35 +892,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the isSyncModeWithDbData method', async function () {
     this.timeout(5000)
@@ -3561,7 +3309,11 @@ module.exports = (
 
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
-    assert.isNotOk(res.body.result)
+    assert.isObject(res.body.result)
+    assert.isNotOk(res.body.result.progress)
+    assert.isNull(res.body.result.syncStartedAt)
+    assert.isNull(res.body.result.spentTime)
+    assert.isNull(res.body.result.leftTime)
   })
 
   it('it should be successfully performed by the disableSyncMode method', async function () {
@@ -3602,7 +3354,7 @@ module.exports = (
     assert.isNotOk(res.body.result)
   })
 
-  it('it should be successfully performed by the removeUser method', async function () {
+  it('it should be successfully performed by the removeUser method with token', async function () {
     this.timeout(5000)
 
     const res = await agent

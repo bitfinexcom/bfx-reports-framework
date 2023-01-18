@@ -6,8 +6,12 @@ const fullSnapshotReportCsvWriter = require(
 const fullTaxReportCsvWriter = require(
   './full-tax-report-csv-writer'
 )
+const weightedAveragesReportCsvWriter = require(
+  './weighted-averages-report-csv-writer'
+)
 
 module.exports = {
   fullSnapshotReportCsvWriter,
-  fullTaxReportCsvWriter
+  fullTaxReportCsvWriter,
+  weightedAveragesReportCsvWriter
 }

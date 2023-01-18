@@ -20,8 +20,7 @@ const {
   startEnvironment
 } = require('./helpers/helpers.boot')
 const {
-  emptyDB,
-  delay
+  emptyDB
 } = require('./helpers/helpers.core')
 const {
   createMockRESTv2SrvWithDate
@@ -31,7 +30,10 @@ process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
 const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
-const { signUpTestCase } = require('./test-cases')
+const {
+  signUpTestCase,
+  getSyncProgressTestCase
+} = require('./test-cases')
 
 let wrkReportServiceApi = null
 let processorQueue = null
@@ -120,35 +122,7 @@ describe('API filter', () => {
     )
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the editPublicTradesConf method', async function () {
     this.timeout(5000)
@@ -175,35 +149,7 @@ describe('API filter', () => {
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the editTickersHistoryConf method', async function () {
     this.timeout(5000)
@@ -230,35 +176,7 @@ describe('API filter', () => {
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the getSyncProgress method', async function () {
-    this.timeout(60000)
-
-    while (true) {
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth,
-          method: 'getSyncProgress',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isNumber(res.body.result)
-
-      if (
-        typeof res.body.result !== 'number' ||
-        res.body.result === 100
-      ) {
-        break
-      }
-
-      await delay()
-    }
-  })
+  getSyncProgressTestCase(agent, { basePath, auth })
 
   it('it should be successfully performed by the api methods', async function () {
     this.timeout(10000)
