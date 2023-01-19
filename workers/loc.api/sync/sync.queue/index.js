@@ -151,7 +151,7 @@ class SyncQueue extends EventEmitter {
       if (
         !nextSync ||
         typeof nextSync !== 'object' ||
-        count > 100
+        count > 10
       ) {
         break
       }
@@ -159,7 +159,7 @@ class SyncQueue extends EventEmitter {
       const { _id } = nextSync
 
       await this._updateStateById(_id, LOCKED_JOB_STATE)
-      multiplier = await this._subProcess(nextSync, multiplier)
+      multiplier = await this._subProcess(params, nextSync, multiplier)
 
       if (this.syncInterrupter.hasInterrupted()) {
         await this._updateStateById(_id, NEW_JOB_STATE)
@@ -183,13 +183,15 @@ class SyncQueue extends EventEmitter {
     return this._progress
   }
 
-  async _subProcess (nextSync, multiplier) {
+  async _subProcess (params, nextSync, multiplier) {
     const {
-      _id,
-      collName,
       ownerUserId,
       isOwnerScheduler
-    } = nextSync
+    } = params ?? {}
+    const {
+      _id,
+      collName
+    } = nextSync ?? {}
     let currMultiplier = 0
 
     try {
@@ -201,7 +203,13 @@ class SyncQueue extends EventEmitter {
       })
 
       dataInserter.addAsyncProgressHandler(async (progress) => {
-        currMultiplier = await this._getMultiplier(collName)
+        currMultiplier = await this._getMultiplier(
+          collName,
+          {
+            ownerUserId,
+            isOwnerScheduler
+          }
+        )
 
         return this._asyncProgressHandler(
           multiplier + currMultiplier,
@@ -251,8 +259,22 @@ class SyncQueue extends EventEmitter {
     }, {})
   }
 
-  async _getMultipliers () {
-    const allSyncs = await this._getAll()
+  async _getMultipliers (params) {
+    const {
+      ownerUserId
+    } = params ?? {}
+    const ownerUserIdFilter = Number.isInteger(ownerUserId)
+      ? { ownerUserId }
+      : {}
+
+    const allSyncs = await this._getAll({
+      state: [
+        NEW_JOB_STATE,
+        LOCKED_JOB_STATE,
+        ERROR_JOB_STATE
+      ],
+      ...ownerUserIdFilter
+    }, { limit: 10 })
 
     if (
       !Array.isArray(allSyncs) ||
@@ -262,16 +284,15 @@ class SyncQueue extends EventEmitter {
     }
 
     return allSyncs.reduce((accum, syncColls) => {
-      const { collName } = { ...syncColls }
+      const { collName } = syncColls ?? {}
 
       if (!Number.isFinite(this.allMultipliers[collName])) {
         return accum
       }
 
-      return {
-        ...accum,
-        [collName]: this.allMultipliers[collName]
-      }
+      accum[collName] = this.allMultipliers[collName]
+
+      return accum
     }, {})
   }
 
@@ -284,8 +305,8 @@ class SyncQueue extends EventEmitter {
       }, 0)
   }
 
-  async _getMultiplier (name) {
-    const multipliers = await this._getMultipliers()
+  async _getMultiplier (name, params) {
+    const multipliers = await this._getMultipliers(params)
     const multipliersSum = this._sumMultipliers(multipliers)
     const currMultipliers = multipliers[name]
 
@@ -301,12 +322,18 @@ class SyncQueue extends EventEmitter {
     return (1 / multipliersSum) * currMultipliers
   }
 
-  _getAll (filter) {
+  _getAll (filter, opts) {
+    const {
+      sort = this._sort,
+      limit = null
+    } = opts ?? {}
+
     return this.dao.getElemsInCollBy(
       this.name,
       {
-        sort: this._sort,
-        filter
+        sort,
+        filter,
+        limit
       }
     )
   }
@@ -326,15 +353,11 @@ class SyncQueue extends EventEmitter {
 
   _getNext (params) {
     const {
-      ownerUserId,
-      isOwnerScheduler
+      ownerUserId
     } = params ?? {}
 
     const ownerUserIdFilter = Number.isInteger(ownerUserId)
       ? { ownerUserId }
-      : {}
-    const isOwnerSchedulerFilter = isOwnerScheduler
-      ? { isOwnerScheduler: 1 }
       : {}
 
     const state = [NEW_JOB_STATE, ERROR_JOB_STATE]
@@ -347,7 +370,7 @@ class SyncQueue extends EventEmitter {
 
     return this.dao.getElemInCollBy(
       this.name,
-      { state, ...ownerUserIdFilter, ...isOwnerSchedulerFilter },
+      { state, ...ownerUserIdFilter },
       this._sort
     )
   }
