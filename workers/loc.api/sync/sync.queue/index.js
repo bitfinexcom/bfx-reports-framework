@@ -136,6 +136,7 @@ class SyncQueue extends EventEmitter {
   async process (params) {
     this._progress = this.syncInterrupter.INITIAL_PROGRESS
 
+    const prevSyncs = []
     let count = 0
     let multiplier = 0
 
@@ -159,7 +160,7 @@ class SyncQueue extends EventEmitter {
       const { _id } = nextSync
 
       await this._updateStateById(_id, LOCKED_JOB_STATE)
-      multiplier = await this._subProcess(params, nextSync, multiplier)
+      multiplier = await this._subProcess(nextSync, prevSyncs, params, multiplier)
 
       if (this.syncInterrupter.hasInterrupted()) {
         await this._updateStateById(_id, NEW_JOB_STATE)
@@ -168,6 +169,7 @@ class SyncQueue extends EventEmitter {
       }
 
       await this._updateStateById(_id, FINISHED_JOB_STATE)
+      prevSyncs.push(nextSync)
     }
 
     /*
@@ -183,7 +185,7 @@ class SyncQueue extends EventEmitter {
     return this._progress
   }
 
-  async _subProcess (params, nextSync, multiplier) {
+  async _subProcess (nextSync, prevSyncs, params, multiplier) {
     const {
       ownerUserId,
       isOwnerScheduler
@@ -203,16 +205,16 @@ class SyncQueue extends EventEmitter {
       })
 
       dataInserter.addAsyncProgressHandler(async (progress) => {
-        currMultiplier = await this._getMultiplier(
-          collName,
-          {
-            ownerUserId,
-            isOwnerScheduler
-          }
-        )
+        currMultiplier = await this._getMultiplier({
+          prevSyncs,
+          syncQueueId: _id,
+          ownerUserId,
+          isOwnerScheduler
+        })
 
         return this._asyncProgressHandler(
-          multiplier + currMultiplier,
+          currMultiplier,
+          multiplier,
           progress
         )
       })
@@ -261,13 +263,15 @@ class SyncQueue extends EventEmitter {
 
   async _getMultipliers (params) {
     const {
-      ownerUserId
+      ownerUserId,
+      prevSyncs
     } = params ?? {}
+
     const ownerUserIdFilter = Number.isInteger(ownerUserId)
       ? { ownerUserId }
       : {}
 
-    const allSyncs = await this._getAll({
+    const futureSyncs = await this._getAll({
       state: [
         NEW_JOB_STATE,
         LOCKED_JOB_STATE,
@@ -276,21 +280,28 @@ class SyncQueue extends EventEmitter {
       ...ownerUserIdFilter
     }, { limit: 10 })
 
-    if (
-      !Array.isArray(allSyncs) ||
-      allSyncs.length === 0
-    ) {
+    const allSyncs = (
+      !Array.isArray(futureSyncs) ||
+      futureSyncs.length === 0
+    )
+      ? prevSyncs
+      : [...prevSyncs, ...futureSyncs]
+
+    if (allSyncs.length === 0) {
       return {}
     }
 
     return allSyncs.reduce((accum, syncColls) => {
-      const { collName } = syncColls ?? {}
+      const {
+        _id,
+        collName
+      } = syncColls ?? {}
 
       if (!Number.isFinite(this.allMultipliers[collName])) {
         return accum
       }
 
-      accum[collName] = this.allMultipliers[collName]
+      accum[_id] = this.allMultipliers[collName]
 
       return accum
     }, {})
@@ -305,10 +316,12 @@ class SyncQueue extends EventEmitter {
       }, 0)
   }
 
-  async _getMultiplier (name, params) {
+  async _getMultiplier (params) {
+    const { syncQueueId } = params ?? {}
+
     const multipliers = await this._getMultipliers(params)
     const multipliersSum = this._sumMultipliers(multipliers)
-    const currMultipliers = multipliers[name]
+    const currMultipliers = multipliers[syncQueueId]
 
     if (
       !Number.isFinite(currMultipliers) ||
@@ -402,12 +415,19 @@ class SyncQueue extends EventEmitter {
     return this._updateById(id, { state })
   }
 
-  async _asyncProgressHandler (multiplier, progress) {
-    if (multiplier === 0 || progress === 0) {
+  async _asyncProgressHandler (
+    currMultiplier,
+    multiplier,
+    progress
+  ) {
+    if (currMultiplier === 0 || progress === 0) {
       return
     }
 
-    const currProgress = Math.round(progress * multiplier)
+    const prevProgress = multiplier * 100
+    const currProgress = Math.round(
+      prevProgress + (progress * currMultiplier)
+    )
 
     if (progress < 100) {
       await this.setProgress(currProgress)
