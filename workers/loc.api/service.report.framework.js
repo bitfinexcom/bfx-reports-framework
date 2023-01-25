@@ -62,8 +62,7 @@ class FrameworkReportService extends ReportService {
   async _checkAuthInApi (args) {
     checkParamsAuth(args)
 
-    const { auth: _auth } = { ...args }
-    const auth = getAuthFromSubAccountAuth(_auth)
+    const auth = getAuthFromSubAccountAuth(args?.auth ?? {})
 
     const {
       email,
