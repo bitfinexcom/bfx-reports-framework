@@ -147,7 +147,10 @@ const pickLowerObjectsNumbers = (propName, objects = []) => {
 
 const pickAllLowerObjectsNumbers = (propName, objects = []) => {
   return objects.reduce((accum, curr) => {
-    if (typeof curr?.[propName] !== 'object') {
+    if (
+      !curr?.[propName] ||
+      typeof curr?.[propName] !== 'object'
+    ) {
       return accum
     }
 
@@ -174,7 +177,10 @@ const pickAllLowerObjectsNumbers = (propName, objects = []) => {
 
 const sumAllObjectsNumbers = (propName, objects = []) => {
   return objects.reduce((accum, curr) => {
-    if (typeof curr?.[propName] !== 'object') {
+    if (
+      !curr?.[propName] ||
+      typeof curr?.[propName] !== 'object'
+    ) {
       return accum
     }
 
