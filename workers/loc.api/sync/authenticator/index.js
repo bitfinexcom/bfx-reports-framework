@@ -844,11 +844,19 @@ class Authenticator {
     return true
   }
 
+  // TODO: Provide authToken for this method in all places
   setUserSession (user) {
-    const { token } = user ?? {}
+    const {
+      token,
+      authToken
+    } = user ?? {}
     const tokenKey = this._getTokenKeyByEmailField(user)
 
-    this.userSessions.set(token, { ...user })
+    const authTokenRefreshInterval = authToken
+      ? this.setupAuthTokenRefreshInterval(user)
+      : null
+
+    this.userSessions.set(token, { ...user, authTokenRefreshInterval })
     this.userTokenMapByEmail.set(tokenKey, token)
   }
 
@@ -888,6 +896,9 @@ class Authenticator {
 
     this.userTokenMapByEmail.delete(tokenKey)
 
+    const session = this.userSessions.get(_token)
+    clearInterval(session?.authTokenRefreshInterval)
+
     return this.userSessions.delete(_token)
   }
 
@@ -922,7 +933,7 @@ class Authenticator {
 
   async generateAuthToken (args) {
     const opts = {
-      ttl: 20 * 60,
+      ttl: 604800,
       writePermission: true
     }
 
@@ -943,6 +954,28 @@ class Authenticator {
     }
 
     return authToken
+  }
+
+  setupAuthTokenRefreshInterval (user) {
+    const { token } = user ?? {}
+
+    const authTokenRefreshInterval = setInterval(async () => {
+      try {
+        const session = this.userSessions.get(token)
+
+        const newAuthToken = await this.generateAuthToken({
+          auth: session
+        })
+
+        // TODO: Need to update authToken in db with encryption
+
+        session.authToken = newAuthToken
+      } catch (err) {
+        // TODO: Need to push WS event to force uname/pwd login
+      }
+    }, (10 * 60 * 1000)).unref()
+
+    return authTokenRefreshInterval
   }
 
   _getTokenKeyByEmailField (user) {
