@@ -920,6 +920,31 @@ class Authenticator {
     return isArray ? res : res[0]
   }
 
+  async generateAuthToken (args) {
+    const opts = {
+      ttl: 20 * 60,
+      writePermission: true
+    }
+
+    const res = await this.getDataFromApi({
+      getData: (s, args) => this.rService._generateToken(args, opts),
+      args,
+      callerName: 'AUTHENTICATOR',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
+
+    const [authToken] = Array.isArray(res) ? res : [null]
+
+    if (!authToken) {
+      // TODO: Move to the error module
+      throw new Error('ERR_AUTH_TOKEN_HAS_NOT_BEEN_GENERATED')
+    }
+
+    return authToken
+  }
+
   _getTokenKeyByEmailField (user) {
     const {
       email,
