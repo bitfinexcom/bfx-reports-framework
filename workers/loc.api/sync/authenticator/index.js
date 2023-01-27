@@ -14,7 +14,8 @@ const {
 } = require('../../helpers')
 const {
   UserRemovingError,
-  UserWasPreviouslyStoredInDbError
+  UserWasPreviouslyStoredInDbError,
+  AuthTokenGenerationError
 } = require('../../errors')
 const {
   generateSubUserName,
@@ -949,8 +950,7 @@ class Authenticator {
     const [authToken] = Array.isArray(res) ? res : [null]
 
     if (!authToken) {
-      // TODO: Move to the error module
-      throw new Error('ERR_AUTH_TOKEN_HAS_NOT_BEEN_GENERATED')
+      throw new AuthTokenGenerationError()
     }
 
     return authToken
