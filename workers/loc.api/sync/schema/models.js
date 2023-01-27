@@ -53,6 +53,7 @@ const _models = new Map([
       email: 'VARCHAR(255)',
       apiKey: 'VARCHAR(255) NOT NULL',
       apiSecret: 'VARCHAR(255) NOT NULL',
+      authToken: 'VARCHAR(255)',
       active: 'INT',
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
