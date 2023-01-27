@@ -19,8 +19,9 @@ const {
   ID_PRIMARY_KEY
 } = require('./const')
 const {
-  DELETE_SUB_USERS_TRIGGER,
-  CREATE_UPDATE_MTS_TRIGGERS
+  CREATE_UPDATE_API_KEYS_TRIGGERS,
+  CREATE_UPDATE_MTS_TRIGGERS,
+  DELETE_SUB_USERS_TRIGGER
 } = require('./common.triggers')
 const {
   USER_ID_CONSTRAINT,
@@ -51,8 +52,8 @@ const _models = new Map([
       _id: ID_PRIMARY_KEY,
       id: 'BIGINT',
       email: 'VARCHAR(255)',
-      apiKey: 'VARCHAR(255) NOT NULL',
-      apiSecret: 'VARCHAR(255) NOT NULL',
+      apiKey: 'VARCHAR(255)',
+      apiSecret: 'VARCHAR(255)',
       authToken: 'VARCHAR(255)',
       active: 'INT',
       isDataFromDb: 'INT',
@@ -66,7 +67,10 @@ const _models = new Map([
       updatedAt: 'BIGINT',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['email', 'username'],
-      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
+      [TRIGGER_FIELD_NAME]: [
+        ...CREATE_UPDATE_API_KEYS_TRIGGERS,
+        ...CREATE_UPDATE_MTS_TRIGGERS
+      ]
     }
   ],
   [
