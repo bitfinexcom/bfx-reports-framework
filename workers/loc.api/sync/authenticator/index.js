@@ -65,6 +65,7 @@ class Authenticator {
   async signUp (args, opts) {
     const { auth } = args ?? {}
     const {
+      authToken,
       apiKey,
       apiSecret,
       password: userPwd,
@@ -88,10 +89,15 @@ class Authenticator {
     } = opts ?? {}
 
     if (
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string' ||
+      (
+        (
+          !apiKey ||
+          typeof apiKey !== 'string' ||
+          !apiSecret ||
+          typeof apiSecret !== 'string'
+        ) &&
+        !authToken
+      ) ||
       !password ||
       typeof password !== 'string' ||
       (
@@ -148,10 +154,12 @@ class Authenticator {
     }
 
     const [
+      encryptedAuthToken,
       encryptedApiKey,
       encryptedApiSecret,
       passwordHash
     ] = await Promise.all([
+      this.crypto.encrypt(authToken, password),
       this.crypto.encrypt(apiKey, password),
       this.crypto.encrypt(apiSecret, password),
       this.crypto.hashPassword(password)
@@ -163,6 +171,7 @@ class Authenticator {
         timezone,
         username,
         id,
+        authToken: encryptedAuthToken,
         apiKey: encryptedApiKey,
         apiSecret: encryptedApiSecret,
         active: serializeVal(active),
@@ -179,6 +188,7 @@ class Authenticator {
     const fullUserData = {
       ...user,
       subUsers: [],
+      authToken,
       apiKey,
       apiSecret,
       password,
