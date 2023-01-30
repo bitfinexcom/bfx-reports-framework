@@ -968,12 +968,20 @@ class Authenticator {
     const authTokenRefreshInterval = setInterval(async () => {
       try {
         const session = this.userSessions.get(token)
+        const password = (
+          session?.password &&
+          typeof session?.password === 'string'
+        )
+          ? session?.password
+          : this.crypto.getSecretKey()
 
         const newAuthToken = await this.generateAuthToken({
           auth: session
         })
 
         // TODO: Need to update authToken in db with encryption
+        const encryptedAuthToken = await this.crypto
+          .encrypt(newAuthToken, password)
 
         session.authToken = newAuthToken
       } catch (err) {
