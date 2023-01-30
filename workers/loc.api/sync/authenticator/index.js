@@ -586,7 +586,6 @@ class Authenticator {
       const pwdParam = isDecryptedApiKeys
         ? { password }
         : {}
-      // TODO:
       const _user = await this.getUser(
         { email, isSubAccount, isSubUser },
         {
@@ -626,13 +625,16 @@ class Authenticator {
         token,
         isReturnedPassword
       )
-      const { apiKey, apiSecret } = session ?? {}
+      const { authToken, apiKey, apiSecret } = session ?? {}
 
       if (
-        !apiKey ||
-        typeof apiKey !== 'string' ||
-        !apiSecret ||
-        typeof apiSecret !== 'string'
+        (
+          !apiKey ||
+          typeof apiKey !== 'string' ||
+          !apiSecret ||
+          typeof apiSecret !== 'string'
+        ) &&
+        !authToken
       ) {
         throw new AuthError()
       }
