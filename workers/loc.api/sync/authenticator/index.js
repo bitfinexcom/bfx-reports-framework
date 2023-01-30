@@ -978,10 +978,18 @@ class Authenticator {
         const newAuthToken = await this.generateAuthToken({
           auth: session
         })
-
-        // TODO: Need to update authToken in db with encryption
         const encryptedAuthToken = await this.crypto
           .encrypt(newAuthToken, password)
+
+        const res = await this.dao.updateCollBy(
+          this.TABLES_NAMES.USERS,
+          { _id: session?._id, email: session?.email },
+          { authToken: encryptedAuthToken }
+        )
+
+        if (res?.changes < 1) {
+          throw new AuthTokenGenerationError()
+        }
 
         session.authToken = newAuthToken
       } catch (err) {
