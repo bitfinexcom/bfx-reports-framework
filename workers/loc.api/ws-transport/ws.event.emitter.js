@@ -57,9 +57,8 @@ class WSEventEmitter extends AbstractWSEventEmitter {
   ) {
     return this.emitSyncingStep(async (user, ...args) => {
       if (
-        !auth ||
-        typeof auth !== 'object' ||
-        user._id !== auth._id
+        !Number.isInteger(auth?._id) ||
+        user?._id !== auth?._id
       ) {
         return { isNotEmitted: true }
       }
@@ -68,6 +67,24 @@ class WSEventEmitter extends AbstractWSEventEmitter {
         ? await handler(user, ...args)
         : handler
     })
+  }
+
+  emitBfxUnamePwdAuthRequiredToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emit(async (user, ...args) => {
+      if (
+        !Number.isInteger(auth?._id) ||
+        user?._id !== auth?._id
+      ) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitBfxUnamePwdAuthRequired')
   }
 
   async emitRedirectingRequestsStatusToApi (
