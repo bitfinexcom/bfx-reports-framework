@@ -231,6 +231,7 @@ class Authenticator {
       withWorkerThreads = false
     } = opts ?? {}
 
+    // TODO:
     const user = await this.verifyUser(
       {
         auth: {
@@ -585,6 +586,7 @@ class Authenticator {
       const pwdParam = isDecryptedApiKeys
         ? { password }
         : {}
+      // TODO:
       const _user = await this.getUser(
         { email, isSubAccount, isSubUser },
         {
@@ -924,10 +926,11 @@ class Authenticator {
     const _users = isArray ? users : [users]
 
     const promises = _users.reduce((accum, user) => {
-      const { apiKey, apiSecret } = user ?? {}
+      const { authToken, apiKey, apiSecret } = user ?? {}
 
       return [
         ...accum,
+        this.crypto.decrypt(authToken, password),
         this.crypto.decrypt(apiKey, password),
         this.crypto.decrypt(apiSecret, password)
       ]
@@ -935,11 +938,13 @@ class Authenticator {
     const decryptedApiKeys = await Promise.all(promises)
 
     const res = _users.map((user, i) => {
-      const apiKey = decryptedApiKeys[i * 2]
-      const apiSecret = decryptedApiKeys[i * 2 + 1]
+      const authToken = decryptedApiKeys[i * 2]
+      const apiKey = decryptedApiKeys[i * 2 + 1]
+      const apiSecret = decryptedApiKeys[i * 2 + 2]
 
       return {
         ...user,
+        authToken,
         apiKey,
         apiSecret
       }
