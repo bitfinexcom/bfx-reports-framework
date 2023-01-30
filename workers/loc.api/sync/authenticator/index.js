@@ -32,7 +32,8 @@ const depsTypes = (TYPES) => [
   TYPES.GetDataFromApi,
   TYPES.Crypto,
   TYPES.SyncFactory,
-  TYPES.WSEventEmitter
+  TYPES.WSEventEmitter,
+  TYPES.Logger
 ]
 class Authenticator {
   constructor (
@@ -42,7 +43,8 @@ class Authenticator {
     getDataFromApi,
     crypto,
     syncFactory,
-    wsEventEmitter
+    wsEventEmitter,
+    logger
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
@@ -51,6 +53,7 @@ class Authenticator {
     this.crypto = crypto
     this.syncFactory = syncFactory
     this.wsEventEmitter = wsEventEmitter
+    this.logger = logger
 
     /**
      * It may only work for one grenache worker instance
@@ -974,7 +977,8 @@ class Authenticator {
 
         session.authToken = newAuthToken
       } catch (err) {
-        // TODO: Need to push WS event to force uname/pwd login
+        this.logger.debug(err)
+
         await this.wsEventEmitter
           .emitBfxUnamePwdAuthRequiredToOne(
             { isAuthTokenGenError: true },
