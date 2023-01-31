@@ -153,6 +153,7 @@ class Authenticator {
       throw new UserWasPreviouslyStoredInDbError()
     }
 
+    // FIXME: Dont encrypt if not passed
     const [
       encryptedAuthToken,
       encryptedApiKey,
@@ -421,6 +422,7 @@ class Authenticator {
 
   async recoverPassword (args, opts) {
     const {
+      authToken,
       apiKey,
       apiSecret,
       newPassword,
@@ -441,10 +443,15 @@ class Authenticator {
     } = opts ?? {}
 
     if (
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string' ||
+      (
+        (
+          !apiKey ||
+          typeof apiKey !== 'string' ||
+          !apiSecret ||
+          typeof apiSecret !== 'string'
+        ) &&
+        !authToken
+      ) ||
       !password ||
       typeof password !== 'string' ||
       (isSubAccount && isSubUser)
@@ -495,15 +502,12 @@ class Authenticator {
       throw new AuthError()
     }
 
-    const [
+    const {
+      passwordHash,
+      encryptedAuthToken,
       encryptedApiKey,
-      encryptedApiSecret,
-      passwordHash
-    ] = await Promise.all([
-      this.crypto.encrypt(apiKey, password),
-      this.crypto.encrypt(apiSecret, password),
-      this.crypto.hashPassword(password)
-    ])
+      encryptedApiSecret
+    } = await this._getEncryptedCredentials(args?.auth)
 
     const username = generateSubUserName(
       { username: uName },
@@ -515,8 +519,9 @@ class Authenticator {
       timezone,
       username,
       email,
-      apiKey: encryptedApiKey,
-      apiSecret: encryptedApiSecret,
+      authToken,
+      apiKey,
+      apiSecret,
       passwordHash,
       active: active === null
         ? userFromDb.active
@@ -531,9 +536,10 @@ class Authenticator {
       { _id: userFromDb._id, email },
       {
         ...freshUserData,
-        active: freshUserData.active,
-        isDataFromDb: freshUserData.isDataFromDb,
-        isNotProtected
+        isNotProtected,
+        authToken: encryptedAuthToken,
+        apiKey: encryptedApiKey,
+        apiSecret: encryptedApiSecret
       },
       { withWorkerThreads, doNotQueueQuery }
     )
@@ -1002,6 +1008,7 @@ class Authenticator {
     return authToken
   }
 
+  // TODO: Need to stop interval if was launched before
   setupAuthTokenRefreshInterval (user) {
     const { token } = user ?? {}
 
@@ -1056,6 +1063,52 @@ class Authenticator {
       : ''
 
     return `${email}${suffix}`
+  }
+
+  async _getEncryptedCredentials (auth) {
+    const {
+      authToken,
+      apiKey,
+      apiSecret,
+      password
+    } = auth ?? {}
+
+    const encryptPromises = [
+      this.crypto.hashPassword(password),
+      null,
+      null,
+      null
+    ]
+
+    if (authToken) {
+      encryptPromises[1] = this.crypto
+        .encrypt(authToken, password)
+    }
+    if (
+      apiKey &&
+      typeof apiKey === 'string' &&
+      apiSecret &&
+      typeof apiSecret === 'string'
+    ) {
+      encryptPromises[2] = this.crypto
+        .encrypt(apiKey, password)
+      encryptPromises[3] = this.crypto
+        .encrypt(apiSecret, password)
+    }
+
+    const [
+      passwordHash,
+      encryptedAuthToken,
+      encryptedApiKey,
+      encryptedApiSecret
+    ] = await Promise.all(encryptPromises)
+
+    return {
+      passwordHash,
+      encryptedAuthToken,
+      encryptedApiKey,
+      encryptedApiSecret
+    }
   }
 }
 
