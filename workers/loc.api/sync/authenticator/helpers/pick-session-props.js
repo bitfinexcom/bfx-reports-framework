@@ -10,6 +10,7 @@ module.exports = (session, isReturnedPassword) => {
     '_id',
     'id',
     'email',
+    'authToken',
     'apiKey',
     'apiSecret',
     'active',
