@@ -153,18 +153,17 @@ class Authenticator {
       throw new UserWasPreviouslyStoredInDbError()
     }
 
-    // FIXME: Dont encrypt if not passed
-    const [
+    const {
+      passwordHash,
       encryptedAuthToken,
       encryptedApiKey,
-      encryptedApiSecret,
-      passwordHash
-    ] = await Promise.all([
-      this.crypto.encrypt(authToken, password),
-      this.crypto.encrypt(apiKey, password),
-      this.crypto.encrypt(apiSecret, password),
-      this.crypto.hashPassword(password)
-    ])
+      encryptedApiSecret
+    } = await this._getEncryptedCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password
+    })
 
     const user = await this.createUser(
       {
