@@ -88,23 +88,21 @@ class Authenticator {
       withWorkerThreads = false
     } = opts ?? {}
 
+    const hasNotCredentials = this._hasNotCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password,
+      isSubAccount,
+      isSubUser
+    })
+
     if (
-      (
-        (
-          !apiKey ||
-          typeof apiKey !== 'string' ||
-          !apiSecret ||
-          typeof apiSecret !== 'string'
-        ) &&
-        !authToken
-      ) ||
-      !password ||
-      typeof password !== 'string' ||
+      hasNotCredentials ||
       (
         !isDisabledApiKeysVerification &&
         isSubAccountApiKeys({ apiKey, apiSecret })
-      ) ||
-      (isSubAccount && isSubUser)
+      )
     ) {
       throw new AuthError()
     }
@@ -441,20 +439,16 @@ class Authenticator {
       doNotQueueQuery
     } = opts ?? {}
 
-    if (
-      (
-        (
-          !apiKey ||
-          typeof apiKey !== 'string' ||
-          !apiSecret ||
-          typeof apiSecret !== 'string'
-        ) &&
-        !authToken
-      ) ||
-      !password ||
-      typeof password !== 'string' ||
-      (isSubAccount && isSubUser)
-    ) {
+    const hasNotCredentials = this._hasNotCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password,
+      isSubAccount,
+      isSubUser
+    })
+
+    if (hasNotCredentials) {
       throw new AuthError()
     }
 
@@ -1112,6 +1106,43 @@ class Authenticator {
       encryptedApiKey,
       encryptedApiSecret
     }
+  }
+
+  _hasNotCredentials (args) {
+    const {
+      authToken,
+      apiKey,
+      apiSecret,
+      password,
+      isSubAccount,
+      isSubUser
+    } = args ?? {}
+
+    if (
+      (
+        !apiKey ||
+        typeof apiKey !== 'string' ||
+        !apiSecret ||
+        typeof apiSecret !== 'string'
+      ) &&
+      !authToken
+    ) {
+      return true
+    }
+    if (
+      !password ||
+      typeof password !== 'string'
+    ) {
+      return true
+    }
+    if (
+      isSubAccount &&
+      isSubUser
+    ) {
+      return true
+    }
+
+    return false
   }
 }
 
