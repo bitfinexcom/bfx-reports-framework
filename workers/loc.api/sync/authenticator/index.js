@@ -231,7 +231,6 @@ class Authenticator {
       withWorkerThreads = false
     } = opts ?? {}
 
-    // TODO:
     const user = await this.verifyUser(
       {
         auth: {
@@ -254,15 +253,26 @@ class Authenticator {
       _id,
       email: emailFromDb,
       isSubAccount: isSubAccountFromDb,
+      authToken,
       apiKey,
       apiSecret
     } = user ?? {}
+
+    const newAuthToken = authToken
+      ? await this.generateAuthToken({
+        auth: user
+      })
+      : null
+    const encryptedAuthToken = authToken
+      ? await this.crypto
+        .encrypt(newAuthToken, password)
+      : null
 
     let userData = user
 
     try {
       userData = await this.rService._checkAuthInApi({
-        auth: { apiKey, apiSecret }
+        auth: { authToken: newAuthToken, apiKey, apiSecret }
       })
     } catch (err) {
       if (!isENetError(err)) {
@@ -291,15 +301,19 @@ class Authenticator {
         : active,
       isDataFromDb: isDataFromDb === null
         ? user.isDataFromDb
-        : isDataFromDb
+        : isDataFromDb,
+      ...newAuthToken
+        ? { authToken: newAuthToken }
+        : null
     }
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
       {
         ...freshUserData,
-        active: freshUserData.active,
-        isDataFromDb: freshUserData.isDataFromDb
+        ...encryptedAuthToken
+          ? { authToken: encryptedAuthToken }
+          : null
       },
       { withWorkerThreads, doNotQueueQuery }
     )
@@ -322,15 +336,24 @@ class Authenticator {
     )
       ? token
       : this.getUserSessionByEmail({ email, isSubAccount })?.token
-    const createdToken = (
+    const isTokenExisted = (
       existedToken &&
       typeof existedToken === 'string'
     )
+    const createdToken = isTokenExisted
       ? existedToken
       : uuidv4()
 
     if (!isNotSetSession) {
       this.setUserSession({ ...refreshedUser, token: createdToken })
+    }
+    if (
+      newAuthToken &&
+      isTokenExisted &&
+      isNotSetSession
+    ) {
+      this.userSessions.get(existedToken)
+        .authToken = newAuthToken
     }
 
     return {
