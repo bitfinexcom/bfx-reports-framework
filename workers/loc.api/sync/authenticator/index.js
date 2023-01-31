@@ -1007,11 +1007,15 @@ class Authenticator {
     return authToken
   }
 
-  // TODO: Need to stop interval if was launched before
   setupAuthTokenRefreshInterval (user) {
-    const { token } = user ?? {}
+    const {
+      token,
+      authTokenRefreshInterval
+    } = user ?? {}
 
-    const authTokenRefreshInterval = setInterval(async () => {
+    clearInterval(authTokenRefreshInterval)
+
+    const newAuthTokenRefreshInterval = setInterval(async () => {
       try {
         const session = this.userSessions.get(token)
         const password = (
@@ -1049,7 +1053,7 @@ class Authenticator {
       }
     }, (10 * 60 * 1000)).unref()
 
-    return authTokenRefreshInterval
+    return newAuthTokenRefreshInterval
   }
 
   _getTokenKeyByEmailField (user) {
