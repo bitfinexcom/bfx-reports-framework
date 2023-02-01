@@ -12,6 +12,7 @@ const { bindDepsToFn } = require(
 const {
   getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
+const responder = require('bfx-report/workers/loc.api/responder')
 
 const TYPES = require('./types')
 
@@ -169,6 +170,7 @@ module.exports = ({
         [
           TYPES.Container,
           TYPES.Logger,
+          TYPES.WSEventEmitter,
           TYPES.Authenticator
         ]
       ))
@@ -383,6 +385,16 @@ module.exports = ({
         getDataFromApi,
         [
           TYPES.SyncInterrupter,
+          TYPES.WSEventEmitter
+        ]
+      )
+    )
+    rebind(TYPES.Responder).toConstantValue(
+      bindDepsToFn(
+        responder,
+        [
+          TYPES.Container,
+          TYPES.Logger,
           TYPES.WSEventEmitter
         ]
       )
