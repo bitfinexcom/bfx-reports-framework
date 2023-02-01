@@ -20,6 +20,7 @@ const _getHandler = (
 module.exports = (
   container,
   logger,
+  wsEventEmitter,
   authenticator
 ) => (
   handler,
@@ -33,7 +34,8 @@ module.exports = (
 
   const _responder = responder(
     container,
-    logger
+    logger,
+    wsEventEmitter
   )
   const _handler = _getHandler(
     authenticator,
