@@ -146,7 +146,8 @@ class FrameworkReportService extends ReportService {
             'email',
             'isSubAccount',
             'isNotProtected',
-            'subUsers'
+            'subUsers',
+            'isRestrictedToBeAddedToSubAccount'
           ]
         }
       )

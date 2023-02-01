@@ -793,7 +793,19 @@ class Authenticator {
         isAppliedProjectionToSubUser,
         subUsersProjection
       }
-    )
+    ).map((user) => {
+      if (
+        user &&
+        typeof user === 'object'
+      ) {
+        user.isRestrictedToBeAddedToSubAccount = (
+          !!user.authToken ||
+          !!user.isSubAccount
+        )
+      }
+
+      return user
+    })
 
     if (
       !password ||
