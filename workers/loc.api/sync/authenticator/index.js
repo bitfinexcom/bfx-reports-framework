@@ -256,11 +256,24 @@ class Authenticator {
       apiSecret
     } = user ?? {}
 
-    const newAuthToken = authToken
-      ? await this.generateAuthToken({
-        auth: user
-      })
-      : null
+    let newAuthToken = null
+
+    try {
+      newAuthToken = authToken
+        ? await this.generateAuthToken({
+          auth: user
+        })
+        : null
+    } catch (err) {
+      await this.wsEventEmitter
+        .emitBfxUnamePwdAuthRequiredToOne(
+          { isAuthTokenGenError: true },
+          user
+        )
+
+      throw err
+    }
+
     const encryptedAuthToken = authToken
       ? await this.crypto
         .encrypt(newAuthToken, password)
