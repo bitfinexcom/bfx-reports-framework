@@ -628,18 +628,21 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * TODO:
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    const { auth } = { ...args }
-    const { apiKey, apiSecret } = { ...auth }
+    const { apiKey, apiSecret, authToken } = args?.auth ?? {}
     const isRequiredUser = (
       cb ||
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string'
+      (
+        (
+          !apiKey ||
+          typeof apiKey !== 'string' ||
+          !apiSecret ||
+          typeof apiSecret !== 'string'
+        ) &&
+        !authToken
+      )
     )
     const responder = isRequiredUser
       ? this._privResponder
