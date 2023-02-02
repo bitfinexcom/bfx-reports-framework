@@ -62,8 +62,10 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     const {
       _id,
       email,
+      username,
       apiKey,
       apiSecret,
+      authToken,
       isSubAccount,
       subUsers,
       token
@@ -82,6 +84,7 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
       email,
       apiKey,
       apiSecret,
+      authToken,
       isSubAccount,
       subUsers,
       token,
@@ -89,7 +92,10 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     }
 
     if (!isSubAccount) {
-      auth.set(apiKey, authPayload)
+      auth.set(
+        `${email}-${username}`,
+        authPayload
+      )
 
       continue
     }
@@ -101,10 +107,10 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     }
 
     subUsers.forEach((subUser) => {
-      const { apiKey: subUserApiKey } = { ...subUser }
+      const { email, username } = { ...subUser }
 
       auth.set(
-        `${apiKey}-${subUserApiKey}`,
+        `${email}-${username}`,
         { ...authPayload, subUser }
       )
     })
