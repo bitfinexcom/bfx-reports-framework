@@ -17,26 +17,32 @@ module.exports = (
   } = opts ?? {}
 
   const {
+    authToken,
     apiKey = '',
     apiSecret = '',
     subUser
   } = reqAuth ?? {}
   const {
+    authToken: subUserAuthToken,
     apiKey: subUserApiKey,
     apiSecret: subUserApiSecret
   } = subUser ?? {}
   const auth = (
-    subUserApiKey &&
-    typeof subUserApiKey === 'string' &&
-    subUserApiSecret &&
-    typeof subUserApiSecret === 'string'
+    (
+      subUserApiKey &&
+      typeof subUserApiKey === 'string' &&
+      subUserApiSecret &&
+      typeof subUserApiSecret === 'string'
+    ) ||
+    subUserAuthToken
   )
     ? {
+        authToken: subUserAuthToken,
         apiKey: subUserApiKey,
         apiSecret: subUserApiSecret,
         session: reqAuth
       }
-    : { apiKey, apiSecret, session: reqAuth }
+    : { authToken, apiKey, apiSecret, session: reqAuth }
 
   return {
     ...additionalApiCallArgs,
