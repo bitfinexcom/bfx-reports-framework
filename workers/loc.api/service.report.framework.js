@@ -628,6 +628,7 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
+   * TODO:
    * @override
    */
   getPositionsAudit (space, args, cb) {
@@ -1151,19 +1152,23 @@ class FrameworkReportService extends ReportService {
    */
   getSettings (space, args, cb) {
     return this._privResponder(async () => {
-      const { auth } = { ...args }
-      const { apiKey, apiSecret, subUsers } = { ...auth }
+      const {
+        apiKey,
+        apiSecret,
+        authToken,
+        subUsers
+      } = args?.auth ?? {}
 
       if (
         Array.isArray(subUsers) &&
         subUsers.length > 1
       ) {
         const promises = subUsers.map((subUser) => {
-          const { apiKey, apiSecret } = { ...subUser }
+          const { apiKey, apiSecret, authToken } = subUser ?? {}
 
           const _args = {
             ...args,
-            auth: { apiKey, apiSecret }
+            auth: { apiKey, apiSecret, authToken }
           }
 
           return super.getSettings(space, _args)
@@ -1182,7 +1187,7 @@ class FrameworkReportService extends ReportService {
       const _args = {
         ...args,
         auth: getAuthFromSubAccountAuth(
-          { apiKey, apiSecret }
+          { apiKey, apiSecret, authToken }
         )
       }
 
@@ -1195,12 +1200,11 @@ class FrameworkReportService extends ReportService {
    */
   updateSettings (space, args, cb) {
     return this._privResponder(async () => {
-      const { auth } = { ...args }
-      const { apiKey, apiSecret } = { ...auth }
+      const { apiKey, apiSecret, authToken } = args?.auth ?? {}
       const _args = {
         ...args,
         auth: getAuthFromSubAccountAuth(
-          { apiKey, apiSecret }
+          { apiKey, apiSecret, authToken }
         )
       }
 
