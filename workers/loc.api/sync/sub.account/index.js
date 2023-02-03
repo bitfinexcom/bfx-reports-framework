@@ -21,13 +21,16 @@ const SyncTempTablesManager = require(
 
 const { decorateInjectable } = require('../../di/utils')
 
+/*
+ * There're restrictions existed
+ * for using `authToken` with sub-accounts
+ */
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
   TYPES.Authenticator,
   TYPES.Sync
 ]
-// TODO: Add restrictions for authToken
 class SubAccount {
   constructor (
     dao,
@@ -379,6 +382,7 @@ class SubAccount {
         )
 
       if (
+        subAccountUser?.authToken ||
         !isSubAccountApiKeys(subAccountUser) ||
         !Array.isArray(addingSubUsers) ||
         !Array.isArray(removingSubUsersByEmails) ||
@@ -386,7 +390,10 @@ class SubAccount {
           addingSubUsers.length === 0 &&
           removingSubUsersByEmails.length === 0
         ) ||
-        addingSubUsers.some(isSubAccountApiKeys) ||
+        addingSubUsers.some((subUserAuth) => (
+          isSubAccountApiKeys(subUserAuth) ||
+          subUserAuth?.authToken
+        )) ||
         removingSubUsersByEmails.some((user) => (
           typeof user?.email !== 'string'
         ))
@@ -484,6 +491,9 @@ class SubAccount {
           }
 
           continue
+        }
+        if (auth?.authToken) {
+          throw new SubAccountUpdatingError()
         }
 
         const subUser = await this.authenticator

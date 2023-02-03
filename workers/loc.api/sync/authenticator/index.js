@@ -912,7 +912,6 @@ class Authenticator {
     return true
   }
 
-  // TODO: Provide authToken for this method in all places
   setUserSession (user) {
     const {
       token,
