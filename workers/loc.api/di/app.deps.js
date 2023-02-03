@@ -108,7 +108,8 @@ const {
   dataInserterFactory,
   syncFactory,
   processMessageManagerFactory,
-  syncUserStepDataFactory
+  syncUserStepDataFactory,
+  wsEventEmitterFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -203,6 +204,8 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SyncFactory)
       .toFactory(syncFactory)
+    bind(TYPES.WSEventEmitterFactory)
+      .toFactory(wsEventEmitterFactory)
     bind(TYPES.ProcessMessageManagerFactory)
       .toFactory(processMessageManagerFactory)
     bind(TYPES.Authenticator)
