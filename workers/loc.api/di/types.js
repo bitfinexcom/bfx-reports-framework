@@ -18,6 +18,7 @@ module.exports = {
   DataInserterFactory: Symbol.for('DataInserterFactory'),
   WSTransport: Symbol.for('WSTransport'),
   WSEventEmitter: Symbol.for('WSEventEmitter'),
+  WSEventEmitterFactory: Symbol.for('WSEventEmitterFactory'),
   RedirectRequestsToApi: Symbol.for('RedirectRequestsToApi'),
   SyncSchema: Symbol.for('SyncSchema'),
   Sync: Symbol.for('Sync'),
