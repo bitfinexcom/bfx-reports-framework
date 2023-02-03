@@ -254,6 +254,7 @@ class SubAccount {
 
   async recoverPassword (args) {
     const {
+      authToken,
       apiKey,
       apiSecret,
       newPassword,
@@ -265,9 +266,13 @@ class SubAccount {
     } = args?.params ?? {}
 
     if (
+      authToken ||
       !isSubAccount ||
       !Array.isArray(subAccountApiKeys) ||
-      subAccountApiKeys.length === 0
+      subAccountApiKeys.length === 0 ||
+      subAccountApiKeys.some((subUserAuth) => (
+        subUserAuth?.authToken
+      ))
     ) {
       throw new AuthError()
     }
@@ -323,11 +328,9 @@ class SubAccount {
               isSubUser: true
             }
           )
-        const isNotExistInDb = subUsers.every((subUser) => {
-          const { _id } = { ...subUser }
-
-          return refreshedSubUser._id !== _id
-        })
+        const isNotExistInDb = subUsers.every((subUser) => (
+          refreshedSubUser._id !== subUser?._id
+        ))
 
         if (isNotExistInDb) {
           throw new AuthError()
