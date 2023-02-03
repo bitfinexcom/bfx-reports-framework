@@ -27,6 +27,7 @@ const depsTypes = (TYPES) => [
   TYPES.Authenticator,
   TYPES.Sync
 ]
+// TODO: Add restrictions for authToken
 class SubAccount {
   constructor (
     dao,
@@ -90,9 +91,13 @@ class SubAccount {
 
     if (
       isSubAccountApiKeys(masterUser) ||
+      masterUser?.authToken ||
       !Array.isArray(subAccountApiKeys) ||
       subAccountApiKeys.length === 0 ||
-      subAccountApiKeys.some(isSubAccountApiKeys)
+      subAccountApiKeys.some((subUserAuth) => (
+        isSubAccountApiKeys(subUserAuth) ||
+        subUserAuth?.authToken
+      ))
     ) {
       throw new SubAccountCreatingError()
     }
@@ -192,6 +197,9 @@ class SubAccount {
           ))
         ) {
           continue
+        }
+        if (auth?.authToken) {
+          throw new SubAccountCreatingError()
         }
 
         const subUser = await this.authenticator
