@@ -32,7 +32,7 @@ const depsTypes = (TYPES) => [
   TYPES.GetDataFromApi,
   TYPES.Crypto,
   TYPES.SyncFactory,
-  TYPES.WSEventEmitter,
+  TYPES.WSEventEmitterFactory,
   TYPES.Logger
 ]
 class Authenticator {
@@ -43,7 +43,7 @@ class Authenticator {
     getDataFromApi,
     crypto,
     syncFactory,
-    wsEventEmitter,
+    wsEventEmitterFactory,
     logger
   ) {
     this.dao = dao
@@ -52,7 +52,7 @@ class Authenticator {
     this.getDataFromApi = getDataFromApi
     this.crypto = crypto
     this.syncFactory = syncFactory
-    this.wsEventEmitter = wsEventEmitter
+    this.wsEventEmitterFactory = wsEventEmitterFactory
     this.logger = logger
 
     /**
@@ -265,7 +265,7 @@ class Authenticator {
         })
         : null
     } catch (err) {
-      await this.wsEventEmitter
+      await this.wsEventEmitterFactory()
         .emitBfxUnamePwdAuthRequiredToOne(
           { isAuthTokenGenError: true },
           user
@@ -1063,7 +1063,7 @@ class Authenticator {
       } catch (err) {
         this.logger.debug(err)
 
-        await this.wsEventEmitter
+        await this.wsEventEmitterFactory()
           .emitBfxUnamePwdAuthRequiredToOne(
             { isAuthTokenGenError: true },
             user
