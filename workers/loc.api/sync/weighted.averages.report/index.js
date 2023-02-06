@@ -114,7 +114,8 @@ class WeightedAveragesReport {
 
       const existedSymbRes = symbResMap.get(symbol)
       const {
-        sumSpent: _sumSpent = 0,
+        absSumSpent: _absSumSpent = 0,
+        absSumAmount: _absSumAmount = 0,
         sumAmount: _sumAmount = 0,
         sumBuyingSpent: _sumBuyingSpent = 0,
         sumBuyingAmount: _sumBuyingAmount = 0,
@@ -122,9 +123,10 @@ class WeightedAveragesReport {
         sumSellingAmount: _sumSellingAmount = 0
       } = existedSymbRes ?? {}
 
-      const sumSpent = Number.isFinite(spent)
-        ? _sumSpent + spent
-        : _sumSpent
+      const absSumSpent = Number.isFinite(spent)
+        ? _absSumSpent + Math.abs(spent)
+        : _absSumSpent
+      const absSumAmount = _absSumAmount + Math.abs(execAmount)
       const sumAmount = _sumAmount + execAmount
       const sumBuyingSpent = (
         isBuying &&
@@ -146,7 +148,8 @@ class WeightedAveragesReport {
         : _sumSellingAmount
 
       symbResMap.set(symbol, {
-        sumSpent,
+        absSumSpent,
+        absSumAmount,
         sumAmount,
         sumBuyingSpent,
         sumBuyingAmount,
@@ -163,7 +166,7 @@ class WeightedAveragesReport {
         sellingAmount: sumSellingAmount,
         cumulativeWeightedPrice: sumAmount === 0
           ? 0
-          : sumSpent / sumAmount,
+          : absSumSpent / absSumAmount,
         cumulativeAmount: sumAmount
       })
     }
