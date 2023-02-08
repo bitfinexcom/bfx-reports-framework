@@ -350,6 +350,20 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
+  /*
+   * Beginning with version 3.26.0, FOREIGN KEY constraints are
+   * always converted when a table is renamed, unless
+   * the PRAGMA legacy_alter_table=ON setting is engaged
+   *
+   * https://sqlite.org/lang_altertable.html
+   */
+  enableLegacyAlterTable () {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'legacy_alter_table = ON'
+    })
+  }
+
   async hasTable (name) {
     const names = Array.isArray(name)
       ? name
