@@ -215,7 +215,7 @@ class Authenticator {
   async signIn (args, opts) {
     const {
       email,
-      password,
+      password: userPwd,
       isSubAccount,
       token
     } = args?.auth ?? {}
@@ -233,7 +233,7 @@ class Authenticator {
       {
         auth: {
           email,
-          password,
+          password: userPwd,
           isSubAccount,
           token
         }
@@ -253,7 +253,8 @@ class Authenticator {
       isSubAccount: isSubAccountFromDb,
       authToken,
       apiKey,
-      apiSecret
+      apiSecret,
+      password
     } = user ?? {}
 
     let newAuthToken = null
