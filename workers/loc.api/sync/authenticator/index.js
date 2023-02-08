@@ -1028,9 +1028,10 @@ class Authenticator {
 
   setupAuthTokenRefreshInterval (user) {
     const {
-      token,
-      authTokenRefreshInterval
+      token
     } = user ?? {}
+    const authTokenRefreshInterval = this.userSessions.get(token)
+      ?.authTokenRefreshInterval
 
     clearInterval(authTokenRefreshInterval)
 
