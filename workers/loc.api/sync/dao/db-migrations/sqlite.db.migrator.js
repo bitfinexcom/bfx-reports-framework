@@ -21,7 +21,9 @@ class SqliteDbMigrator extends DbMigrator {
    */
   async migrateFromCurrToSupportedVer () {
     try {
+      await this.dao.disableLegacyAlterTable()
       await super.migrateFromCurrToSupportedVer()
+      await this.dao.enableLegacyAlterTable()
     } catch (err) {
       if (!(err instanceof MigrationLaunchingError)) {
         throw err
