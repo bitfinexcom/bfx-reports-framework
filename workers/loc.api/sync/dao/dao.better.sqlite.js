@@ -364,6 +364,13 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
+  disableLegacyAlterTable () {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'legacy_alter_table = OFF'
+    })
+  }
+
   async hasTable (name) {
     const names = Array.isArray(name)
       ? name
