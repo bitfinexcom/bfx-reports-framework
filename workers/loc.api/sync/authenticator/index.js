@@ -977,19 +977,38 @@ class Authenticator {
     const promises = _users.reduce((accum, user) => {
       const { authToken, apiKey, apiSecret } = user ?? {}
 
-      return [
-        ...accum,
-        this.crypto.decrypt(authToken, password),
-        this.crypto.decrypt(apiKey, password),
-        this.crypto.decrypt(apiSecret, password)
+      const decryptedPromises = [
+        null,
+        null,
+        null
       ]
+
+      if (authToken) {
+        decryptedPromises[0] = this.crypto
+          .decrypt(authToken, password)
+      }
+      if (
+        apiKey &&
+        typeof apiKey === 'string' &&
+        apiSecret &&
+        typeof apiSecret === 'string'
+      ) {
+        decryptedPromises[1] = this.crypto
+          .decrypt(apiKey, password)
+        decryptedPromises[2] = this.crypto
+          .decrypt(apiSecret, password)
+      }
+
+      accum.push(...decryptedPromises)
+
+      return accum
     }, [])
     const decryptedApiKeys = await Promise.all(promises)
 
     const res = _users.map((user, i) => {
-      const authToken = decryptedApiKeys[i * 2]
-      const apiKey = decryptedApiKeys[i * 2 + 1]
-      const apiSecret = decryptedApiKeys[i * 2 + 2]
+      const authToken = decryptedApiKeys[i * 3]
+      const apiKey = decryptedApiKeys[i * 3 + 1]
+      const apiSecret = decryptedApiKeys[i * 3 + 2]
 
       return {
         ...user,
