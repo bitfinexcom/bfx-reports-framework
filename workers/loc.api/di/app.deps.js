@@ -165,13 +165,25 @@ module.exports = ({
         ...ctx.container.get(TYPES.RServiceDepsSchema),
         ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
       ])
+    bind(TYPES.WSEventEmitterFactory)
+      .toFactory(wsEventEmitterFactory)
+    rebind(TYPES.Responder).toConstantValue(
+      bindDepsToFn(
+        responder,
+        [
+          TYPES.Container,
+          TYPES.Logger,
+          TYPES.WSEventEmitterFactory
+        ]
+      )
+    )
     bind(TYPES.PrivResponder)
       .toDynamicValue((ctx) => bindDepsToFn(
         privResponder,
         [
           TYPES.Container,
           TYPES.Logger,
-          TYPES.WSEventEmitter,
+          TYPES.WSEventEmitterFactory,
           TYPES.Authenticator
         ]
       ))
@@ -204,8 +216,6 @@ module.exports = ({
       .inSingletonScope()
     bind(TYPES.SyncFactory)
       .toFactory(syncFactory)
-    bind(TYPES.WSEventEmitterFactory)
-      .toFactory(wsEventEmitterFactory)
     bind(TYPES.ProcessMessageManagerFactory)
       .toFactory(processMessageManagerFactory)
     bind(TYPES.Authenticator)
@@ -388,16 +398,6 @@ module.exports = ({
         getDataFromApi,
         [
           TYPES.SyncInterrupter,
-          TYPES.WSEventEmitter
-        ]
-      )
-    )
-    rebind(TYPES.Responder).toConstantValue(
-      bindDepsToFn(
-        responder,
-        [
-          TYPES.Container,
-          TYPES.Logger,
           TYPES.WSEventEmitter
         ]
       )
