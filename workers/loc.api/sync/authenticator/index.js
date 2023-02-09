@@ -269,7 +269,10 @@ class Authenticator {
     try {
       newAuthToken = authToken
         ? await this.generateAuthToken({
-          auth: user
+          auth: {
+            ...user,
+            authToken: args?.auth?.authToken ?? user?.authToken
+          }
         })
         : null
     } catch (err) {
