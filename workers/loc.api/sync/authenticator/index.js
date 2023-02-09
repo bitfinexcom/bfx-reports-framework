@@ -60,6 +60,13 @@ class Authenticator {
      */
     this.userSessions = new Map()
     this.userTokenMapByEmail = new Map()
+
+    // TODO: Need to play with ttl:
+    //   - 1) issue when very long syncing
+    //   - 2) issue when user sign-in in after a long time
+    //   - 3) don't generate a lot of auth tokens
+    this.authTokenTTLSec = 24 * 60 * 60 // as option: 604800 -> 7days
+    this.authTokenRefreshIntervalSec = 10 * 60
   }
 
   async signUp (args, opts) {
@@ -1023,7 +1030,7 @@ class Authenticator {
 
   async generateAuthToken (args) {
     const opts = {
-      ttl: 604800,
+      ttl: this.authTokenTTLSec,
       writePermission: true
     }
 
@@ -1090,7 +1097,7 @@ class Authenticator {
             user
           )
       }
-    }, (10 * 60 * 1000)).unref()
+    }, (this.authTokenRefreshIntervalSec * 1000)).unref()
 
     return newAuthTokenRefreshInterval
   }
