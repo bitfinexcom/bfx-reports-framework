@@ -74,9 +74,12 @@ class WSEventEmitter extends AbstractWSEventEmitter {
     auth = {}
   ) {
     return this.emit(async (user, ...args) => {
+      // For the sync process user id need to take from the session object
+      const id = auth?._id ?? auth?.session?._id
+
       if (
-        !Number.isInteger(auth?._id) ||
-        user?._id !== auth?._id
+        !Number.isInteger(id) ||
+        user?._id !== id
       ) {
         return { isNotEmitted: true }
       }
