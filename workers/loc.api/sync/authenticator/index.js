@@ -61,12 +61,9 @@ class Authenticator {
     this.userSessions = new Map()
     this.userTokenMapByEmail = new Map()
 
-    // TODO: Need to play with ttl:
-    //   - 1) issue when very long syncing
-    //   - 2) issue when user sign-in in after a long time
-    //   - 3) don't generate a lot of auth tokens
-    this.authTokenTTLSec = 24 * 60 * 60 // as option: 604800 -> 7days
+    this.authTokenTTLSec = 24 * 60 * 60
     this.authTokenRefreshIntervalSec = 10 * 60
+    this.this.authTokenInvalidateIntervalsSec = 20 * 60
   }
 
   async signUp (args, opts) {
@@ -374,8 +371,14 @@ class Authenticator {
       isTokenExisted &&
       isNotSetSession
     ) {
-      this.userSessions.get(existedToken)
+      this.userSessions.get(createdToken)
         .authToken = newAuthToken
+    }
+    if (authToken) {
+      this.setupAuthTokenInvalidateInterval({
+        token: createdToken,
+        authToken
+      })
     }
 
     return {
@@ -934,7 +937,13 @@ class Authenticator {
       ? this.setupAuthTokenRefreshInterval(user)
       : null
 
-    this.userSessions.set(token, { ...user, authTokenRefreshInterval })
+    this.userSessions.set(
+      token, {
+        ...user,
+        authTokenRefreshInterval,
+        authTokenInvalidateIntervals: new Set()
+      }
+    )
     this.userTokenMapByEmail.set(tokenKey, token)
   }
 
@@ -1068,6 +1077,39 @@ class Authenticator {
     return res
   }
 
+  setupAuthTokenInvalidateInterval (user) {
+    const {
+      token,
+      authToken
+    } = user ?? {}
+    const { authTokenInvalidateIntervals } = this.userSessions.get(token)
+    let count = 0
+
+    const authTokenInvalidateInterval = setInterval(async () => {
+      try {
+        count += 1
+
+        const session = this.userSessions.get(token)
+
+        await this.invalidateAuthToken({
+          auth: session,
+          params: { authToken }
+        })
+
+        clearInterval(authTokenInvalidateInterval)
+        session.authTokenInvalidateIntervals.delete(authTokenInvalidateInterval)
+      } catch (err) {
+        if (count >= 3) {
+          clearInterval(authTokenInvalidateInterval)
+        }
+
+        this.logger.debug(err)
+      }
+    }, (this.authTokenInvalidateIntervalsSec * 1000)).unref()
+
+    authTokenInvalidateIntervals.add(authTokenInvalidateInterval)
+  }
+
   setupAuthTokenRefreshInterval (user) {
     const {
       token
@@ -1080,6 +1122,7 @@ class Authenticator {
     const newAuthTokenRefreshInterval = setInterval(async () => {
       try {
         const session = this.userSessions.get(token)
+        const prevAuthToken = session?.authToken
         const password = (
           session?.password &&
           typeof session?.password === 'string'
@@ -1104,6 +1147,15 @@ class Authenticator {
         }
 
         session.authToken = newAuthToken
+
+        if (!prevAuthToken) {
+          return
+        }
+
+        this.setupAuthTokenInvalidateInterval({
+          token,
+          authToken: prevAuthToken
+        })
       } catch (err) {
         this.logger.debug(err)
 
