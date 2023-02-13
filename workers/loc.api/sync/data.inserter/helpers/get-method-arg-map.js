@@ -18,12 +18,14 @@ module.exports = (
 
   const {
     authToken,
+    authTokenFn,
     apiKey = '',
     apiSecret = '',
     subUser
   } = reqAuth ?? {}
   const {
     authToken: subUserAuthToken,
+    authTokenFn: subUserAuthTokenFn,
     apiKey: subUserApiKey,
     apiSecret: subUserApiSecret
   } = subUser ?? {}
@@ -38,11 +40,12 @@ module.exports = (
   )
     ? {
         authToken: subUserAuthToken,
+        authTokenFn: subUserAuthTokenFn,
         apiKey: subUserApiKey,
         apiSecret: subUserApiSecret,
         session: reqAuth
       }
-    : { authToken, apiKey, apiSecret, session: reqAuth }
+    : { authToken, authTokenFn, apiKey, apiSecret, session: reqAuth }
 
   return {
     ...additionalApiCallArgs,

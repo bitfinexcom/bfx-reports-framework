@@ -66,6 +66,7 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
       apiKey,
       apiSecret,
       authToken,
+      authTokenFn,
       isSubAccount,
       subUsers,
       token
@@ -85,6 +86,7 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
       apiKey,
       apiSecret,
       authToken,
+      authTokenFn,
       isSubAccount,
       subUsers,
       token,
