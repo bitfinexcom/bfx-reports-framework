@@ -1055,6 +1055,19 @@ class Authenticator {
     return authToken
   }
 
+  async invalidateAuthToken (args) {
+    const res = await this.getDataFromApi({
+      getData: (s, args) => this.rService._invalidateAuthToken(args),
+      args,
+      callerName: 'AUTHENTICATOR',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
+
+    return res
+  }
+
   setupAuthTokenRefreshInterval (user) {
     const {
       token
