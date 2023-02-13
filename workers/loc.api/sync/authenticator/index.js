@@ -940,6 +940,9 @@ class Authenticator {
     this.userSessions.set(
       token, {
         ...user,
+        authTokenFn: () => {
+          return this.userSessions.get(token)?.authToken
+        },
         authTokenRefreshInterval,
         authTokenInvalidateIntervals: new Set()
       }
