@@ -950,7 +950,7 @@ class Authenticator {
           return this.userSessions.get(token)?.authToken
         },
         authTokenRefreshInterval,
-        authTokenInvalidateIntervals: new Set()
+        authTokenInvalidateIntervals: new Map()
       }
     )
     this.userTokenMapByEmail.set(tokenKey, token)
@@ -992,8 +992,25 @@ class Authenticator {
 
     this.userTokenMapByEmail.delete(tokenKey)
 
-    const session = this.userSessions.get(_token)
-    clearInterval(session?.authTokenRefreshInterval)
+    const session = this.userSessions.get(_token) ?? {}
+    const {
+      authTokenRefreshInterval,
+      authTokenInvalidateIntervals
+    } = session
+
+    clearInterval(authTokenRefreshInterval)
+
+    for (const [authToken, authTokenInvalidateInterval] of authTokenInvalidateIntervals) {
+      clearInterval(authTokenInvalidateInterval)
+
+      // Try to invalidate auth token without awaiting
+      this.invalidateAuthToken({
+        auth: session,
+        params: { authToken }
+      }).then(() => {}, (err) => {
+        this.logger.debug(err)
+      })
+    }
 
     return this.userSessions.delete(_token)
   }
@@ -1095,10 +1112,10 @@ class Authenticator {
     let count = 0
 
     const authTokenInvalidateInterval = setInterval(async () => {
+      const session = this.userSessions.get(token)
+
       try {
         count += 1
-
-        const session = this.userSessions.get(token)
 
         await this.invalidateAuthToken({
           auth: session,
@@ -1106,17 +1123,18 @@ class Authenticator {
         })
 
         clearInterval(authTokenInvalidateInterval)
-        session.authTokenInvalidateIntervals.delete(authTokenInvalidateInterval)
+        session.authTokenInvalidateIntervals.delete(authToken)
       } catch (err) {
         if (count >= 3) {
           clearInterval(authTokenInvalidateInterval)
+          session.authTokenInvalidateIntervals.delete(authToken)
         }
 
         this.logger.debug(err)
       }
     }, (this.authTokenInvalidateIntervalsSec * 1000)).unref()
 
-    authTokenInvalidateIntervals.add(authTokenInvalidateInterval)
+    authTokenInvalidateIntervals.set(authToken, authTokenInvalidateInterval)
   }
 
   setupAuthTokenRefreshInterval (user) {
