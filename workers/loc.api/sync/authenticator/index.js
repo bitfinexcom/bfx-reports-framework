@@ -62,8 +62,14 @@ class Authenticator {
     this.userTokenMapByEmail = new Map()
 
     this.authTokenTTLSec = 24 * 60 * 60
+    /*
+     * Here need to have an interval between the generation
+     * of a new authToken and the invalidation of the old one
+     * so that the current running processes are finished
+     * successfully if the token was cached in memory
+     */
     this.authTokenRefreshIntervalSec = 10 * 60
-    this.this.authTokenInvalidateIntervalsSec = 20 * 60
+    this.authTokenInvalidateIntervalsSec = 10 * 60
   }
 
   async signUp (args, opts) {
