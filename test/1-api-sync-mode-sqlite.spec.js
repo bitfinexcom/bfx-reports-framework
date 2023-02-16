@@ -1,6 +1,7 @@
 'use strict'
 
 const path = require('path')
+const { omit } = require('lodash')
 const request = require('supertest')
 
 const {
@@ -45,6 +46,7 @@ const apiKeys = {
   apiKey: 'fake',
   apiSecret: 'fake'
 }
+const authToken = 'pub:api:18b3f4d5-1944-4516-9cfc-59e11e3ded4d-caps:s:o:f:w:wd:a-write'
 const email = 'fake@email.fake'
 const password = '123Qwerty'
 const isSubAccount = false
@@ -64,6 +66,10 @@ describe('Sync mode API with SQLite', () => {
     end,
     start
   }
+  const paramsWithAuthToken = {
+    ...omit(params, ['apiKeys']),
+    authToken
+  }
 
   before(async function () {
     this.timeout(20000)
@@ -77,6 +83,8 @@ describe('Sync mode API with SQLite', () => {
     wrkReportServiceApi = env.wrksReportServiceApi[0]
     params.processorQueue = wrkReportServiceApi.lokue_processor.q
     params.aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
+    paramsWithAuthToken.processorQueue = wrkReportServiceApi.lokue_processor.q
+    paramsWithAuthToken.aggregatorQueue = wrkReportServiceApi.lokue_aggregator.q
 
     await emptyDB()
   })
@@ -93,8 +101,17 @@ describe('Sync mode API with SQLite', () => {
     } catch (err) { }
   })
 
-  signUpTestCase(agent, params)
-  apiSyncModeSqliteTestCases(agent, params)
-  signUpTestCase(agent, params)
-  removeUserTestCases(agent, params)
+  describe('Use BFX API keys', () => {
+    signUpTestCase(agent, params)
+    apiSyncModeSqliteTestCases(agent, params)
+    signUpTestCase(agent, params)
+    removeUserTestCases(agent, params)
+  })
+
+  describe('Use BFX auth token', () => {
+    signUpTestCase(agent, paramsWithAuthToken)
+    apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+    signUpTestCase(agent, paramsWithAuthToken)
+    removeUserTestCases(agent, paramsWithAuthToken)
+  })
 })
