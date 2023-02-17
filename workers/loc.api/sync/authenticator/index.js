@@ -533,7 +533,12 @@ class Authenticator {
       encryptedAuthToken,
       encryptedApiKey,
       encryptedApiSecret
-    } = await this._getEncryptedCredentials(args?.auth)
+    } = await this._getEncryptedCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password
+    })
 
     const username = generateSubUserName(
       { username: uName },
