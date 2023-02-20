@@ -1074,7 +1074,7 @@ class Authenticator {
   async generateAuthToken (args) {
     const opts = {
       ttl: this.authTokenTTLSec,
-      writePermission: true
+      writePermission: false
     }
 
     const res = await this.getDataFromApi({
