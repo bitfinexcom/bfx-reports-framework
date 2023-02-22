@@ -330,8 +330,11 @@ class DataInserter extends EventEmitter {
       }
     }
     if (
-      typeof auth.apiKey !== 'string' ||
-      typeof auth.apiSecret !== 'string'
+      (
+        typeof auth?.apiKey !== 'string' ||
+        typeof auth?.apiSecret !== 'string'
+      ) &&
+      !auth?.authToken
     ) {
       await this._setProgress(MESS_ERR_UNAUTH)
 
@@ -481,12 +484,15 @@ class DataInserter extends EventEmitter {
     }
 
     const { auth } = args ?? {}
-    const { apiKey, apiSecret } = auth ?? {}
+    const { authToken, apiKey, apiSecret } = auth ?? {}
     const isPublic = (
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string'
+      (
+        !apiKey ||
+        typeof apiKey !== 'string' ||
+        !apiSecret ||
+        typeof apiSecret !== 'string'
+      ) &&
+      !authToken
     )
     const isPrivate = !isPublic
 

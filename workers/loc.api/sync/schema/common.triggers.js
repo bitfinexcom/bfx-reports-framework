@@ -33,8 +33,43 @@ delete_#{tableName}_subUsers_from_${TABLES_NAMES.USERS}
     DELETE FROM ${TABLES_NAMES.USERS}
       WHERE _id = OLD.subUserId;
   END`
+const CREATE_UPDATE_API_KEYS_TRIGGERS = [
+  `insert_#{tableName}_apiKey_and_apiSecret
+    BEFORE INSERT ON #{tableName}
+    FOR EACH ROW
+    BEGIN
+      SELECT
+        CASE
+          WHEN (NEW.authToken IS NULL AND NEW.apiKey IS NULL) OR
+            (NEW.apiKey IS NULL AND NEW.apiSecret IS NOT NULL)
+          THEN
+            RAISE (FAIL,'Invalid apiKey')
+          WHEN (NEW.authToken IS NULL AND NEW.apiSecret IS NULL) OR
+            (NEW.apiSecret IS NULL AND NEW.apiKey IS NOT NULL)
+          THEN
+            RAISE (FAIL,'Invalid apiSecret')
+        END;
+    END`,
+  `update_#{tableName}_apiKey_and_apiSecret
+    BEFORE UPDATE ON #{tableName}
+    FOR EACH ROW
+    BEGIN
+      SELECT
+        CASE
+          WHEN (NEW.authToken IS NULL AND NEW.apiKey IS NULL) OR
+            (NEW.apiKey IS NULL AND NEW.apiSecret IS NOT NULL)
+          THEN
+            RAISE (FAIL,'Invalid apiKey')
+          WHEN (NEW.authToken IS NULL AND NEW.apiSecret IS NULL) OR
+            (NEW.apiSecret IS NULL AND NEW.apiKey IS NOT NULL)
+          THEN
+            RAISE (FAIL,'Invalid apiSecret')
+        END;
+    END`
+]
 
 module.exports = {
+  CREATE_UPDATE_API_KEYS_TRIGGERS,
   CREATE_UPDATE_MTS_TRIGGERS,
   DELETE_SUB_USERS_TRIGGER
 }

@@ -1008,4 +1008,45 @@ module.exports = (
 
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
+
+  it('it should be successfully performed by the removeUser method with token', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'removeUser',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
+  })
+
+  it('it should not be successfully performed by the verifyUser method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'verifyUser',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(401)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 401)
+    assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+    assert.propertyVal(res.body, 'id', 5)
+  })
 }

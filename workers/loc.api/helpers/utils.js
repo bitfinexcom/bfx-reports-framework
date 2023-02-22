@@ -12,9 +12,19 @@ const {
 } = require('../sync/schema/utils')
 
 const checkParamsAuth = (args) => {
-  const { auth } = { ...args }
-  const { apiKey, apiSecret } = { ...auth }
+  const {
+    apiKey,
+    apiSecret,
+    authToken,
+    isSubAccount
+  } = args?.auth ?? {}
 
+  if (
+    !isSubAccount &&
+    authToken
+  ) {
+    return
+  }
   if (
     !apiKey ||
     typeof apiKey !== 'string' ||

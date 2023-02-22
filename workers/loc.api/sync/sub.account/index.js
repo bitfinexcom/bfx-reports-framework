@@ -21,6 +21,10 @@ const SyncTempTablesManager = require(
 
 const { decorateInjectable } = require('../../di/utils')
 
+/*
+ * There're restrictions existed
+ * for using `authToken` with sub-accounts
+ */
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
@@ -90,9 +94,13 @@ class SubAccount {
 
     if (
       isSubAccountApiKeys(masterUser) ||
+      masterUser?.authToken ||
       !Array.isArray(subAccountApiKeys) ||
       subAccountApiKeys.length === 0 ||
-      subAccountApiKeys.some(isSubAccountApiKeys)
+      subAccountApiKeys.some((subUserAuth) => (
+        isSubAccountApiKeys(subUserAuth) ||
+        subUserAuth?.authToken
+      ))
     ) {
       throw new SubAccountCreatingError()
     }
@@ -193,6 +201,9 @@ class SubAccount {
         ) {
           continue
         }
+        if (auth?.authToken) {
+          throw new SubAccountCreatingError()
+        }
 
         const subUser = await this.authenticator
           .signUp(
@@ -246,6 +257,7 @@ class SubAccount {
 
   async recoverPassword (args) {
     const {
+      authToken,
       apiKey,
       apiSecret,
       newPassword,
@@ -257,9 +269,13 @@ class SubAccount {
     } = args?.params ?? {}
 
     if (
+      authToken ||
       !isSubAccount ||
       !Array.isArray(subAccountApiKeys) ||
-      subAccountApiKeys.length === 0
+      subAccountApiKeys.length === 0 ||
+      subAccountApiKeys.some((subUserAuth) => (
+        subUserAuth?.authToken
+      ))
     ) {
       throw new AuthError()
     }
@@ -315,11 +331,9 @@ class SubAccount {
               isSubUser: true
             }
           )
-        const isNotExistInDb = subUsers.every((subUser) => {
-          const { _id } = { ...subUser }
-
-          return refreshedSubUser._id !== _id
-        })
+        const isNotExistInDb = subUsers.every((subUser) => (
+          refreshedSubUser._id !== subUser?._id
+        ))
 
         if (isNotExistInDb) {
           throw new AuthError()
@@ -368,6 +382,7 @@ class SubAccount {
         )
 
       if (
+        subAccountUser?.authToken ||
         !isSubAccountApiKeys(subAccountUser) ||
         !Array.isArray(addingSubUsers) ||
         !Array.isArray(removingSubUsersByEmails) ||
@@ -375,7 +390,10 @@ class SubAccount {
           addingSubUsers.length === 0 &&
           removingSubUsersByEmails.length === 0
         ) ||
-        addingSubUsers.some(isSubAccountApiKeys) ||
+        addingSubUsers.some((subUserAuth) => (
+          isSubAccountApiKeys(subUserAuth) ||
+          subUserAuth?.authToken
+        )) ||
         removingSubUsersByEmails.some((user) => (
           typeof user?.email !== 'string'
         ))
@@ -473,6 +491,9 @@ class SubAccount {
           }
 
           continue
+        }
+        if (auth?.authToken) {
+          throw new SubAccountUpdatingError()
         }
 
         const subUser = await this.authenticator

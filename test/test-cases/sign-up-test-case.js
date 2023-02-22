@@ -14,7 +14,8 @@ module.exports = (
       password,
       isSubAccount
     },
-    apiKeys
+    apiKeys,
+    authToken
   } = params
 
   it('it should be successfully performed by the signUp method', async function () {
@@ -26,6 +27,7 @@ module.exports = (
       .send({
         auth: {
           ...apiKeys,
+          authToken,
           password
         },
         method: 'signUp',

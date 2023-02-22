@@ -8,7 +8,7 @@ const isSubAccountApiKeys = (auth = {}) => {
   const {
     apiKey,
     apiSecret
-  } = { ...auth }
+  } = auth ?? {}
 
   return (
     typeof apiKey === 'string' &&
@@ -20,40 +20,48 @@ const isSubAccountApiKeys = (auth = {}) => {
 
 const getAuthFromSubAccountAuth = (auth = {}) => {
   const {
-    apiKey: _apiKey,
-    apiSecret: _apiSecret
-  } = { ...auth }
+    apiKey,
+    apiSecret,
+    authToken,
+    isSubAccount
+  } = auth ?? {}
 
   if (
-    typeof _apiKey !== 'string' ||
-    typeof _apiSecret !== 'string'
+    !isSubAccount &&
+    authToken
   ) {
-    return auth
+    return { authToken, isSubAccount: false }
+  }
+  if (
+    typeof apiKey !== 'string' ||
+    typeof apiSecret !== 'string'
+  ) {
+    return auth ?? {}
   }
 
   return {
-    apiKey: _apiKey.replace(_subAccountRegExp, ''),
-    apiSecret: _apiSecret.replace(_subAccountRegExp, '')
+    apiKey: apiKey.replace(_subAccountRegExp, ''),
+    apiSecret: apiSecret.replace(_subAccountRegExp, '')
   }
 }
 
 const getSubAccountAuthFromAuth = (auth = {}) => {
   const {
-    apiKey: _apiKey,
-    apiSecret: _apiSecret
-  } = { ...auth }
+    apiKey,
+    apiSecret
+  } = auth ?? {}
 
   if (
-    typeof _apiKey !== 'string' ||
-    typeof _apiSecret !== 'string' ||
+    typeof apiKey !== 'string' ||
+    typeof apiSecret !== 'string' ||
     isSubAccountApiKeys(auth)
   ) {
-    return auth
+    return auth ?? {}
   }
 
   return {
-    apiKey: `${_apiKey}${SUB_ACCOUNT_API_KEYS_ENDING}`,
-    apiSecret: `${_apiSecret}${SUB_ACCOUNT_API_KEYS_ENDING}`
+    apiKey: `${apiKey}${SUB_ACCOUNT_API_KEYS_ENDING}`,
+    apiSecret: `${apiSecret}${SUB_ACCOUNT_API_KEYS_ENDING}`
   }
 }
 

@@ -12,6 +12,7 @@ const { bindDepsToFn } = require(
 const {
   getDataFromApi
 } = require('bfx-report/workers/loc.api/helpers')
+const responder = require('bfx-report/workers/loc.api/responder')
 
 const TYPES = require('./types')
 
@@ -107,7 +108,8 @@ const {
   dataInserterFactory,
   syncFactory,
   processMessageManagerFactory,
-  syncUserStepDataFactory
+  syncUserStepDataFactory,
+  wsEventEmitterFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -163,12 +165,25 @@ module.exports = ({
         ...ctx.container.get(TYPES.RServiceDepsSchema),
         ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
       ])
+    bind(TYPES.WSEventEmitterFactory)
+      .toFactory(wsEventEmitterFactory)
+    rebind(TYPES.Responder).toConstantValue(
+      bindDepsToFn(
+        responder,
+        [
+          TYPES.Container,
+          TYPES.Logger,
+          TYPES.WSEventEmitterFactory
+        ]
+      )
+    )
     bind(TYPES.PrivResponder)
       .toDynamicValue((ctx) => bindDepsToFn(
         privResponder,
         [
           TYPES.Container,
           TYPES.Logger,
+          TYPES.WSEventEmitterFactory,
           TYPES.Authenticator
         ]
       ))
