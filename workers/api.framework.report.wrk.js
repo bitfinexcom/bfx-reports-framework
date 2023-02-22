@@ -147,12 +147,25 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       ...deps
     })
 
+    const aggregatorQueue = this.lokue_aggregator.q
     const conf = this.conf[this.group]
     const wsTransport = this.container.get(TYPES.WSTransport)
+    const wsEventEmitter = this.container.get(TYPES.WSEventEmitter)
     const sync = this.container.get(TYPES.Sync)
     const processMessageManager = this.container.get(TYPES.ProcessMessageManager)
 
     await wsTransport.start()
+
+    aggregatorQueue.on('completed', (res) => {
+      const { csvFilesMetadata, userInfo } = res ?? {}
+
+      wsEventEmitter.emitCsvGenerationCompletedToOne(
+        { csvFilesMetadata },
+        userInfo
+      ).then(() => {}, (err) => {
+        this.logger.error(`WS_EVENT_EMITTER:CSV_COMPLETED: ${err.stack || err}`)
+      })
+    })
 
     if (
       !conf.syncMode ||
