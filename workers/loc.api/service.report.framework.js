@@ -127,7 +127,8 @@ class FrameworkReportService extends ReportService {
             'email',
             'id',
             'isSubAccount',
-            'subUsers'
+            'subUsers',
+            '_id'
           ]
         }
       )
