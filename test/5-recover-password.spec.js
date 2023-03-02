@@ -30,7 +30,8 @@ const { app } = require('bfx-report-express')
 const agent = request.agent(app)
 
 const {
-  signUpTestCase
+  signUpTestCase,
+  removeUserTestCases
 } = require('./test-cases')
 
 let wrkReportServiceApi = null
@@ -51,6 +52,7 @@ const masterUserApiKeys = {
   apiKey: 'masterUserApiKey',
   apiSecret: 'masterUserApiSecret'
 }
+const masterAuthToken = 'pub:api:18b3f4d5-1944-4516-9cfc-59e11e3ded4d-caps:s:o:f:w:wd:a-write'
 const subUserEmail = 'sub-user@email.fake'
 const masterUserEmail = 'master-user@email.fake'
 const password = '123Qwerty'
@@ -137,7 +139,158 @@ describe('Recover password', () => {
   })
 
   describe('Recover password for master user', () => {
+    const runTestCases = (opts) => {
+      const { apiKeys, authToken } = opts ?? {}
+      const masterUserAuth = { token: '' }
+
+      signUpTestCase(
+        agent,
+        {
+          basePath,
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount: false
+          },
+          ...opts
+        },
+        (token) => {
+          masterUserAuth.token = token
+        }
+      )
+
+      it('it should be successfully performed by the signIn method', async function () {
+        this.timeout(5000)
+
+        const res = await agent
+          .post(`${basePath}/json-rpc`)
+          .type('json')
+          .send({
+            auth: {
+              email: masterUserEmail,
+              password,
+              isSubAccount: false
+            },
+            method: 'signIn',
+            id: 5
+          })
+          .expect('Content-Type', /json/)
+          .expect(200)
+
+        assert.isObject(res.body)
+        assert.propertyVal(res.body, 'id', 5)
+        assert.isObject(res.body.result)
+        assert.strictEqual(res.body.result.email, masterUserEmail)
+        assert.isBoolean(res.body.result.isSubAccount)
+        assert.isNotOk(res.body.result.isSubAccount)
+        assert.strictEqual(res.body.result.token, masterUserAuth.token)
+      })
+
+      it('it should be successfully performed by the recoverPassword method', async function () {
+        this.timeout(5000)
+
+        const res = await agent
+          .post(`${basePath}/json-rpc`)
+          .type('json')
+          .send({
+            auth: {
+              ...apiKeys,
+              authToken,
+              newPassword,
+              isSubAccount: false
+            },
+            method: 'recoverPassword',
+            id: 5
+          })
+          .expect('Content-Type', /json/)
+          .expect(200)
+
+        assert.isObject(res.body)
+        assert.propertyVal(res.body, 'id', 5)
+        assert.isObject(res.body.result)
+        assert.strictEqual(res.body.result.email, masterUserEmail)
+        assert.isBoolean(res.body.result.isSubAccount)
+        assert.isNotOk(res.body.result.isSubAccount)
+        assert.strictEqual(res.body.result.token, masterUserAuth.token)
+      })
+
+      it('it should not be successfully performed by the signIn method with old pwd', async function () {
+        this.timeout(5000)
+
+        const res = await agent
+          .post(`${basePath}/json-rpc`)
+          .type('json')
+          .send({
+            auth: {
+              email: masterUserEmail,
+              password,
+              isSubAccount: false
+            },
+            method: 'signIn',
+            id: 5
+          })
+          .expect('Content-Type', /json/)
+          .expect(401)
+
+        assert.isObject(res.body)
+        assert.isObject(res.body.error)
+        assert.propertyVal(res.body.error, 'code', 401)
+        assert.propertyVal(res.body.error, 'message', 'Unauthorized')
+        assert.propertyVal(res.body, 'id', 5)
+      })
+
+      it('it should be successfully performed by the signIn method with new pwd', async function () {
+        this.timeout(5000)
+
+        const res = await agent
+          .post(`${basePath}/json-rpc`)
+          .type('json')
+          .send({
+            auth: {
+              email: masterUserEmail,
+              password: newPassword,
+              isSubAccount: false
+            },
+            method: 'signIn',
+            id: 5
+          })
+          .expect('Content-Type', /json/)
+          .expect(200)
+
+        assert.isObject(res.body)
+        assert.propertyVal(res.body, 'id', 5)
+        assert.isObject(res.body.result)
+        assert.strictEqual(res.body.result.email, masterUserEmail)
+        assert.isBoolean(res.body.result.isSubAccount)
+        assert.isNotOk(res.body.result.isSubAccount)
+        assert.strictEqual(res.body.result.token, masterUserAuth.token)
+      })
+
+      removeUserTestCases(
+        agent,
+        {
+          basePath,
+          auth: {
+            email: masterUserEmail,
+            password: newPassword,
+            isSubAccount: false
+          }
+        }
+      )
+    }
+
+    describe('Use BFX API keys', () => {
+      runTestCases({ apiKeys: masterUserApiKeys })
+    })
+
+    describe('Use BFX auth token', () => {
+      runTestCases({ authToken: masterAuthToken })
+    })
+  })
+
+  describe('Recover password for sub-account', () => {
     const masterUserAuth = { token: '' }
+    const subAccountAuth = { token: '' }
 
     signUpTestCase(
       agent,
@@ -155,117 +308,6 @@ describe('Recover password', () => {
       }
     )
 
-    it('it should be successfully performed by the signIn method', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: {
-            email: masterUserEmail,
-            password,
-            isSubAccount: false
-          },
-          method: 'signIn',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isObject(res.body.result)
-      assert.strictEqual(res.body.result.email, masterUserEmail)
-      assert.isBoolean(res.body.result.isSubAccount)
-      assert.isNotOk(res.body.result.isSubAccount)
-      assert.strictEqual(res.body.result.token, masterUserAuth.token)
-    })
-
-    it('it should be successfully performed by the recoverPassword method', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: {
-            ...masterUserApiKeys,
-            newPassword,
-            isSubAccount: false
-          },
-          method: 'recoverPassword',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isObject(res.body.result)
-      assert.strictEqual(res.body.result.email, masterUserEmail)
-      assert.isBoolean(res.body.result.isSubAccount)
-      assert.isNotOk(res.body.result.isSubAccount)
-      assert.strictEqual(res.body.result.token, masterUserAuth.token)
-    })
-
-    it('it should not be successfully performed by the signIn method with old pwd', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: {
-            email: masterUserEmail,
-            password,
-            isSubAccount: false
-          },
-          method: 'signIn',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(401)
-
-      assert.isObject(res.body)
-      assert.isObject(res.body.error)
-      assert.propertyVal(res.body.error, 'code', 401)
-      assert.propertyVal(res.body.error, 'message', 'Unauthorized')
-      assert.propertyVal(res.body, 'id', 5)
-    })
-
-    it('it should be successfully performed by the signIn method with new pwd', async function () {
-      this.timeout(5000)
-
-      const res = await agent
-        .post(`${basePath}/json-rpc`)
-        .type('json')
-        .send({
-          auth: {
-            email: masterUserEmail,
-            password: newPassword,
-            isSubAccount: false
-          },
-          method: 'signIn',
-          id: 5
-        })
-        .expect('Content-Type', /json/)
-        .expect(200)
-
-      assert.isObject(res.body)
-      assert.propertyVal(res.body, 'id', 5)
-      assert.isObject(res.body.result)
-      assert.strictEqual(res.body.result.email, masterUserEmail)
-      assert.isBoolean(res.body.result.isSubAccount)
-      assert.isNotOk(res.body.result.isSubAccount)
-      assert.strictEqual(res.body.result.token, masterUserAuth.token)
-    })
-  })
-
-  describe('Recover password for sub-account', () => {
-    const masterUserAuth = { token: '' }
-    const subAccountAuth = { token: '' }
-
     it('it should be successfully performed by the signIn method for master user', async function () {
       this.timeout(5000)
 
@@ -275,7 +317,7 @@ describe('Recover password', () => {
         .send({
           auth: {
             email: masterUserEmail,
-            password: newPassword,
+            password,
             isSubAccount: false
           },
           method: 'signIn',
@@ -291,8 +333,7 @@ describe('Recover password', () => {
       assert.isBoolean(res.body.result.isSubAccount)
       assert.isNotOk(res.body.result.isSubAccount)
       assert.isString(res.body.result.token)
-
-      masterUserAuth.token = res.body.result.token
+      assert.strictEqual(res.body.result.token, masterUserAuth.token)
     })
 
     it('it should be successfully performed by the createSubAccount method', async function () {

@@ -7,6 +7,14 @@ const _ms = Date.now()
 module.exports = new Map([
   ...mockData,
   [
+    'generate_token',
+    ['pub:api:88888888-4444-4444-4444-121212121212-caps:s:o:f:w:wd:a-write']
+  ],
+  [
+    'delete_token',
+    [1]
+  ],
+  [
     'candles',
     [[
       _ms,

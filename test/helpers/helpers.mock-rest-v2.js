@@ -45,7 +45,9 @@ const setDataTo = (
 
 const getMockDataOpts = () => ({
   ...getBaseMockDataOpts(),
-  candles: { limit: 500 }
+  candles: { limit: 500 },
+  generate_token: null,
+  delete_token: null
 })
 
 const createMockRESTv2SrvWithDate = (

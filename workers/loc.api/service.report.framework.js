@@ -62,8 +62,7 @@ class FrameworkReportService extends ReportService {
   async _checkAuthInApi (args) {
     checkParamsAuth(args)
 
-    const { auth: _auth } = { ...args }
-    const auth = getAuthFromSubAccountAuth(_auth)
+    const auth = getAuthFromSubAccountAuth(args?.auth ?? {})
 
     const {
       email,
@@ -128,7 +127,8 @@ class FrameworkReportService extends ReportService {
             'email',
             'id',
             'isSubAccount',
-            'subUsers'
+            'subUsers',
+            '_id'
           ]
         }
       )
@@ -147,7 +147,8 @@ class FrameworkReportService extends ReportService {
             'email',
             'isSubAccount',
             'isNotProtected',
-            'subUsers'
+            'subUsers',
+            'isRestrictedToBeAddedToSubAccount'
           ]
         }
       )
@@ -631,14 +632,18 @@ class FrameworkReportService extends ReportService {
    * @override
    */
   getPositionsAudit (space, args, cb) {
-    const { auth } = { ...args }
-    const { apiKey, apiSecret } = { ...auth }
+    const { apiKey, apiSecret, authToken } = args?.auth ?? {}
     const isRequiredUser = (
       cb ||
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string'
+      (
+        (
+          !apiKey ||
+          typeof apiKey !== 'string' ||
+          !apiSecret ||
+          typeof apiSecret !== 'string'
+        ) &&
+        !authToken
+      )
     )
     const responder = isRequiredUser
       ? this._privResponder
@@ -1151,19 +1156,23 @@ class FrameworkReportService extends ReportService {
    */
   getSettings (space, args, cb) {
     return this._privResponder(async () => {
-      const { auth } = { ...args }
-      const { apiKey, apiSecret, subUsers } = { ...auth }
+      const {
+        apiKey,
+        apiSecret,
+        authToken,
+        subUsers
+      } = args?.auth ?? {}
 
       if (
         Array.isArray(subUsers) &&
         subUsers.length > 1
       ) {
         const promises = subUsers.map((subUser) => {
-          const { apiKey, apiSecret } = { ...subUser }
+          const { apiKey, apiSecret, authToken } = subUser ?? {}
 
           const _args = {
             ...args,
-            auth: { apiKey, apiSecret }
+            auth: { apiKey, apiSecret, authToken }
           }
 
           return super.getSettings(space, _args)
@@ -1182,7 +1191,7 @@ class FrameworkReportService extends ReportService {
       const _args = {
         ...args,
         auth: getAuthFromSubAccountAuth(
-          { apiKey, apiSecret }
+          { apiKey, apiSecret, authToken }
         )
       }
 
@@ -1195,12 +1204,11 @@ class FrameworkReportService extends ReportService {
    */
   updateSettings (space, args, cb) {
     return this._privResponder(async () => {
-      const { auth } = { ...args }
-      const { apiKey, apiSecret } = { ...auth }
+      const { apiKey, apiSecret, authToken } = args?.auth ?? {}
       const _args = {
         ...args,
         auth: getAuthFromSubAccountAuth(
-          { apiKey, apiSecret }
+          { apiKey, apiSecret, authToken }
         )
       }
 

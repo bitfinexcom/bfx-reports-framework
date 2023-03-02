@@ -26,10 +26,13 @@ class WSEventEmitter extends AbstractWSEventEmitter {
     )
   }
 
-  isInvalidAuth (auth = {}, { _id, email } = {}) {
+  isNotTargetUser (auth = {}, user = {}) {
+    // For the sync process user id need to take from the session object
+    const _id = auth?._id ?? auth?.session?._id
+
     return (
-      auth._id !== _id ||
-      auth.email !== email
+      !Number.isInteger(_id) ||
+      user?._id !== _id
     )
   }
 
@@ -56,11 +59,7 @@ class WSEventEmitter extends AbstractWSEventEmitter {
     auth = {}
   ) {
     return this.emitSyncingStep(async (user, ...args) => {
-      if (
-        !auth ||
-        typeof auth !== 'object' ||
-        user._id !== auth._id
-      ) {
+      if (this.isNotTargetUser(auth, user)) {
         return { isNotEmitted: true }
       }
 
@@ -68,6 +67,36 @@ class WSEventEmitter extends AbstractWSEventEmitter {
         ? await handler(user, ...args)
         : handler
     })
+  }
+
+  emitCsvGenerationCompletedToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emit(async (user, ...args) => {
+      if (this.isNotTargetUser(auth, user)) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitCsvGenerationCompletedToOne')
+  }
+
+  emitBfxUnamePwdAuthRequiredToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emit(async (user, ...args) => {
+      if (this.isNotTargetUser(auth, user)) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitBfxUnamePwdAuthRequired')
   }
 
   async emitRedirectingRequestsStatusToApi (

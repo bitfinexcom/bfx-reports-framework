@@ -3,6 +3,10 @@
 const EventEmitter = require('events')
 
 const {
+  isAuthError
+} = require('bfx-report/workers/loc.api/helpers/api-errors-testers')
+
+const {
   tryParseJSON
 } = require('../../helpers')
 
@@ -57,11 +61,16 @@ class Progress extends EventEmitter {
       )
     }
 
-    if (isError) {
-      this.logger.error(
-        `PROGRESS:SYNC: ${progress.stack || progress}`
-      )
+    if (
+      !isError ||
+      isAuthError(progress)
+    ) {
+      return
     }
+
+    this.logger.error(
+      `PROGRESS:SYNC: ${progress.stack || progress}`
+    )
   }
 
   async getProgress () {

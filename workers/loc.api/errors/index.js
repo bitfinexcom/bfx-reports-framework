@@ -211,6 +211,12 @@ class SyncInfoUpdatingError extends BaseError {
   }
 }
 
+class AuthTokenGenerationError extends AuthError {
+  constructor (message = 'ERR_AUTH_TOKEN_HAS_NOT_BEEN_GENERATED') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -243,5 +249,6 @@ module.exports = {
   SyncQueueOwnerSettingError,
   SyncQueueIDSettingError,
   LastSyncedInfoGettingError,
-  SyncInfoUpdatingError
+  SyncInfoUpdatingError,
+  AuthTokenGenerationError
 }

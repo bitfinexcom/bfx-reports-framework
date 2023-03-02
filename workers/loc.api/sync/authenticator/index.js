@@ -14,7 +14,8 @@ const {
 } = require('../../helpers')
 const {
   UserRemovingError,
-  UserWasPreviouslyStoredInDbError
+  UserWasPreviouslyStoredInDbError,
+  AuthTokenGenerationError
 } = require('../../errors')
 const {
   generateSubUserName,
@@ -30,7 +31,9 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.GetDataFromApi,
   TYPES.Crypto,
-  TYPES.SyncFactory
+  TYPES.SyncFactory,
+  TYPES.WSEventEmitterFactory,
+  TYPES.Logger
 ]
 class Authenticator {
   constructor (
@@ -39,7 +42,9 @@ class Authenticator {
     rService,
     getDataFromApi,
     crypto,
-    syncFactory
+    syncFactory,
+    wsEventEmitterFactory,
+    logger
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
@@ -47,17 +52,30 @@ class Authenticator {
     this.getDataFromApi = getDataFromApi
     this.crypto = crypto
     this.syncFactory = syncFactory
+    this.wsEventEmitterFactory = wsEventEmitterFactory
+    this.logger = logger
 
     /**
      * It may only work for one grenache worker instance
      */
     this.userSessions = new Map()
     this.userTokenMapByEmail = new Map()
+
+    this.authTokenTTLSec = 24 * 60 * 60
+    /*
+     * Here need to have an interval between the generation
+     * of a new authToken and the invalidation of the old one
+     * so that the current running processes are finished
+     * successfully if the token was cached in memory
+     */
+    this.authTokenRefreshIntervalSec = 10 * 60
+    this.authTokenInvalidateIntervalsSec = 10 * 60
   }
 
   async signUp (args, opts) {
     const { auth } = args ?? {}
     const {
+      authToken,
       apiKey,
       apiSecret,
       password: userPwd,
@@ -80,18 +98,21 @@ class Authenticator {
       withWorkerThreads = false
     } = opts ?? {}
 
+    const hasNotCredentials = this._hasNotCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password,
+      isSubAccount,
+      isSubUser
+    })
+
     if (
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string' ||
-      !password ||
-      typeof password !== 'string' ||
+      hasNotCredentials ||
       (
         !isDisabledApiKeysVerification &&
         isSubAccountApiKeys({ apiKey, apiSecret })
-      ) ||
-      (isSubAccount && isSubUser)
+      )
     ) {
       throw new AuthError()
     }
@@ -140,15 +161,17 @@ class Authenticator {
       throw new UserWasPreviouslyStoredInDbError()
     }
 
-    const [
+    const {
+      passwordHash,
+      encryptedAuthToken,
       encryptedApiKey,
-      encryptedApiSecret,
-      passwordHash
-    ] = await Promise.all([
-      this.crypto.encrypt(apiKey, password),
-      this.crypto.encrypt(apiSecret, password),
-      this.crypto.hashPassword(password)
-    ])
+      encryptedApiSecret
+    } = await this._getEncryptedCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password
+    })
 
     const user = await this.createUser(
       {
@@ -156,6 +179,7 @@ class Authenticator {
         timezone,
         username,
         id,
+        authToken: encryptedAuthToken,
         apiKey: encryptedApiKey,
         apiSecret: encryptedApiSecret,
         active: serializeVal(active),
@@ -172,6 +196,7 @@ class Authenticator {
     const fullUserData = {
       ...user,
       subUsers: [],
+      authToken,
       apiKey,
       apiSecret,
       password,
@@ -200,7 +225,7 @@ class Authenticator {
   async signIn (args, opts) {
     const {
       email,
-      password,
+      password: userPwd,
       isSubAccount,
       token
     } = args?.auth ?? {}
@@ -218,7 +243,7 @@ class Authenticator {
       {
         auth: {
           email,
-          password,
+          password: userPwd,
           isSubAccount,
           token
         }
@@ -236,15 +261,43 @@ class Authenticator {
       _id,
       email: emailFromDb,
       isSubAccount: isSubAccountFromDb,
+      authToken,
       apiKey,
-      apiSecret
+      apiSecret,
+      password
     } = user ?? {}
+
+    let newAuthToken = null
+
+    try {
+      newAuthToken = authToken
+        ? await this.generateAuthToken({
+          auth: {
+            ...user,
+            authToken: args?.auth?.authToken ?? user?.authToken
+          }
+        })
+        : null
+    } catch (err) {
+      await this.wsEventEmitterFactory()
+        .emitBfxUnamePwdAuthRequiredToOne(
+          { isAuthTokenGenError: true },
+          user
+        )
+
+      throw err
+    }
+
+    const encryptedAuthToken = authToken
+      ? await this.crypto
+        .encrypt(newAuthToken, password)
+      : null
 
     let userData = user
 
     try {
       userData = await this.rService._checkAuthInApi({
-        auth: { apiKey, apiSecret }
+        auth: { authToken: newAuthToken, apiKey, apiSecret }
       })
     } catch (err) {
       if (!isENetError(err)) {
@@ -273,15 +326,19 @@ class Authenticator {
         : active,
       isDataFromDb: isDataFromDb === null
         ? user.isDataFromDb
-        : isDataFromDb
+        : isDataFromDb,
+      ...newAuthToken
+        ? { authToken: newAuthToken }
+        : null
     }
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { _id, email: emailFromDb },
       {
         ...freshUserData,
-        active: freshUserData.active,
-        isDataFromDb: freshUserData.isDataFromDb
+        ...encryptedAuthToken
+          ? { authToken: encryptedAuthToken }
+          : null
       },
       { withWorkerThreads, doNotQueueQuery }
     )
@@ -304,15 +361,30 @@ class Authenticator {
     )
       ? token
       : this.getUserSessionByEmail({ email, isSubAccount })?.token
-    const createdToken = (
+    const isTokenExisted = (
       existedToken &&
       typeof existedToken === 'string'
     )
+    const createdToken = isTokenExisted
       ? existedToken
       : uuidv4()
 
     if (!isNotSetSession) {
       this.setUserSession({ ...refreshedUser, token: createdToken })
+    }
+    if (
+      newAuthToken &&
+      isTokenExisted &&
+      isNotSetSession
+    ) {
+      this.userSessions.get(createdToken)
+        .authToken = newAuthToken
+    }
+    if (authToken) {
+      this.setupAuthTokenInvalidateInterval({
+        token: createdToken,
+        authToken
+      })
     }
 
     return {
@@ -380,6 +452,7 @@ class Authenticator {
 
   async recoverPassword (args, opts) {
     const {
+      authToken,
       apiKey,
       apiSecret,
       newPassword,
@@ -399,15 +472,16 @@ class Authenticator {
       doNotQueueQuery
     } = opts ?? {}
 
-    if (
-      !apiKey ||
-      typeof apiKey !== 'string' ||
-      !apiSecret ||
-      typeof apiSecret !== 'string' ||
-      !password ||
-      typeof password !== 'string' ||
-      (isSubAccount && isSubUser)
-    ) {
+    const hasNotCredentials = this._hasNotCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password,
+      isSubAccount,
+      isSubUser
+    })
+
+    if (hasNotCredentials) {
       throw new AuthError()
     }
 
@@ -454,15 +528,17 @@ class Authenticator {
       throw new AuthError()
     }
 
-    const [
+    const {
+      passwordHash,
+      encryptedAuthToken,
       encryptedApiKey,
-      encryptedApiSecret,
-      passwordHash
-    ] = await Promise.all([
-      this.crypto.encrypt(apiKey, password),
-      this.crypto.encrypt(apiSecret, password),
-      this.crypto.hashPassword(password)
-    ])
+      encryptedApiSecret
+    } = await this._getEncryptedCredentials({
+      authToken,
+      apiKey,
+      apiSecret,
+      password
+    })
 
     const username = generateSubUserName(
       { username: uName },
@@ -474,8 +550,9 @@ class Authenticator {
       timezone,
       username,
       email,
-      apiKey: encryptedApiKey,
-      apiSecret: encryptedApiSecret,
+      authToken,
+      apiKey,
+      apiSecret,
       passwordHash,
       active: active === null
         ? userFromDb.active
@@ -490,9 +567,10 @@ class Authenticator {
       { _id: userFromDb._id, email },
       {
         ...freshUserData,
-        active: freshUserData.active,
-        isDataFromDb: freshUserData.isDataFromDb,
-        isNotProtected
+        isNotProtected,
+        authToken: encryptedAuthToken,
+        apiKey: encryptedApiKey,
+        apiSecret: encryptedApiSecret
       },
       { withWorkerThreads, doNotQueueQuery }
     )
@@ -607,13 +685,16 @@ class Authenticator {
         token,
         isReturnedPassword
       )
-      const { apiKey, apiSecret } = session ?? {}
+      const { authToken, apiKey, apiSecret } = session ?? {}
 
       if (
-        !apiKey ||
-        typeof apiKey !== 'string' ||
-        !apiSecret ||
-        typeof apiSecret !== 'string'
+        (
+          !apiKey ||
+          typeof apiKey !== 'string' ||
+          !apiSecret ||
+          typeof apiSecret !== 'string'
+        ) &&
+        !authToken
       ) {
         throw new AuthError()
       }
@@ -737,7 +818,19 @@ class Authenticator {
         isAppliedProjectionToSubUser,
         subUsersProjection
       }
-    )
+    ).map((user) => {
+      if (
+        user &&
+        typeof user === 'object'
+      ) {
+        user.isRestrictedToBeAddedToSubAccount = (
+          !!user.authToken ||
+          !!user.isSubAccount
+        )
+      }
+
+      return user
+    })
 
     if (
       !password ||
@@ -845,10 +938,26 @@ class Authenticator {
   }
 
   setUserSession (user) {
-    const { token } = user ?? {}
+    const {
+      token,
+      authToken
+    } = user ?? {}
     const tokenKey = this._getTokenKeyByEmailField(user)
 
-    this.userSessions.set(token, { ...user })
+    const authTokenRefreshInterval = authToken
+      ? this.setupAuthTokenRefreshInterval(user)
+      : null
+
+    this.userSessions.set(
+      token, {
+        ...user,
+        authTokenFn: () => {
+          return this.userSessions.get(token)?.authToken
+        },
+        authTokenRefreshInterval,
+        authTokenInvalidateIntervals: new Map()
+      }
+    )
     this.userTokenMapByEmail.set(tokenKey, token)
   }
 
@@ -888,6 +997,26 @@ class Authenticator {
 
     this.userTokenMapByEmail.delete(tokenKey)
 
+    const session = this.userSessions.get(_token) ?? {}
+    const {
+      authTokenRefreshInterval,
+      authTokenInvalidateIntervals
+    } = session
+
+    clearInterval(authTokenRefreshInterval)
+
+    for (const [authToken, authTokenInvalidateInterval] of authTokenInvalidateIntervals) {
+      clearInterval(authTokenInvalidateInterval)
+
+      // Try to invalidate auth token without awaiting
+      this.invalidateAuthToken({
+        auth: session,
+        params: { authToken }
+      }).then(() => {}, (err) => {
+        this.logger.debug(err)
+      })
+    }
+
     return this.userSessions.delete(_token)
   }
 
@@ -896,28 +1025,181 @@ class Authenticator {
     const _users = isArray ? users : [users]
 
     const promises = _users.reduce((accum, user) => {
-      const { apiKey, apiSecret } = user ?? {}
+      const { authToken, apiKey, apiSecret } = user ?? {}
 
-      return [
-        ...accum,
-        this.crypto.decrypt(apiKey, password),
-        this.crypto.decrypt(apiSecret, password)
+      const decryptedPromises = [
+        null,
+        null,
+        null
       ]
+
+      if (authToken) {
+        decryptedPromises[0] = this.crypto
+          .decrypt(authToken, password)
+      }
+      if (
+        apiKey &&
+        typeof apiKey === 'string' &&
+        apiSecret &&
+        typeof apiSecret === 'string'
+      ) {
+        decryptedPromises[1] = this.crypto
+          .decrypt(apiKey, password)
+        decryptedPromises[2] = this.crypto
+          .decrypt(apiSecret, password)
+      }
+
+      accum.push(...decryptedPromises)
+
+      return accum
     }, [])
     const decryptedApiKeys = await Promise.all(promises)
 
     const res = _users.map((user, i) => {
-      const apiKey = decryptedApiKeys[i * 2]
-      const apiSecret = decryptedApiKeys[i * 2 + 1]
+      const authToken = decryptedApiKeys[i * 3]
+      const apiKey = decryptedApiKeys[i * 3 + 1]
+      const apiSecret = decryptedApiKeys[i * 3 + 2]
 
       return {
         ...user,
+        authToken,
         apiKey,
         apiSecret
       }
     })
 
     return isArray ? res : res[0]
+  }
+
+  async generateAuthToken (args) {
+    const opts = {
+      ttl: this.authTokenTTLSec,
+      writePermission: false
+    }
+
+    const res = await this.getDataFromApi({
+      getData: (s, args) => this.rService._generateToken(args, opts),
+      args,
+      callerName: 'AUTHENTICATOR',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
+
+    const [authToken] = Array.isArray(res) ? res : [null]
+
+    if (!authToken) {
+      throw new AuthTokenGenerationError()
+    }
+
+    return authToken
+  }
+
+  async invalidateAuthToken (args) {
+    const res = await this.getDataFromApi({
+      getData: (s, args) => this.rService._invalidateAuthToken(args),
+      args,
+      callerName: 'AUTHENTICATOR',
+      eNetErrorAttemptsTimeframeMin: 10 / 60,
+      eNetErrorAttemptsTimeoutMs: 1000,
+      shouldNotInterrupt: true
+    })
+
+    return res
+  }
+
+  setupAuthTokenInvalidateInterval (user) {
+    const {
+      token,
+      authToken
+    } = user ?? {}
+    const { authTokenInvalidateIntervals } = this.userSessions.get(token)
+    let count = 0
+
+    const authTokenInvalidateInterval = setInterval(async () => {
+      const session = this.userSessions.get(token)
+
+      try {
+        count += 1
+
+        await this.invalidateAuthToken({
+          auth: session,
+          params: { authToken }
+        })
+
+        clearInterval(authTokenInvalidateInterval)
+        session.authTokenInvalidateIntervals.delete(authToken)
+      } catch (err) {
+        if (count >= 3) {
+          clearInterval(authTokenInvalidateInterval)
+          session.authTokenInvalidateIntervals.delete(authToken)
+        }
+
+        this.logger.debug(err)
+      }
+    }, (this.authTokenInvalidateIntervalsSec * 1000)).unref()
+
+    authTokenInvalidateIntervals.set(authToken, authTokenInvalidateInterval)
+  }
+
+  setupAuthTokenRefreshInterval (user) {
+    const {
+      token
+    } = user ?? {}
+    const authTokenRefreshInterval = this.userSessions.get(token)
+      ?.authTokenRefreshInterval
+
+    clearInterval(authTokenRefreshInterval)
+
+    const newAuthTokenRefreshInterval = setInterval(async () => {
+      try {
+        const session = this.userSessions.get(token)
+        const prevAuthToken = session?.authToken
+        const password = (
+          session?.password &&
+          typeof session?.password === 'string'
+        )
+          ? session?.password
+          : this.crypto.getSecretKey()
+
+        const newAuthToken = await this.generateAuthToken({
+          auth: session
+        })
+        const encryptedAuthToken = await this.crypto
+          .encrypt(newAuthToken, password)
+
+        const res = await this.dao.updateCollBy(
+          this.TABLES_NAMES.USERS,
+          { _id: session?._id, email: session?.email },
+          { authToken: encryptedAuthToken }
+        )
+
+        if (res?.changes < 1) {
+          throw new AuthTokenGenerationError()
+        }
+
+        session.authToken = newAuthToken
+
+        if (!prevAuthToken) {
+          return
+        }
+
+        this.setupAuthTokenInvalidateInterval({
+          token,
+          authToken: prevAuthToken
+        })
+      } catch (err) {
+        this.logger.debug(err)
+
+        await this.wsEventEmitterFactory()
+          .emitBfxUnamePwdAuthRequiredToOne(
+            { isAuthTokenGenError: true },
+            user
+          )
+      }
+    }, (this.authTokenRefreshIntervalSec * 1000)).unref()
+
+    return newAuthTokenRefreshInterval
   }
 
   _getTokenKeyByEmailField (user) {
@@ -930,6 +1212,89 @@ class Authenticator {
       : ''
 
     return `${email}${suffix}`
+  }
+
+  async _getEncryptedCredentials (auth) {
+    const {
+      authToken,
+      apiKey,
+      apiSecret,
+      password
+    } = auth ?? {}
+
+    const encryptPromises = [
+      this.crypto.hashPassword(password),
+      null,
+      null,
+      null
+    ]
+
+    if (authToken) {
+      encryptPromises[1] = this.crypto
+        .encrypt(authToken, password)
+    }
+    if (
+      apiKey &&
+      typeof apiKey === 'string' &&
+      apiSecret &&
+      typeof apiSecret === 'string'
+    ) {
+      encryptPromises[2] = this.crypto
+        .encrypt(apiKey, password)
+      encryptPromises[3] = this.crypto
+        .encrypt(apiSecret, password)
+    }
+
+    const [
+      passwordHash,
+      encryptedAuthToken,
+      encryptedApiKey,
+      encryptedApiSecret
+    ] = await Promise.all(encryptPromises)
+
+    return {
+      passwordHash,
+      encryptedAuthToken,
+      encryptedApiKey,
+      encryptedApiSecret
+    }
+  }
+
+  _hasNotCredentials (args) {
+    const {
+      authToken,
+      apiKey,
+      apiSecret,
+      password,
+      isSubAccount,
+      isSubUser
+    } = args ?? {}
+
+    if (
+      (
+        !apiKey ||
+        typeof apiKey !== 'string' ||
+        !apiSecret ||
+        typeof apiSecret !== 'string'
+      ) &&
+      !authToken
+    ) {
+      return true
+    }
+    if (
+      !password ||
+      typeof password !== 'string'
+    ) {
+      return true
+    }
+    if (
+      isSubAccount &&
+      isSubUser
+    ) {
+      return true
+    }
+
+    return false
   }
 }
 
