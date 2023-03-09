@@ -22,6 +22,8 @@ module.exports = (session, isReturnedPassword) => {
     'isSubUser',
     'subUsers',
     'token',
+    'shouldNotSyncOnStartupAfterUpdate',
+    'isSyncOnStartupRequired',
     ...passwordProp
   ]
   const { subUsers: reqSubUsers } = { ...session }
