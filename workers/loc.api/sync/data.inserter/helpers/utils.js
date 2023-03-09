@@ -42,7 +42,8 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     ownerUserId,
     isOwnerScheduler
   } = opts ?? {}
-  const auth = new Map()
+  const sessionAuth = new Map()
+  const syncAuth = new Map()
   const sessions = shouldGetEveryone
     ? await authenticator.getUsers(
       { isSubAccount: true, isSubUser: false },
@@ -51,7 +52,7 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     : authenticator.getUserSessions()
 
   if (sessions.size === 0) {
-    return auth
+    return { sessionAuth, syncAuth }
   }
 
   for (const session of sessions) {
@@ -94,10 +95,11 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     }
 
     if (!isSubAccount) {
-      auth.set(
+      syncAuth.set(
         `${email}-${username}`,
         authPayload
       )
+      sessionAuth.set(_id, user)
 
       continue
     }
@@ -111,14 +113,16 @@ const getAuthFromDb = async (authenticator, opts = {}) => {
     subUsers.forEach((subUser) => {
       const { email, username } = { ...subUser }
 
-      auth.set(
+      syncAuth.set(
         `${email}-${username}`,
         { ...authPayload, subUser }
       )
     })
+
+    sessionAuth.set(_id, user)
   }
 
-  return auth
+  return { sessionAuth, syncAuth }
 }
 
 const getAllowedCollsNames = (allowedColls) => {
