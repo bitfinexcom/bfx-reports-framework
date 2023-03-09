@@ -290,10 +290,10 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
     const dataInserter = this.getDataInserter()
     const auth = dataInserter
       ? dataInserter.getAuth()
-      : await getAuthFromDb(
-        this.authenticator,
-        { shouldGetEveryone: true }
-      )
+      : (await getAuthFromDb(
+          this.authenticator,
+          { shouldGetEveryone: true }
+        )).syncAuth
 
     if (
       !auth ||
