@@ -63,6 +63,8 @@ const _models = new Map([
       isNotProtected: 'INT',
       isSubAccount: 'INT',
       isSubUser: 'INT',
+      shouldNotSyncOnStartupAfterUpdate: 'INT',
+      isSyncOnStartupRequired: 'INT',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
