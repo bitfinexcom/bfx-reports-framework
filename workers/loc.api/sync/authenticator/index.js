@@ -264,7 +264,9 @@ class Authenticator {
       authToken,
       apiKey,
       apiSecret,
-      password
+      password,
+      shouldNotSyncOnStartupAfterUpdate,
+      isSyncOnStartupRequired
     } = user ?? {}
 
     let newAuthToken = null
@@ -391,7 +393,9 @@ class Authenticator {
       ...returnedUser,
       email: emailFromApi,
       isSubAccount: isSubAccountFromDb,
-      token: createdToken
+      token: createdToken,
+      shouldNotSyncOnStartupAfterUpdate,
+      isSyncOnStartupRequired
     }
   }
 
