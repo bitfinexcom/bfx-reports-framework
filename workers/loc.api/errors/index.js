@@ -113,6 +113,14 @@ class SubAccountUpdatingError extends AuthError {
   }
 }
 
+class UserUpdatingError extends AuthError {
+  constructor (message = 'ERR_USER_UPDATE_HAS_BEEN_FAILED') {
+    super(message)
+
+    this.statusMessage = 'User update has been failed'
+  }
+}
+
 class UserRemovingError extends AuthError {
   constructor (message = 'ERR_USER_REMOVE_HAS_BEEN_FAILED') {
     super(message)
@@ -235,6 +243,7 @@ module.exports = {
   MigrationLaunchingError,
   SubAccountCreatingError,
   SubAccountUpdatingError,
+  UserUpdatingError,
   UserRemovingError,
   UserWasPreviouslyStoredInDbError,
   SubAccountLedgersBalancesRecalcError,
