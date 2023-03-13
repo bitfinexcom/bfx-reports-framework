@@ -14,6 +14,7 @@ const {
   isSubAccountApiKeys
 } = require('../../helpers')
 const {
+  UserUpdatingError,
   UserRemovingError,
   UserWasPreviouslyStoredInDbError,
   AuthTokenGenerationError
@@ -991,7 +992,7 @@ class Authenticator {
     )
 
     if (res && res.changes < 1) {
-      throw new AuthError()
+      throw new UserUpdatingError()
     }
 
     const existedToken = (
@@ -1005,11 +1006,13 @@ class Authenticator {
       existedToken &&
       typeof existedToken === 'string'
     ) {
-      return
+      return true
     }
 
     const session = this.userSessions.get(existedToken)
     Object.assign(session, freshUserData)
+
+    return true
   }
 
   setUserSession (user) {
