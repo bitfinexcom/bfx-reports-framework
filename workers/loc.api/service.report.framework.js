@@ -189,6 +189,12 @@ class FrameworkReportService extends ReportService {
     }, 'removeUser', args, cb)
   }
 
+  updateUser (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.updateUser(args)
+    }, 'updateUser', args, cb)
+  }
+
   createSubAccount (space, args, cb) {
     return this._responder(() => {
       checkParams(args, 'paramsSchemaForCreateSubAccount')
