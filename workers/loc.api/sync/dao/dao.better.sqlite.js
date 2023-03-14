@@ -956,6 +956,30 @@ class BetterSqliteDAO extends DAO {
   /**
    * @override
    */
+  async updateUsersSyncOnStartupRequiredState (opts) {
+    const {
+      doNotQueueQuery = false,
+      withWorkerThreads = false
+    } = opts ?? {}
+
+    await this.updateCollBy(
+      this.TABLES_NAMES.USERS,
+      {
+        $or: {
+          $isNull: 'shouldNotSyncOnStartupAfterUpdate',
+          $eq: { shouldNotSyncOnStartupAfterUpdate: 0 }
+        }
+      },
+      { isSyncOnStartupRequired: 1 },
+      { withWorkerThreads, doNotQueueQuery }
+    )
+
+    return true
+  }
+
+  /**
+   * @override
+   */
   getElemsInCollBy (
     collName,
     {
