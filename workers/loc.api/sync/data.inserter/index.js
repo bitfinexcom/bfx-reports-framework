@@ -930,13 +930,13 @@ class DataInserter extends EventEmitter {
           doNotQueueQuery: true
         })
 
-      await this._setUserSyncState()
+      await this._setUserSyncState({ doNotQueueQuery: true })
     })
   }
 
-  async _setUserSyncState () {
+  async _setUserSyncState (opts) {
     const didNotAllCollsSync = this.syncColls
-      .some((collName) => collName === this.ALLOWED_COLLS.ALL)
+      .every((collName) => collName !== this.ALLOWED_COLLS.ALL)
 
     if (
       didNotAllCollsSync ||
@@ -946,8 +946,8 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const userIds = [...this._sessionAuth].reduce((accum, curr) => {
-      const { _id, isSyncOnStartupRequired } = curr ?? {}
+    const userIds = [...this._sessionAuth].reduce((accum, [key, val]) => {
+      const { _id, isSyncOnStartupRequired } = val ?? {}
 
       if (isSyncOnStartupRequired) {
         accum.push(_id)
@@ -963,7 +963,8 @@ class DataInserter extends EventEmitter {
     await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
       { $in: { _id: userIds } },
-      { isSyncOnStartupRequired: false }
+      { isSyncOnStartupRequired: 0 },
+      opts
     )
   }
 
