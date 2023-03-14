@@ -104,7 +104,7 @@ class FrameworkReportService extends ReportService {
       )
 
       if (
-        shouldNotSyncOnStartupAfterUpdate &&
+        !shouldNotSyncOnStartupAfterUpdate &&
         isSyncOnStartupRequired
       ) {
         await this._sync.start({
