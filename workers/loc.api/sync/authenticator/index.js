@@ -1003,8 +1003,8 @@ class Authenticator {
       : this.getUserSessionByEmail({ email, isSubAccount })?.token
 
     if (
-      existedToken &&
-      typeof existedToken === 'string'
+      !existedToken ||
+      typeof existedToken !== 'string'
     ) {
       return true
     }
