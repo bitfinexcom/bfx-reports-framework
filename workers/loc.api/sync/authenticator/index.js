@@ -811,14 +811,7 @@ class Authenticator {
       })
 
     const _users = await this.dao.getUsers(filter, opts)
-    const users = pickProps(
-      _users,
-      projection,
-      {
-        isAppliedProjectionToSubUser,
-        subUsersProjection
-      }
-    ).map((user) => {
+    const remapedUsers = _users.map((user) => {
       if (
         user &&
         typeof user === 'object'
@@ -831,6 +824,14 @@ class Authenticator {
 
       return user
     })
+    const users = pickProps(
+      remapedUsers,
+      projection,
+      {
+        isAppliedProjectionToSubUser,
+        subUsersProjection
+      }
+    )
 
     if (
       !password ||
