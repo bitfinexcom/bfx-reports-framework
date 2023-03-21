@@ -1150,27 +1150,36 @@ class Authenticator {
   }
 
   async generateAuthToken (args) {
-    const opts = {
-      ttl: this.authTokenTTLSec,
-      writePermission: false
+    try {
+      const opts = {
+        ttl: this.authTokenTTLSec,
+        writePermission: false
+      }
+
+      const res = await this.getDataFromApi({
+        getData: (s, args) => this.rService._generateToken(args, opts),
+        args,
+        callerName: 'AUTHENTICATOR',
+        eNetErrorAttemptsTimeframeMin: 10 / 60,
+        eNetErrorAttemptsTimeoutMs: 1000,
+        shouldNotInterrupt: true
+      })
+
+      const [authToken] = Array.isArray(res) ? res : [null]
+
+      if (!authToken) {
+        throw new AuthTokenGenerationError()
+      }
+
+      return authToken
+    } catch (err) {
+      throw new AuthTokenGenerationError({
+        data: {
+          isAuthTokenGenerationError: true,
+          rootMessage: err.toString()
+        }
+      })
     }
-
-    const res = await this.getDataFromApi({
-      getData: (s, args) => this.rService._generateToken(args, opts),
-      args,
-      callerName: 'AUTHENTICATOR',
-      eNetErrorAttemptsTimeframeMin: 10 / 60,
-      eNetErrorAttemptsTimeoutMs: 1000,
-      shouldNotInterrupt: true
-    })
-
-    const [authToken] = Array.isArray(res) ? res : [null]
-
-    if (!authToken) {
-      throw new AuthTokenGenerationError()
-    }
-
-    return authToken
   }
 
   async invalidateAuthToken (args) {
@@ -1253,7 +1262,9 @@ class Authenticator {
         )
 
         if (res?.changes < 1) {
-          throw new AuthTokenGenerationError()
+          throw new AuthTokenGenerationError({
+            data: { isAuthTokenGenerationError: true }
+          })
         }
 
         session.authToken = newAuthToken
