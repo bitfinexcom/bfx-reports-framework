@@ -69,5 +69,6 @@ module.exports = {
   SyncUserStepData: Symbol.for('SyncUserStepData'),
   SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory'),
   WeightedAveragesReport: Symbol.for('WeightedAveragesReport'),
-  WeightedAveragesReportCsvWriter: Symbol.for('WeightedAveragesReportCsvWriter')
+  WeightedAveragesReportCsvWriter: Symbol.for('WeightedAveragesReportCsvWriter'),
+  HTTPRequest: Symbol.for('HTTPRequest')
 }
