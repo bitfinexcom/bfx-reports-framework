@@ -83,6 +83,13 @@ class FrameworkReportService extends ReportService {
     }
   }
 
+  loginToBFX (space, args, cb) {
+    return this._responder(() => {
+      return this._httpRequest.getRequest()
+        .login(args?.params)
+    }, 'loginToBFX', args, cb)
+  }
+
   signUp (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signUp(args)
