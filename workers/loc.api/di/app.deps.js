@@ -115,6 +115,7 @@ const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
 const privResponder = require('../responder')
 const ProcessMessageManager = require('../process.message.manager')
+const HTTPRequest = require('../http.request')
 
 decorate(injectable(), EventEmitter)
 
@@ -157,7 +158,8 @@ module.exports = ({
           ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
           ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance],
           ['_weightedAveragesReport', TYPES.WeightedAveragesReport],
-          ['_getDataFromApi', TYPES.GetDataFromApi]
+          ['_getDataFromApi', TYPES.GetDataFromApi],
+          ['_httpRequest', TYPES.HTTPRequest]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
@@ -196,6 +198,9 @@ module.exports = ({
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.ProcessMessageManager)
       .to(ProcessMessageManager)
+      .inSingletonScope()
+    bind(TYPES.HTTPRequest)
+      .to(HTTPRequest)
       .inSingletonScope()
     bind(TYPES.WSTransport)
       .to(WSTransport)
