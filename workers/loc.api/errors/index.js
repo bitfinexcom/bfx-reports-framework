@@ -6,6 +6,9 @@ const {
   ConflictError,
   ArgsParamsError
 } = require('bfx-report/workers/loc.api/errors')
+const {
+  getErrorArgs
+} = require('bfx-report/workers/loc.api/errors/helpers')
 
 class CollSyncPermissionError extends BaseError {
   constructor (message = 'ERR_PERMISSION_DENIED_TO_SYNC_SELECTED_COLL') {
@@ -220,8 +223,10 @@ class SyncInfoUpdatingError extends BaseError {
 }
 
 class AuthTokenGenerationError extends AuthError {
-  constructor (message = 'ERR_AUTH_TOKEN_HAS_NOT_BEEN_GENERATED') {
-    super(message)
+  constructor (args) {
+    const _args = getErrorArgs(args, 'ERR_AUTH_TOKEN_HAS_NOT_BEEN_GENERATED')
+
+    super(_args)
   }
 }
 
