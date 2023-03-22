@@ -1,6 +1,7 @@
 'use strict'
 
 const { v4: uuidv4 } = require('uuid')
+const { pick } = require('lodash')
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
@@ -13,6 +14,7 @@ const {
   isSubAccountApiKeys
 } = require('../../helpers')
 const {
+  UserUpdatingError,
   UserRemovingError,
   UserWasPreviouslyStoredInDbError,
   AuthTokenGenerationError
@@ -187,7 +189,9 @@ class Authenticator {
         isSubAccount: serializeVal(isSubAccount),
         isSubUser: serializeVal(isSubUser),
         passwordHash,
-        isNotProtected: serializeVal(isNotProtected)
+        isNotProtected: serializeVal(isNotProtected),
+        shouldNotSyncOnStartupAfterUpdate: 0,
+        isSyncOnStartupRequired: 0
       },
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
@@ -264,7 +268,9 @@ class Authenticator {
       authToken,
       apiKey,
       apiSecret,
-      password
+      password,
+      shouldNotSyncOnStartupAfterUpdate,
+      isSyncOnStartupRequired
     } = user ?? {}
 
     let newAuthToken = null
@@ -391,7 +397,9 @@ class Authenticator {
       ...returnedUser,
       email: emailFromApi,
       isSubAccount: isSubAccountFromDb,
-      token: createdToken
+      token: createdToken,
+      shouldNotSyncOnStartupAfterUpdate,
+      isSyncOnStartupRequired
     }
   }
 
@@ -934,6 +942,76 @@ class Authenticator {
       isSubAccount,
       token
     })
+
+    return true
+  }
+
+  async updateUser (args, opts) {
+    const {
+      email,
+      password: userPwd,
+      isSubAccount,
+      token
+    } = args?.auth ?? {}
+    const freshUserData = pick(
+      args?.params,
+      [
+        'shouldNotSyncOnStartupAfterUpdate',
+        'isSyncOnStartupRequired'
+      ]
+    )
+    const {
+      isNotInTrans = false,
+      doNotQueueQuery = false,
+      withWorkerThreads = false
+    } = opts ?? {}
+
+    const {
+      _id,
+      email: emailFromDb
+    } = await this.verifyUser(
+      {
+        auth: {
+          email,
+          password: userPwd,
+          isSubAccount,
+          token
+        }
+      },
+      {
+        isNotInTrans,
+        withWorkerThreads,
+        doNotQueueQuery
+      }
+    )
+
+    const res = await this.dao.updateCollBy(
+      this.TABLES_NAMES.USERS,
+      { _id, email: emailFromDb },
+      freshUserData,
+      { withWorkerThreads, doNotQueueQuery }
+    )
+
+    if (res && res.changes < 1) {
+      throw new UserUpdatingError()
+    }
+
+    const existedToken = (
+      token &&
+      typeof token === 'string'
+    )
+      ? token
+      : this.getUserSessionByEmail({ email, isSubAccount })?.token
+
+    if (
+      !existedToken ||
+      typeof existedToken !== 'string'
+    ) {
+      return true
+    }
+
+    const session = this.userSessions.get(existedToken)
+    Object.assign(session, freshUserData)
 
     return true
   }

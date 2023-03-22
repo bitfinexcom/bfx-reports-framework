@@ -138,6 +138,11 @@ class DAO {
   /**
    * @abstract
    */
+  async updateUsersSyncOnStartupRequiredState () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
   async updateCollBy () { throw new ImplementationError() }
 
   /**

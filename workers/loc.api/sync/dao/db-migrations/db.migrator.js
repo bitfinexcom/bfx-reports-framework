@@ -135,6 +135,7 @@ class DbMigrator {
 
     await this.dbBackupManager.backupDb({ currVer, supportedVer })
     await this.migrate(versions, isDown)
+    await this.dao.updateUsersSyncOnStartupRequiredState()
   }
 }
 

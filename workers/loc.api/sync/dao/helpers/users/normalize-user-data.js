@@ -7,8 +7,10 @@ const _normalize = (userData) => {
     isSubAccount,
     isSubUser,
     haveSubUsers,
-    isNotProtected
-  } = { ...userData }
+    isNotProtected,
+    shouldNotSyncOnStartupAfterUpdate,
+    isSyncOnStartupRequired
+  } = userData ?? {}
 
   return {
     ...userData,
@@ -17,7 +19,9 @@ const _normalize = (userData) => {
     isSubAccount: !!isSubAccount,
     isSubUser: !!isSubUser,
     haveSubUsers: !!haveSubUsers,
-    isNotProtected: !!isNotProtected
+    isNotProtected: !!isNotProtected,
+    shouldNotSyncOnStartupAfterUpdate: !!shouldNotSyncOnStartupAfterUpdate,
+    isSyncOnStartupRequired: !!isSyncOnStartupRequired
   }
 }
 

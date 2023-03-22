@@ -278,6 +278,28 @@ class ProcessMessageManager {
       { backupFilesMetadata }
     )
   }
+
+  async [PROCESS_STATES.REQUEST_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE] (err, state, data) {
+    if (err) {
+      this.logger.debug('[Users sync on startup required state has not been updated]')
+      this.logger.error(err)
+
+      this.sendState(
+        PROCESS_MESSAGES.RESPONSE_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE,
+        { err }
+      )
+
+      return
+    }
+
+    const isDone = await this.dao
+      .updateUsersSyncOnStartupRequiredState()
+
+    this.sendState(
+      PROCESS_MESSAGES.RESPONSE_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE,
+      { isDone }
+    )
+  }
 }
 
 decorateInjectable(ProcessMessageManager, depsTypes)
