@@ -47,8 +47,17 @@ const getMockDataOpts = () => ({
   ...getBaseMockDataOpts(),
   candles: { limit: 500 },
   generate_token: null,
-  delete_token: null
+  delete_token: null,
+  login: null,
+  login_verify: null
 })
+
+const getExtraMockMethods = () => (new Map([
+  ['post', {
+    '/v2/login': 'login',
+    '/v2/login/verify': 'login_verify'
+  }]
+]))
 
 const createMockRESTv2SrvWithDate = (
   start = Date.now(),
@@ -57,7 +66,8 @@ const createMockRESTv2SrvWithDate = (
   opts = getMockDataOpts(),
   {
     _getMockData = getMockData,
-    _setDataTo = setDataTo
+    _setDataTo = setDataTo,
+    extraMockMethods = getExtraMockMethods()
   } = {}
 ) => {
   return _createMockRESTv2SrvWithDate(
@@ -67,7 +77,8 @@ const createMockRESTv2SrvWithDate = (
     opts,
     {
       _getMockData,
-      _setDataTo
+      _setDataTo,
+      extraMockMethods
     }
   )
 }
