@@ -1378,15 +1378,6 @@ class FrameworkReportService extends ReportService {
     }, 'getWinLossVSAccountBalance', args, cb)
   }
 
-  getWeightedAveragesReport (space, args, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForWeightedAveragesReportApi')
-
-      return this._weightedAveragesReport
-        .getWeightedAveragesReport(args)
-    }, 'getWeightedAveragesReport', args, cb)
-  }
-
   /**
    * @override
    */
