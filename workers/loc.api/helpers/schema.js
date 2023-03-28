@@ -259,21 +259,6 @@ const paramsSchemaForWinLossVSAccountBalanceApi = {
   }
 }
 
-const paramsSchemaForWeightedAveragesReportApi = {
-  type: 'object',
-  properties: {
-    start: {
-      type: 'integer'
-    },
-    end: {
-      type: 'integer'
-    },
-    symbol: {
-      type: ['string', 'array']
-    }
-  }
-}
-
 const paramsSchemaForTradedVolumeApi = {
   type: 'object',
   properties: {
@@ -384,15 +369,6 @@ const paramsSchemaForWinLossVSAccountBalanceCsv = {
   }
 }
 
-const paramsSchemaForWeightedAveragesReportApiCsv = {
-  type: 'object',
-  properties: {
-    ...cloneDeep(paramsSchemaForWeightedAveragesReportApi.properties),
-    timezone,
-    dateFormat
-  }
-}
-
 const paramsSchemaForPositionsSnapshotCsv = {
   type: 'object',
   properties: {
@@ -469,7 +445,6 @@ module.exports = {
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
   paramsSchemaForWinLossVSAccountBalanceApi,
-  paramsSchemaForWeightedAveragesReportApi,
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
@@ -480,7 +455,6 @@ module.exports = {
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
   paramsSchemaForWinLossVSAccountBalanceCsv,
-  paramsSchemaForWeightedAveragesReportApiCsv,
   paramsSchemaForPositionsSnapshotCsv,
   paramsSchemaForFullSnapshotReportCsv,
   paramsSchemaForFullTaxReportCsv,
