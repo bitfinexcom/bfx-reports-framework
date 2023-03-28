@@ -1482,15 +1482,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getWinLossVSAccountBalanceCsv', args, cb)
   }
-
-  getWeightedAveragesReportCsv (space, args, cb) {
-    return this._responder(() => {
-      return this._generateCsv(
-        'getWeightedAveragesReportCsvJobData',
-        args
-      )
-    }, 'getWeightedAveragesReportCsv', args, cb)
-  }
 }
 
 module.exports = FrameworkReportService
