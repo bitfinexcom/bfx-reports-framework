@@ -49,6 +49,7 @@ const depsTypes = (TYPES) => [
   TYPES.ApiMiddleware,
   TYPES.SyncSchema,
   TYPES.ALLOWED_COLLS,
+  TYPES.TABLES_NAMES,
   TYPES.Authenticator,
   TYPES.ConvertCurrencyHook,
   TYPES.RecalcSubAccountLedgersBalancesHook,
@@ -66,6 +67,7 @@ class DataInserter extends EventEmitter {
     apiMiddleware,
     syncSchema,
     ALLOWED_COLLS,
+    TABLES_NAMES,
     authenticator,
     convertCurrencyHook,
     recalcSubAccountLedgersBalancesHook,
@@ -83,6 +85,7 @@ class DataInserter extends EventEmitter {
     this.apiMiddleware = apiMiddleware
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
+    this.TABLES_NAMES = TABLES_NAMES
     this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
@@ -96,6 +99,7 @@ class DataInserter extends EventEmitter {
 
     this._asyncProgressHandlers = []
     this._auth = null
+    this._sessionAuth = null
     this._allowedCollsNames = getAllowedCollsNames(
       this.ALLOWED_COLLS
     )
@@ -166,13 +170,15 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    this._auth = await getAuthFromDb(
+    const { sessionAuth, syncAuth } = await getAuthFromDb(
       this.authenticator,
       {
         ownerUserId: this.ownerUserId,
         isOwnerScheduler: this.isOwnerScheduler
       }
     )
+    this._auth = syncAuth
+    this._sessionAuth = sessionAuth
 
     if (
       !this._auth ||
@@ -923,7 +929,43 @@ class DataInserter extends EventEmitter {
           isNotInTrans: true,
           doNotQueueQuery: true
         })
+
+      await this._setUserSyncState({ doNotQueueQuery: true })
     })
+  }
+
+  async _setUserSyncState (opts) {
+    const didNotAllCollsSync = this.syncColls
+      .every((collName) => collName !== this.ALLOWED_COLLS.ALL)
+
+    if (
+      didNotAllCollsSync ||
+      !(this._sessionAuth instanceof Map) ||
+      this._sessionAuth.size === 0
+    ) {
+      return
+    }
+
+    const userIds = [...this._sessionAuth].reduce((accum, [key, val]) => {
+      const { _id, isSyncOnStartupRequired } = val ?? {}
+
+      if (isSyncOnStartupRequired) {
+        accum.push(_id)
+      }
+
+      return accum
+    }, [])
+
+    if (userIds.length === 0) {
+      return
+    }
+
+    await this.dao.updateCollBy(
+      this.TABLES_NAMES.USERS,
+      { $in: { _id: userIds } },
+      { isSyncOnStartupRequired: 0 },
+      opts
+    )
   }
 
   _addAfterAllInsertsHooks (hook, opts) {

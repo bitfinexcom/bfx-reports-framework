@@ -83,6 +83,58 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
+  it('it should be successfully performed by the loginToBFX method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth: {
+          login: 'user-name',
+          password: 'user-pwd'
+        },
+        method: 'loginToBFX',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.isString(res.body.result[0])
+    assert.isArray(res.body.result[1])
+    assert.isArray(res.body.result[1][0])
+    assert.isString(res.body.result[1][0][0])
+    assert.isBoolean(res.body.result[1][0][1])
+  })
+
+  it('it should be successfully performed by the verifyOnBFX method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth: {
+          loginToken: '12345678-8888-4321-1234-8cb090a01360',
+          token: '123456',
+          verifyMethod: 'otp'
+        },
+        method: 'verifyOnBFX',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.isString(res.body.result[0])
+    assert.isString(res.body.result[1])
+  })
+
   it('it should be successfully performed by the signIn method', async function () {
     this.timeout(5000)
 
@@ -107,8 +159,33 @@ module.exports = (
     assert.strictEqual(res.body.result.email, email)
     assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
     assert.isString(res.body.result.token)
+    assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
+    assert.isNotOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
 
     auth.token = res.body.result.token
+  })
+
+  it('it should be successfully performed by the updateUser method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'updateUser',
+        params: {
+          shouldNotSyncOnStartupAfterUpdate: true
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
   })
 
   it('it should be successfully performed by the signIn method by token', async function () {
@@ -131,6 +208,8 @@ module.exports = (
     assert.strictEqual(res.body.result.email, email)
     assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
     assert.strictEqual(res.body.result.token, auth.token)
+    assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
+    assert.isOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
   })
 
   it('it should not be successfully performed by the signIn method', async function () {
@@ -328,6 +407,7 @@ module.exports = (
       assert.isString(user.email)
       assert.isBoolean(user.isSubAccount)
       assert.isBoolean(user.isNotProtected)
+      assert.isBoolean(user.isRestrictedToBeAddedToSubAccount)
       assert.isArray(user.subUsers)
 
       user.subUsers.forEach((subUser) => {

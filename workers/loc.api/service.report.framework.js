@@ -83,6 +83,20 @@ class FrameworkReportService extends ReportService {
     }
   }
 
+  loginToBFX (space, args, cb) {
+    return this._responder(() => {
+      return this._httpRequest.getRequest()
+        .login(args?.params)
+    }, 'loginToBFX', args, cb)
+  }
+
+  verifyOnBFX (space, args, cb) {
+    return this._responder(() => {
+      return this._httpRequest.getRequest()
+        .verify(args?.params)
+    }, 'verifyOnBFX', args, cb)
+  }
+
   signUp (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signUp(args)
@@ -90,8 +104,36 @@ class FrameworkReportService extends ReportService {
   }
 
   signIn (space, args, cb) {
-    return this._responder(() => {
-      return this._authenticator.signIn(args)
+    return this._responder(async () => {
+      const {
+        _id,
+        email,
+        isSubAccount,
+        token,
+        shouldNotSyncOnStartupAfterUpdate,
+        isSyncOnStartupRequired
+      } = await this._authenticator.signIn(
+        args,
+        { isReturnedUser: true }
+      )
+
+      if (
+        !shouldNotSyncOnStartupAfterUpdate &&
+        isSyncOnStartupRequired
+      ) {
+        await this._sync.start({
+          syncColls: this._ALLOWED_COLLS.ALL,
+          isSolveAfterRedirToApi: true,
+          ownerUserId: _id
+        })
+      }
+
+      return {
+        email,
+        isSubAccount,
+        token,
+        shouldNotSyncOnStartupAfterUpdate
+      }
     }, 'signIn', args, cb)
   }
 
@@ -159,6 +201,12 @@ class FrameworkReportService extends ReportService {
     return this._responder(() => {
       return this._authenticator.removeUser(args)
     }, 'removeUser', args, cb)
+  }
+
+  updateUser (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.updateUser(args)
+    }, 'updateUser', args, cb)
   }
 
   createSubAccount (space, args, cb) {
