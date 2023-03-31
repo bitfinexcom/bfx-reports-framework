@@ -125,10 +125,18 @@ class UserUpdatingError extends AuthError {
 }
 
 class UserRemovingError extends AuthError {
-  constructor (message = 'ERR_USER_REMOVE_HAS_BEEN_FAILED') {
+  constructor (message = 'ERR_USER_REMOVAL_HAS_BEEN_FAILED') {
     super(message)
 
-    this.statusMessage = 'User remove has been failed'
+    this.statusMessage = 'User removal has been failed'
+  }
+}
+
+class UserRemovingDuringSyncError extends UserRemovingError {
+  constructor (message = 'USER_REMOVAL_HAS_BEEN_DISALLOWED_DURING_SYNC') {
+    super(message)
+
+    this.statusMessage = 'User removal has been disallowed during sync'
   }
 }
 
@@ -250,6 +258,7 @@ module.exports = {
   SubAccountUpdatingError,
   UserUpdatingError,
   UserRemovingError,
+  UserRemovingDuringSyncError,
   UserWasPreviouslyStoredInDbError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
