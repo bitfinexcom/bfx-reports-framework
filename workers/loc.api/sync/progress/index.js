@@ -74,15 +74,22 @@ class Progress extends EventEmitter {
   }
 
   async getProgress () {
-    const progressObj = await this.dao
-      .getElemInCollBy(this.TABLES_NAMES.PROGRESS)
+    const progress = await this.constructor
+      .getNonEstimatedProgress(this.dao, this.TABLES_NAMES)
+    const estimatedSyncTime = this._estimateSyncTime({ progress })
+
+    return estimatedSyncTime
+  }
+
+  static async getNonEstimatedProgress (dao, TABLES_NAMES) {
+    const progressObj = await dao
+      .getElemInCollBy(TABLES_NAMES.PROGRESS)
 
     const progress = typeof progressObj?.value === 'string'
       ? tryParseJSON(progressObj.value, true)
       : 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
-    const estimatedSyncTime = this._estimateSyncTime({ progress })
 
-    return estimatedSyncTime
+    return progress
   }
 
   activateSyncTimeEstimate () {
