@@ -65,7 +65,9 @@ class Authenticator {
     this.userSessions = new Map()
     this.userTokenMapByEmail = new Map()
 
-    this.authTokenTTLSec = 24 * 60 * 60
+    this.minAuthTokenTTLSec = 24 * 60 * 60
+    this.maxAuthTokenTTLSec = 7 * 24 * 60 * 60
+    this.authTokenTTLSec = this.minAuthTokenTTLSec
     /*
      * Here need to have an interval between the generation
      * of a new authToken and the invalidation of the old one
@@ -77,14 +79,14 @@ class Authenticator {
   }
 
   async signUp (args, opts) {
-    const { auth } = args ?? {}
+    const { auth, params } = args ?? {}
     const {
-      authToken,
       apiKey,
       apiSecret,
       password: userPwd,
       isNotProtected = false
     } = auth ?? {}
+    const { authTokenTTLSec = null } = params ?? {}
     const password = isNotProtected
       ? this.crypto.getSecretKey()
       : userPwd
@@ -103,7 +105,7 @@ class Authenticator {
     } = opts ?? {}
 
     const hasNotCredentials = this._hasNotCredentials({
-      authToken,
+      authToken: auth?.authToken,
       apiKey,
       apiSecret,
       password,
@@ -120,6 +122,21 @@ class Authenticator {
     ) {
       throw new AuthError()
     }
+    if (
+      auth?.authToken &&
+      (
+        !Number.isInteger(authTokenTTLSec) ||
+        authTokenTTLSec < this.minAuthTokenTTLSec ||
+        authTokenTTLSec > this.maxAuthTokenTTLSec
+      )
+    ) {
+      throw new AuthError() // TODO:
+    }
+    const authToken = auth?.authToken
+      ? await this.generateAuthToken({
+        auth: { authToken: auth?.authToken, authTokenTTLSec }
+      })
+      : auth?.authToken
 
     const {
       email,
@@ -193,7 +210,8 @@ class Authenticator {
         passwordHash,
         isNotProtected: serializeVal(isNotProtected),
         shouldNotSyncOnStartupAfterUpdate: 0,
-        isSyncOnStartupRequired: 0
+        isSyncOnStartupRequired: 0,
+        authTokenTTLSec
       },
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
@@ -1161,7 +1179,7 @@ class Authenticator {
   async generateAuthToken (args) {
     try {
       const opts = {
-        ttl: this.authTokenTTLSec,
+        ttl: args?.auth?.authTokenTTLSec ?? this.authTokenTTLSec,
         writePermission: false
       }
 
