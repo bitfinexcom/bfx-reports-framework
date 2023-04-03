@@ -65,6 +65,7 @@ const _models = new Map([
       isSubUser: 'INT',
       shouldNotSyncOnStartupAfterUpdate: 'INT',
       isSyncOnStartupRequired: 'INT',
+      authTokenTTLSec: 'INT',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
