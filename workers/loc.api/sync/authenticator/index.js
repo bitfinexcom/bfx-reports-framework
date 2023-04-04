@@ -16,6 +16,7 @@ const {
 const {
   UserUpdatingError,
   UserRemovingError,
+  UserRemovingDuringSyncError,
   UserWasPreviouslyStoredInDbError,
   AuthTokenGenerationError
 } = require('../../errors')
@@ -24,6 +25,7 @@ const {
   pickProps,
   pickSessionProps
 } = require('./helpers')
+const Progress = require('../progress')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -926,6 +928,12 @@ class Authenticator {
         }
       }
     )
+    const progress = await Progress
+      .getNonEstimatedProgress(this.dao, this.TABLES_NAMES)
+
+    if (progress < 100) {
+      throw new UserRemovingDuringSyncError()
+    }
 
     const res = await this.dao.removeElemsFromDb(
       this.TABLES_NAMES.USERS,
