@@ -50,7 +50,7 @@ class WeightedAveragesReport extends BaseWeightedAveragesReport {
       ? { $in: { symbol: args.symbol } }
       : {}
 
-    return this.dao.getElemsInCollBy(
+    const res = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.TRADES,
       {
         filter: {
@@ -65,6 +65,12 @@ class WeightedAveragesReport extends BaseWeightedAveragesReport {
         isExcludePrivate: true
       }
     )
+
+    // Returns `nextPage: false` to have the same response as in hosted ver
+    return {
+      res,
+      nextPage: false
+    }
   }
 }
 
