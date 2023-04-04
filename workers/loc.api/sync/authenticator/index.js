@@ -290,7 +290,8 @@ class Authenticator {
       apiSecret,
       password,
       shouldNotSyncOnStartupAfterUpdate,
-      isSyncOnStartupRequired
+      isSyncOnStartupRequired,
+      authTokenTTLSec
     } = user ?? {}
 
     let newAuthToken = null
@@ -419,7 +420,8 @@ class Authenticator {
       isSubAccount: isSubAccountFromDb,
       token: createdToken,
       shouldNotSyncOnStartupAfterUpdate,
-      isSyncOnStartupRequired
+      isSyncOnStartupRequired,
+      authTokenTTLSec
     }
   }
 

@@ -111,7 +111,8 @@ class FrameworkReportService extends ReportService {
         isSubAccount,
         token,
         shouldNotSyncOnStartupAfterUpdate,
-        isSyncOnStartupRequired
+        isSyncOnStartupRequired,
+        authTokenTTLSec
       } = await this._authenticator.signIn(
         args,
         { isReturnedUser: true }
@@ -132,7 +133,8 @@ class FrameworkReportService extends ReportService {
         email,
         isSubAccount,
         token,
-        shouldNotSyncOnStartupAfterUpdate
+        shouldNotSyncOnStartupAfterUpdate,
+        authTokenTTLSec
       }
     }, 'signIn', args, cb)
   }
