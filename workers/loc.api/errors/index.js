@@ -238,6 +238,12 @@ class AuthTokenGenerationError extends AuthError {
   }
 }
 
+class AuthTokenTTLSettingError extends ArgsParamsError {
+  constructor (message = 'AUTH_TOKEN_TTL_HAS_BEEN_SET_TO_DISALLOWED_VALUE') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -273,5 +279,6 @@ module.exports = {
   SyncQueueIDSettingError,
   LastSyncedInfoGettingError,
   SyncInfoUpdatingError,
-  AuthTokenGenerationError
+  AuthTokenGenerationError,
+  AuthTokenTTLSettingError
 }
