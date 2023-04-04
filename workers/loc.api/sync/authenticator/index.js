@@ -18,7 +18,8 @@ const {
   UserRemovingError,
   UserRemovingDuringSyncError,
   UserWasPreviouslyStoredInDbError,
-  AuthTokenGenerationError
+  AuthTokenGenerationError,
+  AuthTokenTTLSettingError
 } = require('../../errors')
 const {
   generateSubUserName,
@@ -130,7 +131,7 @@ class Authenticator {
         authTokenTTLSec > this.maxAuthTokenTTLSec
       )
     ) {
-      throw new AuthError() // TODO:
+      throw new AuthTokenTTLSettingError()
     }
     const authToken = auth?.authToken
       ? await this.generateAuthToken({
