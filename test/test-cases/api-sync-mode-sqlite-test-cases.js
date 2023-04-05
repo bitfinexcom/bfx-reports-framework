@@ -161,6 +161,7 @@ module.exports = (
     assert.isString(res.body.result.token)
     assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNotOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
+    assert.isNull(res.body.result.authTokenTTLSec)
 
     auth.token = res.body.result.token
   })
@@ -257,6 +258,7 @@ module.exports = (
     assert.strictEqual(res.body.result.token, auth.token)
     assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
+    assert.isNumber(res.body.result.authTokenTTLSec)
   })
 
   it('it should not be successfully performed by the signIn method', async function () {
