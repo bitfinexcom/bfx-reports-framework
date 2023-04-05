@@ -581,9 +581,11 @@ module.exports = (
 
       assert.isObject(res.body)
       assert.propertyVal(res.body, 'id', 5)
-      assert.isArray(res.body.result)
+      assert.isObject(res.body.result)
+      assert.isArray(res.body.result.res)
+      assert.isBoolean(res.body.result.nextPage)
 
-      const resItem = res.body.result[0]
+      const resItem = res.body.result.res[0]
 
       assert.isObject(resItem)
       assert.containsAllKeys(resItem, [
