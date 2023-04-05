@@ -1,7 +1,7 @@
 'use strict'
 
 const { v4: uuidv4 } = require('uuid')
-const { pick } = require('lodash')
+const { pick, isNil } = require('lodash')
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
@@ -125,11 +125,7 @@ class Authenticator {
     }
     if (
       auth?.authToken &&
-      (
-        !Number.isInteger(authTokenTTLSec) ||
-        authTokenTTLSec < this.minAuthTokenTTLSec ||
-        authTokenTTLSec > this.maxAuthTokenTTLSec
-      )
+      this._isAuthTokenTTLInvalid(authTokenTTLSec)
     ) {
       throw new AuthTokenTTLSettingError()
     }
@@ -1415,6 +1411,17 @@ class Authenticator {
     }
 
     return false
+  }
+
+  _isAuthTokenTTLInvalid (authTokenTTLSec) {
+    return (
+      !isNil(authTokenTTLSec) &&
+      (
+        !Number.isInteger(authTokenTTLSec) ||
+        authTokenTTLSec < this.minAuthTokenTTLSec ||
+        authTokenTTLSec > this.maxAuthTokenTTLSec
+      )
+    )
   }
 }
 
