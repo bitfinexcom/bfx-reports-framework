@@ -994,7 +994,8 @@ class Authenticator {
 
     const {
       _id,
-      email: emailFromDb
+      email: emailFromDb,
+      authToken
     } = await this.verifyUser(
       {
         auth: {
@@ -1010,6 +1011,22 @@ class Authenticator {
         doNotQueueQuery
       }
     )
+
+    if (Object.keys(freshUserData).length === 0) {
+      return false
+    }
+    if (
+      (
+        !authToken &&
+        !isNil(freshUserData?.authTokenTTLSec)
+      ) ||
+      (
+        authToken &&
+        this._isAuthTokenTTLInvalid(freshUserData?.authTokenTTLSec)
+      )
+    ) {
+      throw new AuthTokenTTLSettingError()
+    }
 
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
