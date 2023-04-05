@@ -123,10 +123,7 @@ class Authenticator {
     ) {
       throw new AuthError()
     }
-    if (
-      auth?.authToken &&
-      this._isAuthTokenTTLInvalid(authTokenTTLSec)
-    ) {
+    if (this._isAuthTokenTTLInvalid(authTokenTTLSec)) {
       throw new AuthTokenTTLSettingError()
     }
     const authToken = auth?.authToken
@@ -994,8 +991,7 @@ class Authenticator {
 
     const {
       _id,
-      email: emailFromDb,
-      authToken
+      email: emailFromDb
     } = await this.verifyUser(
       {
         auth: {
@@ -1015,16 +1011,7 @@ class Authenticator {
     if (Object.keys(freshUserData).length === 0) {
       return false
     }
-    if (
-      (
-        !authToken &&
-        !isNil(freshUserData?.authTokenTTLSec)
-      ) ||
-      (
-        authToken &&
-        this._isAuthTokenTTLInvalid(freshUserData?.authTokenTTLSec)
-      )
-    ) {
+    if (this._isAuthTokenTTLInvalid(freshUserData?.authTokenTTLSec)) {
       throw new AuthTokenTTLSettingError()
     }
 
