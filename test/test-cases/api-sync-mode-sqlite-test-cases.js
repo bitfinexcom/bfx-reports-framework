@@ -165,7 +165,7 @@ module.exports = (
     auth.token = res.body.result.token
   })
 
-  it('it should be successfully performed by the updateUser method', async function () {
+  it('it should be successfully performed by the updateUser method for shouldNotSyncOnStartupAfterUpdate field', async function () {
     this.timeout(5000)
 
     const res = await agent
@@ -186,6 +186,53 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
     assert.isBoolean(res.body.result)
     assert.isOk(res.body.result)
+  })
+
+  it('it should be successfully performed by the updateUser method for authTokenTTLSec field', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'updateUser',
+        params: {
+          authTokenTTLSec: 7 * 24 * 60 * 60
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
+  })
+
+  it('it should not be successfully performed by the updateUser method for authTokenTTLSec field', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'updateUser',
+        params: {
+          authTokenTTLSec: 8 * 24 * 60 * 60
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(400)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Auth token TTL has been set to disallowed value')
+    assert.propertyVal(res.body, 'id', 5)
   })
 
   it('it should be successfully performed by the signIn method by token', async function () {
