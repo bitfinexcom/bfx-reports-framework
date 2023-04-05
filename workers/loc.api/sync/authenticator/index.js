@@ -986,7 +986,8 @@ class Authenticator {
       args?.params,
       [
         'shouldNotSyncOnStartupAfterUpdate',
-        'isSyncOnStartupRequired'
+        'isSyncOnStartupRequired',
+        'authTokenTTLSec'
       ]
     )
     const {
