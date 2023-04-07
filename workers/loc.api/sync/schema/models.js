@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 33
+const SUPPORTED_DB_VERSION = 34
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -65,6 +65,7 @@ const _models = new Map([
       isSubUser: 'INT',
       shouldNotSyncOnStartupAfterUpdate: 'INT',
       isSyncOnStartupRequired: 'INT',
+      authTokenTTLSec: 'INT',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 

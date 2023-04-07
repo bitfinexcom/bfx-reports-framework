@@ -1,7 +1,7 @@
 'use strict'
 
 const { v4: uuidv4 } = require('uuid')
-const { pick } = require('lodash')
+const { pick, isNil } = require('lodash')
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
@@ -18,7 +18,8 @@ const {
   UserRemovingError,
   UserRemovingDuringSyncError,
   UserWasPreviouslyStoredInDbError,
-  AuthTokenGenerationError
+  AuthTokenGenerationError,
+  AuthTokenTTLSettingError
 } = require('../../errors')
 const {
   generateSubUserName,
@@ -65,7 +66,9 @@ class Authenticator {
     this.userSessions = new Map()
     this.userTokenMapByEmail = new Map()
 
-    this.authTokenTTLSec = 24 * 60 * 60
+    this.minAuthTokenTTLSec = 24 * 60 * 60
+    this.maxAuthTokenTTLSec = 7 * 24 * 60 * 60
+    this.authTokenTTLSec = this.minAuthTokenTTLSec
     /*
      * Here need to have an interval between the generation
      * of a new authToken and the invalidation of the old one
@@ -77,14 +80,14 @@ class Authenticator {
   }
 
   async signUp (args, opts) {
-    const { auth } = args ?? {}
+    const { auth, params } = args ?? {}
     const {
-      authToken,
       apiKey,
       apiSecret,
       password: userPwd,
       isNotProtected = false
     } = auth ?? {}
+    const { authTokenTTLSec = null } = params ?? {}
     const password = isNotProtected
       ? this.crypto.getSecretKey()
       : userPwd
@@ -103,7 +106,7 @@ class Authenticator {
     } = opts ?? {}
 
     const hasNotCredentials = this._hasNotCredentials({
-      authToken,
+      authToken: auth?.authToken,
       apiKey,
       apiSecret,
       password,
@@ -120,6 +123,14 @@ class Authenticator {
     ) {
       throw new AuthError()
     }
+    if (this._isAuthTokenTTLInvalid(authTokenTTLSec)) {
+      throw new AuthTokenTTLSettingError()
+    }
+    const authToken = auth?.authToken
+      ? await this.generateAuthToken({
+        auth: { authToken: auth?.authToken, authTokenTTLSec }
+      })
+      : auth?.authToken
 
     const {
       email,
@@ -193,7 +204,8 @@ class Authenticator {
         passwordHash,
         isNotProtected: serializeVal(isNotProtected),
         shouldNotSyncOnStartupAfterUpdate: 0,
-        isSyncOnStartupRequired: 0
+        isSyncOnStartupRequired: 0,
+        authTokenTTLSec
       },
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
@@ -272,7 +284,8 @@ class Authenticator {
       apiSecret,
       password,
       shouldNotSyncOnStartupAfterUpdate,
-      isSyncOnStartupRequired
+      isSyncOnStartupRequired,
+      authTokenTTLSec
     } = user ?? {}
 
     let newAuthToken = null
@@ -401,7 +414,8 @@ class Authenticator {
       isSubAccount: isSubAccountFromDb,
       token: createdToken,
       shouldNotSyncOnStartupAfterUpdate,
-      isSyncOnStartupRequired
+      isSyncOnStartupRequired,
+      authTokenTTLSec
     }
   }
 
@@ -965,7 +979,8 @@ class Authenticator {
       args?.params,
       [
         'shouldNotSyncOnStartupAfterUpdate',
-        'isSyncOnStartupRequired'
+        'isSyncOnStartupRequired',
+        'authTokenTTLSec'
       ]
     )
     const {
@@ -992,6 +1007,13 @@ class Authenticator {
         doNotQueueQuery
       }
     )
+
+    if (Object.keys(freshUserData).length === 0) {
+      return false
+    }
+    if (this._isAuthTokenTTLInvalid(freshUserData?.authTokenTTLSec)) {
+      throw new AuthTokenTTLSettingError()
+    }
 
     const res = await this.dao.updateCollBy(
       this.TABLES_NAMES.USERS,
@@ -1161,7 +1183,7 @@ class Authenticator {
   async generateAuthToken (args) {
     try {
       const opts = {
-        ttl: this.authTokenTTLSec,
+        ttl: args?.auth?.authTokenTTLSec ?? this.authTokenTTLSec,
         writePermission: false
       }
 
@@ -1393,6 +1415,17 @@ class Authenticator {
     }
 
     return false
+  }
+
+  _isAuthTokenTTLInvalid (authTokenTTLSec) {
+    return (
+      !isNil(authTokenTTLSec) &&
+      (
+        !Number.isInteger(authTokenTTLSec) ||
+        authTokenTTLSec < this.minAuthTokenTTLSec ||
+        authTokenTTLSec > this.maxAuthTokenTTLSec
+      )
+    )
   }
 }
 
