@@ -52,7 +52,8 @@ class SubAccount {
     } = args?.auth ?? {}
     const {
       subAccountPassword,
-      subAccountApiKeys
+      subAccountApiKeys,
+      localUsername
     } = args?.params ?? {}
 
     const masterUser = await this.authenticator
@@ -115,7 +116,10 @@ class SubAccount {
     return this.dao.executeQueriesInTrans(async () => {
       const subAccountUser = await this.authenticator
         .signUp(
-          { auth: subAccount },
+          {
+            auth: subAccount,
+            params: { localUsername }
+          },
           {
             isDisabledApiKeysVerification: true,
             isReturnedFullUserData: true,
