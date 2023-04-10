@@ -3,7 +3,8 @@
 const { v4: uuidv4 } = require('uuid')
 const { pick, isNil } = require('lodash')
 const {
-  AuthError
+  AuthError,
+  ArgsParamsError
 } = require('bfx-report/workers/loc.api/errors')
 const {
   isENetError
@@ -87,7 +88,10 @@ class Authenticator {
       password: userPwd,
       isNotProtected = false
     } = auth ?? {}
-    const { authTokenTTLSec = null } = params ?? {}
+    const {
+      authTokenTTLSec = null,
+      localUsername = null
+    } = params ?? {}
     const password = isNotProtected
       ? this.crypto.getSecretKey()
       : userPwd
@@ -125,6 +129,12 @@ class Authenticator {
     }
     if (this._isAuthTokenTTLInvalid(authTokenTTLSec)) {
       throw new AuthTokenTTLSettingError()
+    }
+    if (
+      (localUsername && !isSubAccount) ||
+      this._isLocalUsernameInvalid(localUsername)
+    ) {
+      throw new ArgsParamsError()
     }
     const authToken = auth?.authToken
       ? await this.generateAuthToken({
@@ -205,7 +215,8 @@ class Authenticator {
         isNotProtected: serializeVal(isNotProtected),
         shouldNotSyncOnStartupAfterUpdate: 0,
         isSyncOnStartupRequired: 0,
-        authTokenTTLSec
+        authTokenTTLSec,
+        localUsername
       },
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
@@ -1424,6 +1435,16 @@ class Authenticator {
         !Number.isInteger(authTokenTTLSec) ||
         authTokenTTLSec < this.minAuthTokenTTLSec ||
         authTokenTTLSec > this.maxAuthTokenTTLSec
+      )
+    )
+  }
+
+  _isLocalUsernameInvalid (localUsername) {
+    return (
+      !isNil(localUsername) &&
+      (
+        !localUsername ||
+        typeof localUsername !== 'string'
       )
     )
   }
