@@ -59,6 +59,7 @@ const _models = new Map([
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
       username: 'VARCHAR(255)',
+      localUsername: 'VARCHAR(255)',
       passwordHash: 'VARCHAR(255)',
       isNotProtected: 'INT',
       isSubAccount: 'INT',
