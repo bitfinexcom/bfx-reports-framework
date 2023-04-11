@@ -363,6 +363,54 @@ describe('Sub-account', () => {
         assert.isNotOk(subUser.isSubAccount)
       })
     })
+
+    it('it should be successfully performed by the updateUser method for localUsername field', async function () {
+      this.timeout(5000)
+
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth: subAccountAuth,
+          method: 'updateUser',
+          params: {
+            localUsername: 'updatedTestLocalUsername'
+          },
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isBoolean(res.body.result)
+      assert.isOk(res.body.result)
+    })
+
+    it('it should be successfully performed by the signIn method for sub-account with updated localUsername', async function () {
+      this.timeout(5000)
+
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount
+          },
+          method: 'signIn',
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isObject(res.body.result)
+      assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+      assert.strictEqual(res.body.result.localUsername, 'updatedTestLocalUsername')
+    })
   })
 
   describe('API with SQLite', () => {
