@@ -162,6 +162,7 @@ module.exports = (
     assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNotOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNull(res.body.result.authTokenTTLSec)
+    assert.isNull(res.body.result.localUsername)
 
     auth.token = res.body.result.token
   })
