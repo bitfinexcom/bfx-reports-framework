@@ -281,7 +281,8 @@ describe('Sub-account', () => {
           auth: masterUserAuth,
           method: 'createSubAccount',
           params: {
-            subAccountApiKeys: [subUserApiKeys]
+            subAccountApiKeys: [subUserApiKeys],
+            localUsername: 'testLocalUsername'
           },
           id: 5
         })
@@ -296,6 +297,36 @@ describe('Sub-account', () => {
       assert.isString(res.body.result.token)
 
       subAccountAuth.token = res.body.result.token
+    })
+
+    it('it should be successfully performed by the signIn method for sub-account', async function () {
+      this.timeout(5000)
+
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth: {
+            email: masterUserEmail,
+            password,
+            isSubAccount
+          },
+          method: 'signIn',
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isObject(res.body.result)
+      assert.strictEqual(res.body.result.email, masterUserEmail)
+      assert.isBoolean(res.body.result.isSubAccount)
+      assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+      assert.isString(res.body.result.token)
+      assert.isString(res.body.result.localUsername)
+
+      assert.strictEqual(res.body.result.token, subAccountAuth.token)
     })
 
     it('it should be successfully performed by the verifyUser method', async function () {
