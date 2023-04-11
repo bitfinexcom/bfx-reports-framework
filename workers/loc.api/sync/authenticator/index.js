@@ -993,7 +993,8 @@ class Authenticator {
       [
         'shouldNotSyncOnStartupAfterUpdate',
         'isSyncOnStartupRequired',
-        'authTokenTTLSec'
+        'authTokenTTLSec',
+        'localUsername'
       ]
     )
     const {
@@ -1004,7 +1005,8 @@ class Authenticator {
 
     const {
       _id,
-      email: emailFromDb
+      email: emailFromDb,
+      isSubAccount: isSubAccountFromDb
     } = await this.verifyUser(
       {
         auth: {
@@ -1026,6 +1028,12 @@ class Authenticator {
     }
     if (this._isAuthTokenTTLInvalid(freshUserData?.authTokenTTLSec)) {
       throw new AuthTokenTTLSettingError()
+    }
+    if (
+      (freshUserData?.localUsername && !isSubAccountFromDb) ||
+      this._isLocalUsernameInvalid(freshUserData?.localUsername)
+    ) {
+      throw new ArgsParamsError()
     }
 
     const res = await this.dao.updateCollBy(
