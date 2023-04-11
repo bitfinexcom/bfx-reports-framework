@@ -296,7 +296,8 @@ class Authenticator {
       password,
       shouldNotSyncOnStartupAfterUpdate,
       isSyncOnStartupRequired,
-      authTokenTTLSec
+      authTokenTTLSec,
+      localUsername
     } = user ?? {}
 
     let newAuthToken = null
@@ -426,7 +427,8 @@ class Authenticator {
       token: createdToken,
       shouldNotSyncOnStartupAfterUpdate,
       isSyncOnStartupRequired,
-      authTokenTTLSec
+      authTokenTTLSec,
+      localUsername
     }
   }
 
