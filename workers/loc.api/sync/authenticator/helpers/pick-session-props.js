@@ -18,6 +18,7 @@ module.exports = (session, isReturnedPassword) => {
     'isDataFromDb',
     'timezone',
     'username',
+    'localUsername',
     'isSubAccount',
     'isSubUser',
     'subUsers',
