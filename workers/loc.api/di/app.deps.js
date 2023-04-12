@@ -91,8 +91,7 @@ const CurrencyConverter = require('../sync/currency.converter')
 const CsvJobData = require('../generate-csv/csv.job.data')
 const {
   fullSnapshotReportCsvWriter,
-  fullTaxReportCsvWriter,
-  weightedAveragesReportCsvWriter
+  fullTaxReportCsvWriter
 } = require('../generate-csv/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
 const WeightedAveragesReport = require('../sync/weighted.averages.report')
@@ -157,7 +156,6 @@ module.exports = ({
           ['_syncCollsManager', TYPES.SyncCollsManager],
           ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
           ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance],
-          ['_weightedAveragesReport', TYPES.WeightedAveragesReport],
           ['_getDataFromApi', TYPES.GetDataFromApi],
           ['_httpRequest', TYPES.HTTPRequest]
         ]
@@ -381,19 +379,9 @@ module.exports = ({
           ]
         )
       )
-    bind(TYPES.WeightedAveragesReportCsvWriter)
-      .toConstantValue(
-        bindDepsToFn(
-          weightedAveragesReportCsvWriter,
-          [
-            TYPES.RService,
-            TYPES.GetDataFromApi
-          ]
-        )
-      )
     bind(TYPES.FullTaxReport)
       .to(FullTaxReport)
-    bind(TYPES.WeightedAveragesReport)
+    rebind(TYPES.WeightedAveragesReport)
       .to(WeightedAveragesReport)
     rebind(TYPES.CsvJobData)
       .to(CsvJobData)

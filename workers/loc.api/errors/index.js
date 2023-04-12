@@ -125,10 +125,18 @@ class UserUpdatingError extends AuthError {
 }
 
 class UserRemovingError extends AuthError {
-  constructor (message = 'ERR_USER_REMOVE_HAS_BEEN_FAILED') {
+  constructor (message = 'ERR_USER_REMOVAL_HAS_BEEN_FAILED') {
     super(message)
 
-    this.statusMessage = 'User remove has been failed'
+    this.statusMessage = 'User removal has been failed'
+  }
+}
+
+class UserRemovingDuringSyncError extends UserRemovingError {
+  constructor (message = 'USER_REMOVAL_HAS_BEEN_DISALLOWED_DURING_SYNC') {
+    super(message)
+
+    this.statusMessage = 'User removal has been disallowed during sync'
   }
 }
 
@@ -230,6 +238,16 @@ class AuthTokenGenerationError extends AuthError {
   }
 }
 
+class AuthTokenTTLSettingError extends ArgsParamsError {
+  constructor (args) {
+    const _args = getErrorArgs(args, 'AUTH_TOKEN_TTL_HAS_BEEN_SET_TO_DISALLOWED_VALUE')
+
+    super(_args)
+
+    this.statusMessage = 'Auth token TTL has been set to disallowed value'
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -250,6 +268,7 @@ module.exports = {
   SubAccountUpdatingError,
   UserUpdatingError,
   UserRemovingError,
+  UserRemovingDuringSyncError,
   UserWasPreviouslyStoredInDbError,
   SubAccountLedgersBalancesRecalcError,
   DatePropNameError,
@@ -264,5 +283,6 @@ module.exports = {
   SyncQueueIDSettingError,
   LastSyncedInfoGettingError,
   SyncInfoUpdatingError,
-  AuthTokenGenerationError
+  AuthTokenGenerationError,
+  AuthTokenTTLSettingError
 }
