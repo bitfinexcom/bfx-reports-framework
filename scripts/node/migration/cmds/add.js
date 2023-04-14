@@ -29,6 +29,6 @@ module.exports = {
       ? SUPPORTED_DB_VERSION + 1
       : argv.ver
 
-    console.log('Added a new DB migration file'.bgBlue, `${version}`.bgGreen)
+    console.log('Added a new DB migration file:'.blue, `v${version}`.bgGreen, '\n')
   }
 }
