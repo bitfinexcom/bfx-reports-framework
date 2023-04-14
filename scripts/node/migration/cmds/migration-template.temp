@@ -1,0 +1,67 @@
+'use strict'
+
+/*
+ * CREATED AT: #{timestamp}
+ * VERSION: v#{version}
+ */
+
+const AbstractMigration = require('./abstract.migration')
+const { getSqlArrToModifyColumns } = require('./helpers')
+
+const {
+  ID_PRIMARY_KEY
+} = require('./helpers/const')
+
+class MigrationV#{version} extends AbstractMigration {
+  /**
+   * @override
+   */
+  up () {
+    const sqlArr = []
+
+    this.addSql(sqlArr)
+  }
+
+  /**
+   * @override
+   */
+  down () {
+    const sqlArr = []
+
+    this.addSql(sqlArr)
+  }
+
+  // TODO: Remove redundant hooks
+
+  /**
+   * @override
+   */
+  before () { return this.dao.disableForeignKeys() }
+
+  /**
+   * @override
+   */
+  beforeUp () {}
+
+  /**
+   * @override
+   */
+  afterUp () {}
+
+  /**
+   * @override
+   */
+  beforeDown () {}
+
+  /**
+   * @override
+   */
+  afterDown () {}
+
+  /**
+   * @override
+   */
+  after () { return this.dao.enableForeignKeys() }
+}
+
+module.exports = MigrationV#{version}
