@@ -75,13 +75,23 @@ module.exports = {
         default: false,
         alias: 'r'
       })
+      .positional('wipe', {
+        describe: 'Should trash folder migration files be wiped',
+        type: 'boolean',
+        default: false,
+        alias: 'w'
+      })
   },
 
   handler: (argv) => {
     const shouldBeRemoved = argv.totally
     const shouldBeRecovered = argv.recover
+    const shouldBeWiped = argv.wipe
 
-    if (shouldBeRecovered) {
+    if (
+      shouldBeRecovered ||
+      shouldBeWiped
+    ) {
       const tempMigrationFileDirents = fs.readdirSync(
         trashFolderPath,
         { withFileTypes: true }
@@ -89,17 +99,34 @@ module.exports = {
       const tempMigrationFileMetadata = _getMigrationFileMetadata(
         tempMigrationFileDirents
       )
-      const strRecoveringFileNames = _getFileNamesStr(tempMigrationFileMetadata)
+      const fileNamesStr = _getFileNamesStr(
+        tempMigrationFileMetadata
+      )
 
       for (const metadata of tempMigrationFileMetadata) {
+        const filePaths = path.join(trashFolderPath, metadata.name)
+
+        if (shouldBeWiped) {
+          fs.rmSync(filePaths, { maxRetries: 10, recursive: true })
+
+          continue
+        }
+
         fs.renameSync(
-          path.join(trashFolderPath, metadata.name),
+          filePaths,
           path.join(migrationFolderPath, metadata.name)
         )
       }
 
-      console.log('Recovered trash folder migration files:'.blue)
-      console.log(strRecoveringFileNames.yellow)
+      const actionVerb = shouldBeWiped
+        ? 'Wiped'
+        : 'Recovered'
+      const coloredFileNamesStr = shouldBeWiped
+        ? fileNamesStr.red
+        : fileNamesStr.yellow
+
+      console.log(`${actionVerb} trash folder migration files:`.blue)
+      console.log(coloredFileNamesStr)
 
       return
     }
@@ -139,7 +166,7 @@ module.exports = {
       ))
     }
 
-    const strRemovingFileNames = _getFileNamesStr(removingFileNames)
+    const fileNamesStr = _getFileNamesStr(removingFileNames)
 
     if (shouldBeRemoved) {
       for (const filePaths of removingFilePaths) {
@@ -147,7 +174,7 @@ module.exports = {
       }
 
       console.log('Removed redundant migration files:'.blue)
-      console.log(strRemovingFileNames.red)
+      console.log(fileNamesStr.red)
 
       return
     }
@@ -161,6 +188,6 @@ module.exports = {
     }
 
     console.log('Moved redundant migration files to the trash folder:'.blue)
-    console.log(strRemovingFileNames.yellow)
+    console.log(fileNamesStr.yellow)
   }
 }
