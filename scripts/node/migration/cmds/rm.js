@@ -18,6 +18,46 @@ const trashFolderPath = path.join(
   'trash'
 )
 
+const _getMigrationFileMetadata = (migrationFileDirents) => {
+  const metadata = migrationFileDirents.reduce((accum, dirent) => {
+    if (
+      !dirent.isFile() ||
+      !/^migration.v\d+.?\d*.js$/.test(dirent.name)
+    ) {
+      return accum
+    }
+
+    const splitName = dirent.name.split('.')
+    const version = Number.parseInt(splitName[1].replace('v', ''))
+    const parsedMts = Number.parseInt(splitName[2])
+    const mts = Number.isNaN(parsedMts) ? 0 : parsedMts
+
+    if (Number.isNaN(version)) {
+      return accum
+    }
+
+    accum.push({
+      name: dirent.name,
+      version,
+      mts
+    })
+
+    return accum
+  }, [])
+
+  return orderBy(
+    metadata,
+    ['version', 'mts'],
+    ['asc', 'asc']
+  )
+}
+
+const _getFileNamesStr = (fileNames) => {
+  return fileNames.reduce((accum, dirent) => (
+    `${accum}  - ${dirent?.name ?? dirent}\n`
+  ), '')
+}
+
 module.exports = {
   command: 'rm [totally]',
   desc: 'Remove redundant migration files',
@@ -29,10 +69,41 @@ module.exports = {
         default: false,
         alias: 't'
       })
+      .positional('recover', {
+        describe: 'Should trash folder migration files be recovered',
+        type: 'boolean',
+        default: false,
+        alias: 'r'
+      })
   },
 
   handler: (argv) => {
     const shouldBeRemoved = argv.totally
+    const shouldBeRecovered = argv.recover
+
+    if (shouldBeRecovered) {
+      const tempMigrationFileDirents = fs.readdirSync(
+        trashFolderPath,
+        { withFileTypes: true }
+      )
+      const tempMigrationFileMetadata = _getMigrationFileMetadata(
+        tempMigrationFileDirents
+      )
+      const strRecoveringFileNames = _getFileNamesStr(tempMigrationFileMetadata)
+
+      for (const metadata of tempMigrationFileMetadata) {
+        fs.renameSync(
+          path.join(trashFolderPath, metadata.name),
+          path.join(migrationFolderPath, metadata.name)
+        )
+      }
+
+      console.log('Recovered trash folder migration files:'.blue)
+      console.log(strRecoveringFileNames.yellow)
+
+      return
+    }
+
     const mts = Date.now()
     const momentMts = moment.utc(mts)
     const maxAllowedMts = momentMts.subtract(6, 'months')
@@ -42,43 +113,15 @@ module.exports = {
       migrationFolderPath,
       { withFileTypes: true }
     )
-    const migrationFileMetadata = migrationFileDirents
-      .reduce((accum, dirent) => {
-        if (
-          !dirent.isFile() ||
-          !/^migration.v\d+.?\d*.js$/.test(dirent.name)
-        ) {
-          return accum
-        }
-
-        const splitName = dirent.name.split('.')
-        const version = Number.parseInt(splitName[1].replace('v', ''))
-        const parsedMts = Number.parseInt(splitName[2])
-        const mts = Number.isNaN(parsedMts) ? 0 : parsedMts
-
-        if (Number.isNaN(version)) {
-          return accum
-        }
-
-        accum.push({
-          name: dirent.name,
-          version,
-          mts
-        })
-
-        return accum
-      }, [])
-    const orderedMigrationFileMetadata = orderBy(
-      migrationFileMetadata,
-      ['version', 'mts'],
-      ['asc', 'asc']
+    const migrationFileMetadata = _getMigrationFileMetadata(
+      migrationFileDirents
     )
 
     const removingFileNames = []
     const removingFilePaths = []
 
-    for (const metadata of orderedMigrationFileMetadata) {
-      const nonRemovableFilesAmount = (orderedMigrationFileMetadata.length -
+    for (const metadata of migrationFileMetadata) {
+      const nonRemovableFilesAmount = (migrationFileMetadata.length -
         removingFileNames.length)
 
       if (
@@ -96,16 +139,14 @@ module.exports = {
       ))
     }
 
-    const strRemovingFileNames = removingFileNames.reduce((accum, name) => (
-      `${accum}  - ${name}\n`
-    ), '')
+    const strRemovingFileNames = _getFileNamesStr(removingFileNames)
 
     if (shouldBeRemoved) {
       for (const filePaths of removingFilePaths) {
         fs.rmSync(filePaths, { maxRetries: 10, recursive: true })
       }
 
-      console.log('Remover redundant migration files:'.blue)
+      console.log('Removed redundant migration files:'.blue)
       console.log(strRemovingFileNames.red)
 
       return
