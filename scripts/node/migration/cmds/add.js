@@ -85,8 +85,8 @@ module.exports = {
 
     if (currMigrationVersionDirent?.name) {
       console.log(
-        `V${version} DB migration file already exists, file name:`.yellow,
-        currMigrationVersionDirent.name.bgBlue,
+        'DB migration file'.blue, `v${version}`.yellow, 'already exists, file name:'.blue,
+        `\n  - ${currMigrationVersionDirent.name}`.yellow,
         '\n'
       )
 
@@ -104,7 +104,7 @@ module.exports = {
 
     console.log(
       'Added a new DB migration file:'.blue,
-      `${migrationFileName}`.bgGreen,
+      `\n  - ${migrationFileName}`.green,
       '\n'
     )
   }

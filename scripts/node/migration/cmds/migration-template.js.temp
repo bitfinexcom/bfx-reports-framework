@@ -1,7 +1,7 @@
 'use strict'
 
 /*
- * CREATED AT: #{timestamp}
+ * CREATED_AT: #{timestamp}
  * VERSION: v#{version}
  */
 
