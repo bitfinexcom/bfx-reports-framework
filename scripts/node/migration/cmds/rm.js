@@ -46,19 +46,17 @@ module.exports = {
       .reduce((accum, dirent) => {
         if (
           !dirent.isFile() ||
-          !/^migration.v\d+.js$/.test(dirent.name)
+          !/^migration.v\d+.?\d*.js$/.test(dirent.name)
         ) {
           return accum
         }
 
         const splitName = dirent.name.split('.')
         const version = Number.parseInt(splitName[1].replace('v', ''))
-        const mts = Number.parseInt(splitName[2] ?? 0)
+        const parsedMts = Number.parseInt(splitName[2])
+        const mts = Number.isNaN(parsedMts) ? 0 : parsedMts
 
-        if (
-          Number.isNaN(version) ||
-          Number.isNaN(mts)
-        ) {
+        if (Number.isNaN(version)) {
           return accum
         }
 
