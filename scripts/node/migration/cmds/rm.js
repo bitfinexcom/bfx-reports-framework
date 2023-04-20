@@ -3,11 +3,13 @@
 const path = require('path')
 const fs = require('fs')
 const moment = require('moment')
-const { orderBy } = require('lodash')
 
 const {
   SUPPORTED_DB_VERSION
 } = require('../../../../workers/loc.api/sync/schema')
+const {
+  getMigrationFileMetadata
+} = require('../../../../workers/loc.api/di/factories/helpers')
 
 const migrationFolderPath = path.join(
   __dirname,
@@ -17,40 +19,6 @@ const trashFolderPath = path.join(
   migrationFolderPath,
   'trash'
 )
-
-const _getMigrationFileMetadata = (migrationFileDirents) => {
-  const metadata = migrationFileDirents.reduce((accum, dirent) => {
-    if (
-      !dirent.isFile() ||
-      !/^migration.v\d+.?\d*.js$/.test(dirent.name)
-    ) {
-      return accum
-    }
-
-    const splitName = dirent.name.split('.')
-    const version = Number.parseInt(splitName[1].replace('v', ''))
-    const parsedMts = Number.parseInt(splitName[2])
-    const mts = Number.isNaN(parsedMts) ? 0 : parsedMts
-
-    if (Number.isNaN(version)) {
-      return accum
-    }
-
-    accum.push({
-      name: dirent.name,
-      version,
-      mts
-    })
-
-    return accum
-  }, [])
-
-  return orderBy(
-    metadata,
-    ['version', 'mts'],
-    ['asc', 'asc']
-  )
-}
 
 const _getFileNamesStr = (fileNames) => {
   return fileNames.reduce((accum, dirent) => (
@@ -96,7 +64,7 @@ module.exports = {
         trashFolderPath,
         { withFileTypes: true }
       )
-      const tempMigrationFileMetadata = _getMigrationFileMetadata(
+      const tempMigrationFileMetadata = getMigrationFileMetadata(
         tempMigrationFileDirents
       )
       const fileNamesStr = _getFileNamesStr(
@@ -140,7 +108,7 @@ module.exports = {
       migrationFolderPath,
       { withFileTypes: true }
     )
-    const migrationFileMetadata = _getMigrationFileMetadata(
+    const migrationFileMetadata = getMigrationFileMetadata(
       migrationFileDirents
     )
 
