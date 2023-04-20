@@ -1,11 +1,48 @@
 'use strict'
 
+const path = require('path')
+const fs = require('fs')
+
 const TYPES = require('../types')
 
 const {
   DbVersionTypeError,
   MigrationLaunchingError
 } = require('../../errors')
+const {
+  getMigrationFileMetadata
+} = require('./helpers')
+
+const mainMigrationFolderPath = path.join(
+  __dirname,
+  '../../sync/dao/db-migrations/sqlite-migrations'
+)
+
+const _getMigrationFolderPath = (migrationsType) => {
+  return path.join(
+    mainMigrationFolderPath,
+    `${migrationsType}-migrations`
+  )
+}
+
+const _lookUpMigrations = (
+  migrationsType,
+  migrationsVersion,
+  migrationFileMetadata,
+  dependencies
+) => {
+  return migrationFileMetadata.filter((metadata) => (
+    metadata.version === migrationsVersion
+  )).map((metadata) => {
+    const migrationPath = path.join(
+      _getMigrationFolderPath(migrationsType),
+      metadata.name
+    )
+    const Migration = require(migrationPath)
+
+    return new Migration(migrationsVersion, ...dependencies)
+  })
+}
 
 module.exports = (ctx) => {
   const { dbDriver } = ctx.container.get(
@@ -37,17 +74,32 @@ module.exports = (ctx) => {
       return ctx.container.get(type)
     })
 
-    const migrations = versions.map((ver) => {
+    const migrationFileDirents = fs.readdirSync(
+      _getMigrationFolderPath(migrationsType),
+      { withFileTypes: true }
+    )
+    const metadata = getMigrationFileMetadata(migrationFileDirents)
+
+    const migrations = versions.reduce((accum, ver) => {
       try {
         if (!Number.isInteger(ver)) {
           throw new DbVersionTypeError()
         }
 
-        const Migration = require(
-          `../../sync/dao/db-migrations/${migrationsType}-migrations/migration.v${ver}`
+        const migrations = _lookUpMigrations(
+          migrationsType,
+          metadata,
+          ver,
+          deps
         )
 
-        return new Migration(ver, ...deps)
+        if (migrations.length === 0) {
+          throw new DbVersionTypeError()
+        }
+
+        accum.push(...migrations)
+
+        return accum
       } catch (err) {
         logger.debug(err)
         processMessageManager.sendState(
@@ -56,7 +108,7 @@ module.exports = (ctx) => {
 
         throw new MigrationLaunchingError()
       }
-    })
+    }, [])
 
     return migrations
   }
