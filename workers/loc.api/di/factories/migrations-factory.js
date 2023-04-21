@@ -15,7 +15,7 @@ const {
 
 const mainMigrationFolderPath = path.join(
   __dirname,
-  '../../sync/dao/db-migrations/sqlite-migrations'
+  '../../sync/dao/db-migrations'
 )
 
 const _getMigrationFolderPath = (migrationsType) => {
@@ -88,8 +88,8 @@ module.exports = (ctx) => {
 
         const migrations = _lookUpMigrations(
           migrationsType,
-          metadata,
           ver,
+          metadata,
           deps
         )
 
