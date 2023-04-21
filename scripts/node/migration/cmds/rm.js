@@ -27,7 +27,7 @@ const _getFileNamesStr = (fileNames) => {
 }
 
 module.exports = {
-  command: 'rm [totally]',
+  command: 'rm [totally|recover|wipe]',
   desc: 'Remove redundant migration files',
   builder: (yargs) => {
     yargs

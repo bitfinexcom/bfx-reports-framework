@@ -38,7 +38,7 @@ const _renderMigrationTemplate = (
 }
 
 module.exports = {
-  command: 'add [version]',
+  command: 'add [ver|next]',
   desc: 'Add a new DB migration file',
   builder: (yargs) => {
     yargs
