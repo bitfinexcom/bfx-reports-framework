@@ -194,7 +194,8 @@ class FrameworkReportService extends ReportService {
             'isSubAccount',
             'isNotProtected',
             'subUsers',
-            'isRestrictedToBeAddedToSubAccount'
+            'isRestrictedToBeAddedToSubAccount',
+            'isApiKeysAuth'
           ]
         }
       )

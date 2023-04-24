@@ -850,14 +850,22 @@ class Authenticator {
     const _users = await this.dao.getUsers(filter, opts)
     const remapedUsers = _users.map((user) => {
       if (
-        user &&
-        typeof user === 'object'
+        !user ||
+        typeof user !== 'object'
       ) {
-        user.isRestrictedToBeAddedToSubAccount = (
-          !!user.authToken ||
-          !!user.isSubAccount
-        )
+        return user
       }
+
+      user.isRestrictedToBeAddedToSubAccount = (
+        !!user.authToken ||
+        !!user.isSubAccount
+      )
+      user.isApiKeysAuth = !!(
+        user.apiKey &&
+        typeof user.apiKey === 'string' &&
+        user.apiSecret &&
+        typeof user.apiSecret === 'string'
+      )
 
       return user
     })

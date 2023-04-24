@@ -458,6 +458,7 @@ module.exports = (
       assert.isBoolean(user.isSubAccount)
       assert.isBoolean(user.isNotProtected)
       assert.isBoolean(user.isRestrictedToBeAddedToSubAccount)
+      assert.isBoolean(user.isApiKeysAuth)
       assert.isArray(user.subUsers)
 
       user.subUsers.forEach((subUser) => {
