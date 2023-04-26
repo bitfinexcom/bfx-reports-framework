@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 34
+const SUPPORTED_DB_VERSION = 35
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -59,6 +59,7 @@ const _models = new Map([
       isDataFromDb: 'INT',
       timezone: 'VARCHAR(255)',
       username: 'VARCHAR(255)',
+      localUsername: 'VARCHAR(255)',
       passwordHash: 'VARCHAR(255)',
       isNotProtected: 'INT',
       isSubAccount: 'INT',

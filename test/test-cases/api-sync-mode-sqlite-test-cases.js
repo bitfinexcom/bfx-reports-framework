@@ -162,6 +162,7 @@ module.exports = (
     assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNotOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNull(res.body.result.authTokenTTLSec)
+    assert.isNull(res.body.result.localUsername)
 
     auth.token = res.body.result.token
   })
@@ -457,6 +458,7 @@ module.exports = (
       assert.isBoolean(user.isSubAccount)
       assert.isBoolean(user.isNotProtected)
       assert.isBoolean(user.isRestrictedToBeAddedToSubAccount)
+      assert.isBoolean(user.isApiKeysAuth)
       assert.isArray(user.subUsers)
 
       user.subUsers.forEach((subUser) => {
