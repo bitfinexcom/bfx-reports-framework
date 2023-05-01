@@ -33,3 +33,4 @@ terraform/config/credentials.conf
 terraform/backend.tf
 terraform/.terraform.tfstate.lock.info
 READY
+workers/loc.api/sync/dao/db-migrations/sqlite-migrations/trash

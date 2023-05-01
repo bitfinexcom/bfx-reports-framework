@@ -89,7 +89,7 @@ class DbMigrationVerCorrectnessError extends BaseError {
 }
 
 class DbVersionTypeError extends BaseError {
-  constructor (message = 'ERR_DB_VERSION_IS_NOT_INTEGER') {
+  constructor (message = 'ERR_DB_MIGRATION_HAS_NOT_BEEN_FOUND') {
     super(message)
   }
 }

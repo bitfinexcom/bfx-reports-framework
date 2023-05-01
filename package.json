@@ -119,6 +119,7 @@
     "startExpress": "better-npm-run start:express",
     "startUI": "better-npm-run start:ui",
     "start": "better-npm-run start:all",
-    "unit": "better-npm-run unit"
+    "unit": "better-npm-run unit",
+    "migration": "node scripts/node/migration"
   }
 }
