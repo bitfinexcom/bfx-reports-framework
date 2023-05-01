@@ -1,12 +1,8 @@
 'use strict'
 
-const { promisify } = require('util')
-const fs = require('fs')
 const path = require('path')
 const { omit } = require('lodash')
 const request = require('supertest')
-
-const rmdir = promisify(fs.rmdir)
 
 const {
   stopEnvironment
@@ -20,7 +16,8 @@ const {
   startEnvironment
 } = require('./helpers/helpers.boot')
 const {
-  emptyDB
+  emptyDB,
+  rmRf
 } = require('./helpers/helpers.core')
 const {
   createMockRESTv2SrvWithDate
@@ -81,7 +78,7 @@ describe('Sync mode API with SQLite', () => {
 
     mockRESTv2Srv = createMockRESTv2SrvWithDate(start, end, 100)
 
-    await rmdir(csvDirPath, { recursive: true })
+    await rmRf(csvDirPath)
     await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
     const env = await startEnvironment(false, false, 1)
@@ -101,7 +98,7 @@ describe('Sync mode API with SQLite', () => {
     await stopEnvironment()
     await rmDB(dbDirPath)
     await rmAllFiles(tempDirPath, ['README.md'])
-    await rmdir(csvDirPath, { recursive: true })
+    await rmRf(csvDirPath)
 
     try {
       await mockRESTv2Srv.close()
@@ -119,7 +116,7 @@ describe('Sync mode API with SQLite', () => {
     before(async function () {
       this.timeout(20000)
 
-      await rmdir(csvDirPath, { recursive: true })
+      await rmRf(csvDirPath)
       await rmAllFiles(tempDirPath, ['README.md'])
     })
 

@@ -1,5 +1,7 @@
 'use strict'
 
+const fsPromises = require('fs/promises')
+
 const container = require('bfx-report/workers/loc.api/di')
 
 const {
@@ -73,9 +75,15 @@ const getRServiceProxy = (
   })
 }
 
+const rmRf = (path) => fsPromises.rm(path, {
+  recursive: true,
+  force: true
+})
+
 module.exports = {
   emptyDB,
   delay,
   getParamsArrToTestTimeframeGrouping,
-  getRServiceProxy
+  getRServiceProxy,
+  rmRf
 }
