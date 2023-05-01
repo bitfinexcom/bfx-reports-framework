@@ -1167,6 +1167,7 @@ module.exports = (
       assert.isObject(item)
       assert.isString(item.id)
       assert.isString(item.name)
+      assert.isString(item.symbol)
     })
   })
 
