@@ -1,15 +1,47 @@
 'use strict'
 
-const AbstractMigration = require('./abstract.migration')
-const { getSqlArrToModifyColumns } = require('./helpers')
+/*
+ * CREATED_AT: 2023-05-01T08:32:51.371Z
+ * VERSION: v36
+ */
 
-class MigrationV11 extends AbstractMigration {
+const {
+  ID_PRIMARY_KEY
+} = require('./helpers/const')
+const {
+  getSqlArrToModifyColumns
+} = require('./helpers')
+
+const AbstractMigration = require('./abstract.migration')
+
+class MigrationV36 extends AbstractMigration {
   /**
    * @override
    */
   up () {
     const sqlArr = [
-      'ALTER TABLE currencies ADD COLUMN walletFx TEXT'
+      'ALTER TABLE currencies ADD COLUMN symbol VARCHAR(255)'
+    ]
+
+    this.addSql(sqlArr)
+  }
+
+  /**
+   * @override
+   */
+  down () {
+    const sqlArr = [
+      ...getSqlArrToModifyColumns(
+        'currencies',
+        {
+          _id: ID_PRIMARY_KEY,
+          id: 'VARCHAR(255)',
+          name: 'VARCHAR(255)',
+          pool: 'VARCHAR(255)',
+          explorer: 'TEXT',
+          walletFx: 'TEXT'
+        }
+      )
     ]
 
     this.addSql(sqlArr)
@@ -23,27 +55,7 @@ class MigrationV11 extends AbstractMigration {
   /**
    * @override
    */
-  down () {
-    const sqlArr = [
-      ...getSqlArrToModifyColumns(
-        'currencies',
-        {
-          _id: 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
-          id: 'VARCHAR(255)',
-          name: 'VARCHAR(255)',
-          pool: 'VARCHAR(255)',
-          explorer: 'TEXT'
-        }
-      )
-    ]
-
-    this.addSql(sqlArr)
-  }
-
-  /**
-   * @override
-   */
   afterDown () { return this.dao.enableForeignKeys() }
 }
 
-module.exports = MigrationV11
+module.exports = MigrationV36

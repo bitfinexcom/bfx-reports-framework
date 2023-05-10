@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "4.5.0",
+  "version": "4.6.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
@@ -119,6 +119,7 @@
     "startExpress": "better-npm-run start:express",
     "startUI": "better-npm-run start:ui",
     "start": "better-npm-run start:all",
-    "unit": "better-npm-run unit"
+    "unit": "better-npm-run unit",
+    "migration": "node scripts/node/migration"
   }
 }

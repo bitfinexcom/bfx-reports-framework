@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 35
+const SUPPORTED_DB_VERSION = 36
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -682,6 +682,7 @@ const _models = new Map([
       name: 'VARCHAR(255)',
       pool: 'VARCHAR(255)',
       explorer: 'TEXT',
+      symbol: 'VARCHAR(255)',
       walletFx: 'TEXT',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id']
