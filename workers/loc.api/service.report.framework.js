@@ -191,6 +191,7 @@ class FrameworkReportService extends ReportService {
           subUsersProjection: ['email'],
           projection: [
             'email',
+            'localUsername',
             'isSubAccount',
             'isNotProtected',
             'subUsers',
