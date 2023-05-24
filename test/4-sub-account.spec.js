@@ -299,6 +299,42 @@ describe('Sub-account', () => {
       subAccountAuth.token = res.body.result.token
     })
 
+    it('it should be successfully performed by the getUsers method', async function () {
+      this.timeout(5000)
+
+      const res = await agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          method: 'getUsers',
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      assert.isObject(res.body)
+      assert.propertyVal(res.body, 'id', 5)
+      assert.isArray(res.body.result)
+
+      res.body.result.forEach((user) => {
+        assert.isObject(user)
+        assert.isString(user.email)
+        assert.isBoolean(user.isSubAccount)
+        assert.isBoolean(user.isNotProtected)
+        assert.isBoolean(user.isRestrictedToBeAddedToSubAccount)
+        assert.isBoolean(user.isApiKeysAuth)
+        assert.isArray(user.subUsers)
+
+        if (user.isSubAccount) {
+          assert.isString(user.localUsername)
+        }
+
+        user.subUsers.forEach((subUser) => {
+          assert.isString(subUser.email)
+        })
+      })
+    })
+
     it('it should be successfully performed by the signIn method for sub-account', async function () {
       this.timeout(5000)
 

@@ -1138,7 +1138,7 @@ class Authenticator {
     const session = this.userSessions.get(_token) ?? {}
     const {
       authTokenRefreshInterval,
-      authTokenInvalidateIntervals
+      authTokenInvalidateIntervals = new Map()
     } = session
 
     clearInterval(authTokenRefreshInterval)
@@ -1260,7 +1260,13 @@ class Authenticator {
       token,
       authToken
     } = user ?? {}
-    const { authTokenInvalidateIntervals } = this.userSessions.get(token)
+    const userSession = this.userSessions.get(token)
+
+    if (!(userSession.authTokenInvalidateIntervals instanceof Map)) {
+      userSession.authTokenInvalidateIntervals = new Map()
+    }
+
+    const { authTokenInvalidateIntervals } = userSession
     let count = 0
 
     const authTokenInvalidateInterval = setInterval(async () => {
@@ -1275,11 +1281,11 @@ class Authenticator {
         })
 
         clearInterval(authTokenInvalidateInterval)
-        session.authTokenInvalidateIntervals.delete(authToken)
+        session.authTokenInvalidateIntervals?.delete(authToken)
       } catch (err) {
         if (count >= 3) {
           clearInterval(authTokenInvalidateInterval)
-          session.authTokenInvalidateIntervals.delete(authToken)
+          session.authTokenInvalidateIntervals?.delete(authToken)
         }
 
         this.logger.debug(err)
