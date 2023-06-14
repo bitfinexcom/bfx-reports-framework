@@ -1254,6 +1254,32 @@ class BetterSqliteDAO extends DAO {
       params: { ...values, ...limitVal }
     })
   }
+
+  /**
+   * @override
+   */
+  getLastFinishedSyncQueueJob (userId) {
+    if (!Number.isInteger(userId)) {
+      throw new AuthError()
+    }
+
+    const _sort = getOrderQuery([['updatedAt', -1]])
+    const where = `WHERE
+      collName = '_ALL' AND
+      state = 'FINISHED' AND
+      (ownerUserId = $ownerUserId  OR isOwnerScheduler = 1)`
+    const params = { ownerUserId: userId }
+
+    const sql = `SELECT * FROM ${this.TABLES_NAMES.SYNC_QUEUE}
+      ${where}
+      ${_sort}`
+
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.GET,
+      sql,
+      params
+    }, { withWorkerThreads: true })
+  }
 }
 
 decorateInjectable(BetterSqliteDAO, depsTypes)
