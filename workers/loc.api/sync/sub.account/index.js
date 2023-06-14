@@ -417,6 +417,10 @@ class SubAccount {
         subUser?.email === email
       ))
 
+      if (subAccountUser?.password) {
+        masterUser.password = subAccountUser.password
+      }
+
       const addingSubUsersAuth = [
         ...addingSubUsers,
         masterUser
