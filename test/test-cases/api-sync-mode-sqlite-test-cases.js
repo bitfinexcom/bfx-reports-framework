@@ -163,6 +163,7 @@ module.exports = (
     assert.isNotOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNull(res.body.result.authTokenTTLSec)
     assert.isNull(res.body.result.localUsername)
+    assert.isNull(res.body.result.lastSyncMts)
 
     auth.token = res.body.result.token
   })
@@ -260,6 +261,8 @@ module.exports = (
     assert.isBoolean(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isOk(res.body.result.shouldNotSyncOnStartupAfterUpdate)
     assert.isNumber(res.body.result.authTokenTTLSec)
+    assert.isNull(res.body.result.localUsername)
+    assert.isNull(res.body.result.lastSyncMts)
   })
 
   it('it should not be successfully performed by the signIn method', async function () {
@@ -546,6 +549,26 @@ module.exports = (
   })
 
   getSyncProgressTestCase(agent, { basePath, auth })
+
+  it('it should be successfully performed by the signIn method, lastSyncMts is integer', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'signIn',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isOk(Number.isInteger(res.body.result.lastSyncMts))
+  })
 
   it('it should be successfully performed by the haveCollsBeenSyncedAtLeastOnce method, returns true', async function () {
     this.timeout(60000)
