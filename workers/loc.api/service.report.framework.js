@@ -1036,6 +1036,27 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
+  getMovementInfo (space, args, cb) {
+    return this._privResponder(async () => {
+      const res = await this._subAccountApiData
+        .getDataForSubAccount(
+          (args) => super.getMovementInfo(space, args),
+          args,
+          {
+            datePropName: 'mtsUpdated',
+            isNotPreparedResponse: true
+          }
+        )
+
+      return Array.isArray(res)
+        ? res.filter((sRes) => Number.isInteger(sRes?.id))[0] ?? {}
+        : res
+    }, 'getMovementInfo', args, cb)
+  }
+
+  /**
+   * @override
+   */
   getFundingOfferHistory (space, args, cb) {
     return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
