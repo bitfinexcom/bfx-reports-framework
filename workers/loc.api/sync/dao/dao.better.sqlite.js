@@ -46,6 +46,8 @@ const {
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
 } = require('../schema/const')
+const ALLOWED_COLLS = require('../schema/allowed.colls')
+const SYNC_QUEUE_STATES = require('../sync.queue/sync.queue.states')
 const DB_WORKER_ACTIONS = require(
   './sqlite-worker/db-worker-actions/db-worker-actions.const'
 )
@@ -1265,8 +1267,8 @@ class BetterSqliteDAO extends DAO {
 
     const _sort = getOrderQuery([['updatedAt', -1]])
     const where = `WHERE
-      collName = '_ALL' AND
-      state = 'FINISHED' AND
+      collName = '${ALLOWED_COLLS.ALL}' AND
+      state = '${SYNC_QUEUE_STATES.FINISHED_JOB_STATE}' AND
       (ownerUserId = $ownerUserId  OR isOwnerScheduler = 1)`
     const params = { ownerUserId: userId }
 
