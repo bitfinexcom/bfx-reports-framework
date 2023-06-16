@@ -130,13 +130,17 @@ class FrameworkReportService extends ReportService {
         })
       }
 
+      const lastFinishedSyncQueueJob = await this._dao
+        .getLastFinishedSyncQueueJob(_id)
+
       return {
         email,
         isSubAccount,
         token,
         shouldNotSyncOnStartupAfterUpdate,
         authTokenTTLSec,
-        localUsername
+        localUsername,
+        lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null
       }
     }, 'signIn', args, cb)
   }
