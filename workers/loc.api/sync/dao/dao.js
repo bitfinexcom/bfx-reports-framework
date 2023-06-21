@@ -169,6 +169,11 @@ class DAO {
    * @abstract
    */
   async removeElemsLeaveLastNRecords () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async getLastFinishedSyncQueueJob () { throw new ImplementationError() }
 }
 
 decorateInjectable(DAO)

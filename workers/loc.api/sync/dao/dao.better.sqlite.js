@@ -46,6 +46,8 @@ const {
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
 } = require('../schema/const')
+const ALLOWED_COLLS = require('../schema/allowed.colls')
+const SYNC_QUEUE_STATES = require('../sync.queue/sync.queue.states')
 const DB_WORKER_ACTIONS = require(
   './sqlite-worker/db-worker-actions/db-worker-actions.const'
 )
@@ -1253,6 +1255,32 @@ class BetterSqliteDAO extends DAO {
       sql,
       params: { ...values, ...limitVal }
     })
+  }
+
+  /**
+   * @override
+   */
+  getLastFinishedSyncQueueJob (userId) {
+    if (!Number.isInteger(userId)) {
+      throw new AuthError()
+    }
+
+    const _sort = getOrderQuery([['updatedAt', -1]])
+    const where = `WHERE
+      collName = '${ALLOWED_COLLS.ALL}' AND
+      state = '${SYNC_QUEUE_STATES.FINISHED_JOB_STATE}' AND
+      (ownerUserId = $ownerUserId  OR isOwnerScheduler = 1)`
+    const params = { ownerUserId: userId }
+
+    const sql = `SELECT * FROM ${this.TABLES_NAMES.SYNC_QUEUE}
+      ${where}
+      ${_sort}`
+
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.GET,
+      sql,
+      params
+    }, { withWorkerThreads: true })
   }
 }
 

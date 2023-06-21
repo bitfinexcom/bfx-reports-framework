@@ -162,12 +162,12 @@ class SubAccountApiData {
       limit = 10000,
       notThrowError,
       notCheckNextPage
-    } = { ...params }
+    } = params ?? {}
     const {
       datePropName,
       isThrownErrIfAllFail,
       isNotPreparedResponse
-    } = { ...opts }
+    } = opts ?? {}
 
     const errors = []
     const promises = argsArr.map(async (args) => {
@@ -198,16 +198,17 @@ class SubAccountApiData {
     }
 
     const mergedRes = resArr.reduce((accum, curr) => {
-      const { res } = Array.isArray(curr)
-        ? { res: curr }
-        : { ...curr }
+      const res = Array.isArray(curr)
+        ? curr
+        : curr?.res ?? curr ?? {}
 
-      if (
-        Array.isArray(res) &&
-        res.length !== 0
-      ) {
+      if (Array.isArray(res)) {
         accum.push(...res)
+
+        return accum
       }
+
+      accum.push(res)
 
       return accum
     }, [])
@@ -222,11 +223,10 @@ class SubAccountApiData {
       ? orderedRes.slice(0, limit)
       : orderedRes
 
-    const firstElem = { ...limitedRes[0] }
-    const mts = firstElem[datePropName]
+    const firstElem = limitedRes[0]
+    const mts = firstElem?.[datePropName]
     const isNotContainedSameMts = limitedRes.some((item) => {
-      const _item = { ...item }
-      const _mts = _item[datePropName]
+      const _mts = item?.[datePropName]
 
       return _mts !== mts
     })
