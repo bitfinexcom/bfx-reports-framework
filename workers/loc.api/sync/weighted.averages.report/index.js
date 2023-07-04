@@ -35,6 +35,9 @@ class WeightedAveragesReport extends BaseWeightedAveragesReport {
 
     this.tradesModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.TRADES)
+
+    // Used to switch data fetching from DB for framework mode
+    this._isNotCalcTakenFromBfxApi = true
   }
 
   /**
