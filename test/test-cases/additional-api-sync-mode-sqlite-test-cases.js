@@ -578,7 +578,7 @@ module.exports = (
     this.timeout(120000)
 
     const paramsArr = [
-      { end, start },
+      { end, start, symbol: 'tBTCUSD' },
       {
         end,
         start: end - (10 * 60 * 60 * 1000),
@@ -1019,6 +1019,7 @@ module.exports = (
         auth,
         method: 'getWeightedAveragesReportCsv',
         params: {
+          symbol: 'tBTCUSD',
           end,
           start,
           email
