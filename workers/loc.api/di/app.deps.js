@@ -10,7 +10,9 @@ const { bindDepsToFn } = require(
   'bfx-report/workers/loc.api/di/helpers'
 )
 const {
-  getDataFromApi
+  getREST,
+  getDataFromApi,
+  prepareApiResponse
 } = require('bfx-report/workers/loc.api/helpers')
 const responder = require('bfx-report/workers/loc.api/responder')
 
@@ -115,6 +117,7 @@ const Authenticator = require('../sync/authenticator')
 const privResponder = require('../responder')
 const ProcessMessageManager = require('../process.message.manager')
 const HTTPRequest = require('../http.request')
+const BfxApiRouter = require('../bfx.api.router')
 
 decorate(injectable(), EventEmitter)
 
@@ -393,6 +396,24 @@ module.exports = ({
           TYPES.SyncInterrupter,
           TYPES.WSEventEmitter
         ]
+      )
+    )
+    rebind(TYPES.BfxApiRouter)
+      .to(BfxApiRouter)
+      .inSingletonScope()
+    rebind(TYPES.GetREST).toConstantValue(
+      bindDepsToFn(
+        getREST,
+        [
+          TYPES.CONF,
+          TYPES.BfxApiRouter
+        ]
+      )
+    )
+    rebind(TYPES.PrepareApiResponse).toConstantValue(
+      bindDepsToFn(
+        prepareApiResponse,
+        [TYPES.GetREST]
       )
     )
   })
