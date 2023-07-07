@@ -8,9 +8,15 @@ const RateLimitChecker = require('./rate.limit.checker')
 
 const { decorateInjectable } = require('../di/utils')
 
+const isTestEnv = process.env.NODE_ENV === 'test'
+
 class BfxApiRouter extends BaseBfxApiRouter {
   constructor () {
     super()
+
+    this._coolDownDelayMs = isTestEnv
+      ? 0
+      : 60000
 
     this._rateLimitCheckerMaps = new Map()
     this._rateLimitForMethodName = new Map([
@@ -75,12 +81,13 @@ class BfxApiRouter extends BaseBfxApiRouter {
 
     if (rateLimitChecker.check()) {
       // Cool down delay
-      return new Promise((resolve) => setTimeout(resolve, 60000))
-        .then(() => {
-          rateLimitChecker.add()
+      return new Promise((resolve) => (
+        setTimeout(resolve, this._coolDownDelayMs))
+      ).then(() => {
+        rateLimitChecker.add()
 
-          return method()
-        })
+        return method()
+      })
     }
 
     rateLimitChecker.add()
