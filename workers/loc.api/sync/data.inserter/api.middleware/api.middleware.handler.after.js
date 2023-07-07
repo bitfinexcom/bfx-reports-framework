@@ -22,9 +22,9 @@ class ApiMiddlewareHandlerAfter {
   async [SYNC_API_METHODS.POSITIONS_HISTORY] (
     args,
     apiRes,
-    isCheckCall
+    opts
   ) {
-    if (isCheckCall) {
+    if (opts?.shouldNotApiMiddlewareBeLaunched) {
       return apiRes
     }
 

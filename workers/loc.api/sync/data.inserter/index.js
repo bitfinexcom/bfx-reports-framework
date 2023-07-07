@@ -509,7 +509,8 @@ class DataInserter extends EventEmitter {
     const {
       name: collName,
       dateFieldName,
-      model
+      model,
+      shouldNotApiMiddlewareBeLaunched
     } = schema
 
     const _args = cloneDeep(args)
@@ -542,7 +543,8 @@ class DataInserter extends EventEmitter {
         isInterrupted
       } = await this._getDataFromApi(
         methodApi,
-        currIterationArgs
+        currIterationArgs,
+        shouldNotApiMiddlewareBeLaunched
       )
 
       if (isInterrupted) {
@@ -756,7 +758,8 @@ class DataInserter extends EventEmitter {
 
     const {
       name: collName,
-      projection
+      projection,
+      shouldNotApiMiddlewareBeLaunched
     } = schema
     const _projection = Array.isArray(projection)
       ? projection
@@ -766,7 +769,11 @@ class DataInserter extends EventEmitter {
     const args = this._getMethodArgMap(
       schema,
       { start: null, end: null })
-    const elemsFromApi = await this._getDataFromApi(methodApi, args)
+    const elemsFromApi = await this._getDataFromApi(
+      methodApi,
+      args,
+      shouldNotApiMiddlewareBeLaunched
+    )
 
     if (
       elemsFromApi &&
@@ -809,10 +816,15 @@ class DataInserter extends EventEmitter {
 
     const {
       name: collName,
-      model
+      model,
+      shouldNotApiMiddlewareBeLaunched
     } = schema ?? {}
 
-    const apiRes = await this._getDataFromApi(methodApi, args)
+    const apiRes = await this._getDataFromApi(
+      methodApi,
+      args,
+      shouldNotApiMiddlewareBeLaunched
+    )
     const isApiResObj = (
       apiRes &&
       typeof apiRes === 'object'
@@ -992,7 +1004,11 @@ class DataInserter extends EventEmitter {
     this._afterAllInsertsHooks.push(...hookArr)
   }
 
-  _getDataFromApi (methodApi, args, isCheckCall) {
+  _getDataFromApi (
+    methodApi,
+    args,
+    shouldNotApiMiddlewareBeLaunched
+  ) {
     if (!this.apiMiddleware.hasMethod(methodApi)) {
       throw new FindMethodError()
     }
@@ -1001,7 +1017,7 @@ class DataInserter extends EventEmitter {
       getData: methodApi,
       args,
       middleware: this.apiMiddleware.request.bind(this.apiMiddleware),
-      middlewareParams: isCheckCall,
+      middlewareParams: { shouldNotApiMiddlewareBeLaunched },
       callerName: 'DATA_SYNCER'
     })
   }
