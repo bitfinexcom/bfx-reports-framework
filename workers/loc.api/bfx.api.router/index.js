@@ -10,6 +10,8 @@ const { decorateInjectable } = require('../di/utils')
 
 const isTestEnv = process.env.NODE_ENV === 'test'
 
+const rateLimitCheckerMaps = new Map()
+
 class BfxApiRouter extends BaseBfxApiRouter {
   constructor () {
     super()
@@ -18,7 +20,6 @@ class BfxApiRouter extends BaseBfxApiRouter {
       ? 0
       : 60000
 
-    this._rateLimitCheckerMaps = new Map()
     this._rateLimitForMethodName = new Map([
       ['generateToken', null],
       ['invalidateAuthToken', null],
@@ -68,16 +69,16 @@ class BfxApiRouter extends BaseBfxApiRouter {
       return method()
     }
 
-    if (!this._rateLimitCheckerMaps.has(methodName)) {
+    if (!rateLimitCheckerMaps.has(methodName)) {
       const rateLimit = this._rateLimitForMethodName.get(methodName)
 
-      this._rateLimitCheckerMaps.set(
+      rateLimitCheckerMaps.set(
         methodName,
         new RateLimitChecker({ rateLimit })
       )
     }
 
-    const rateLimitChecker = this._rateLimitCheckerMaps.get(methodName)
+    const rateLimitChecker = rateLimitCheckerMaps.get(methodName)
 
     if (rateLimitChecker.check()) {
       // Cool down delay
