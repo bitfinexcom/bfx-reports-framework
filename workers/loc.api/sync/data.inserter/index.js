@@ -886,8 +886,6 @@ class DataInserter extends EventEmitter {
         const { userId, subUserId } = this._getUserIds(auth)
         const updatesForOneUserPromises = []
 
-        updatesForOneUserPromises.push(setImmediatePromise())
-
         for (const [collName, schema] of methodCollMap) {
           if (
             !Array.isArray(schema?.start) ||
@@ -895,6 +893,8 @@ class DataInserter extends EventEmitter {
           ) {
             continue
           }
+
+          updatesForOneUserPromises.push(setImmediatePromise())
 
           const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
             collName,
