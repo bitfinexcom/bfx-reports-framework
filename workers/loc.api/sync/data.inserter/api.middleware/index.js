@@ -27,9 +27,15 @@ class ApiMiddleware {
     return typeof this.apiMiddlewareHandlerAfter[method] === 'function'
   }
 
-  async request (method, args, isCheckCall = false) {
+  async request (method, args, opts) {
+    const { shouldNotApiMiddlewareBeLaunched } = opts ?? {}
     const apiRes = await this._requestToReportService(method, args)
-    const res = await this._after(method, args, apiRes, isCheckCall)
+
+    if (shouldNotApiMiddlewareBeLaunched) {
+      return apiRes
+    }
+
+    const res = await this._after(method, args, apiRes, opts)
 
     return res
   }
@@ -44,7 +50,7 @@ class ApiMiddleware {
     return fn(args)
   }
 
-  _after (method, args, apiRes, isCheckCall) {
+  _after (method, args, apiRes, opts) {
     if (!this._hasHandlerAfter(method)) {
       return apiRes
     }
@@ -53,7 +59,7 @@ class ApiMiddleware {
       this.apiMiddlewareHandlerAfter
     )
 
-    return fn(args, apiRes, isCheckCall)
+    return fn(args, apiRes, opts)
   }
 }
 

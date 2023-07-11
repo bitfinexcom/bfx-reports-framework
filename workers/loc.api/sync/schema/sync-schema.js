@@ -175,6 +175,7 @@ const _methodCollMap = new Map([
       hasNewData: false,
       start: [],
       isSyncRequiredAtLeastOnce: false,
+      shouldNotApiMiddlewareBeLaunched: true,
       type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
       model: getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
     }

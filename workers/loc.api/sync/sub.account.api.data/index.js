@@ -18,7 +18,17 @@ const {
 
 const { decorateInjectable } = require('../../di/utils')
 
+const depsTypes = (TYPES) => [
+  TYPES.GetDataFromApi
+]
+
 class SubAccountApiData {
+  constructor (
+    getDataFromApi
+  ) {
+    this.getDataFromApi = getDataFromApi
+  }
+
   _hasId (id) {
     return (
       Number.isInteger(id) ||
@@ -170,22 +180,27 @@ class SubAccountApiData {
     } = opts ?? {}
 
     const errors = []
-    const promises = argsArr.map(async (args) => {
-      try {
-        const res = await method(args)
+    const resArr = []
 
-        return res
+    for (const args of argsArr) {
+      try {
+        const res = await this.getDataFromApi({
+          getData: (space, args) => method(args),
+          args,
+          callerName: 'SUB_ACCOUNT_API_DATA'
+        })
+
+        resArr.push(res)
       } catch (err) {
         if (isThrownErrIfAllFail) {
           errors.push(err)
 
-          return
+          continue
         }
 
         throw err
       }
-    })
-    const resArr = await Promise.all(promises)
+    }
 
     if (
       errors.length > 0 &&
@@ -320,6 +335,6 @@ class SubAccountApiData {
   }
 }
 
-decorateInjectable(SubAccountApiData)
+decorateInjectable(SubAccountApiData, depsTypes)
 
 module.exports = SubAccountApiData
