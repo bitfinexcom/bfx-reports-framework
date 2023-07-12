@@ -615,7 +615,9 @@ module.exports = (
         'sellingWeightedPrice',
         'sellingAmount',
         'cumulativeWeightedPrice',
-        'cumulativeAmount'
+        'cumulativeAmount',
+        'firstTradeMts',
+        'lastTradeMts'
       ])
     }
   })
