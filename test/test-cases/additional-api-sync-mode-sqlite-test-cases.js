@@ -612,8 +612,10 @@ module.exports = (
         'symbol',
         'buyingWeightedPrice',
         'buyingAmount',
+        'cost',
         'sellingWeightedPrice',
         'sellingAmount',
+        'sale',
         'cumulativeAmount',
         'firstTradeMts',
         'lastTradeMts'
