@@ -33,6 +33,12 @@ class Progress extends EventEmitter {
     this.logger = logger
 
     this._syncStartedAt = null
+    this._progressEmitterInterval = null
+    this._progressEmitterIntervalMs = 1000
+    this._progress = null
+    this._hasNotProgressChanged = true
+    this._leftTime = null
+    this._prevEstimatedLeftTime = Date.now()
   }
 
   async setProgress (progress) {
@@ -43,18 +49,16 @@ class Progress extends EventEmitter {
     const _progress = isError
       ? progress.toString()
       : progress
+    this._hasNotProgressChanged = this._progress !== _progress
+    this._progress = _progress
 
     try {
       await this.dao.updateRecordOf(
         this.TABLES_NAMES.PROGRESS,
         { value: JSON.stringify(_progress) }
       )
-      const estimatedSyncTime = this._estimateSyncTime({
-        progress: _progress
-      })
 
-      this.emit(estimatedSyncTime)
-      await this.wsEventEmitter.emitProgress(() => estimatedSyncTime)
+      await this._emitProgress()
     } catch (e) {
       this.logger.error(
         `PROGRESS:SYNC:SET: ${e.stack || e}`
@@ -94,11 +98,13 @@ class Progress extends EventEmitter {
 
   activateSyncTimeEstimate () {
     this._syncStartedAt = Date.now()
+    this._launchProgressEmitterInterval()
 
     return this
   }
 
   deactivateSyncTimeEstimate () {
+    clearInterval(this._progressEmitterInterval)
     this._syncStartedAt = null
 
     return this
@@ -106,7 +112,8 @@ class Progress extends EventEmitter {
 
   async _estimateSyncTime (params) {
     const {
-      progress
+      progress,
+      hasNotProgressChanged
     } = params ?? {}
 
     const syncStartedAt = this._getSyncStartedAt()
@@ -139,7 +146,12 @@ class Progress extends EventEmitter {
       }
     }
 
-    const leftTime = (spentTime / progress) * (100 - progress)
+    const leftTime = this._calcLeftTime({
+      progress,
+      nowMts,
+      spentTime,
+      hasNotProgressChanged
+    })
 
     return {
       progress,
@@ -149,8 +161,65 @@ class Progress extends EventEmitter {
     }
   }
 
+  _calcLeftTime (params) {
+    const {
+      progress,
+      nowMts,
+      spentTime,
+      hasNotProgressChanged
+    } = params ?? {}
+
+    if (!hasNotProgressChanged) {
+      this._prevEstimatedLeftTime = nowMts
+      this._leftTime = (spentTime / progress) * (100 - progress)
+
+      return this._leftTime
+    }
+    if (!Number.isFinite(this._leftTime)) {
+      this._prevEstimatedLeftTime = nowMts
+
+      return this._leftTime
+    }
+
+    const leftTime = this._leftTime - (nowMts - this._prevEstimatedLeftTime)
+    this._prevEstimatedLeftTime = nowMts
+    this._leftTime = leftTime > 0
+      ? leftTime
+      : null
+
+    return this._leftTime
+  }
+
   _getSyncStartedAt () {
     return this._syncStartedAt ?? null
+  }
+
+  _launchProgressEmitterInterval () {
+    clearInterval(this._progressEmitterInterval)
+
+    this._progressEmitterInterval = setInterval(async () => {
+      await this._emitProgress({
+        hasNotProgressChanged: this._hasNotProgressChanged
+      })
+    }, this._progressEmitterIntervalMs).unref()
+  }
+
+  async _emitProgress (opts) {
+    try {
+      const { hasNotProgressChanged } = opts ?? {}
+
+      const estimatedSyncTime = this._estimateSyncTime({
+        progress: this._progress,
+        hasNotProgressChanged
+      })
+
+      this.emit(estimatedSyncTime)
+      await this.wsEventEmitter.emitProgress(() => estimatedSyncTime)
+    } catch (e) {
+      this.logger.error(
+        `PROGRESS:SYNC:EMITTING: ${e.stack || e}`
+      )
+    }
   }
 }
 

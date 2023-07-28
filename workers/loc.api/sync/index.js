@@ -50,6 +50,8 @@ class Sync {
       }
     }
 
+    this.progress.deactivateSyncTimeEstimate()
+
     try {
       await this.redirectRequestsToApi({ isRedirected: false })
     } catch (err) {
