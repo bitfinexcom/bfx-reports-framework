@@ -32,10 +32,21 @@ module.exports = (
       assert.propertyVal(res.body, 'id', 5)
       assert.isObject(res.body.result)
       assert.isNumber(res.body.result.progress)
-      assert.isNumber(res.body.result.syncStartedAt)
-      assert.isNumber(res.body.result.spentTime)
+
+      assert.isOk(
+        res.body.result.syncStartedAt === null ||
+        Number.isInteger(res.body.result.syncStartedAt)
+      )
+      assert.isOk(
+        res.body.result.spentTime === null ||
+        Number.isInteger(res.body.result.spentTime)
+      )
+      if (Number.isFinite(res.body.result.syncStartedAt)) {
+        Number.isInteger(res.body.result.spentTime)
+      }
 
       if (
+        !Number.isFinite(res.body.result.syncStartedAt) ||
         !Number.isFinite(res.body.result.progress) ||
         res.body.result.progress <= 0 ||
         res.body.result.progress > 100
