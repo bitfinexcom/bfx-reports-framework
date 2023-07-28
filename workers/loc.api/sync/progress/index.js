@@ -131,7 +131,7 @@ class Progress extends EventEmitter {
       }
     }
 
-    const spentTime = nowMts - syncStartedAt
+    const spentTime = Math.floor(nowMts - syncStartedAt)
 
     if (
       !Number.isFinite(progress) ||
@@ -171,7 +171,7 @@ class Progress extends EventEmitter {
 
     if (!hasNotProgressChanged) {
       this._prevEstimatedLeftTime = nowMts
-      this._leftTime = (spentTime / progress) * (100 - progress)
+      this._leftTime = Math.floor((spentTime / progress) * (100 - progress))
 
       return this._leftTime
     }
@@ -181,7 +181,7 @@ class Progress extends EventEmitter {
       return this._leftTime
     }
 
-    const leftTime = this._leftTime - (nowMts - this._prevEstimatedLeftTime)
+    const leftTime = Math.floor(this._leftTime - (nowMts - this._prevEstimatedLeftTime))
     this._prevEstimatedLeftTime = nowMts
     this._leftTime = leftTime > 0
       ? leftTime
