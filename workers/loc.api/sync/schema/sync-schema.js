@@ -381,6 +381,19 @@ const _methodCollMap = new Map([
     }
   ],
   [
+    SYNC_API_METHODS.FUTURE_CURRENCY_LIST,
+    {
+      name: ALLOWED_COLLS.FUTURE_CURRENCY_LIST,
+      maxLimit: 10000,
+      projection: 'symbol',
+      sort: [['symbol', 1]],
+      hasNewData: false,
+      isSyncRequiredAtLeastOnce: true,
+      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
+      model: getModelOf(TABLES_NAMES.FUTURE_CURRENCY_LIST)
+    }
+  ],
+  [
     SYNC_API_METHODS.CANDLES,
     {
       name: ALLOWED_COLLS.CANDLES,
