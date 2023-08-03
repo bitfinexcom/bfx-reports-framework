@@ -689,6 +689,16 @@ const _models = new Map([
     }
   ],
   [
+    TABLES_NAMES.LABLE_CURRENCY_MAP,
+    {
+      _id: ID_PRIMARY_KEY,
+      key: 'VARCHAR(255)',
+      value: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['key']
+    }
+  ],
+  [
     TABLES_NAMES.CANDLES,
     {
       _id: ID_PRIMARY_KEY,
