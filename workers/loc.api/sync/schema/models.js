@@ -699,6 +699,15 @@ const _models = new Map([
     }
   ],
   [
+    TABLES_NAMES.FUTURE_CURRENCY_LIST,
+    {
+      _id: ID_PRIMARY_KEY,
+      symbol: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['symbol']
+    }
+  ],
+  [
     TABLES_NAMES.CANDLES,
     {
       _id: ID_PRIMARY_KEY,
