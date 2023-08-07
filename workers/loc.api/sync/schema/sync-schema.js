@@ -368,45 +368,6 @@ const _methodCollMap = new Map([
     }
   ],
   [
-    SYNC_API_METHODS.LABLE_CURRENCY_MAP,
-    {
-      name: ALLOWED_COLLS.LABLE_CURRENCY_MAP,
-      maxLimit: 10000,
-      projection: ['key', 'value'],
-      sort: [['key', 1]],
-      hasNewData: false,
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.LABLE_CURRENCY_MAP)
-    }
-  ],
-  [
-    SYNC_API_METHODS.FUTURE_CURRENCY_LIST,
-    {
-      name: ALLOWED_COLLS.FUTURE_CURRENCY_LIST,
-      maxLimit: 10000,
-      projection: 'symbol',
-      sort: [['symbol', 1]],
-      hasNewData: false,
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
-      model: getModelOf(TABLES_NAMES.FUTURE_CURRENCY_LIST)
-    }
-  ],
-  [
-    SYNC_API_METHODS.SECURITY_CURRENCY_LIST,
-    {
-      name: ALLOWED_COLLS.SECURITY_CURRENCY_LIST,
-      maxLimit: 10000,
-      projection: 'symbol',
-      sort: [['symbol', 1]],
-      hasNewData: false,
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
-      model: getModelOf(TABLES_NAMES.SECURITY_CURRENCY_LIST)
-    }
-  ],
-  [
     SYNC_API_METHODS.MARGIN_CURRENCY_LIST,
     {
       name: ALLOWED_COLLS.MARGIN_CURRENCY_LIST,

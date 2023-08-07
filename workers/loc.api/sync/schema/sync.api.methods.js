@@ -24,9 +24,6 @@ const INACTIVE_CURRENCIES = '_getInactiveCurrencies'
 const INACTIVE_SYMBOLS = '_getInactiveSymbols'
 const FUTURES = '_getFutures'
 const CURRENCIES = '_getCurrencies'
-const LABLE_CURRENCY_MAP = '_getLabelCurrencyMap'
-const FUTURE_CURRENCY_LIST = '_getFutureCurrencyList'
-const SECURITY_CURRENCY_LIST = '_getSecurityCurrencyList'
 const MARGIN_CURRENCY_LIST = '_getMarginCurrencyList'
 const POSITIONS_SNAPSHOT = '_getPositionsSnapshot'
 
@@ -55,9 +52,6 @@ module.exports = {
   INACTIVE_SYMBOLS,
   FUTURES,
   CURRENCIES,
-  LABLE_CURRENCY_MAP,
-  FUTURE_CURRENCY_LIST,
-  SECURITY_CURRENCY_LIST,
   MARGIN_CURRENCY_LIST,
   POSITIONS_SNAPSHOT
 }

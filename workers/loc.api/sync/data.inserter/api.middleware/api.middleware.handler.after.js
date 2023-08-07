@@ -167,10 +167,6 @@ class ApiMiddlewareHandlerAfter {
   [SYNC_API_METHODS.MAP_SYMBOLS] (args, apiRes) {
     return convertArrayMapToObjectMap(apiRes)
   }
-
-  [SYNC_API_METHODS.LABLE_CURRENCY_MAP] (args, apiRes) {
-    return convertArrayMapToObjectMap(apiRes)
-  }
 }
 
 decorateInjectable(ApiMiddlewareHandlerAfter, depsTypes)
