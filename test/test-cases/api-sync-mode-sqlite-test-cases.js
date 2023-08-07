@@ -1167,30 +1167,40 @@ module.exports = (
     assert.isArray(res.body.result.inactiveSymbols)
     assert.isArray(res.body.result.mapSymbols)
     assert.isArray(res.body.result.inactiveCurrencies)
+    assert.isArray(res.body.result.marginCurrencyList)
     assert.lengthOf(res.body.result.pairs, 13)
     assert.lengthOf(res.body.result.currencies, 11)
     assert.lengthOf(res.body.result.inactiveSymbols, 2)
     assert.lengthOf(res.body.result.mapSymbols, 3)
     assert.lengthOf(res.body.result.inactiveCurrencies, 2)
+    assert.lengthOf(res.body.result.marginCurrencyList, 4)
 
-    res.body.result.mapSymbols.forEach(item => {
-      assert.isArray(item)
-      assert.lengthOf(item, 2)
-    })
-    res.body.result.pairs.forEach(item => {
+    res.body.result.pairs.forEach((item) => {
       assert.isString(item)
     })
-    res.body.result.inactiveSymbols.forEach(item => {
-      assert.isString(item)
-    })
-    res.body.result.inactiveCurrencies.forEach(item => {
-      assert.isString(item)
-    })
-    res.body.result.currencies.forEach(item => {
+    res.body.result.currencies.forEach((item) => {
       assert.isObject(item)
       assert.isString(item.id)
       assert.isString(item.name)
-      assert.isString(item.symbol)
+      assert.isBoolean(item.active)
+      assert.isBoolean(item.isInPair)
+      assert.isBoolean(item.isFunding)
+    })
+    res.body.result.inactiveSymbols.forEach((item) => {
+      assert.isString(item)
+    })
+    res.body.result.mapSymbols.forEach((item) => {
+      assert.lengthOf(item, 2)
+
+      item.forEach((item) => {
+        assert.isString(item)
+      })
+    })
+    res.body.result.inactiveCurrencies.forEach((item) => {
+      assert.isString(item)
+    })
+    res.body.result.marginCurrencyList.forEach((item) => {
+      assert.isString(item)
     })
   })
 
