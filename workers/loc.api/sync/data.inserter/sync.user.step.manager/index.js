@@ -9,6 +9,10 @@ const {
 } = require('lodash')
 
 const {
+  MIN_START_MTS
+} = require('bfx-report/workers/loc.api/helpers/date-param.helpers')
+
+const {
   isPublic,
   isUpdatable
 } = require('../../schema/utils')
@@ -191,7 +195,7 @@ class SyncUserStepManager {
       subUserId,
       symbol,
       timeframe,
-      defaultStart = 0,
+      defaultStart: _defaultStart = MIN_START_MTS,
       currMts = Date.now()
     } = params ?? {}
     const {
@@ -203,6 +207,7 @@ class SyncUserStepManager {
       model
     } = syncSchema ?? {}
 
+    const defaultStart = this._getMinStart(_defaultStart)
     const hasUserIdField = (
       typeof model?.user_id === 'string' &&
       Number.isInteger(userId)
@@ -314,7 +319,7 @@ class SyncUserStepManager {
     ])
 
     const {
-      baseStart,
+      baseStart: _baseStart,
       baseEnd,
       currStart,
       currEnd,
@@ -322,6 +327,7 @@ class SyncUserStepManager {
       isCurrStepReady = false
     } = syncUserStepInfo ?? {}
 
+    const baseStart = this._getMinStart(_baseStart)
     const isMainTableEmpty = isEmpty(lastElemFromMainTable)
     const isTempTableEmpty = isEmpty(lastElemFromTempTable)
     const firstElemMtsFromMainTable = firstElemFromMainTable?.[dateFieldName] ?? null
@@ -442,6 +448,15 @@ class SyncUserStepManager {
       tableName,
       this.syncQueueId
     )
+  }
+
+  _getMinStart (start) {
+    return (
+      Number.isFinite(start) &&
+      start < MIN_START_MTS
+    )
+      ? MIN_START_MTS
+      : start
   }
 }
 
