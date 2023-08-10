@@ -4,7 +4,8 @@ const SYNC_API_METHODS = require('../../schema/sync.api.methods')
 const {
   addPropsToResIfExist,
   getFlagsFromLedgerDescription,
-  getCategoryFromDescription
+  getCategoryFromDescription,
+  convertArrayMapToObjectMap
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../../di/utils')
@@ -164,19 +165,7 @@ class ApiMiddlewareHandlerAfter {
   }
 
   [SYNC_API_METHODS.MAP_SYMBOLS] (args, apiRes) {
-    return apiRes.reduce((accum, item) => {
-      if (
-        !Array.isArray(item) ||
-        item.length < 2
-      ) {
-        return accum
-      }
-
-      const [key, value] = item
-      accum.push({ key, value })
-
-      return accum
-    }, [])
+    return convertArrayMapToObjectMap(apiRes)
   }
 }
 

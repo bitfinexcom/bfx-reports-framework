@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 36
+const SUPPORTED_DB_VERSION = 37
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -686,6 +686,15 @@ const _models = new Map([
       walletFx: 'TEXT',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id']
+    }
+  ],
+  [
+    TABLES_NAMES.MARGIN_CURRENCY_LIST,
+    {
+      _id: ID_PRIMARY_KEY,
+      symbol: 'VARCHAR(255)',
+
+      [UNIQUE_INDEX_FIELD_NAME]: ['symbol']
     }
   ],
   [

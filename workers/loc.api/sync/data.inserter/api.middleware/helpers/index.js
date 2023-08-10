@@ -9,9 +9,13 @@ const getFlagsFromLedgerDescription = require(
 const getCategoryFromDescription = require(
   './get-category-from-description'
 )
+const convertArrayMapToObjectMap = require(
+  './convert-array-map-to-object-map'
+)
 
 module.exports = {
   addPropsToResIfExist,
   getFlagsFromLedgerDescription,
-  getCategoryFromDescription
+  getCategoryFromDescription,
+  convertArrayMapToObjectMap
 }

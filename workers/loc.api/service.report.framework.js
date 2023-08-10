@@ -10,7 +10,8 @@ const {
 } = require('bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
-  isENetError
+  isENetError,
+  prepareSymbolResponse
 } = require('bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
@@ -595,9 +596,10 @@ class FrameworkReportService extends ReportService {
         this._SYNC_API_METHODS.SYMBOLS,
         this._SYNC_API_METHODS.FUTURES,
         this._SYNC_API_METHODS.CURRENCIES,
+        this._SYNC_API_METHODS.INACTIVE_SYMBOLS,
         this._SYNC_API_METHODS.MAP_SYMBOLS,
         this._SYNC_API_METHODS.INACTIVE_CURRENCIES,
-        this._SYNC_API_METHODS.INACTIVE_SYMBOLS
+        this._SYNC_API_METHODS.MARGIN_CURRENCY_LIST
       ]
       const promises = methods.map(async (method) => {
         const res = await this._dao.findInCollBy(
@@ -614,9 +616,9 @@ class FrameworkReportService extends ReportService {
         return collObjToArr(res, { projection, type })
       })
 
-      const res = await Promise.all(promises)
+      const arrRes = await Promise.all(promises)
 
-      if (res.some(isEmpty)) {
+      if (arrRes.some(isEmpty)) {
         return super.getSymbols(space, args)
       }
 
@@ -624,20 +626,23 @@ class FrameworkReportService extends ReportService {
         symbols,
         futures,
         currencies,
+        inactiveSymbols,
         mapSymbols,
         inactiveCurrencies,
-        inactiveSymbols
-      ] = res
+        marginCurrencyList
+      ] = arrRes
 
-      const pairs = [...symbols, ...futures]
-
-      return {
-        pairs,
+      const res = prepareSymbolResponse({
+        symbols,
+        futures,
         currencies,
-        mapSymbols: mapSymbols.map((map) => [map?.key, map?.value]),
+        inactiveSymbols,
+        mapSymbols,
         inactiveCurrencies,
-        inactiveSymbols
-      }
+        marginCurrencyList
+      })
+
+      return res
     }, 'getSymbols', args, cb)
   }
 

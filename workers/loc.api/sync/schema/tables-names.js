@@ -20,6 +20,7 @@ module.exports = {
   INACTIVE_SYMBOLS: 'inactiveSymbols',
   FUTURES: 'futures',
   CURRENCIES: 'currencies',
+  MARGIN_CURRENCY_LIST: 'marginCurrencyList',
   CANDLES: 'candles',
   STATUS_MESSAGES: 'statusMessages',
   PUBLIC_COLLS_CONF: 'publicСollsСonf',
