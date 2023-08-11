@@ -105,6 +105,19 @@ class SyncTempTablesManager {
     })
   }
 
+  static async cleanUpAllTempDBStructure (deps) {
+    const { dao } = deps ?? {}
+
+    await dao.executeQueriesInTrans(async () => {
+      await dao.dropAllTables({
+        expectations: [BASE_NAME_PREFIX],
+        isNotStrictEqual: true,
+        isNotInTrans: true,
+        doNotQueueQuery: true
+      })
+    })
+  }
+
   getCurrNamePrefix (id) {
     const syncQueueId = id ?? this.syncQueueId
 
