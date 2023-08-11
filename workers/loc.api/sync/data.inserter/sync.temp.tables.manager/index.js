@@ -134,7 +134,7 @@ class SyncTempTablesManager {
     return `${BASE_NAME_PREFIX}${id}_`
   }
 
-  static async _getTempTableNamesByPattern (pattern, deps, opts) {
+  static async getTempTableNamesByPattern (pattern, deps, opts) {
     const { dao } = deps ?? {}
     const { doNotQueueQuery } = opts ?? {}
 
