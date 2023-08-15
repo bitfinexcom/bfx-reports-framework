@@ -141,7 +141,20 @@ class Sync {
       await this.progress.setProgress(err)
     }
 
-    if (!error && isSolveAfterRedirToApi) {
+    // Logs errors in the background
+    if (isOwnerScheduler) {
+      return this._sync(error, syncParams)
+    }
+    if (error) {
+      const res = await this._sync(error, syncParams)
+
+      if (error instanceof Error) {
+        throw error
+      }
+
+      return res
+    }
+    if (isSolveAfterRedirToApi) {
       this._sync(error, syncParams).then(() => {}, () => {})
 
       return 'SYNCHRONIZATION_IS_STARTED'
