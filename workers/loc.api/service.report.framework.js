@@ -238,6 +238,17 @@ class FrameworkReportService extends ReportService {
     }, 'updateSubAccount', args, cb)
   }
 
+  getPlatformStatus (space, args, cb) {
+    return this._responder(async () => {
+      const rest = this._getREST({})
+
+      const res = await rest.status()
+      const isMaintenance = !Array.isArray(res) || !res[0]
+
+      return { isMaintenance }
+    }, 'getPlatformStatus', args, cb)
+  }
+
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
