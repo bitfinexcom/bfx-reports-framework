@@ -745,7 +745,9 @@ const _models = new Map([
     TABLES_NAMES.PROGRESS,
     {
       _id: ID_PRIMARY_KEY,
-      value: 'VARCHAR(255)',
+      error: 'VARCHAR(255)',
+      value: 'DECIMAL(22,12)',
+      state: 'VARCHAR(255)',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
