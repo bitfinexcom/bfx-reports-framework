@@ -963,7 +963,7 @@ class Authenticator {
         }
       }
     )
-    const progress = await Progress
+    const { progress } = await Progress
       .getNonEstimatedProgress(this.dao, this.TABLES_NAMES)
 
     if (progress < 100) {

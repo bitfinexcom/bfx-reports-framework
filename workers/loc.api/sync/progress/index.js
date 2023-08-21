@@ -7,9 +7,6 @@ const {
 } = require('bfx-report/workers/loc.api/helpers/api-errors-testers')
 
 const SYNC_PROGRESS_STATES = require('./sync.progress.states')
-const {
-  tryParseJSON
-} = require('../../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -33,10 +30,14 @@ class Progress extends EventEmitter {
     this.wsEventEmitter = wsEventEmitter
     this.logger = logger
 
+    this._availableSyncProgressStates = Object.values(SYNC_PROGRESS_STATES)
+
     this._syncStartedAt = null
     this._progressEmitterInterval = null
     this._progressEmitterIntervalMs = 1000
+    this._error = null
     this._progress = null
+    this._state = null
     this._hasNotProgressChanged = true
     this._leftTime = null
     this._prevEstimatedLeftTime = Date.now()
@@ -47,16 +48,38 @@ class Progress extends EventEmitter {
       progress instanceof Error ||
       (typeof progress === 'string' && /error/gi.test(progress))
     )
-    const _progress = isError
+    const isFinite = Number.isFinite(progress)
+    const isState = this._isState(progress)
+
+    const error = isError
       ? progress.toString()
-      : progress
-    this._hasNotProgressChanged = this._progress !== _progress
-    this._progress = _progress
+      : null
+    const value = isFinite
+      ? progress
+      : null
+    const state = this._getSyncProgressState(
+      progress,
+      isState,
+      isError
+    )
+
+    this._hasNotProgressChanged = (
+      (isError && this._error !== error) ||
+      (isFinite && this._progress !== value) ||
+      (isState && this._state !== state)
+    )
+    this._error = error
+    this._progress = value
+    this._state = state
 
     try {
       await this.dao.updateRecordOf(
         this.TABLES_NAMES.PROGRESS,
-        { value: JSON.stringify(_progress) }
+        {
+          value,
+          error,
+          state
+        }
       )
 
       await this._emitProgress()
@@ -79,9 +102,9 @@ class Progress extends EventEmitter {
   }
 
   async getProgress () {
-    const progress = await this.constructor
+    const storedProgress = await this.constructor
       .getNonEstimatedProgress(this.dao, this.TABLES_NAMES)
-    const estimatedSyncTime = this._estimateSyncTime({ progress })
+    const estimatedSyncTime = this._estimateSyncTime(storedProgress)
 
     return estimatedSyncTime
   }
@@ -90,11 +113,11 @@ class Progress extends EventEmitter {
     const progressObj = await dao
       .getElemInCollBy(TABLES_NAMES.PROGRESS)
 
-    const progress = typeof progressObj?.value === 'string'
-      ? tryParseJSON(progressObj.value, true)
-      : SYNC_PROGRESS_STATES.INITIAL_PROGRESS
-
-    return progress
+    return {
+      error: progressObj?.error ?? null,
+      progress: progressObj?.value ?? null,
+      state: progressObj?.state ?? null
+    }
   }
 
   activateSyncTimeEstimate () {
@@ -113,7 +136,9 @@ class Progress extends EventEmitter {
 
   async _estimateSyncTime (params) {
     const {
+      error,
       progress,
+      state,
       hasNotProgressChanged
     } = params ?? {}
 
@@ -125,7 +150,9 @@ class Progress extends EventEmitter {
       syncStartedAt > nowMts
     ) {
       return {
+        error,
         progress,
+        state,
         syncStartedAt: null,
         spentTime: null,
         leftTime: null
@@ -140,7 +167,9 @@ class Progress extends EventEmitter {
       progress > 100
     ) {
       return {
+        error,
         progress,
+        state,
         syncStartedAt,
         spentTime,
         leftTime: null
@@ -155,7 +184,9 @@ class Progress extends EventEmitter {
     })
 
     return {
+      error,
       progress,
+      state,
       syncStartedAt,
       spentTime,
       leftTime
@@ -210,7 +241,9 @@ class Progress extends EventEmitter {
       const { hasNotProgressChanged } = opts ?? {}
 
       const estimatedSyncTime = this._estimateSyncTime({
+        error: this._error,
         progress: this._progress,
+        state: this._state,
         hasNotProgressChanged
       })
 
@@ -221,6 +254,23 @@ class Progress extends EventEmitter {
         `PROGRESS:SYNC:EMITTING: ${e.stack || e}`
       )
     }
+  }
+
+  _getSyncProgressState (progress, isState, isError) {
+    if (isState) {
+      return progress
+    }
+    if (isError) {
+      return null
+    }
+
+    return SYNC_PROGRESS_STATES.ACITVE_PROGRESS
+  }
+
+  _isState (state) {
+    return this._availableSyncProgressStates.some((item) => (
+      item === state
+    ))
   }
 }
 
