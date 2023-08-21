@@ -4,6 +4,8 @@ const Interrupter = require(
   'bfx-report/workers/loc.api/interrupter'
 )
 
+const SYNC_PROGRESS_STATES = require('../progress/sync.progress.states')
+
 const { decorateInjectable } = require('../../di/utils')
 
 class SyncInterrupter extends Interrupter {
@@ -16,7 +18,7 @@ class SyncInterrupter extends Interrupter {
     this.SYNC_INTERRUPTED_WITH_ERR_EVENT = 'ERR_SYNC_INTERRUPTED_WITH_ERR_EVENT'
 
     this.INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_BEEN_STARTED_TO_INTERRUPT'
-    this.INTERRUPTED_PROGRESS = 'SYNCHRONIZATION_HAS_BEEN_INTERRUPTED'
+    this.INTERRUPTED_PROGRESS = SYNC_PROGRESS_STATES.INTERRUPTED_PROGRESS
 
     this._init()
   }

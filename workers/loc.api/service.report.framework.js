@@ -30,7 +30,7 @@ const {
   pickLowerObjectsNumbers
 } = require('./helpers')
 
-const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+const SYNC_PROGRESS_STATES = require('./sync/progress/sync.progress.states')
 
 class FrameworkReportService extends ReportService {
   /**
@@ -44,7 +44,7 @@ class FrameworkReportService extends ReportService {
 
   async _databaseInitialize (db) {
     await this._dao.databaseInitialize(db)
-    await this._progress.setProgress(INITIAL_PROGRESS)
+    await this._progress.setProgress(SYNC_PROGRESS_STATES.INITIAL_PROGRESS)
     await this._dao.updateRecordOf(
       this._TABLES_NAMES.SYNC_MODE,
       { isEnable: true }

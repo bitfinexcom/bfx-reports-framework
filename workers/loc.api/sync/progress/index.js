@@ -6,6 +6,7 @@ const {
   isAuthError
 } = require('bfx-report/workers/loc.api/helpers/api-errors-testers')
 
+const SYNC_PROGRESS_STATES = require('./sync.progress.states')
 const {
   tryParseJSON
 } = require('../../helpers')
@@ -91,7 +92,7 @@ class Progress extends EventEmitter {
 
     const progress = typeof progressObj?.value === 'string'
       ? tryParseJSON(progressObj.value, true)
-      : 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+      : SYNC_PROGRESS_STATES.INITIAL_PROGRESS
 
     return progress
   }

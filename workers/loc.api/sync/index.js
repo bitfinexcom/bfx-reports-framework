@@ -1,5 +1,7 @@
 'use strict'
 
+const SYNC_PROGRESS_STATES = require('./progress/sync.progress.states')
+
 const {
   CollSyncPermissionError,
   SyncQueueOwnerSettingError
@@ -157,7 +159,7 @@ class Sync {
     if (isSolveAfterRedirToApi) {
       this._sync(error, syncParams).then(() => {}, () => {})
 
-      return 'SYNCHRONIZATION_IS_STARTED'
+      return SYNC_PROGRESS_STATES.ACITVE_PROGRESS
     }
 
     return this._sync(error, syncParams)
