@@ -963,10 +963,10 @@ class Authenticator {
         }
       }
     )
-    const { progress } = await Progress
+    const { isSyncInProgress } = await Progress
       .getNonEstimatedProgress(this.dao, this.TABLES_NAMES)
 
-    if (progress < 100) {
+    if (isSyncInProgress) {
       throw new UserRemovingDuringSyncError()
     }
 

@@ -109,7 +109,7 @@ class Sync {
 
       const isEnable = await this.rService.isSchedulerEnabled()
       const {
-        progress: currProgress
+        isSyncInProgress
       } = await this.progress.getProgress()
 
       if (isEnable) {
@@ -120,7 +120,7 @@ class Sync {
         })
       }
       if (
-        (currProgress < 100) ||
+        isSyncInProgress ||
         !isEnable
       ) {
         return (await this.progress.getProgress())?.progress
@@ -167,12 +167,12 @@ class Sync {
 
   async stop () {
     const {
-      progress: currProgress
+      isSyncInProgress
     } = await this.progress
       .deactivateSyncTimeEstimate()
       .getProgress()
 
-    if (currProgress < 100) {
+    if (isSyncInProgress) {
       return this.syncInterrupter.interrupt()
     }
 
