@@ -7,6 +7,7 @@ const {
 } = require('bfx-report/workers/loc.api/helpers/api-errors-testers')
 
 const SYNC_PROGRESS_STATES = require('./sync.progress.states')
+const errorRegExp = /(error)|(ERR_)/gi
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -44,10 +45,7 @@ class Progress extends EventEmitter {
   }
 
   async setProgress (progress) {
-    const isError = (
-      progress instanceof Error ||
-      (typeof progress === 'string' && /error/gi.test(progress))
-    )
+    const isError = this._isError(progress)
     const isFinite = Number.isFinite(progress)
     const isState = this._isState(progress)
 
@@ -271,6 +269,16 @@ class Progress extends EventEmitter {
     return this._availableSyncProgressStates.some((item) => (
       item === state
     ))
+  }
+
+  _isError (error) {
+    return (
+      error instanceof Error ||
+      (
+        typeof error === 'string' &&
+        errorRegExp.test(error)
+      )
+    )
   }
 }
 
