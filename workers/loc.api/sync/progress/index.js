@@ -110,12 +110,25 @@ class Progress extends EventEmitter {
   static async getNonEstimatedProgress (dao, TABLES_NAMES) {
     const progressObj = await dao
       .getElemInCollBy(TABLES_NAMES.PROGRESS)
+    const isSyncInProgress = this.isSyncInProgress(progressObj)
 
     return {
       error: progressObj?.error ?? null,
       progress: progressObj?.value ?? null,
-      state: progressObj?.state ?? null
+      state: progressObj?.state ?? null,
+      isSyncInProgress
     }
+  }
+
+  static isSyncInProgress (storedProgress) {
+    const progress = storedProgress?.value ?? storedProgress?.progress
+
+    return (
+      !storedProgress?.error &&
+      storedProgress?.state === SYNC_PROGRESS_STATES.ACITVE_PROGRESS &&
+      Number.isFinite(progress) &&
+      progress < 100
+    )
   }
 
   activateSyncTimeEstimate () {
@@ -140,6 +153,8 @@ class Progress extends EventEmitter {
       hasNotProgressChanged
     } = params ?? {}
 
+    const isSyncInProgress = params?.isSyncInProgress ?? this.constructor
+      .isSyncInProgress(params)
     const syncStartedAt = this._getSyncStartedAt()
     const nowMts = Date.now()
 
@@ -151,6 +166,7 @@ class Progress extends EventEmitter {
         error,
         progress,
         state,
+        isSyncInProgress,
         syncStartedAt: null,
         spentTime: null,
         leftTime: null
@@ -168,6 +184,7 @@ class Progress extends EventEmitter {
         error,
         progress,
         state,
+        isSyncInProgress,
         syncStartedAt,
         spentTime,
         leftTime: null
@@ -185,6 +202,7 @@ class Progress extends EventEmitter {
       error,
       progress,
       state,
+      isSyncInProgress,
       syncStartedAt,
       spentTime,
       leftTime
@@ -260,6 +278,12 @@ class Progress extends EventEmitter {
     }
     if (isError) {
       return null
+    }
+    if (
+      Number.isFinite(progress) &&
+      progress >= 100
+    ) {
+      return SYNC_PROGRESS_STATES.FINISHED_PROGRESS
     }
 
     return SYNC_PROGRESS_STATES.ACITVE_PROGRESS
