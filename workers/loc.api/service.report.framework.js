@@ -403,7 +403,10 @@ class FrameworkReportService extends ReportService {
       )
         ? this._progress.getProgress()
         : {
-            progress: false,
+            error: null,
+            progress: null,
+            state: null,
+            isSyncInProgress: false,
             syncStartedAt: null,
             spentTime: null,
             leftTime: null
