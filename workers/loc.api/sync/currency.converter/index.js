@@ -441,7 +441,7 @@ class CurrencyConverter {
       return candle?.close
     }
 
-    const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
+    const tempTableNames = await SyncTempTablesManager.getTempTableNamesByPattern(
       this.candlesSchema.name,
       { dao: this.dao }
     )
