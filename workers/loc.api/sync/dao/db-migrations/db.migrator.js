@@ -1,5 +1,8 @@
 'use strict'
 
+const SyncTempTablesManager = require(
+  '../../data.inserter/sync.temp.tables.manager'
+)
 const {
   DbMigrationVerCorrectnessError,
   DbVersionTypeError,
@@ -135,6 +138,7 @@ class DbMigrator {
 
     await this.dbBackupManager.backupDb({ currVer, supportedVer })
     await this.migrate(versions, isDown)
+    await SyncTempTablesManager.cleanUpAllTempDBStructure({ dao: this.dao })
     await this.dao.updateUsersSyncOnStartupRequiredState()
   }
 }

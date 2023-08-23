@@ -89,9 +89,9 @@ ${COLOR_RED}${noword}${COLOR_BLUE})?${COLOR_NORMAL}\
 
 function askUserAboutBranch {
   local masterBranch="master"
-  local betaBranch="beta"
+  local stagingBranch="staging"
   local masterptrn="^$masterBranch$"
-  local betaptrn="^$betaBranch$"
+  local stagingptrn="^$stagingBranch$"
 
   if [ $yesToEverything == 1 ]; then
     echo "${REPO_BRANCH:-"$masterBranch"}"
@@ -102,7 +102,7 @@ function askUserAboutBranch {
 \n${COLOR_BLUE}Choose syncing repository branch, by default '${COLOR_NORMAL}master${COLOR_BLUE}'\
 \nto apply it just push the 'Enter' key \
 (${COLOR_GREEN}${masterBranch}${COLOR_BLUE} / \
-${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
+${COLOR_YELLOW}${stagingBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
 ")
 
   while true; do
@@ -112,14 +112,14 @@ ${COLOR_YELLOW}${betaBranch}${COLOR_BLUE})?${COLOR_NORMAL}\
       echo "$masterBranch"
       return
     fi
-    if [[ "$answer" =~ $betaptrn ]]; then
-      echo "$betaBranch"
+    if [[ "$answer" =~ $stagingptrn ]]; then
+      echo "$stagingBranch"
       return
     fi
 
     echo -e "\
 \n${COLOR_RED}Available answer \
-'${masterBranch}' / '${betaBranch}'!${COLOR_NORMAL}\
+'${masterBranch}' / '${stagingBranch}'!${COLOR_NORMAL}\
 " >&2
 
   done

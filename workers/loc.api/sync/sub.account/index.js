@@ -574,7 +574,7 @@ class SubAccount {
           { doNotQueueQuery: true }
         )
 
-        const tempTableNames = await SyncTempTablesManager._getTempTableNamesByPattern(
+        const tempTableNames = await SyncTempTablesManager.getTempTableNamesByPattern(
           this.TABLES_NAMES.LEDGERS,
           { dao: this.dao },
           { doNotQueueQuery: true }
