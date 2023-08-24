@@ -124,11 +124,18 @@ class FrameworkReportService extends ReportService {
         !shouldNotSyncOnStartupAfterUpdate &&
         isSyncOnStartupRequired
       ) {
-        await this._sync.start({
-          syncColls: this._ALLOWED_COLLS.ALL,
-          isSolveAfterRedirToApi: true,
-          ownerUserId: _id
-        })
+        try {
+          await this._sync.start({
+            syncColls: this._ALLOWED_COLLS.ALL,
+            isSolveAfterRedirToApi: true,
+            ownerUserId: _id
+          })
+        } catch (err) {
+          // If internet connection is not available provide ability to sign in
+          if (!(err instanceof ServerAvailabilityError)) {
+            throw err
+          }
+        }
       }
 
       const lastFinishedSyncQueueJob = await this._dao
