@@ -259,16 +259,23 @@ class FrameworkReportService extends ReportService {
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
-        const { pingMethod = this._SYNC_API_METHODS.SYMBOLS } = { ...args }
+        const { pingMethod = 'getPlatformStatus' } = args ?? {}
         const _args = omit(args, ['pingMethod'])
 
         if (typeof this[pingMethod] !== 'function') {
           throw new BadRequestError()
         }
 
-        await this[pingMethod](_args)
+        const res = await this[pingMethod](_args)
 
-        return true
+        if (pingMethod !== 'getPlatformStatus') {
+          return true
+        }
+        if (!cb && res?.isMaintenance) {
+          throw new ServerAvailabilityError(this._conf.restUrl)
+        }
+
+        return !res?.isMaintenance
       } catch (err) {
         const isServerUnavailable = isENetError(err)
 
