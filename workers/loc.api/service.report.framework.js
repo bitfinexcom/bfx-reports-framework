@@ -272,6 +272,9 @@ class FrameworkReportService extends ReportService {
           return true
         }
         if (!cb && res?.isMaintenance) {
+          await this._wsEventEmitterFactory()
+            .emitMaintenanceTurnedOn()
+
           throw new ServerAvailabilityError(this._conf.restUrl)
         }
 
