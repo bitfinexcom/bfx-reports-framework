@@ -7,13 +7,17 @@ const AbstractWSEventEmitter = require(
 const { decorateInjectable } = require('../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.WSTransport
+  TYPES.WSTransport,
+  TYPES.Logger
 ]
 class WSEventEmitter extends AbstractWSEventEmitter {
-  constructor (wsTransport) {
+  constructor (wsTransport, logger) {
     super()
 
     this.wsTransport = wsTransport
+    this.logger = logger
+
+    this._maintenanceTurnedOffInterval = null
   }
 
   /**
@@ -106,6 +110,44 @@ class WSEventEmitter extends AbstractWSEventEmitter {
       handler,
       'emitRedirectingRequestsStatusToApi'
     )
+  }
+
+  /**
+   * @override
+   */
+  async emitMaintenanceTurnedOn (handler) {
+    await super.emitMaintenanceTurnedOn(handler)
+
+    if (this._maintenanceTurnedOffInterval) {
+      return
+    }
+
+    this._maintenanceTurnedOffInterval = setInterval(async () => {
+      try {
+        const isMaintenanceModeOff = await this.wsTransport
+          .isBfxApiMaintenanceModeOff()
+
+        if (!isMaintenanceModeOff) {
+          return
+        }
+
+        await this.emitMaintenanceTurnedOff()
+      } catch (err) {
+        this.logger.error(
+          `WS_EVENT_EMITTER:MAINTENANCE_MODE:INTERVAL: ${err.stack || err}`
+        )
+      }
+    }, 10000)
+  }
+
+  /**
+   * @override
+   */
+  async emitMaintenanceTurnedOff (handler) {
+    await super.emitMaintenanceTurnedOff(handler)
+
+    clearInterval(this._maintenanceTurnedOffInterval)
+    this._maintenanceTurnedOffInterval = null
   }
 }
 
