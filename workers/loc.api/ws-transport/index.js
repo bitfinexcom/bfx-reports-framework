@@ -355,6 +355,18 @@ class WSTransport {
     return this._auth
   }
 
+  async isBfxApiMaintenanceModeOff () {
+    try {
+      const {
+        isMaintenance
+      } = await this.rService.getPlatformStatus()
+
+      return !isMaintenance
+    } catch (err) {
+      return false
+    }
+  }
+
   async start () {
     this._initPeer()
     this._initTransport()
