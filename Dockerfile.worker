@@ -1,4 +1,4 @@
-FROM node:14.16.0-alpine
+FROM node:18.17.1-alpine3.18
 
 ARG GRC_VER="0.7.1"
 
