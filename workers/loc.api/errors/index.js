@@ -58,7 +58,7 @@ class DAOInitializationError extends BaseError {
 
 class ServerAvailabilityError extends BaseError {
   constructor (restUrl) {
-    super(`ERR_SERVER_${restUrl}_IS_NOT_AVAILABLE`)
+    super('ERR_BFX_API_SERVER_IS_NOT_AVAILABLE')
 
     this.statusMessage = `The server ${restUrl} is not available`
   }
