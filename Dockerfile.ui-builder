@@ -1,4 +1,4 @@
-FROM node:14.16.0-alpine
+FROM node:18.17.1-alpine3.18
 
 WORKDIR /home/node/bfx-report-ui
 
@@ -13,7 +13,12 @@ RUN apk add --no-cache --virtual \
 
 COPY ./scripts/maintenance/index.html var/www/html/maintenance.html
 COPY ./bfx-report-ui/package*.json ./
-RUN npm i --no-audit
+COPY ./bfx-report-ui/scripts ./scripts
+COPY ./bfx-report-ui/.npmrc ./.npmrc
+
+RUN mkdir -p ./src/ui/PlatformLogo/files && \
+  mkdir -p ./public && \
+  npm i --no-audit
 
 COPY ./bfx-report-ui .
 COPY ./scripts/build-ui.sh /usr/local/bin/
