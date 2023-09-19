@@ -445,5 +445,9 @@ module.exports = new Map([
         'look at this note'
       ]
     ]
+  ],
+  [
+    'platform_status',
+    [1]
   ]
 ])
