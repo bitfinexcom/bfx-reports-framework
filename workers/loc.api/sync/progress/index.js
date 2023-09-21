@@ -50,7 +50,7 @@ class Progress extends EventEmitter {
     const isState = this._isState(progress)
 
     const error = isError
-      ? progress.toString()
+      ? progress?.statusMessage ?? progress.toString()
       : null
     const value = isFinite
       ? progress
