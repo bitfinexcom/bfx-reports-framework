@@ -54,7 +54,8 @@ class BfxApiRouter extends BaseBfxApiRouter {
       ['fundingCreditHistory', 90],
       ['accountSummary', 90],
       ['logins', 90],
-      ['changeLogs', 90]
+      ['changeLogs', 90],
+      ['status', 30]
     ])
   }
 

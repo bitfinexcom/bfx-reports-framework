@@ -1,5 +1,7 @@
 'use strict'
 
+const SYNC_PROGRESS_STATES = require('./progress/sync.progress.states')
+
 const {
   CollSyncPermissionError,
   SyncQueueOwnerSettingError
@@ -107,7 +109,7 @@ class Sync {
 
       const isEnable = await this.rService.isSchedulerEnabled()
       const {
-        progress: currProgress
+        isSyncInProgress
       } = await this.progress.getProgress()
 
       if (isEnable) {
@@ -118,7 +120,7 @@ class Sync {
         })
       }
       if (
-        (currProgress < 100) ||
+        isSyncInProgress ||
         !isEnable
       ) {
         return (await this.progress.getProgress())?.progress
@@ -141,10 +143,23 @@ class Sync {
       await this.progress.setProgress(err)
     }
 
-    if (!error && isSolveAfterRedirToApi) {
+    // Logs errors in the background
+    if (isOwnerScheduler) {
+      return this._sync(error, syncParams)
+    }
+    if (error) {
+      const res = await this._sync(error, syncParams)
+
+      if (error instanceof Error) {
+        throw error
+      }
+
+      return res
+    }
+    if (isSolveAfterRedirToApi) {
       this._sync(error, syncParams).then(() => {}, () => {})
 
-      return 'SYNCHRONIZATION_IS_STARTED'
+      return SYNC_PROGRESS_STATES.ACITVE_PROGRESS
     }
 
     return this._sync(error, syncParams)
@@ -152,12 +167,12 @@ class Sync {
 
   async stop () {
     const {
-      progress: currProgress
+      isSyncInProgress
     } = await this.progress
       .deactivateSyncTimeEstimate()
       .getProgress()
 
-    if (currProgress < 100) {
+    if (isSyncInProgress) {
       return this.syncInterrupter.interrupt()
     }
 

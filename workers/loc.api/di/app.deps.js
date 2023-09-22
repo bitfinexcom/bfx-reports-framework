@@ -160,7 +160,8 @@ module.exports = ({
           ['_dataConsistencyChecker', TYPES.DataConsistencyChecker],
           ['_winLossVSAccountBalance', TYPES.WinLossVSAccountBalance],
           ['_getDataFromApi', TYPES.GetDataFromApi],
-          ['_httpRequest', TYPES.HTTPRequest]
+          ['_httpRequest', TYPES.HTTPRequest],
+          ['_wsEventEmitterFactory', TYPES.WSEventEmitterFactory]
         ]
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
