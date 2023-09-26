@@ -1445,6 +1445,15 @@ class FrameworkReportService extends ReportService {
     }, 'getWinLossVSAccountBalance', args, cb)
   }
 
+  getSummaryByAsset (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.SUMMARY_BY_ASSET, args)
+
+      return this._summaryByAsset.getSummaryByAsset(args)
+    }, 'getSummaryByAsset', args, cb)
+  }
+
   /**
    * @override
    */
