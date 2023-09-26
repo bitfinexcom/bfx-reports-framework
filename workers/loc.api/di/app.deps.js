@@ -80,6 +80,7 @@ const WinLossVSAccountBalance = require('../sync/win.loss.vs.account.balance')
 const Wallets = require('../sync/wallets')
 const BalanceHistory = require('../sync/balance.history')
 const WinLoss = require('../sync/win.loss')
+const SummaryByAsset = require('../sync/summary.by.asset')
 const PositionsSnapshot = require('../sync/positions.snapshot')
 const FullSnapshotReport = require('../sync/full.snapshot.report')
 const Trades = require('../sync/trades')
@@ -145,6 +146,7 @@ module.exports = ({
           ['_wallets', TYPES.Wallets],
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
+          ['_summaryByAsset', TYPES.SummaryByAsset],
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
           ['_fullSnapshotReport', TYPES.FullSnapshotReport],
           ['_fullTaxReport', TYPES.FullTaxReport],
@@ -345,6 +347,8 @@ module.exports = ({
       .to(BalanceHistory)
     bind(TYPES.WinLoss)
       .to(WinLoss)
+    bind(TYPES.SummaryByAsset)
+      .to(SummaryByAsset)
     bind(TYPES.PositionsSnapshot)
       .to(PositionsSnapshot)
     bind(TYPES.FullSnapshotReport)
