@@ -160,6 +160,21 @@ class Checkers {
 
     return true
   }
+
+  // TODO:
+  [CHECKER_NAMES.SUMMARY_BY_ASSET] (auth) {
+    return this.syncCollsManager
+      .haveCollsBeenSyncedUpToDate({
+        auth,
+        params: {
+          schema: [
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.CANDLES,
+            this.SYNC_API_METHODS.MOVEMENTS
+          ]
+        }
+      })
+  }
 }
 
 decorateInjectable(Checkers, depsTypes)
