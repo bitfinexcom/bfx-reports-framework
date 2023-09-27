@@ -199,7 +199,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     await super.stopService()
 
     const wsTransport = this.container.get(TYPES.WSTransport)
+    const processMessageManager = this.container.get(TYPES.ProcessMessageManagerFactory)()
 
+    processMessageManager.stop()
     wsTransport.stop()
   }
 }
