@@ -1,13 +1,10 @@
 'use strict'
 
-const { pipeline } = require('stream')
-const { stringify } = require('csv')
-
 const {
   write
 } = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
 
-const nope = () => {}
+const { streamWriter } = require('./helpers')
 
 module.exports = (
   rService,
@@ -36,91 +33,18 @@ module.exports = (
   queue.emit('progress', 0)
 
   if (typeof jobData === 'string') {
-    const stringifier = stringify(
-      { columns: ['mess'] }
+    await streamWriter(
+      wStream,
+      [{
+        columnParams: { columns: ['mess'] },
+        writeFn: (stream) => write([{ mess: jobData }], stream)
+      }]
     )
 
-    pipeline(stringifier, wStream, nope)
-    write([{ mess: jobData }], stringifier)
     queue.emit('progress', 100)
-    stringifier.end()
 
     return
   }
-
-  wStream.setMaxListeners(50)
-
-  const timestampsStringifier = stringify({
-    header: true,
-    columns: columnsCsv.timestamps
-  })
-  const startingPositionsSnapshotNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const startingPositionsSnapshotStringifier = stringify({
-    header: true,
-    columns: columnsCsv.positionsSnapshot
-  })
-  const endingPositionsSnapshotNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const endingPositionsSnapshotStringifier = stringify({
-    header: true,
-    columns: columnsCsv.positionsSnapshot
-  })
-  const finalStateNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const startingPeriodBalancesNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const startingPeriodBalancesStringifier = stringify({
-    header: true,
-    columns: columnsCsv.periodBalances
-  })
-  const movementsNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const movementsStringifier = stringify({
-    header: true,
-    columns: columnsCsv.movements
-  })
-  const movementsTotalAmountStringifier = stringify({
-    header: true,
-    columns: columnsCsv.movementsTotalAmount
-  })
-  const endingPeriodBalancesNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const endingPeriodBalancesStringifier = stringify({
-    header: true,
-    columns: columnsCsv.periodBalances
-  })
-  const totalResultStringifier = stringify({
-    header: true,
-    columns: columnsCsv.totalResult
-  })
-
-  const rStreamArr = [
-    timestampsStringifier,
-    startingPositionsSnapshotNameStringifier,
-    startingPositionsSnapshotStringifier,
-    endingPositionsSnapshotNameStringifier,
-    endingPositionsSnapshotStringifier,
-    finalStateNameStringifier,
-    startingPeriodBalancesNameStringifier,
-    startingPeriodBalancesStringifier,
-    movementsNameStringifier,
-    movementsStringifier,
-    movementsTotalAmountStringifier,
-    endingPeriodBalancesNameStringifier,
-    endingPeriodBalancesStringifier,
-    totalResultStringifier
-  ]
-
-  rStreamArr.forEach((rStream) => {
-    pipeline(rStream, wStream, nope)
-  })
 
   const res = await getDataFromApi({
     getData: rService[name].bind(rService),
@@ -137,88 +61,145 @@ module.exports = (
       endingPeriodBalances,
       totalResult
     }
-  } = { ...res }
+  } = res ?? {}
 
-  write(
-    [{ mtsCreated, start, end }, {}],
-    timestampsStringifier,
-    formatSettings.timestamps,
-    params
-  )
-  write(
-    [{ name: 'STARTING POSITIONS SNAPSHOT' }],
-    startingPositionsSnapshotNameStringifier
-  )
-  write(
-    [...startingPositionsSnapshot, {}],
-    startingPositionsSnapshotStringifier,
-    formatSettings.positionsSnapshot,
-    params
-  )
+  wStream.setMaxListeners(50)
 
-  write(
-    [{ name: 'ENDING POSITIONS SNAPSHOT' }],
-    endingPositionsSnapshotNameStringifier
-  )
-  write(
-    [...endingPositionsSnapshot, {}],
-    endingPositionsSnapshotStringifier,
-    formatSettings.positionsSnapshot,
-    params
-  )
-
-  write(
-    [{ name: 'FINAL STATE' }],
-    finalStateNameStringifier
-  )
-  write(
-    [{ name: 'STARTING PERIOD BALANCES' }],
-    startingPeriodBalancesNameStringifier
-  )
-  write(
-    [startingPeriodBalances, {}],
-    startingPeriodBalancesStringifier
-  )
-  write(
-    [{ name: 'MOVEMENTS DETAIL' }],
-    movementsNameStringifier
-  )
-  write(
-    [...movements, {}],
-    movementsStringifier,
-    formatSettings.movements,
-    params
-  )
-  write(
-    [{ movementsTotalAmount }, {}],
-    movementsTotalAmountStringifier
-  )
-  write(
-    [{ name: 'ENDING PERIOD BALANCES' }],
-    endingPeriodBalancesNameStringifier
-  )
-  write(
-    [endingPeriodBalances, {}],
-    endingPeriodBalancesStringifier
-  )
-  write(
-    [{ totalResult }],
-    totalResultStringifier
+  await streamWriter(
+    wStream,
+    [
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.timestamps
+        },
+        writeFn: (stream) => write(
+          [{ mtsCreated, start, end }, {}],
+          stream,
+          formatSettings.timestamps,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write(
+          [{ name: 'STARTING POSITIONS SNAPSHOT' }],
+          stream
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.positionsSnapshot
+        },
+        writeFn: (stream) => write(
+          [...startingPositionsSnapshot, {}],
+          stream,
+          formatSettings.positionsSnapshot,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write(
+          [{ name: 'ENDING POSITIONS SNAPSHOT' }],
+          stream
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.positionsSnapshot
+        },
+        writeFn: (stream) => write(
+          [...endingPositionsSnapshot, {}],
+          stream,
+          formatSettings.positionsSnapshot,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write(
+          [{ name: 'FINAL STATE' }],
+          stream
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write(
+          [{ name: 'STARTING PERIOD BALANCES' }],
+          stream
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.periodBalances
+        },
+        writeFn: (stream) => write(
+          [startingPeriodBalances, {}],
+          stream
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write(
+          [{ name: 'MOVEMENTS DETAIL' }],
+          stream
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.movements
+        },
+        writeFn: (stream) => write(
+          [...movements, {}],
+          stream,
+          formatSettings.movements,
+          params
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.movementsTotalAmount
+        },
+        writeFn: (stream) => write(
+          [{ movementsTotalAmount }, {}],
+          stream
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write(
+          [{ name: 'ENDING PERIOD BALANCES' }],
+          stream
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.periodBalances
+        },
+        writeFn: (stream) => write(
+          [endingPeriodBalances, {}],
+          stream
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.totalResult
+        },
+        writeFn: (stream) => write(
+          [{ totalResult }],
+          stream
+        )
+      }
+    ]
   )
 
   queue.emit('progress', 100)
-
-  startingPositionsSnapshotNameStringifier.end()
-  startingPositionsSnapshotStringifier.end()
-  endingPositionsSnapshotNameStringifier.end()
-  endingPositionsSnapshotStringifier.end()
-  finalStateNameStringifier.end()
-  startingPeriodBalancesNameStringifier.end()
-  startingPeriodBalancesStringifier.end()
-  movementsNameStringifier.end()
-  movementsStringifier.end()
-  movementsTotalAmountStringifier.end()
-  endingPeriodBalancesNameStringifier.end()
-  endingPeriodBalancesStringifier.end()
-  totalResultStringifier.end()
 }
