@@ -1,5 +1,7 @@
 'use strict'
 
+const moment = require('moment')
+
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -42,9 +44,35 @@ class SummaryByAsset {
 
   // TODO:
   async getSummaryByAsset (args) {
-    const auth = args?.auth ?? {}
-    const user = await this.authenticator
-      .verifyRequestUser({ auth })
+    const auth = await this.authenticator
+      .verifyRequestUser({ auth: args?.auth ?? {} })
+    const end = args?.end ?? Date.now()
+    const start = moment.utc(end)
+      .add(-30, 'days')
+      .valueOf()
+
+    const withdrawalsPromise = this.movements.getMovements({
+      auth,
+      start,
+      end,
+      sort: [['mtsStarted', -1]],
+      isWithdrawals: true
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth,
+      start,
+      end,
+      sort: [['mtsUpdated', -1]],
+      isDeposits: true
+    })
+
+    const [
+      withdrawals,
+      deposits
+    ] = await Promise.all([
+      withdrawalsPromise,
+      depositsPromise
+    ])
 
     // TODO: mock data
     return [
