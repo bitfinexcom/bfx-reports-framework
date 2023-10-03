@@ -112,17 +112,17 @@ class SummaryByAsset {
     endWallets
   }) {
     const currencyRes = []
-    const currencySet = new Set(...endWallets.map((wallet) => (
+    const currencySet = new Set(endWallets.map((wallet) => (
       wallet.currency
     )))
 
     for (const currency of currencySet) {
-      const startWalletsForCurrency = startWallets.find((wallet) => (
+      const startWalletsForCurrency = startWallets.filter((wallet) => (
         wallet.currency === currency
-      )) ?? []
-      const endWalletsForCurrency = endWallets.find((wallet) => (
+      ))
+      const endWalletsForCurrency = endWallets.filter((wallet) => (
         wallet.currency === currency
-      )) ?? []
+      ))
 
       const calcedStartWalletbalance = this.#calcFieldByName(
         startWalletsForCurrency,
