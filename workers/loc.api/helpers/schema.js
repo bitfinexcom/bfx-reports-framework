@@ -337,6 +337,15 @@ const paramsSchemaForPerformingLoanApi = {
   }
 }
 
+const paramsSchemaForSummaryByAssetApi = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    }
+  }
+}
+
 const {
   timezone,
   dateFormat
@@ -452,6 +461,7 @@ module.exports = {
   paramsSchemaForTotalFeesReportApi,
   paramsSchemaForPerformingLoanApi,
   paramsSchemaForCandlesApi,
+  paramsSchemaForSummaryByAssetApi,
   paramsSchemaForBalanceHistoryCsv,
   paramsSchemaForWinLossCsv,
   paramsSchemaForWinLossVSAccountBalanceCsv,
