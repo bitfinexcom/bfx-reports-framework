@@ -1450,6 +1450,8 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.SUMMARY_BY_ASSET, args)
 
+      checkParams(args, 'paramsSchemaForSummaryByAssetApi')
+
       return this._summaryByAsset.getSummaryByAsset(args)
     }, 'getSummaryByAsset', args, cb)
   }
