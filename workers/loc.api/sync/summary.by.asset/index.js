@@ -36,10 +36,7 @@ class SummaryByAsset {
 
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
-    this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.LEDGERS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
-    this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
   }
 
   // TODO:
@@ -65,26 +62,113 @@ class SummaryByAsset {
       sort: [['mtsUpdated', -1]],
       isDeposits: true
     })
+    const startWalletsPromise = this.wallets.getWallets({
+      auth,
+      params: { end: start }
+    })
+    const endWalletsPromise = this.wallets.getWallets({
+      auth,
+      params: { end }
+    })
 
     const [
       withdrawals,
-      deposits
+      deposits,
+      startWallets,
+      endWallets
     ] = await Promise.all([
       withdrawalsPromise,
-      depositsPromise
+      depositsPromise,
+      startWalletsPromise,
+      endWalletsPromise
     ])
 
+    const res = this.#calcSummaryByAsset({
+      withdrawals,
+      deposits,
+      startWallets,
+      endWallets
+    })
+
     // TODO: mock data
-    return [
-      {
-        currency: 'BTC',
-        balance: 12.32,
-        balanceUsd: 246_400,
-        valueChange30dUsd: 246_400, // means the difference between the value 30 days ago and the current value
-        result30dUsd: 246_400, // show the value change without the deposit/withdrawals
-        volume30dUsd: 246_400 //  means traded, lended, funded volume for 30 days period
+    // [
+    //   {
+    //     currency: 'BTC',
+    //     balance: 12.32,
+    //     balanceUsd: 246_400,
+    //     valueChange30dUsd: 246_400, // means the difference between the value 30 days ago and the current value
+    //     result30dUsd: 246_400, // show the value change without the deposit/withdrawals
+    //     volume30dUsd: 246_400 //  means traded, lended, funded volume for 30 days period
+    //   }
+    // ]
+
+    return res
+  }
+
+  #calcSummaryByAsset ({
+    withdrawals,
+    deposits,
+    startWallets,
+    endWallets
+  }) {
+    const currencyRes = []
+    const currencySet = new Set(...endWallets.map((wallet) => (
+      wallet.currency
+    )))
+
+    for (const currency of currencySet) {
+      const startWalletsForCurrency = startWallets.find((wallet) => (
+        wallet.currency === currency
+      )) ?? []
+      const endWalletsForCurrency = endWallets.find((wallet) => (
+        wallet.currency === currency
+      )) ?? []
+
+      const calcedStartWalletbalance = this.#calcFieldByName(
+        startWalletsForCurrency,
+        'balance'
+      )
+      const calcedEndWalletbalance = this.#calcFieldByName(
+        endWalletsForCurrency,
+        'balance'
+      )
+      const calcedEndWalletbalanceUsd = this.#calcFieldByName(
+        endWalletsForCurrency,
+        'balanceUsd'
+      )
+
+      if (
+        !Number.isFinite(calcedEndWalletbalance) ||
+        !Number.isFinite(calcedEndWalletbalanceUsd) ||
+        calcedEndWalletbalance === 0 ||
+        calcedEndWalletbalanceUsd === 0
+      ) {
+        continue
       }
-    ]
+
+      const actualRate = calcedEndWalletbalanceUsd / calcedEndWalletbalance
+      const valueChange30d = calcedEndWalletbalance - calcedStartWalletbalance
+      const valueChange30dUsd = valueChange30d * actualRate
+
+      const res = {
+        currency,
+        balance: calcedEndWalletbalance,
+        balanceUsd: calcedEndWalletbalanceUsd,
+        valueChange30dUsd
+      }
+
+      currencyRes.push(res)
+    }
+
+    return currencyRes
+  }
+
+  #calcFieldByName (wallets, fieldName) {
+    return wallets.reduce((accum, curr) => (
+      Number.isFinite(curr?.[fieldName])
+        ? accum + curr[fieldName]
+        : accum
+    ), 0)
   }
 }
 
