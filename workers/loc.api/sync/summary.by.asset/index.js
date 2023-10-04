@@ -43,7 +43,7 @@ class SummaryByAsset {
   async getSummaryByAsset (args) {
     const auth = await this.authenticator
       .verifyRequestUser({ auth: args?.auth ?? {} })
-    const end = args?.end ?? Date.now()
+    const end = args?.params?.end ?? Date.now()
     const start = moment.utc(end)
       .add(-30, 'days')
       .valueOf()
@@ -149,12 +149,18 @@ class SummaryByAsset {
       const actualRate = calcedEndWalletbalanceUsd / calcedEndWalletbalance
       const valueChange30d = calcedEndWalletbalance - calcedStartWalletbalance
       const valueChange30dUsd = valueChange30d * actualRate
+      const calcedMovementsByCurrency = this.#calcMovementsByCurrency(
+        { withdrawals, deposits },
+        currency
+      )
+      const result30dUsd = (valueChange30d - calcedMovementsByCurrency) * actualRate
 
       const res = {
         currency,
         balance: calcedEndWalletbalance,
         balanceUsd: calcedEndWalletbalanceUsd,
-        valueChange30dUsd
+        valueChange30dUsd,
+        result30dUsd
       }
 
       currencyRes.push(res)
@@ -169,6 +175,28 @@ class SummaryByAsset {
         ? accum + curr[fieldName]
         : accum
     ), 0)
+  }
+
+  #calcMovementsByCurrency (movements, currency) {
+    const { withdrawals, deposits } = movements ?? {}
+
+    const withdrawalsForCurrency = withdrawals.filter((item) => (
+      item?.[this.movementsSymbolFieldName] === currency
+    ))
+    const depositsForCurrency = deposits.filter((item) => (
+      item?.[this.movementsSymbolFieldName] === currency
+    ))
+
+    const calcedWithdrawals = this.#calcFieldByName(
+      withdrawalsForCurrency,
+      'amount'
+    )
+    const calcedDeposits = this.#calcFieldByName(
+      depositsForCurrency,
+      'amount'
+    )
+
+    return calcedWithdrawals + calcedDeposits
   }
 }
 
