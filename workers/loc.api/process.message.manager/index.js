@@ -7,6 +7,7 @@ const {
 
 const {
   onMessage,
+  offMessage,
   sendState
 } = require('./utils')
 const PROCESS_STATES = require('./process.states')
@@ -71,6 +72,10 @@ class ProcessMessageManager {
     }, this.logger)
 
     return this
+  }
+
+  stop () {
+    offMessage(this._mainHandler)
   }
 
   sendState (state, data) {

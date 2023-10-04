@@ -49,7 +49,8 @@ const getMockDataOpts = () => ({
   generate_token: null,
   delete_token: null,
   login: null,
-  login_verify: null
+  login_verify: null,
+  platform_status: null
 })
 
 const getExtraMockMethods = () => (new Map([

@@ -41,11 +41,10 @@ class DataConsistencyChecker {
 
     if (!isValid) {
       const {
-        progress: currProgress
+        isSyncInProgress
       } = await this.progress.getProgress()
-      const isDBSyncing = currProgress < 100
 
-      if (isDBSyncing) {
+      if (isSyncInProgress) {
         throw new DataConsistencyWhileSyncingError()
       }
 

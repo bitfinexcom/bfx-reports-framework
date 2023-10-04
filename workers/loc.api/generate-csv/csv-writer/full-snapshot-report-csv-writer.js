@@ -1,13 +1,11 @@
 'use strict'
 
-const { pipeline } = require('stream')
-const { stringify } = require('csv')
-
 const {
   write
 } = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
-
-const nope = () => {}
+const {
+  streamWriter
+} = require('bfx-report/workers/loc.api/generate-csv/csv-writer/helpers')
 
 module.exports = (
   rService,
@@ -35,78 +33,18 @@ module.exports = (
   queue.emit('progress', 0)
 
   if (typeof jobData === 'string') {
-    const stringifier = stringify(
-      { columns: ['mess'] }
+    await streamWriter(
+      wStream,
+      [{
+        columnParams: { columns: ['mess'] },
+        writeFn: (stream) => write([{ mess: jobData }], stream)
+      }]
     )
 
-    pipeline(stringifier, wStream, nope)
-    write([{ mess: jobData }], stringifier)
     queue.emit('progress', 100)
-    stringifier.end()
 
     return
   }
-
-  wStream.setMaxListeners(50)
-
-  const timestampsStringifier = stringify({
-    header: true,
-    columns: columnsCsv.timestamps
-  })
-  const posNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const posStringifier = stringify({
-    header: true,
-    columns: columnsCsv.positionsSnapshot
-  })
-  const positionsTotalPlUsdStringifier = stringify({
-    header: true,
-    columns: columnsCsv.positionsTotalPlUsd
-  })
-  const walletsNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const walletsStringifier = stringify({
-    header: true,
-    columns: columnsCsv.walletsSnapshot
-  })
-  const walletsTotalBalanceUsdStringifier = stringify({
-    header: true,
-    columns: columnsCsv.walletsTotalBalanceUsd
-  })
-  const positionsTickersNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const positionsTickersStringifier = stringify({
-    header: true,
-    columns: columnsCsv.positionsTickers
-  })
-  const walletsTickersNameStringifier = stringify(
-    { columns: ['name'] }
-  )
-  const walletsTickersStringifier = stringify({
-    header: true,
-    columns: columnsCsv.walletsTickers
-  })
-
-  const rStreamArr = [
-    timestampsStringifier,
-    posNameStringifier,
-    posStringifier,
-    positionsTotalPlUsdStringifier,
-    walletsNameStringifier,
-    walletsStringifier,
-    walletsTotalBalanceUsdStringifier,
-    positionsTickersNameStringifier,
-    positionsTickersStringifier,
-    walletsTickersNameStringifier,
-    walletsTickersStringifier
-  ]
-
-  rStreamArr.forEach((rStream) => {
-    pipeline(rStream, wStream, nope)
-  })
 
   const res = await getDataFromApi({
     getData: rService[name].bind(rService),
@@ -121,65 +59,115 @@ module.exports = (
     walletsTickers,
     positionsTotalPlUsd,
     walletsTotalBalanceUsd
-  } = { ...res }
+  } = res ?? {}
 
-  write(
-    [{ mtsCreated, end }, {}],
-    timestampsStringifier,
-    formatSettings.timestamps,
-    params
-  )
-  write([{ name: 'POSITIONS' }], posNameStringifier)
-  write(
-    [...positionsSnapshot, {}],
-    posStringifier,
-    formatSettings.positionsSnapshot,
-    params
-  )
-  write(
-    [{ plUsd: positionsTotalPlUsd }, {}],
-    positionsTotalPlUsdStringifier,
-    formatSettings.positionsTotalPlUsd,
-    params
-  )
-  write([{ name: 'WALLETS' }], walletsNameStringifier)
-  write(
-    [...walletsSnapshot, {}],
-    walletsStringifier,
-    formatSettings.walletsSnapshot,
-    params
-  )
-  write(
-    [{ balanceUsd: walletsTotalBalanceUsd }, {}],
-    walletsTotalBalanceUsdStringifier,
-    formatSettings.walletsTotalBalanceUsd,
-    params
-  )
-  write([{ name: 'POSITIONS TICKERS' }], positionsTickersNameStringifier)
-  write(
-    [...positionsTickers, {}],
-    positionsTickersStringifier,
-    formatSettings.positionsTickers,
-    params
-  )
-  write([{ name: 'WALLETS TICKERS' }], walletsTickersNameStringifier)
-  write(
-    walletsTickers,
-    walletsTickersStringifier,
-    formatSettings.walletsTickers,
-    params
+  wStream.setMaxListeners(50)
+
+  await streamWriter(
+    wStream,
+    [
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.timestamps
+        },
+        writeFn: (stream) => write(
+          [{ mtsCreated, end }, {}],
+          stream,
+          formatSettings.timestamps,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write([{ name: 'POSITIONS' }], stream)
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.positionsSnapshot
+        },
+        writeFn: (stream) => write(
+          [...positionsSnapshot, {}],
+          stream,
+          formatSettings.positionsSnapshot,
+          params
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.positionsTotalPlUsd
+        },
+        writeFn: (stream) => write(
+          [{ plUsd: positionsTotalPlUsd }, {}],
+          stream,
+          formatSettings.positionsTotalPlUsd,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write([{ name: 'WALLETS' }], stream)
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.walletsSnapshot
+        },
+        writeFn: (stream) => write(
+          [...walletsSnapshot, {}],
+          stream,
+          formatSettings.walletsSnapshot,
+          params
+        )
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.walletsTotalBalanceUsd
+        },
+        writeFn: (stream) => write(
+          [{ balanceUsd: walletsTotalBalanceUsd }, {}],
+          stream,
+          formatSettings.walletsTotalBalanceUsd,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write([{ name: 'POSITIONS TICKERS' }], stream)
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.positionsTickers
+        },
+        writeFn: (stream) => write(
+          [...positionsTickers, {}],
+          stream,
+          formatSettings.positionsTickers,
+          params
+        )
+      },
+      {
+        columnParams: { columns: ['name'] },
+        writeFn: (stream) => write([{ name: 'WALLETS TICKERS' }], stream)
+      },
+      {
+        columnParams: {
+          header: true,
+          columns: columnsCsv.walletsTickers
+        },
+        writeFn: (stream) => write(
+          walletsTickers,
+          stream,
+          formatSettings.walletsTickers,
+          params
+        )
+      }
+    ]
   )
 
   queue.emit('progress', 100)
-
-  posNameStringifier.end()
-  posStringifier.end()
-  positionsTotalPlUsdStringifier.end()
-  walletsNameStringifier.end()
-  walletsStringifier.end()
-  walletsTotalBalanceUsdStringifier.end()
-  positionsTickersNameStringifier.end()
-  positionsTickersStringifier.end()
-  walletsTickersNameStringifier.end()
-  walletsTickersStringifier.end()
 }

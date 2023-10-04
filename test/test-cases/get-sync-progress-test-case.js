@@ -32,7 +32,21 @@ module.exports = (
       assert.propertyVal(res.body, 'id', 5)
       assert.isObject(res.body.result)
       assert.isNumber(res.body.result.progress)
+      assert.isBoolean(res.body.result.isSyncInProgress)
 
+      assert.isOk(
+        res.body.result.error === null ||
+        typeof res.body.result.error === 'string'
+      )
+      assert.isOk(
+        res.body.result.state === null ||
+        [
+          'SYNCHRONIZATION_HAS_NOT_BEEN_STARTED_YET',
+          'SYNCHRONIZATION_IS_STARTED',
+          'SYNCHRONIZATION_IS_FINISHED',
+          'SYNCHRONIZATION_HAS_BEEN_INTERRUPTED'
+        ].some((state) => state === res.body.result.state)
+      )
       assert.isOk(
         res.body.result.syncStartedAt === null ||
         Number.isInteger(res.body.result.syncStartedAt)

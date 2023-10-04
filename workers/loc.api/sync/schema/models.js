@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 37
+const SUPPORTED_DB_VERSION = 38
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -745,7 +745,9 @@ const _models = new Map([
     TABLES_NAMES.PROGRESS,
     {
       _id: ID_PRIMARY_KEY,
-      value: 'VARCHAR(255)',
+      error: 'VARCHAR(255)',
+      value: 'DECIMAL(22,12)',
+      state: 'VARCHAR(255)',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 

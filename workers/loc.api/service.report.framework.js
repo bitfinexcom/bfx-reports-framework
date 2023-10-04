@@ -30,7 +30,7 @@ const {
   pickLowerObjectsNumbers
 } = require('./helpers')
 
-const INITIAL_PROGRESS = 'SYNCHRONIZATION_HAS_NOT_STARTED_YET'
+const SYNC_PROGRESS_STATES = require('./sync/progress/sync.progress.states')
 
 class FrameworkReportService extends ReportService {
   /**
@@ -44,7 +44,7 @@ class FrameworkReportService extends ReportService {
 
   async _databaseInitialize (db) {
     await this._dao.databaseInitialize(db)
-    await this._progress.setProgress(INITIAL_PROGRESS)
+    await this._progress.setProgress(SYNC_PROGRESS_STATES.INITIAL_PROGRESS)
     await this._dao.updateRecordOf(
       this._TABLES_NAMES.SYNC_MODE,
       { isEnable: true }
@@ -124,11 +124,18 @@ class FrameworkReportService extends ReportService {
         !shouldNotSyncOnStartupAfterUpdate &&
         isSyncOnStartupRequired
       ) {
-        await this._sync.start({
-          syncColls: this._ALLOWED_COLLS.ALL,
-          isSolveAfterRedirToApi: true,
-          ownerUserId: _id
-        })
+        try {
+          await this._sync.start({
+            syncColls: this._ALLOWED_COLLS.ALL,
+            isSolveAfterRedirToApi: true,
+            ownerUserId: _id
+          })
+        } catch (err) {
+          // If internet connection is not available provide ability to sign in
+          if (!(err instanceof ServerAvailabilityError)) {
+            throw err
+          }
+        }
       }
 
       const lastFinishedSyncQueueJob = await this._dao
@@ -238,19 +245,40 @@ class FrameworkReportService extends ReportService {
     }, 'updateSubAccount', args, cb)
   }
 
+  getPlatformStatus (space, args, cb) {
+    return this._responder(async () => {
+      const rest = this._getREST({})
+
+      const res = await rest.status()
+      const isMaintenance = !Array.isArray(res) || !res[0]
+
+      return { isMaintenance }
+    }, 'getPlatformStatus', args, cb)
+  }
+
   pingApi (space, args, cb) {
     return this._responder(async () => {
       try {
-        const { pingMethod = this._SYNC_API_METHODS.SYMBOLS } = { ...args }
+        const { pingMethod = 'getPlatformStatus' } = args ?? {}
         const _args = omit(args, ['pingMethod'])
 
         if (typeof this[pingMethod] !== 'function') {
           throw new BadRequestError()
         }
 
-        await this[pingMethod](_args)
+        const res = await this[pingMethod](_args)
 
-        return true
+        if (pingMethod !== 'getPlatformStatus') {
+          return true
+        }
+        if (!cb && res?.isMaintenance) {
+          await this._wsEventEmitterFactory()
+            .emitMaintenanceTurnedOn()
+
+          throw new ServerAvailabilityError(this._conf.restUrl)
+        }
+
+        return !res?.isMaintenance
       } catch (err) {
         const isServerUnavailable = isENetError(err)
 
@@ -392,7 +420,10 @@ class FrameworkReportService extends ReportService {
       )
         ? this._progress.getProgress()
         : {
-            progress: false,
+            error: null,
+            progress: null,
+            state: null,
+            isSyncInProgress: false,
             syncStartedAt: null,
             spentTime: null,
             leftTime: null

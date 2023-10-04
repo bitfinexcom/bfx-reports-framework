@@ -34,6 +34,10 @@ const onMessage = (messageHandler, logger) => {
   return handler
 }
 
+const offMessage = (messageHandler) => {
+  process.removeListener('message', messageHandler)
+}
+
 const sendState = (state, data) => {
   if (
     !state ||
@@ -59,5 +63,6 @@ const sendState = (state, data) => {
 
 module.exports = {
   onMessage,
+  offMessage,
   sendState
 }

@@ -31,6 +31,26 @@ module.exports = (
   } = params
   const auth = { token: '' }
 
+  it('it should be successfully performed by the getPlatformStatus method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        method: 'getPlatformStatus',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isBoolean(res.body.result.isMaintenance)
+    assert.isNotOk(res.body.result.isMaintenance)
+  })
+
   it('it should be successfully performed by the pingApi method', async function () {
     this.timeout(5000)
 
