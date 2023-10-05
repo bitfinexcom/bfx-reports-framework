@@ -688,6 +688,47 @@ module.exports = (
     await testMethodOfGettingCsv(procPromise, aggrPromise, res)
   })
 
+  it('it should be successfully performed by the getSummaryByAsset method', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getSummaryByAsset',
+        params: {
+          end
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.summaryByAsset)
+    assert.isObject(res.body.result.total)
+
+    res.body.result.summaryByAsset.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'currency',
+        'balance',
+        'balanceUsd',
+        'valueChange30dUsd',
+        'result30dUsd'
+      ])
+    })
+
+    assert.containsAllKeys(res.body.result.total, [
+      'balanceUsd',
+      'valueChange30dUsd',
+      'result30dUsd'
+    ])
+  })
+
   it('it should be successfully performed by the getWinLossCsv method', async function () {
     this.timeout(60000)
 
