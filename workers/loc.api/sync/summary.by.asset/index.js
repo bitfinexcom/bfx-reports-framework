@@ -83,14 +83,7 @@ class SummaryByAsset {
       endWalletsPromise
     ])
 
-    const res = this.#calcSummaryByAsset({
-      withdrawals,
-      deposits,
-      startWallets,
-      endWallets
-    })
-
-    // TODO: mock data
+    // TODO: Data example
     // [
     //   {
     //     currency: 'BTC',
@@ -101,8 +94,23 @@ class SummaryByAsset {
     //     volume30dUsd: 246_400 //  means traded, lended, funded volume for 30 days period
     //   }
     // ]
+    const summaryByAsset = this.#calcSummaryByAsset({
+      withdrawals,
+      deposits,
+      startWallets,
+      endWallets
+    })
+    // TODO: Data example
+    const total = {
+      balanceUsd: 246_400,
+      valueChange30dUsd: 246_400,
+      result30dUsd: 246_400
+    }
 
-    return res
+    return {
+      summaryByAsset,
+      total
+    }
   }
 
   #calcSummaryByAsset ({
