@@ -729,6 +729,30 @@ module.exports = (
     ])
   })
 
+  it('it should not be successfully performed by the getSummaryByAsset method', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getSummaryByAsset',
+        params: {
+          end: 'not integer'
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(400)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
+    assert.propertyVal(res.body, 'id', 5)
+  })
+
   it('it should be successfully performed by the getWinLossCsv method', async function () {
     this.timeout(60000)
 
