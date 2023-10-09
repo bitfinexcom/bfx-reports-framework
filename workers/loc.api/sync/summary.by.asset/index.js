@@ -164,7 +164,11 @@ class SummaryByAsset {
         { withdrawals, deposits },
         currency
       )
+      const result30d = valueChange30d - calcedMovementsByCurrency
       const result30dUsd = (valueChange30d - calcedMovementsByCurrency) * actualRate
+      const result30dPerc = calcedMovementsByCurrency === 0
+        ? 0
+        : (result30d / calcedMovementsByCurrency) * 100
 
       const res = {
         currency,
@@ -172,7 +176,8 @@ class SummaryByAsset {
         balanceUsd: calcedEndWalletbalanceUsd,
         valueChange30dUsd,
         valueChange30dPerc,
-        result30dUsd
+        result30dUsd,
+        result30dPerc
       }
 
       currencyRes.push(res)
