@@ -142,6 +142,9 @@ class SummaryByAsset {
     )))
 
     for (const currency of currencySet) {
+      const ledgersForCurrency = ledgers.filter((ledger) => (
+        ledger[this.ledgersSymbolFieldName] === currency
+      ))
       const startWalletsForCurrency = startWallets.filter((wallet) => (
         wallet.currency === currency
       ))
@@ -149,6 +152,9 @@ class SummaryByAsset {
         wallet.currency === currency
       ))
 
+      const calcedVolume30d = this.#calcVolume30d(
+        ledgersForCurrency
+      )
       const calcedStartWalletbalance = this.#calcFieldByName(
         startWalletsForCurrency,
         'balance'
@@ -186,6 +192,7 @@ class SummaryByAsset {
       const result30dPerc = calcedMovementsByCurrency === 0
         ? 0
         : (result30d / calcedMovementsByCurrency) * 100
+      const volume30dUsd = calcedVolume30d * actualRate
 
       const res = {
         currency,
@@ -194,7 +201,8 @@ class SummaryByAsset {
         valueChange30dUsd,
         valueChange30dPerc,
         result30dUsd,
-        result30dPerc
+        result30dPerc,
+        volume30dUsd
       }
 
       currencyRes.push(res)
@@ -209,6 +217,18 @@ class SummaryByAsset {
         ? accum + curr[fieldName]
         : accum
     ), 0)
+  }
+
+  #calcVolume30d (ledgers) {
+    return ledgers.reduce((accum, curr) => {
+      const amount = curr?.amount
+
+      if (!Number.isFinite(amount)) {
+        return accum
+      }
+
+      return accum + Math.abs(amount)
+    }, 0)
   }
 
   #calcMovementsByCurrency (movements, currency) {
