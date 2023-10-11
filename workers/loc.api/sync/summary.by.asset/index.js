@@ -11,6 +11,7 @@ const depsTypes = (TYPES) => [
   TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.SYNC_API_METHODS,
+  TYPES.ALLOWED_COLLS,
   TYPES.Movements,
   TYPES.Wallets
 ]
@@ -22,6 +23,7 @@ class SummaryByAsset {
     FOREX_SYMBS,
     authenticator,
     SYNC_API_METHODS,
+    ALLOWED_COLLS,
     movements,
     wallets
   ) {
@@ -31,12 +33,18 @@ class SummaryByAsset {
     this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.ALLOWED_COLLS = ALLOWED_COLLS
     this.movements = movements
     this.wallets = wallets
 
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
+    this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
+      .get(this.SYNC_API_METHODS.LEDGERS)
+    this.ledgersModel = this.syncSchema.getModelsMap()
+      .get(this.ALLOWED_COLLS.LEDGERS)
     this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
+    this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
   }
 
   // TODO:
@@ -48,6 +56,11 @@ class SummaryByAsset {
       .add(-30, 'days')
       .valueOf()
 
+    const ledgersPromise = this.#getLedgers({
+      auth,
+      start,
+      end
+    })
     const withdrawalsPromise = this.movements.getMovements({
       auth,
       start,
@@ -72,11 +85,13 @@ class SummaryByAsset {
     })
 
     const [
+      ledgers,
       withdrawals,
       deposits,
       startWallets,
       endWallets
     ] = await Promise.all([
+      ledgersPromise,
       withdrawalsPromise,
       depositsPromise,
       startWalletsPromise,
@@ -95,6 +110,7 @@ class SummaryByAsset {
     //   }
     // ]
     const summaryByAsset = this.#calcSummaryByAsset({
+      ledgers,
       withdrawals,
       deposits,
       startWallets,
@@ -114,6 +130,7 @@ class SummaryByAsset {
   }
 
   #calcSummaryByAsset ({
+    ledgers,
     withdrawals,
     deposits,
     startWallets,
@@ -214,6 +231,27 @@ class SummaryByAsset {
     )
 
     return calcedWithdrawals + calcedDeposits
+  }
+
+  #getLedgers (args) {
+    const {
+      auth,
+      start,
+      end
+    } = args ?? {}
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      {
+        filter: {
+          $lte: { mts: end },
+          $gte: { mts: start },
+          user_id: auth._id
+        },
+        sort: [['mts', 1], ['id', 1]],
+        projection: this.ledgersModel
+      }
+    )
   }
 }
 
