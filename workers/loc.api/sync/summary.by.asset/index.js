@@ -7,35 +7,32 @@ const { decorateInjectable } = require('../../di/utils')
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.SyncSchema,
-  TYPES.BalanceHistory,
-  TYPES.FOREX_SYMBS,
   TYPES.Authenticator,
   TYPES.SYNC_API_METHODS,
   TYPES.ALLOWED_COLLS,
   TYPES.Movements,
-  TYPES.Wallets
+  TYPES.Wallets,
+  TYPES.CurrencyConverter
 ]
 class SummaryByAsset {
   constructor (
     dao,
     syncSchema,
-    balanceHistory,
-    FOREX_SYMBS,
     authenticator,
     SYNC_API_METHODS,
     ALLOWED_COLLS,
     movements,
-    wallets
+    wallets,
+    currencyConverter
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
-    this.balanceHistory = balanceHistory
-    this.FOREX_SYMBS = FOREX_SYMBS
     this.authenticator = authenticator
     this.SYNC_API_METHODS = SYNC_API_METHODS
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.movements = movements
     this.wallets = wallets
+    this.currencyConverter = currencyConverter
 
     this.movementsMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.MOVEMENTS)
@@ -47,7 +44,6 @@ class SummaryByAsset {
     this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
   }
 
-  // TODO:
   async getSummaryByAsset (args) {
     const auth = await this.authenticator
       .verifyRequestUser({ auth: args?.auth ?? {} })
@@ -98,30 +94,15 @@ class SummaryByAsset {
       endWalletsPromise
     ])
 
-    // TODO: Data example
-    // [
-    //   {
-    //     currency: 'BTC',
-    //     balance: 12.32,
-    //     balanceUsd: 246_400,
-    //     valueChange30dUsd: 246_400, // means the difference between the value 30 days ago and the current value
-    //     result30dUsd: 246_400, // show the value change without the deposit/withdrawals
-    //     volume30dUsd: 246_400 //  means traded, lended, funded volume for 30 days period
-    //   }
-    // ]
-    const summaryByAsset = this.#calcSummaryByAsset({
+    const summaryByAsset = await this.#calcSummaryByAsset({
+      start,
       ledgers,
       withdrawals,
       deposits,
       startWallets,
       endWallets
     })
-    // TODO: Data example
-    const total = {
-      balanceUsd: 246_400,
-      valueChange30dUsd: 246_400,
-      result30dUsd: 246_400
-    }
+    const total = this.#calcTotal(summaryByAsset)
 
     return {
       summaryByAsset,
@@ -129,7 +110,8 @@ class SummaryByAsset {
     }
   }
 
-  #calcSummaryByAsset ({
+  async #calcSummaryByAsset ({
+    start,
     ledgers,
     withdrawals,
     deposits,
@@ -142,8 +124,15 @@ class SummaryByAsset {
     )))
 
     for (const currency of currencySet) {
+      // TODO: need to improve with one request to this.currencyConverter.convertByCandles()
+      const startRate = currency === 'USD'
+        ? 1
+        : (await this.currencyConverter.getPrice(`t${currency}USD`, start))
       const ledgersForCurrency = ledgers.filter((ledger) => (
         ledger[this.ledgersSymbolFieldName] === currency
+      ))
+      const exchangeLedgers = ledgersForCurrency.filter((ledger) => (
+        ledger._category === 5
       ))
       const startWalletsForCurrency = startWallets.filter((wallet) => (
         wallet.currency === currency
@@ -152,52 +141,68 @@ class SummaryByAsset {
         wallet.currency === currency
       ))
 
+      const calcedExchangeLedgers = this.#calcFieldByName(
+        exchangeLedgers,
+        'amount'
+      )
+      const calcedExchangeProfitUsd = this.#calcExchangeProfitUsd(
+        exchangeLedgers,
+        startRate
+      )
       const calcedVolume30d = this.#calcVolume30d(
         ledgersForCurrency
       )
-      const calcedStartWalletbalance = this.#calcFieldByName(
+      const calcedStartWalletBalance = this.#calcFieldByName(
         startWalletsForCurrency,
         'balance'
       )
-      const calcedEndWalletbalance = this.#calcFieldByName(
+      const calcedEndWalletBalance = this.#calcFieldByName(
         endWalletsForCurrency,
         'balance'
       )
-      const calcedEndWalletbalanceUsd = this.#calcFieldByName(
+
+      const calcedEndWalletBalanceUsd = this.#calcFieldByName(
         endWalletsForCurrency,
         'balanceUsd'
       )
 
       if (
-        !Number.isFinite(calcedEndWalletbalance) ||
-        !Number.isFinite(calcedEndWalletbalanceUsd) ||
-        calcedEndWalletbalance === 0 ||
-        calcedEndWalletbalanceUsd === 0
+        !Number.isFinite(calcedEndWalletBalance) ||
+        !Number.isFinite(calcedEndWalletBalanceUsd) ||
+        calcedEndWalletBalance === 0 ||
+        calcedEndWalletBalanceUsd === 0
       ) {
         continue
       }
 
-      const actualRate = calcedEndWalletbalanceUsd / calcedEndWalletbalance
-      const valueChange30d = calcedEndWalletbalance - calcedStartWalletbalance
+      const actualRate = currency === 'USD'
+        ? 1
+        : calcedEndWalletBalanceUsd / calcedEndWalletBalance
+      const valueChange30d = calcedEndWalletBalance - calcedStartWalletBalance
       const valueChange30dUsd = valueChange30d * actualRate
-      const valueChange30dPerc = calcedStartWalletbalance === 0
+      const valueChange30dPerc = calcedStartWalletBalance === 0
         ? 0
-        : (valueChange30d / calcedStartWalletbalance) * 100
+        : (valueChange30d / calcedStartWalletBalance) * 100
       const calcedMovementsByCurrency = this.#calcMovementsByCurrency(
         { withdrawals, deposits },
         currency
       )
-      const result30d = valueChange30d - calcedMovementsByCurrency
-      const result30dUsd = (valueChange30d - calcedMovementsByCurrency) * actualRate
-      const result30dPerc = calcedMovementsByCurrency === 0
+      const result30d = (
+        valueChange30d -
+        calcedMovementsByCurrency -
+        calcedExchangeLedgers
+      )
+      const result30dUsd = (result30d * (actualRate - startRate)) +
+        calcedExchangeProfitUsd
+      const result30dPerc = calcedStartWalletBalance === 0
         ? 0
-        : (result30d / calcedMovementsByCurrency) * 100
+        : (result30dUsd / (calcedStartWalletBalance * startRate)) * 100
       const volume30dUsd = calcedVolume30d * actualRate
 
       const res = {
         currency,
-        balance: calcedEndWalletbalance,
-        balanceUsd: calcedEndWalletbalanceUsd,
+        balance: calcedEndWalletBalance,
+        balanceUsd: calcedEndWalletBalanceUsd,
         valueChange30dUsd,
         valueChange30dPerc,
         result30dUsd,
@@ -228,6 +233,25 @@ class SummaryByAsset {
       }
 
       return accum + Math.abs(amount)
+    }, 0)
+  }
+
+  #calcExchangeProfitUsd (ledgers, startRate) {
+    return ledgers.reduce((accum, curr) => {
+      const amount = curr?.amount
+      const amountUsd = curr?.amountUsd
+
+      if (
+        !Number.isFinite(amount) ||
+        !Number.isFinite(amountUsd) ||
+        amount > 0 // Take into account the sale
+      ) {
+        return accum
+      }
+
+      const profit = amountUsd - (amount * startRate)
+
+      return accum + profit
     }, 0)
   }
 
@@ -272,6 +296,40 @@ class SummaryByAsset {
         projection: this.ledgersModel
       }
     )
+  }
+
+  #calcTotal (summaryByAsset) {
+    const initTotal = {
+      balanceUsd: 0,
+      valueChange30dUsd: 0,
+      valueChange30dPerc: 0, // TODO:
+      result30dUsd: 0,
+      result30dPerc: 0, // TODO:
+      volume30dUsd: 0
+    }
+
+    return summaryByAsset.reduce((accum, curr) => {
+      this.#calcObjPropsByName(
+        accum,
+        curr,
+        [
+          'balanceUsd',
+          'valueChange30dUsd',
+          'result30dUsd',
+          'volume30dUsd'
+        ]
+      )
+
+      return accum
+    }, initTotal)
+  }
+
+  #calcObjPropsByName (accum, curr, propNames) {
+    for (const propName of propNames) {
+      accum[propName] = Number.isFinite(curr?.[propName])
+        ? accum[propName] + curr[propName]
+        : accum[propName]
+    }
   }
 }
 
