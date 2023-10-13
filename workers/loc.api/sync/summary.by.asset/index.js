@@ -122,12 +122,13 @@ class SummaryByAsset {
     const currencySet = new Set(endWallets.map((wallet) => (
       wallet.currency
     )))
+    const startRateMap = await this.#getStartRateMapByCandles(
+      start,
+      currencySet
+    )
 
     for (const currency of currencySet) {
-      // TODO: need to improve with one request to this.currencyConverter.convertByCandles()
-      const startRate = currency === 'USD'
-        ? 1
-        : (await this.currencyConverter.getPrice(`t${currency}USD`, start))
+      const startRate = startRateMap.get(currency)
       const ledgersForCurrency = ledgers.filter((ledger) => (
         ledger[this.ledgersSymbolFieldName] === currency
       ))
@@ -330,6 +331,19 @@ class SummaryByAsset {
         ? accum[propName] + curr[propName]
         : accum[propName]
     }
+  }
+
+  async #getStartRateMapByCandles (start, currencySet) {
+    const startRates = await this.currencyConverter.convertByCandles(
+      [...currencySet].map((ccy) => ({ ccy, multip: 1, rate: 0 })),
+      {
+        symbolFieldName: 'ccy',
+        mts: start,
+        convFields: [{ inputField: 'multip', outputField: 'rate' }]
+      }
+    )
+
+    return new Map(startRates.map(({ ccy, rate }) => [ccy, rate]))
   }
 }
 
