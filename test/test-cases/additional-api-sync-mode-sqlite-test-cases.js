@@ -718,14 +718,20 @@ module.exports = (
         'balance',
         'balanceUsd',
         'valueChange30dUsd',
-        'result30dUsd'
+        'valueChange30dPerc',
+        'result30dUsd',
+        'result30dPerc',
+        'volume30dUsd'
       ])
     })
 
     assert.containsAllKeys(res.body.result.total, [
       'balanceUsd',
       'valueChange30dUsd',
-      'result30dUsd'
+      'valueChange30dPerc',
+      'result30dUsd',
+      'result30dPerc',
+      'volume30dUsd'
     ])
   })
 
