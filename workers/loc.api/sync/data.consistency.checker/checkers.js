@@ -161,7 +161,6 @@ class Checkers {
     return true
   }
 
-  // TODO:
   [CHECKER_NAMES.SUMMARY_BY_ASSET] (auth) {
     return this.syncCollsManager
       .haveCollsBeenSyncedUpToDate({

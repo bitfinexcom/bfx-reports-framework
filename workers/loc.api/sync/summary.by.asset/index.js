@@ -128,13 +128,6 @@ class SummaryByAsset {
     )
 
     for (const currency of currencySet) {
-      const startRate = startRateMap.get(currency)
-      const ledgersForCurrency = ledgers.filter((ledger) => (
-        ledger[this.ledgersSymbolFieldName] === currency
-      ))
-      const exchangeLedgers = ledgersForCurrency.filter((ledger) => (
-        ledger._category === 5
-      ))
       const startWalletsForCurrency = startWallets.filter((wallet) => (
         wallet.currency === currency
       ))
@@ -142,20 +135,13 @@ class SummaryByAsset {
         wallet.currency === currency
       ))
 
-      const calcedExchangeLedgers = this.#calcFieldByName(
-        exchangeLedgers,
-        'amount'
-      )
-      const calcedExchangeProfitUsd = this.#calcExchangeProfitUsd(
-        exchangeLedgers,
-        startRate
-      )
-      const calcedVolume30d = this.#calcVolume30d(
-        ledgersForCurrency
-      )
       const calcedStartWalletBalance = this.#calcFieldByName(
         startWalletsForCurrency,
         'balance'
+      )
+      const calcedStartWalletBalanceUsd = this.#calcFieldByName(
+        startWalletsForCurrency,
+        'balanceUsd'
       )
       const calcedEndWalletBalance = this.#calcFieldByName(
         endWalletsForCurrency,
@@ -168,6 +154,8 @@ class SummaryByAsset {
       )
 
       if (
+        !Number.isFinite(calcedStartWalletBalance) ||
+        !Number.isFinite(calcedStartWalletBalanceUsd) ||
         !Number.isFinite(calcedEndWalletBalance) ||
         !Number.isFinite(calcedEndWalletBalanceUsd) ||
         calcedEndWalletBalance === 0 ||
@@ -176,14 +164,36 @@ class SummaryByAsset {
         continue
       }
 
+      // Start rate can't be calced by start wallets
+      // due to possibility of non-existent ones
+      const startRate = startRateMap.get(currency)
       const actualRate = currency === 'USD'
         ? 1
         : calcedEndWalletBalanceUsd / calcedEndWalletBalance
+
+      const ledgersForCurrency = ledgers.filter((ledger) => (
+        ledger[this.ledgersSymbolFieldName] === currency
+      ))
+      const exchangeLedgers = ledgersForCurrency.filter((ledger) => (
+        ledger._category === 5
+      ))
+      const calcedExchangeLedgers = this.#calcFieldByName(
+        exchangeLedgers,
+        'amount'
+      )
+      const calcedExchangeProfitUsd = this.#calcExchangeProfitUsd(
+        exchangeLedgers,
+        startRate
+      )
+      const calcedVolume30d = this.#calcVolume30d(
+        ledgersForCurrency
+      )
+
       const valueChange30d = calcedEndWalletBalance - calcedStartWalletBalance
       const valueChange30dUsd = valueChange30d * actualRate
-      const valueChange30dPerc = calcedStartWalletBalance === 0
+      const valueChange30dPerc = calcedStartWalletBalanceUsd === 0
         ? 0
-        : (valueChange30d / calcedStartWalletBalance) * 100
+        : (valueChange30dUsd / calcedStartWalletBalanceUsd) * 100
       const calcedMovementsByCurrency = this.#calcMovementsByCurrency(
         { withdrawals, deposits },
         currency
@@ -195,9 +205,9 @@ class SummaryByAsset {
       )
       const result30dUsd = (result30d * (actualRate - startRate)) +
         calcedExchangeProfitUsd
-      const result30dPerc = calcedStartWalletBalance === 0
+      const result30dPerc = calcedStartWalletBalanceUsd === 0
         ? 0
-        : (result30dUsd / (calcedStartWalletBalance * startRate)) * 100
+        : (result30dUsd / calcedStartWalletBalanceUsd) * 100
       const volume30dUsd = calcedVolume30d * actualRate
 
       const res = {
@@ -208,7 +218,10 @@ class SummaryByAsset {
         valueChange30dPerc,
         result30dUsd,
         result30dPerc,
-        volume30dUsd
+        volume30dUsd,
+
+        // It's used to total perc calc
+        calcedStartWalletBalanceUsd
       }
 
       currencyRes.push(res)
@@ -303,9 +316,9 @@ class SummaryByAsset {
     const initTotal = {
       balanceUsd: 0,
       valueChange30dUsd: 0,
-      valueChange30dPerc: 0, // TODO:
+      valueChange30dPerc: 0,
       result30dUsd: 0,
-      result30dPerc: 0, // TODO:
+      result30dPerc: 0,
       volume30dUsd: 0
     }
 
@@ -317,9 +330,16 @@ class SummaryByAsset {
           'balanceUsd',
           'valueChange30dUsd',
           'result30dUsd',
-          'volume30dUsd'
+          'volume30dUsd',
+
+          'calcedStartWalletBalanceUsd'
         ]
       )
+
+      if (accum.calcedStartWalletBalanceUsd !== 0) {
+        accum.valueChange30dPerc = (accum.valueChange30dUsd / accum.calcedStartWalletBalanceUsd) * 100
+        accum.result30dPerc = (accum.result30dUsd / accum.calcedStartWalletBalanceUsd) * 100
+      }
 
       return accum
     }, initTotal)
