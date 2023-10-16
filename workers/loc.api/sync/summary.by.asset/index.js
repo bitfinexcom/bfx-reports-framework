@@ -319,7 +319,9 @@ class SummaryByAsset {
       valueChange30dPerc: 0,
       result30dUsd: 0,
       result30dPerc: 0,
-      volume30dUsd: 0
+      volume30dUsd: 0,
+
+      calcedStartWalletBalanceUsd: 0
     }
 
     return summaryByAsset.reduce((accum, curr) => {
