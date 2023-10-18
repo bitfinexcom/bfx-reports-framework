@@ -6,7 +6,7 @@ const setImmediatePromise = promisify(setImmediate)
 const EventEmitter = require('events')
 const {
   cloneDeep
-} = require('lodash')
+} = require('lib-js-util-base')
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
