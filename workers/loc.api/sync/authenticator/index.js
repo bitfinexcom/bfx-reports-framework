@@ -1,7 +1,8 @@
 'use strict'
 
 const { v4: uuidv4 } = require('uuid')
-const { pick, isNil } = require('lodash')
+const { isNil } = require('lodash')
+const { pick } = require('lib-js-util-base')
 const {
   AuthError,
   ArgsParamsError
