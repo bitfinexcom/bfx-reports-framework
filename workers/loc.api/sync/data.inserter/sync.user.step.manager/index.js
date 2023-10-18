@@ -3,10 +3,12 @@
 const {
   isEmpty,
   merge,
-  omit,
   min,
   max
 } = require('lodash')
+const {
+  omit
+} = require('lib-js-util-base')
 
 const {
   MIN_START_MTS

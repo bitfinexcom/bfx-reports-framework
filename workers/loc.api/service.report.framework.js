@@ -1,9 +1,11 @@
 'use strict'
 
 const {
-  omit,
   isEmpty
 } = require('lodash')
+const {
+  omit
+} = require('lib-js-util-base')
 const {
   AuthError,
   BadRequestError

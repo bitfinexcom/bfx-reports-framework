@@ -1,7 +1,7 @@
 'use strict'
 
 const path = require('path')
-const { omit } = require('lodash')
+const { omit } = require('lib-js-util-base')
 const request = require('supertest')
 
 const {

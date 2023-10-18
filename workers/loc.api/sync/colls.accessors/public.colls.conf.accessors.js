@@ -2,10 +2,12 @@
 
 const {
   pick,
-  omit,
   isEmpty,
   orderBy
 } = require('lodash')
+const {
+  omit
+} = require('lib-js-util-base')
 const {
   prepareResponse
 } = require('bfx-report/workers/loc.api/helpers')

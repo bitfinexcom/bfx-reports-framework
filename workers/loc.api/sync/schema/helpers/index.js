@@ -1,6 +1,7 @@
 'use strict'
 
-const { cloneDeep, omit } = require('lodash')
+const { cloneDeep } = require('lodash')
+const { omit } = require('lib-js-util-base')
 
 const {
   CONSTR_FIELD_NAME,
