@@ -13,6 +13,7 @@
     "csv": "5.5.3",
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "inversify": "6.0.1",
+    "lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
     "lodash": "4.17.21",
     "moment": "2.29.4",
     "uuid": "9.0.0",
