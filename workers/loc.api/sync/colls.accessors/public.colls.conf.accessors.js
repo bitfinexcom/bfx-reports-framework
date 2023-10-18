@@ -1,12 +1,12 @@
 'use strict'
 
 const {
-  isEmpty,
   orderBy
 } = require('lodash')
 const {
   omit,
-  pick
+  pick,
+  isEmpty
 } = require('lib-js-util-base')
 const {
   prepareResponse

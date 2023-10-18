@@ -1,9 +1,9 @@
 'use strict'
 
 const {
-  isEmpty,
   min
 } = require('lodash')
+const { isEmpty } = require('lib-js-util-base')
 const moment = require('moment')
 
 const SyncTempTablesManager = require('../sync.temp.tables.manager')

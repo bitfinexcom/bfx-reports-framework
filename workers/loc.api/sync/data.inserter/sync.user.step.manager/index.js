@@ -1,13 +1,13 @@
 'use strict'
 
 const {
-  isEmpty,
   merge,
   min,
   max
 } = require('lodash')
 const {
-  omit
+  omit,
+  isEmpty
 } = require('lib-js-util-base')
 
 const {

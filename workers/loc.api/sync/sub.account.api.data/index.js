@@ -1,9 +1,11 @@
 'use strict'
 
 const {
-  orderBy,
-  isEmpty
+  orderBy
 } = require('lodash')
+const {
+  isEmpty
+} = require('lib-js-util-base')
 const {
   prepareResponse
 } = require('bfx-report/workers/loc.api/helpers')
