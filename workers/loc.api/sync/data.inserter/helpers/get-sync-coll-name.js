@@ -1,11 +1,13 @@
 'use strict'
 
-const { snakeCase } = require('lodash')
-
+/*
+ * Converts 'getFundingOfferHistory' name to 'FUNDING_OFFER_HISTORY'
+ */
 module.exports = (method) => {
-  const name = method.replace(/^[^A-Z]+/, '')
-  const snakeCaseName = snakeCase(name)
-  const upperCaseName = snakeCaseName.toUpperCase()
-
-  return upperCaseName
+  return method
+    .replace(/^[^A-Z]+/, '')
+    .replace(/[A-Z]/g, (match, offset) => (
+      `${offset > 0 ? '_' : ''}${match.toLowerCase()}`
+    ))
+    .toUpperCase()
 }
