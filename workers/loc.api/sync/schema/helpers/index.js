@@ -14,6 +14,14 @@ const cloneSchema = (map, omittedFields = []) => {
     const normalizedSchema = omit(schema, omittedFields)
     const clonedSchema = cloneDeep(normalizedSchema)
 
+    for (const [propName, value] of Object.entries(schema)) {
+      if (typeof value !== 'function') {
+        continue
+      }
+
+      clonedSchema[propName] = value
+    }
+
     return [key, clonedSchema]
   })
 
