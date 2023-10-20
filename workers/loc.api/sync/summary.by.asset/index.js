@@ -1,5 +1,6 @@
 'use strict'
 
+const { omit } = require('lib-js-util-base')
 const moment = require('moment')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -94,7 +95,7 @@ class SummaryByAsset {
       endWalletsPromise
     ])
 
-    const summaryByAsset = await this.#calcSummaryByAsset({
+    const _summaryByAsset = await this.#calcSummaryByAsset({
       start,
       ledgers,
       withdrawals,
@@ -102,7 +103,10 @@ class SummaryByAsset {
       startWallets,
       endWallets
     })
-    const total = this.#calcTotal(summaryByAsset)
+    const total = this.#calcTotal(_summaryByAsset)
+    const summaryByAsset = _summaryByAsset.map((item) => (
+      omit(item, ['calcedStartWalletBalanceUsd'])
+    ))
 
     return {
       summaryByAsset,
@@ -324,7 +328,7 @@ class SummaryByAsset {
       calcedStartWalletBalanceUsd: 0
     }
 
-    return summaryByAsset.reduce((accum, curr) => {
+    const res = summaryByAsset.reduce((accum, curr) => {
       this.#calcObjPropsByName(
         accum,
         curr,
@@ -345,6 +349,8 @@ class SummaryByAsset {
 
       return accum
     }, initTotal)
+
+    return omit(res, ['calcedStartWalletBalanceUsd'])
   }
 
   #calcObjPropsByName (accum, curr, propNames) {
