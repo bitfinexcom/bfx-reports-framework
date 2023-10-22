@@ -1,6 +1,6 @@
 'use strict'
 
-const { pick } = require('lodash')
+const { pick } = require('lib-js-util-base')
 
 module.exports = (
   data,

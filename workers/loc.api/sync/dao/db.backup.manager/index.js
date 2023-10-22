@@ -4,7 +4,7 @@ const { mkdirSync } = require('fs')
 const { readdir, rm, copyFile } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
-const { orderBy, uniqBy } = require('lodash')
+const { orderBy } = require('lodash')
 
 const { decorateInjectable } = require('../../../di/utils')
 
@@ -163,7 +163,7 @@ class DBBackupManager {
         if (
           i === 0 ||
           (
-            uniqBy(excludedFiles, 'version').filter((m) => (
+            this._getFirstUniqFilesByVer(excludedFiles).filter((m) => (
               m.version !== version
             )).length < 2 &&
             excludedFiles.filter((m) => (
@@ -194,6 +194,17 @@ class DBBackupManager {
       removedFiles,
       excludedFiles
     }
+  }
+
+  _getFirstUniqFilesByVer (metadata) {
+    return metadata.reduce((accum, curr) => {
+      if (!accum.uKeys.has(curr?.version)) {
+        accum.res.push(curr)
+        accum.uKeys.add(curr?.version)
+      }
+
+      return accum
+    }, { res: [], uKeys: new Set() }).res
   }
 
   _makeBackupsFolder () {

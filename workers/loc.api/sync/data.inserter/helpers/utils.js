@@ -2,7 +2,7 @@
 
 const {
   pick
-} = require('lodash')
+} = require('lib-js-util-base')
 
 const normalizeApiData = (
   data = [],

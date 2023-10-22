@@ -1,7 +1,7 @@
 'use strict'
 
 const uuid = require('uuid')
-const { omit } = require('lodash')
+const { omit } = require('lib-js-util-base')
 const { PeerRPCServer } = require('grenache-nodejs-ws')
 
 const {

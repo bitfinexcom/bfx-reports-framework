@@ -1,6 +1,6 @@
 'use strict'
 
-const { merge } = require('lodash')
+const { merge } = require('lib-js-util-base')
 
 const {
   TotalFeesParamsFlagError
