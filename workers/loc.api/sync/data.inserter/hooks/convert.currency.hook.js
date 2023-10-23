@@ -142,6 +142,22 @@ class ConvertCurrencyHook extends DataInserterHook {
             _schema
           )
 
+        if (collName === this.ALLOWED_COLLS.LEDGERS) {
+          await this.dao.updateElemsInCollBy(
+            tableName,
+            convElems.map((item) => ({
+              ...item,
+              _isBalanceRecalced: null
+            })),
+            ['_id'],
+            [...updatedFieldNames, '_isBalanceRecalced']
+          )
+
+          _id = elems[elems.length - 1]._id
+
+          continue
+        }
+
         await this.dao.updateElemsInCollBy(
           tableName,
           convElems,
