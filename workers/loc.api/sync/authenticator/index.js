@@ -1211,6 +1211,7 @@ class Authenticator {
 
   async generateAuthToken (args) {
     try {
+      const auth = pickSessionProps(args?.auth)
       const opts = {
         ttl: args?.auth?.authTokenTTLSec ?? this.authTokenTTLSec,
         writePermission: false
@@ -1218,7 +1219,7 @@ class Authenticator {
 
       const res = await this.getDataFromApi({
         getData: (s, args) => this.rService._generateToken(args, opts),
-        args,
+        args: { ...args, auth },
         callerName: 'AUTHENTICATOR',
         eNetErrorAttemptsTimeframeMin: 10 / 60,
         eNetErrorAttemptsTimeoutMs: 1000,
@@ -1243,9 +1244,11 @@ class Authenticator {
   }
 
   async invalidateAuthToken (args) {
+    const auth = pickSessionProps(args?.auth)
+
     const res = await this.getDataFromApi({
       getData: (s, args) => this.rService._invalidateAuthToken(args),
-      args,
+      args: { ...args, auth },
       callerName: 'AUTHENTICATOR',
       eNetErrorAttemptsTimeframeMin: 10 / 60,
       eNetErrorAttemptsTimeoutMs: 1000,
