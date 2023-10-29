@@ -589,7 +589,15 @@ class DataChecker {
       firstTempElemLedgers?.mts
     ])
 
-    return firstElemMts
+    /*
+     * To convert the first ledgers to USD
+     * it needs to provide some overlap of candles
+     */
+    const mts = moment.utc(firstElemMts)
+      .add(-5, 'days')
+      .valueOf()
+
+    return mts
   }
 
   async _getUniqueSymbsFromLedgers () {
