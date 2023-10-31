@@ -68,5 +68,6 @@ module.exports = {
   SyncUserStepManager: Symbol.for('SyncUserStepManager'),
   SyncUserStepData: Symbol.for('SyncUserStepData'),
   SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory'),
-  HTTPRequest: Symbol.for('HTTPRequest')
+  HTTPRequest: Symbol.for('HTTPRequest'),
+  SummaryByAsset: Symbol.for('SummaryByAsset')
 }

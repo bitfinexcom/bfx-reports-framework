@@ -1,7 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events')
-const { isEmpty } = require('lodash')
+const { isEmpty } = require('lib-js-util-base')
 
 const COLLS_TYPES = require('../schema/colls.types')
 

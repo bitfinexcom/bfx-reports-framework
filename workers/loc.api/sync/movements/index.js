@@ -1,6 +1,7 @@
 'use strict'
 
-const { orderBy, merge } = require('lodash')
+const { orderBy } = require('lodash')
+const { merge } = require('lib-js-util-base')
 
 const { decorateInjectable } = require('../../di/utils')
 

@@ -6,7 +6,7 @@ const setImmediatePromise = promisify(setImmediate)
 const EventEmitter = require('events')
 const {
   cloneDeep
-} = require('lodash')
+} = require('lib-js-util-base')
 const {
   FindMethodError
 } = require('bfx-report/workers/loc.api/errors')
@@ -52,6 +52,7 @@ const depsTypes = (TYPES) => [
   TYPES.TABLES_NAMES,
   TYPES.Authenticator,
   TYPES.ConvertCurrencyHook,
+  TYPES.ConvertCurrencyHook,
   TYPES.RecalcSubAccountLedgersBalancesHook,
   TYPES.RecalcSubAccountLedgersBalancesHook,
   TYPES.DataChecker,
@@ -70,6 +71,7 @@ class DataInserter extends EventEmitter {
     TABLES_NAMES,
     authenticator,
     convertCurrencyHook,
+    convertCurrencyHookWithoutTempTable,
     recalcSubAccountLedgersBalancesHook,
     recalcSubAccountLedgersBalancesHookWithoutTempTable,
     dataChecker,
@@ -88,6 +90,7 @@ class DataInserter extends EventEmitter {
     this.TABLES_NAMES = TABLES_NAMES
     this.authenticator = authenticator
     this.convertCurrencyHook = convertCurrencyHook
+    this.convertCurrencyHookWithoutTempTable = convertCurrencyHookWithoutTempTable
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
     this.recalcSubAccountLedgersBalancesHookWithoutTempTable = recalcSubAccountLedgersBalancesHookWithoutTempTable
     this.dataChecker = dataChecker
@@ -143,6 +146,10 @@ class DataInserter extends EventEmitter {
      * This hook, without `syncQueueId`, covers sub-account recalc
      * for non-temp ledgers table in cases when sub-users being added/removed
      */
+    this._addAfterAllInsertsHooks(
+      this.convertCurrencyHookWithoutTempTable,
+      { syncQueueId: null }
+    )
     this._addAfterAllInsertsHooks(
       this.recalcSubAccountLedgersBalancesHookWithoutTempTable,
       { syncQueueId: null }

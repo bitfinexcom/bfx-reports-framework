@@ -1,9 +1,9 @@
 'use strict'
 
 const {
-  isEmpty,
   min
 } = require('lodash')
+const { isEmpty } = require('lib-js-util-base')
 const moment = require('moment')
 
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
@@ -589,7 +589,15 @@ class DataChecker {
       firstTempElemLedgers?.mts
     ])
 
-    return firstElemMts
+    /*
+     * To convert the first ledgers to USD
+     * it needs to provide some overlap of candles
+     */
+    const mts = moment.utc(firstElemMts)
+      .add(-5, 'days')
+      .valueOf()
+
+    return mts
   }
 
   async _getUniqueSymbsFromLedgers () {

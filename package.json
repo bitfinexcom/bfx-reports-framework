@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "4.10.0",
+  "version": "4.11.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
@@ -13,6 +13,7 @@
     "csv": "5.5.3",
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "inversify": "6.0.1",
+    "lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
     "lodash": "4.17.21",
     "moment": "2.29.4",
     "uuid": "9.0.0",

@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmpty } = require('lodash')
+const { isEmpty } = require('lib-js-util-base')
 
 module.exports = (sort = []) => {
   if (

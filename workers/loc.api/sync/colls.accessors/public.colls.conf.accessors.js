@@ -1,11 +1,13 @@
 'use strict'
 
 const {
-  pick,
-  omit,
-  isEmpty,
   orderBy
 } = require('lodash')
+const {
+  omit,
+  pick,
+  isEmpty
+} = require('lib-js-util-base')
 const {
   prepareResponse
 } = require('bfx-report/workers/loc.api/helpers')

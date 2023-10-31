@@ -1,6 +1,6 @@
 'use strict'
 
-const { omit } = require('lodash')
+const { omit } = require('lib-js-util-base')
 const FILTER_CONDITIONS = require(
   'bfx-report/workers/loc.api/helpers/filter.conditions'
 )

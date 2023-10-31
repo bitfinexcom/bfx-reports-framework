@@ -2,7 +2,7 @@
 
 const { promisify } = require('util')
 const setImmediatePromise = promisify(setImmediate)
-const { pick, omit } = require('lodash')
+const { omit, pick } = require('lib-js-util-base')
 
 const getBackIterable = require('../helpers/get-back-iterable')
 
