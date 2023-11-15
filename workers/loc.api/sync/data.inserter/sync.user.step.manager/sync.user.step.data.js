@@ -9,6 +9,7 @@ const { decorateInjectable } = require('../../../di/utils')
  */
 class SyncUserStepData {
   constructor () {
+    this.syncedAt = null
     this.symbol = null
     this.timeframe = null
     this.baseStart = null
@@ -23,6 +24,7 @@ class SyncUserStepData {
   }
 
   /**
+   * @param {?number} [syncedAt] - Used to specify synced mts point
    * @param {?string} [symbol] - Used to specify synced symbol, can be `_ALL` if all ones are syncing
    * @param {?string} [timeframe] - Used to specify synced timeframe, eg. for candles collection
    * @param {?number} [baseStart] - Used to specify base start mts point to continue first sync
@@ -34,6 +36,7 @@ class SyncUserStepData {
    */
   setParams (params = {}) {
     const {
+      syncedAt = this.syncedAt,
       symbol = this.symbol,
       timeframe = this.timeframe,
       baseStart = this.baseStart,
@@ -44,6 +47,7 @@ class SyncUserStepData {
       isCurrStepReady = this.isCurrStepReady
     } = params ?? {}
 
+    this.syncedAt = syncedAt
     this.symbol = symbol
     this.timeframe = timeframe
     this.baseStart = baseStart
@@ -116,6 +120,10 @@ class SyncUserStepData {
 
   get hasCurrStart () {
     return Number.isInteger(this.currStart)
+  }
+
+  get hasSyncedAt () {
+    return Number.isInteger(this.syncedAt)
   }
 }
 

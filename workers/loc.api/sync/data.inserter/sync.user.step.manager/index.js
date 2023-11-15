@@ -326,7 +326,8 @@ class SyncUserStepManager {
       currStart,
       currEnd,
       isBaseStepReady = false,
-      isCurrStepReady = false
+      isCurrStepReady = false,
+      syncedAt
     } = syncUserStepInfo ?? {}
 
     const baseStart = this._getMinStart(_baseStart)
@@ -348,7 +349,8 @@ class SyncUserStepManager {
         baseEnd: baseEnd ?? currMts,
         isBaseStepReady,
         symbol,
-        timeframe
+        timeframe,
+        syncedAt
       })
 
       return {
@@ -365,7 +367,8 @@ class SyncUserStepManager {
       isBaseStepReady,
       isCurrStepReady,
       symbol,
-      timeframe
+      timeframe,
+      syncedAt
     })
 
     if (!isCurrStepReady) {
