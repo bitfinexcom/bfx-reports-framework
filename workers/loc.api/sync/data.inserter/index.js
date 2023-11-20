@@ -284,7 +284,7 @@ class DataInserter extends EventEmitter {
     await this.wsEventEmitter
       .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
-      .checkNewPublicData()
+      .checkNewPublicData(this._sessionAuth)
     await this.syncTempTablesManager
       .createTempDBStructureForCurrSync(methodCollMap)
     const size = methodCollMap.size
