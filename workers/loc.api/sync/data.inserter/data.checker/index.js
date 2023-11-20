@@ -95,14 +95,17 @@ class DataChecker {
     return filterMethodCollMap(methodCollMap)
   }
 
-  async checkNewPublicData () {
+  /*
+   * `sessionAuth` can be empty
+   */
+  async checkNewPublicData (sessionAuth) {
     const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
     }
 
-    await this._checkNewDataPublicArrObjType(methodCollMap)
+    await this._checkNewDataPublicArrObjType(sessionAuth, methodCollMap)
     await this._checkNewPublicUpdatableData(methodCollMap)
 
     return filterMethodCollMap(methodCollMap, true)
@@ -179,7 +182,7 @@ class DataChecker {
     schema.start.push(freshSyncUserStepData)
   }
 
-  async _checkNewDataPublicArrObjType (methodCollMap) {
+  async _checkNewDataPublicArrObjType (sessionAuth, methodCollMap) {
     for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
         return
@@ -191,7 +194,11 @@ class DataChecker {
       this._resetSyncSchemaProps(schema)
 
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        await this._checkNewCandlesData(method, schema)
+        await this._checkNewCandlesData(
+          method,
+          schema,
+          sessionAuth
+        )
       }
       if (
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
@@ -336,20 +343,24 @@ class DataChecker {
    */
   async _checkNewCandlesData (
     method,
-    schema
+    schema,
+    sessionAuth
   ) {
     if (this._isInterrupted) {
       return
     }
 
     const currMts = Date.now()
-    const firstLedgerMts = await this._getFirstLedgerMts()
+    const usersFilter = this._getUsersFilter(sessionAuth)
+    const firstLedgerMts = await this._getFirstLedgerMts(usersFilter)
 
     if (!Number.isInteger(firstLedgerMts)) {
       return
     }
 
-    const uniqueSymbsSet = await this._getUniqueSymbsFromLedgers()
+    const uniqueSymbsSet = await this._getUniqueSymbsFromLedgers(
+      usersFilter
+    )
     const candlesPairsSet = new Set()
 
     for (const symbol of uniqueSymbsSet) {
@@ -568,8 +579,11 @@ class DataChecker {
     return momentDiff > allowedTimeDiff
   }
 
-  async _getFirstLedgerMts () {
-    const firstElemFilter = { $not: { currency: 'USD' } }
+  async _getFirstLedgerMts (usersFilter) {
+    const firstElemFilter = {
+      ...usersFilter,
+      $not: { currency: 'USD' }
+    }
     const firstElemOrder = [['mts', 1]]
 
     const tempLedgersTableName = SyncTempTablesManager.getTempTableName(
@@ -615,9 +629,12 @@ class DataChecker {
     return mts
   }
 
-  async _getUniqueSymbsFromLedgers () {
+  async _getUniqueSymbsFromLedgers (usersFilter) {
     const ledgerParams = {
-      filter: { $not: { currency: this.FOREX_SYMBS } },
+      filter: {
+        ...usersFilter,
+        $not: { currency: this.FOREX_SYMBS }
+      },
       isDistinct: true,
       projection: ['currency']
     }
@@ -697,6 +714,19 @@ class DataChecker {
   _setMethodCollMap (methodCollMap) {
     this._methodCollMap = this.syncSchema
       .getMethodCollMap(methodCollMap)
+  }
+
+  _getUsersFilter (sessionAuth) {
+    if (
+      !(sessionAuth instanceof Map) ||
+      sessionAuth.size === 0
+    ) {
+      return {}
+    }
+
+    const userIds = [...sessionAuth.keys()]
+
+    return { $in: { user_id: userIds } }
   }
 }
 
