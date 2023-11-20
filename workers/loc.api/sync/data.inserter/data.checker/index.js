@@ -407,7 +407,8 @@ class DataChecker {
       )
       const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
         syncUserStepData,
-        currMts
+        currMts,
+        { dayOfYear: 1 }
       )
 
       if (
@@ -502,7 +503,8 @@ class DataChecker {
   ) {
     const {
       measure = 'minutes',
-      allowedTimeDiff = 60
+      allowedTimeDiff = 60,
+      dayOfYear
     } = allowedDiff ?? {}
 
     const baseEnd = (
@@ -517,15 +519,28 @@ class DataChecker {
     )
       ? syncUserStepData.currEnd
       : 0
+    const syncedAt = syncUserStepData.hasSyncedAt
+      ? syncUserStepData.syncedAt
+      : 0
 
     const momentBaseEnd = moment.utc(baseEnd)
     const momentCurrEnd = moment.utc(currEnd)
     const momentCurrMts = moment.utc(currMts)
+    const momentSyncedAt = moment.utc(syncedAt)
 
     const momentMaxEnd = moment.max(momentBaseEnd, momentCurrEnd)
     const momentDiff = momentCurrMts.diff(momentMaxEnd, measure)
+    const yearsDiff = momentCurrMts.year() - momentSyncedAt.year()
+    const dayOfYearDiff = momentCurrMts.dayOfYear() - momentSyncedAt.dayOfYear()
 
-    return momentDiff > allowedTimeDiff
+    return (
+      momentDiff > allowedTimeDiff &&
+      (
+        !Number.isFinite(dayOfYear) ||
+        yearsDiff >= 1 ||
+        dayOfYearDiff >= dayOfYear
+      )
+    )
   }
 
   _wasStartPointChanged (
