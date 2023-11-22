@@ -96,16 +96,16 @@ class DataChecker {
   }
 
   /*
-   * `sessionAuth` can be empty
+   * `authMap` can be empty
    */
-  async checkNewPublicData (sessionAuth) {
+  async checkNewPublicData (authMap) {
     const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
     }
 
-    await this._checkNewDataPublicArrObjType(sessionAuth, methodCollMap)
+    await this._checkNewDataPublicArrObjType(authMap, methodCollMap)
     await this._checkNewPublicUpdatableData(methodCollMap)
 
     return filterMethodCollMap(methodCollMap, true)
@@ -182,7 +182,7 @@ class DataChecker {
     schema.start.push(freshSyncUserStepData)
   }
 
-  async _checkNewDataPublicArrObjType (sessionAuth, methodCollMap) {
+  async _checkNewDataPublicArrObjType (authMap, methodCollMap) {
     for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
         return
@@ -194,11 +194,21 @@ class DataChecker {
       this._resetSyncSchemaProps(schema)
 
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        await this._checkNewCandlesData(
-          method,
-          schema,
-          sessionAuth
+        // If `authMap` is empty sync candles for all users
+        const _authMap = (
+          !(authMap instanceof Map) ||
+          authMap.size === 0
         )
+          ? new Map([['ALL', {}]])
+          : authMap
+
+        for (const authItem of _authMap) {
+          await this._checkNewCandlesData(
+            method,
+            schema,
+            authItem[1]
+          )
+        }
       }
       if (
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
@@ -344,14 +354,19 @@ class DataChecker {
   async _checkNewCandlesData (
     method,
     schema,
-    sessionAuth
+    auth
   ) {
     if (this._isInterrupted) {
       return
     }
 
+    const { _id: userId, subUser } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+    const usersFilter = Number.isInteger(userId)
+      ? { $eq: { user_id: userId } }
+      : {}
+
     const currMts = Date.now()
-    const usersFilter = this._getUsersFilter(sessionAuth)
     const firstLedgerMts = await this._getFirstLedgerMts(usersFilter)
 
     if (!Number.isInteger(firstLedgerMts)) {
@@ -400,7 +415,9 @@ class DataChecker {
           collName: method,
           symbol,
           timeframe: CANDLES_TIMEFRAME,
-          defaultStart: firstLedgerMts
+          defaultStart: firstLedgerMts,
+          userId,
+          subUserId
         }
       )
 
@@ -409,7 +426,6 @@ class DataChecker {
         !syncUserStepData.isCurrStepReady
       ) {
         schema.hasNewData = true
-        schema.start.push(syncUserStepData)
       }
 
       const wasStartPointChanged = this._wasStartPointChanged(
@@ -422,36 +438,38 @@ class DataChecker {
         { dayOfYear: 1 }
       )
 
-      if (
-        !wasStartPointChanged &&
-        !shouldFreshSyncBeAdded
-      ) {
-        continue
-      }
-
-      const freshSyncUserStepData = this.syncUserStepDataFactory({
-        ...syncUserStepData.getParams(),
-        isBaseStepReady: true,
-        isCurrStepReady: true
-      })
-
       if (wasStartPointChanged) {
-        freshSyncUserStepData.setParams({
+        syncUserStepData.setParams({
           baseStart: firstLedgerMts,
-          baseEnd: syncUserStepData.baseStart,
           isBaseStepReady: false
         })
+
+        schema.hasNewData = true
       }
       if (shouldFreshSyncBeAdded) {
-        freshSyncUserStepData.setParams({
+        syncUserStepData.setParams({
           currStart: lastElemMtsFromTables,
           currEnd: currMts,
           isCurrStepReady: false
         })
+
+        schema.hasNewData = true
       }
 
-      schema.hasNewData = true
-      schema.start.push(freshSyncUserStepData)
+      if (!schema.hasNewData) {
+        continue
+      }
+
+      // To keep flow: one candles request per currency
+      if (!syncUserStepData.isBaseStepReady) {
+        syncUserStepData.setParams({
+          baseEnd: syncUserStepData.currEnd,
+          isCurrStepReady: true
+        })
+      }
+
+      syncUserStepData.auth = auth
+      schema.start.push(syncUserStepData)
     }
   }
 
@@ -714,19 +732,6 @@ class DataChecker {
   _setMethodCollMap (methodCollMap) {
     this._methodCollMap = this.syncSchema
       .getMethodCollMap(methodCollMap)
-  }
-
-  _getUsersFilter (sessionAuth) {
-    if (
-      !(sessionAuth instanceof Map) ||
-      sessionAuth.size === 0
-    ) {
-      return {}
-    }
-
-    const userIds = [...sessionAuth.keys()]
-
-    return { $in: { user_id: userIds } }
   }
 }
 
