@@ -284,7 +284,7 @@ class DataInserter extends EventEmitter {
     await this.wsEventEmitter
       .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
-      .checkNewPublicData(this._sessionAuth)
+      .checkNewPublicData(this._auth)
     await this.syncTempTablesManager
       .createTempDBStructureForCurrSync(methodCollMap)
     const size = methodCollMap.size
@@ -417,7 +417,14 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const { userId, subUserId } = this._getUserIds(auth)
+    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
+    const _auth = (
+      hasCandlesSection &&
+      syncUserStepData?.auth
+    )
+      ? syncUserStepData.auth
+      : auth
+    const { userId, subUserId } = this._getUserIds(_auth)
     await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
       collName: methodApi,
       userId,
@@ -436,7 +443,6 @@ class DataInserter extends EventEmitter {
       hasTimeframe,
       areAllSymbolsRequired
     } = syncUserStepData
-    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
 
     const params = {}
 
@@ -926,19 +932,47 @@ class DataInserter extends EventEmitter {
           continue
         }
 
-        const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
-          collName,
-          syncedAt,
-          ...this.syncUserStepManager.wereStepsSynced(
-            schema.start,
-            {
-              shouldNotMtsBeChecked: isUpdatable(schema?.type),
-              shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
-            }
-          )
-        }, { doNotQueueQuery: true })
+        const startWithAuth = schema.start
+          .filter((syncUserStepData) => syncUserStepData?.auth)
+        const startWithoutAuth = schema.start
+          .filter((syncUserStepData) => !syncUserStepData?.auth)
 
-        updatesForPubCollsPromises.push(promise)
+        if (startWithAuth.length > 0) {
+          for (const syncUserStepData of startWithAuth) {
+            const { userId, subUserId } = this._getUserIds(syncUserStepData.auth)
+
+            const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+              collName,
+              userId,
+              subUserId,
+              syncedAt,
+              ...this.syncUserStepManager.wereStepsSynced(
+                [syncUserStepData],
+                {
+                  shouldNotMtsBeChecked: isUpdatable(schema?.type),
+                  shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+                }
+              )
+            }, { doNotQueueQuery: true })
+
+            updatesForPubCollsPromises.push(promise)
+          }
+        }
+        if (startWithoutAuth.length > 0) {
+          const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+            collName,
+            syncedAt,
+            ...this.syncUserStepManager.wereStepsSynced(
+              schema.start,
+              {
+                shouldNotMtsBeChecked: isUpdatable(schema?.type),
+                shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+              }
+            )
+          }, { doNotQueueQuery: true })
+
+          updatesForPubCollsPromises.push(promise)
+        }
       }
 
       await Promise.all(updatesForPubCollsPromises)
