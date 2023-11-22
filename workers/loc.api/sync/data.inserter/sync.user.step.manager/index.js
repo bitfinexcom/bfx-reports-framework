@@ -211,12 +211,16 @@ class SyncUserStepManager {
 
     const defaultStart = this._getMinStart(_defaultStart)
     const hasUserIdField = (
-      typeof model?.user_id === 'string' &&
       Number.isInteger(userId)
     )
+    const hasUserIdFieldInModel = (
+      typeof model?.user_id === 'string'
+    )
     const hasSubUserIdField = (
-      typeof model?.subUserId === 'string' &&
       Number.isInteger(subUserId)
+    )
+    const hasSubUserIdFieldInModel = (
+      typeof model?.subUserId === 'string'
     )
     const hasSymbolField = (
       symbolFieldName &&
@@ -230,13 +234,19 @@ class SyncUserStepManager {
       timeframe &&
       typeof timeframe === 'string'
     )
-    const shouldCollBePublic = !hasUserIdField
+    const shouldCollBePublic = (
+      !hasUserIdField ||
+      !hasUserIdFieldInModel
+    )
     const shouldTableDataBeFetched = (
       dateFieldName &&
       typeof dateFieldName === 'string'
     )
 
-    if (isPublic(syncSchema?.type) !== shouldCollBePublic) {
+    if (
+      tableName !== this.TABLES_NAMES.CANDLES &&
+      isPublic(syncSchema?.type) !== shouldCollBePublic
+    ) {
       throw new LastSyncedInfoGettingError()
     }
 
@@ -257,8 +267,8 @@ class SyncUserStepManager {
       : {}
     const dataFilter = merge(
       {},
-      userIdFilter,
-      subUserIdFilter,
+      hasUserIdFieldInModel ? userIdFilter : {},
+      subUserIdFilter ? hasSubUserIdFieldInModel : {},
       symbolFilter,
       timeframeFilter
     )
@@ -267,7 +277,8 @@ class SyncUserStepManager {
       this.TABLES_NAMES.SYNC_USER_STEPS,
       {
         collName,
-        ...userIdFilter
+        ...userIdFilter,
+        ...subUserIdFilter
       },
       [['syncedAt', -1]]
     )
