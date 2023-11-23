@@ -162,14 +162,16 @@ class SyncUserStepManager {
 
     const userIdFilter = hasUserIdField
       ? { $eq: { user_id: userId } }
-      : {}
+      : { $isNull: ['user_id'] }
     const subUserIdFilter = hasSubUserIdField
       ? { $eq: { subUserId } }
-      : {}
+      : { $isNull: ['subUserId'] }
     const filter = merge(
       { $eq: { collName } },
-      userIdFilter,
-      subUserIdFilter
+      this._mergeUserFilters(
+        userIdFilter,
+        subUserIdFilter
+      )
     )
 
     const updateRes = await this.dao.updateCollBy(
@@ -255,10 +257,10 @@ class SyncUserStepManager {
 
     const userIdFilter = hasUserIdField
       ? { $eq: { user_id: userId } }
-      : {}
+      : { $isNull: ['user_id'] }
     const subUserIdFilter = hasSubUserIdField
       ? { $eq: { subUserId } }
-      : {}
+      : { $isNull: ['subUserId'] }
     const symbolFilter = hasSymbolField
       ? { $eq: { [symbolFieldName]: symbol } }
       : {}
@@ -267,8 +269,10 @@ class SyncUserStepManager {
       : {}
     const dataFilter = merge(
       {},
-      hasUserIdFieldInModel ? userIdFilter : {},
-      subUserIdFilter ? hasSubUserIdFieldInModel : {},
+      this._mergeUserFilters(
+        hasUserIdFieldInModel ? userIdFilter : {},
+        hasSubUserIdFieldInModel ? subUserIdFilter : {}
+      ),
       symbolFilter,
       timeframeFilter
     )
@@ -277,8 +281,10 @@ class SyncUserStepManager {
       this.TABLES_NAMES.SYNC_USER_STEPS,
       {
         collName,
-        ...userIdFilter,
-        ...subUserIdFilter
+        ...this._mergeUserFilters(
+          userIdFilter,
+          subUserIdFilter
+        )
       },
       [['syncedAt', -1]]
     )
@@ -473,6 +479,22 @@ class SyncUserStepManager {
     )
       ? MIN_START_MTS
       : start
+  }
+
+  _mergeUserFilters (userIdFilter, subUserIdFilter) {
+    const $isNull = [
+      ...userIdFilter?.$isNull ?? [],
+      ...subUserIdFilter?.$isNull ?? []
+    ]
+    const $isNullObj = $isNull.length > 0
+      ? { $isNull }
+      : {}
+
+    return merge(
+      userIdFilter,
+      subUserIdFilter,
+      $isNullObj
+    )
   }
 }
 
