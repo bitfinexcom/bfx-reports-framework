@@ -463,7 +463,7 @@ class DataChecker {
       // To keep flow: one candles request per currency
       if (!syncUserStepData.isBaseStepReady) {
         syncUserStepData.setParams({
-          baseEnd: syncUserStepData.currEnd,
+          baseEnd: syncUserStepData.currEnd ?? currMts,
           isCurrStepReady: true
         })
       }
