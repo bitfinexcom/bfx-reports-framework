@@ -60,7 +60,8 @@ const depsTypes = (TYPES) => [
   TYPES.WSEventEmitter,
   TYPES.GetDataFromApi,
   TYPES.SyncTempTablesManager,
-  TYPES.SyncUserStepManager
+  TYPES.SyncUserStepManager,
+  TYPES.Progress
 ]
 class DataInserter extends EventEmitter {
   constructor (
@@ -79,7 +80,8 @@ class DataInserter extends EventEmitter {
     wsEventEmitter,
     getDataFromApi,
     syncTempTablesManager,
-    syncUserStepManager
+    syncUserStepManager,
+    progress
   ) {
     super()
 
@@ -99,6 +101,7 @@ class DataInserter extends EventEmitter {
     this.getDataFromApi = getDataFromApi
     this.syncTempTablesManager = syncTempTablesManager
     this.syncUserStepManager = syncUserStepManager
+    this.progress = progress
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -301,6 +304,12 @@ class DataInserter extends EventEmitter {
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
       const { type, start } = schema ?? {}
+
+      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+        // Considers 10 reqs/min for candles
+        const leftTime = Math.floor((60 / 10) * start.length * 1000)
+        this.progress.setCandlesLeftTime(leftTime)
+      }
 
       for (const syncUserStepData of start) {
         if (isInsertableArrObj(schema?.type, { isPublic: true })) {
