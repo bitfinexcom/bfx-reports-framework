@@ -30,7 +30,8 @@ const depsTypes = (TYPES) => [
   TYPES.SyncSchema,
   TYPES.FOREX_SYMBS,
   TYPES.ALLOWED_COLLS,
-  TYPES.SYNC_API_METHODS
+  TYPES.SYNC_API_METHODS,
+  TYPES.Logger
 ]
 class CurrencyConverter {
   constructor (
@@ -40,7 +41,8 @@ class CurrencyConverter {
     syncSchema,
     FOREX_SYMBS,
     ALLOWED_COLLS,
-    SYNC_API_METHODS
+    SYNC_API_METHODS,
+    logger
   ) {
     this.rService = rService
     this.getDataFromApi = getDataFromApi
@@ -49,6 +51,7 @@ class CurrencyConverter {
     this.FOREX_SYMBS = FOREX_SYMBS
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.SYNC_API_METHODS = SYNC_API_METHODS
+    this.logger = logger
 
     this._COLL_NAMES = {
       PUBLIC_TRADES: 'publicTrades',
@@ -114,6 +117,8 @@ class CurrencyConverter {
           return this.currenciesSynonymous
         }
       } catch (err) {
+        this.logger.debug(err)
+
         return this.currenciesSynonymous
       }
     }

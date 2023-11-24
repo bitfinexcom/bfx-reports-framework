@@ -95,14 +95,17 @@ class DataChecker {
     return filterMethodCollMap(methodCollMap)
   }
 
-  async checkNewPublicData () {
+  /*
+   * `authMap` can be empty
+   */
+  async checkNewPublicData (authMap) {
     const methodCollMap = this._getMethodCollMap()
 
     if (this._isInterrupted) {
       return filterMethodCollMap(methodCollMap, true)
     }
 
-    await this._checkNewDataPublicArrObjType(methodCollMap)
+    await this._checkNewDataPublicArrObjType(authMap, methodCollMap)
     await this._checkNewPublicUpdatableData(methodCollMap)
 
     return filterMethodCollMap(methodCollMap, true)
@@ -179,7 +182,7 @@ class DataChecker {
     schema.start.push(freshSyncUserStepData)
   }
 
-  async _checkNewDataPublicArrObjType (methodCollMap) {
+  async _checkNewDataPublicArrObjType (authMap, methodCollMap) {
     for (const [method, schema] of methodCollMap) {
       if (this._isInterrupted) {
         return
@@ -191,7 +194,21 @@ class DataChecker {
       this._resetSyncSchemaProps(schema)
 
       if (schema.name === this.ALLOWED_COLLS.CANDLES) {
-        await this._checkNewCandlesData(method, schema)
+        // If `authMap` is empty sync candles for all users
+        const _authMap = (
+          !(authMap instanceof Map) ||
+          authMap.size === 0
+        )
+          ? new Map([['ALL', {}]])
+          : authMap
+
+        for (const authItem of _authMap) {
+          await this._checkNewCandlesData(
+            method,
+            schema,
+            authItem[1]
+          )
+        }
       }
       if (
         schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
@@ -336,20 +353,29 @@ class DataChecker {
    */
   async _checkNewCandlesData (
     method,
-    schema
+    schema,
+    auth
   ) {
     if (this._isInterrupted) {
       return
     }
 
+    const { _id: userId, subUser } = auth ?? {}
+    const { _id: subUserId } = subUser ?? {}
+    const usersFilter = Number.isInteger(userId)
+      ? { $eq: { user_id: userId } }
+      : {}
+
     const currMts = Date.now()
-    const firstLedgerMts = await this._getFirstLedgerMts()
+    const firstLedgerMts = await this._getFirstLedgerMts(usersFilter)
 
     if (!Number.isInteger(firstLedgerMts)) {
       return
     }
 
-    const uniqueSymbsSet = await this._getUniqueSymbsFromLedgers()
+    const uniqueSymbsSet = await this._getUniqueSymbsFromLedgers(
+      usersFilter
+    )
     const candlesPairsSet = new Set()
 
     for (const symbol of uniqueSymbsSet) {
@@ -389,7 +415,9 @@ class DataChecker {
           collName: method,
           symbol,
           timeframe: CANDLES_TIMEFRAME,
-          defaultStart: firstLedgerMts
+          defaultStart: firstLedgerMts,
+          userId,
+          subUserId
         }
       )
 
@@ -398,7 +426,6 @@ class DataChecker {
         !syncUserStepData.isCurrStepReady
       ) {
         schema.hasNewData = true
-        schema.start.push(syncUserStepData)
       }
 
       const wasStartPointChanged = this._wasStartPointChanged(
@@ -411,36 +438,38 @@ class DataChecker {
         { dayOfYear: 1 }
       )
 
-      if (
-        !wasStartPointChanged &&
-        !shouldFreshSyncBeAdded
-      ) {
-        continue
-      }
-
-      const freshSyncUserStepData = this.syncUserStepDataFactory({
-        ...syncUserStepData.getParams(),
-        isBaseStepReady: true,
-        isCurrStepReady: true
-      })
-
       if (wasStartPointChanged) {
-        freshSyncUserStepData.setParams({
+        syncUserStepData.setParams({
           baseStart: firstLedgerMts,
-          baseEnd: syncUserStepData.baseStart,
           isBaseStepReady: false
         })
+
+        schema.hasNewData = true
       }
       if (shouldFreshSyncBeAdded) {
-        freshSyncUserStepData.setParams({
+        syncUserStepData.setParams({
           currStart: lastElemMtsFromTables,
           currEnd: currMts,
           isCurrStepReady: false
         })
+
+        schema.hasNewData = true
       }
 
-      schema.hasNewData = true
-      schema.start.push(freshSyncUserStepData)
+      if (!schema.hasNewData) {
+        continue
+      }
+
+      // To keep flow: one candles request per currency
+      if (!syncUserStepData.isBaseStepReady) {
+        syncUserStepData.setParams({
+          baseEnd: syncUserStepData.currEnd ?? currMts,
+          isCurrStepReady: true
+        })
+      }
+
+      syncUserStepData.auth = auth
+      schema.start.push(syncUserStepData)
     }
   }
 
@@ -568,8 +597,11 @@ class DataChecker {
     return momentDiff > allowedTimeDiff
   }
 
-  async _getFirstLedgerMts () {
-    const firstElemFilter = { $not: { currency: 'USD' } }
+  async _getFirstLedgerMts (usersFilter) {
+    const firstElemFilter = {
+      ...usersFilter,
+      $not: { currency: 'USD' }
+    }
     const firstElemOrder = [['mts', 1]]
 
     const tempLedgersTableName = SyncTempTablesManager.getTempTableName(
@@ -615,9 +647,12 @@ class DataChecker {
     return mts
   }
 
-  async _getUniqueSymbsFromLedgers () {
+  async _getUniqueSymbsFromLedgers (usersFilter) {
     const ledgerParams = {
-      filter: { $not: { currency: this.FOREX_SYMBS } },
+      filter: {
+        ...usersFilter,
+        $not: { currency: this.FOREX_SYMBS }
+      },
       isDistinct: true,
       projection: ['currency']
     }

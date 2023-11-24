@@ -91,6 +91,7 @@ class SyncCollsManager {
 
     for (const [method, schema] of this._methodCollMap) {
       const {
+        name,
         type,
         isSyncRequiredAtLeastOnce
       } = schema
@@ -101,7 +102,10 @@ class SyncCollsManager {
       ) {
         continue
       }
-      if (isPublic(type)) {
+      if (
+        isPublic(type) &&
+        name !== this.TABLES_NAMES.CANDLES
+      ) {
         const isDone = completedColls.some((completedColl) => (
           completedColl?.isBaseStepReady &&
           completedColl?.collName === method
@@ -260,11 +264,21 @@ class SyncCollsManager {
     )
   }
 
-  _getCompletedCollsBy (filter = {}) {
-    return this.dao.getElemsInCollBy(
+  async _getCompletedCollsBy (filter = {}) {
+    const completedColls = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.SYNC_USER_STEPS,
       { filter }
     )
+
+    if (!Array.isArray(completedColls)) {
+      return []
+    }
+
+    // Considers candles referenced to specific user
+    return completedColls.filter((completedColl) => (
+      completedColl.collName !== this.SYNC_API_METHODS.CANDLES ||
+      Number.isInteger(completedColl.user_id)
+    ))
   }
 }
 

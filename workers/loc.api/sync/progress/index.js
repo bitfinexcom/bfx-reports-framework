@@ -41,6 +41,7 @@ class Progress extends EventEmitter {
     this._state = null
     this._hasNotProgressChanged = true
     this._leftTime = null
+    this._candlesLeftTime = null
     this._prevEstimatedLeftTime = Date.now()
   }
 
@@ -145,7 +146,7 @@ class Progress extends EventEmitter {
     return this
   }
 
-  async _estimateSyncTime (params) {
+  _estimateSyncTime (params) {
     const {
       error,
       progress,
@@ -218,6 +219,7 @@ class Progress extends EventEmitter {
     } = params ?? {}
 
     if (!hasNotProgressChanged) {
+      this._candlesLeftTime = null
       this._prevEstimatedLeftTime = nowMts
       this._leftTime = Math.floor((spentTime / progress) * (100 - progress))
 
@@ -233,7 +235,10 @@ class Progress extends EventEmitter {
     this._prevEstimatedLeftTime = nowMts
     this._leftTime = leftTime > 0
       ? leftTime
-      : null
+      : this._candlesLeftTime ?? this._calcLeftTime({
+        ...params,
+        hasNotProgressChanged: false
+      })
 
     return this._leftTime
   }
@@ -303,6 +308,10 @@ class Progress extends EventEmitter {
         errorRegExp.test(error)
       )
     )
+  }
+
+  setCandlesLeftTime (leftTime) {
+    this._candlesLeftTime = leftTime
   }
 }
 

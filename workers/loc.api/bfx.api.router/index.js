@@ -43,7 +43,7 @@ class BfxApiRouter extends BaseBfxApiRouter {
       ['fundingTrades', 90],
       ['trades', 15],
       ['statusMessages', 90],
-      ['candles', 30],
+      ['candles', 20],
       ['orderTrades', 90],
       ['orderHistory', 90],
       ['activeOrders', 90],
