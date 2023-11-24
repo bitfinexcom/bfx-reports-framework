@@ -1082,19 +1082,25 @@ class Authenticator {
     } = user ?? {}
     const tokenKey = this._getTokenKeyByEmailField(user)
 
+    const userSession = this.userSessions.get(token) ?? {}
     const authTokenRefreshInterval = authToken
       ? this.setupAuthTokenRefreshInterval(user)
       : null
 
     this.userSessions.set(
-      token, {
-        ...user,
-        authTokenFn: () => {
-          return this.userSessions.get(token)?.authToken
-        },
-        authTokenRefreshInterval,
-        authTokenInvalidateIntervals: new Map()
-      }
+      token,
+      Object.assign(
+        userSession,
+        user,
+        {
+          authTokenFn: () => {
+            return this.userSessions.get(token)?.authToken
+          },
+          authTokenRefreshInterval,
+          authTokenInvalidateIntervals: userSession
+            ?.authTokenInvalidateIntervals ?? new Map()
+        }
+      )
     )
     this.userTokenMapByEmail.set(tokenKey, token)
   }
@@ -1133,9 +1139,8 @@ class Authenticator {
       ? token
       : this.userTokenMapByEmail.get(tokenKey)
 
-    this.userTokenMapByEmail.delete(tokenKey)
-
     const session = this.userSessions.get(_token) ?? {}
+    this.userTokenMapByEmail.delete(this._getTokenKeyByEmailField(session))
     const {
       authTokenRefreshInterval,
       authTokenInvalidateIntervals = new Map()
@@ -1272,8 +1277,12 @@ class Authenticator {
     const { authTokenInvalidateIntervals } = userSession
     let count = 0
 
+    if (authTokenInvalidateIntervals.has(authToken)) {
+      return
+    }
+
     const authTokenInvalidateInterval = setInterval(async () => {
-      const session = this.userSessions.get(token)
+      const session = this.userSessions.get(token) ?? userSession
 
       try {
         count += 1
@@ -1288,7 +1297,7 @@ class Authenticator {
       } catch (err) {
         if (count >= 3) {
           clearInterval(authTokenInvalidateInterval)
-          session.authTokenInvalidateIntervals?.delete(authToken)
+          session?.authTokenInvalidateIntervals?.delete(authToken)
         }
 
         this.logger.debug(err)
