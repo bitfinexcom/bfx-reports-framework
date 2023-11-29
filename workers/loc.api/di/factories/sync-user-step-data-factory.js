@@ -9,6 +9,7 @@ module.exports = (ctx) => {
     )
 
     const paramsOrder = [
+      'syncedAt',
       'symbol',
       'timeframe',
       'baseStart',

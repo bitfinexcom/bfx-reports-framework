@@ -60,7 +60,8 @@ const depsTypes = (TYPES) => [
   TYPES.WSEventEmitter,
   TYPES.GetDataFromApi,
   TYPES.SyncTempTablesManager,
-  TYPES.SyncUserStepManager
+  TYPES.SyncUserStepManager,
+  TYPES.Progress
 ]
 class DataInserter extends EventEmitter {
   constructor (
@@ -79,7 +80,8 @@ class DataInserter extends EventEmitter {
     wsEventEmitter,
     getDataFromApi,
     syncTempTablesManager,
-    syncUserStepManager
+    syncUserStepManager,
+    progress
   ) {
     super()
 
@@ -99,6 +101,7 @@ class DataInserter extends EventEmitter {
     this.getDataFromApi = getDataFromApi
     this.syncTempTablesManager = syncTempTablesManager
     this.syncUserStepManager = syncUserStepManager
+    this.progress = progress
 
     this._asyncProgressHandlers = []
     this._auth = null
@@ -284,7 +287,7 @@ class DataInserter extends EventEmitter {
     await this.wsEventEmitter
       .emitSyncingStep('CHECKING_NEW_PUBLIC_DATA')
     const methodCollMap = await this.dataChecker
-      .checkNewPublicData()
+      .checkNewPublicData(this._auth)
     await this.syncTempTablesManager
       .createTempDBStructureForCurrSync(methodCollMap)
     const size = methodCollMap.size
@@ -301,6 +304,12 @@ class DataInserter extends EventEmitter {
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
       const { type, start } = schema ?? {}
+
+      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+        // Considers 10 reqs/min for candles
+        const leftTime = Math.floor((60 / 10) * start.length * 1000)
+        this.progress.setCandlesLeftTime(leftTime)
+      }
 
       for (const syncUserStepData of start) {
         if (isInsertableArrObj(schema?.type, { isPublic: true })) {
@@ -417,7 +426,14 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const { userId, subUserId } = this._getUserIds(auth)
+    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
+    const _auth = (
+      hasCandlesSection &&
+      syncUserStepData?.auth
+    )
+      ? syncUserStepData.auth
+      : auth
+    const { userId, subUserId } = this._getUserIds(_auth)
     await this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
       collName: methodApi,
       userId,
@@ -436,7 +452,6 @@ class DataInserter extends EventEmitter {
       hasTimeframe,
       areAllSymbolsRequired
     } = syncUserStepData
-    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
 
     const params = {}
 
@@ -926,19 +941,47 @@ class DataInserter extends EventEmitter {
           continue
         }
 
-        const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
-          collName,
-          syncedAt,
-          ...this.syncUserStepManager.wereStepsSynced(
-            schema.start,
-            {
-              shouldNotMtsBeChecked: isUpdatable(schema?.type),
-              shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
-            }
-          )
-        }, { doNotQueueQuery: true })
+        const startWithAuth = schema.start
+          .filter((syncUserStepData) => syncUserStepData?.auth)
+        const startWithoutAuth = schema.start
+          .filter((syncUserStepData) => !syncUserStepData?.auth)
 
-        updatesForPubCollsPromises.push(promise)
+        if (startWithAuth.length > 0) {
+          for (const syncUserStepData of startWithAuth) {
+            const { userId, subUserId } = this._getUserIds(syncUserStepData.auth)
+
+            const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+              collName,
+              userId,
+              subUserId,
+              syncedAt,
+              ...this.syncUserStepManager.wereStepsSynced(
+                [syncUserStepData],
+                {
+                  shouldNotMtsBeChecked: isUpdatable(schema?.type),
+                  shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+                }
+              )
+            }, { doNotQueueQuery: true })
+
+            updatesForPubCollsPromises.push(promise)
+          }
+        }
+        if (startWithoutAuth.length > 0) {
+          const promise = this.syncUserStepManager.updateOrInsertSyncInfoForCurrColl({
+            collName,
+            syncedAt,
+            ...this.syncUserStepManager.wereStepsSynced(
+              schema.start,
+              {
+                shouldNotMtsBeChecked: isUpdatable(schema?.type),
+                shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+              }
+            )
+          }, { doNotQueueQuery: true })
+
+          updatesForPubCollsPromises.push(promise)
+        }
       }
 
       await Promise.all(updatesForPubCollsPromises)
