@@ -5,6 +5,7 @@ const moment = require('moment')
 
 const {
   calcGroupedData,
+  getStartMtsByTimeframe,
   getMtsGroupedByTimeframe,
   groupByTimeframe,
   isForexSymb
@@ -484,9 +485,10 @@ class BalanceHistory {
 
     const {
       timeframe = 'day',
-      start = 0,
+      start: reqStart = 0,
       end = Date.now(),
-      isUnrealizedProfitExcluded
+      isUnrealizedProfitExcluded,
+      doNotLookUpForStartMts
     } = params ?? {}
     const {
       isSubCalc = false
@@ -501,6 +503,13 @@ class BalanceHistory {
         isSubCalc
       )
     }
+
+    const start = doNotLookUpForStartMts
+      ? reqStart
+      : await this.#lookUpStartMts({
+        auth,
+        params: { timeframe, start: reqStart }
+      })
 
     const args = {
       auth,
@@ -576,6 +585,32 @@ class BalanceHistory {
     )
 
     return res
+  }
+
+  async #lookUpStartMts (args) {
+    const { auth, params } = args ?? {}
+    const {
+      start,
+      timeframe
+    } = params ?? {}
+
+    const ledger = await this.dao.getElemInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      {
+        user_id: auth._id,
+        $lte: { mts: start }
+      },
+      [['mts', -1], ['id', -1]]
+    )
+
+    if (!Number.isInteger(ledger?.mts)) {
+      return start
+    }
+
+    return getStartMtsByTimeframe(
+      ledger.mts,
+      timeframe
+    )
   }
 }
 
