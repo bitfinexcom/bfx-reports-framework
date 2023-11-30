@@ -5,7 +5,6 @@ const moment = require('moment')
 
 const {
   calcGroupedData,
-  getStartMtsByTimeframe,
   getMtsGroupedByTimeframe,
   groupByTimeframe,
   isForexSymb
@@ -448,29 +447,10 @@ class BalanceHistory {
     }]
   }
 
-  async _getStartingMts (
-    args,
-    groupedWallets
-  ) {
-    if (
-      Array.isArray(groupedWallets) &&
-      groupedWallets.length > 0 &&
-      groupedWallets[groupedWallets.length - 1] &&
-      typeof groupedWallets[groupedWallets.length - 1] === 'object' &&
-      Number.isInteger(groupedWallets[groupedWallets.length - 1].mts)
-    ) {
-      return groupedWallets[groupedWallets.length - 1].mts
-    }
-
-    const firstWalletsMts = await this.wallets.getFirstWalletsMts(args)
-
-    if (Number.isInteger(firstWalletsMts)) {
-      return firstWalletsMts
-    }
-
-    const { start = 0 } = args?.params ?? {}
-
-    return start
+  async _getStartingMts (args) {
+    return Number.isInteger(args?.params?.start)
+      ? args.params.start
+      : await this.wallets.getFirstWalletsMts(args)
   }
 
   async getBalanceHistory (
@@ -485,10 +465,9 @@ class BalanceHistory {
 
     const {
       timeframe = 'day',
-      start: reqStart = 0,
+      start = 0,
       end = Date.now(),
-      isUnrealizedProfitExcluded,
-      doNotLookUpForStartMts
+      isUnrealizedProfitExcluded
     } = params ?? {}
     const {
       isSubCalc = false
@@ -503,13 +482,6 @@ class BalanceHistory {
         isSubCalc
       )
     }
-
-    const start = doNotLookUpForStartMts
-      ? reqStart
-      : await this.#lookUpStartMts({
-        auth,
-        params: { timeframe, start: reqStart }
-      })
 
     const args = {
       auth,
@@ -554,10 +526,7 @@ class BalanceHistory {
       'currency',
       this._calcWalletsInTimeframe(firstWallets)
     )
-    const startingMts = await this._getStartingMts(
-      args,
-      walletsGroupedByTimeframe
-    )
+    const startingMts = await this._getStartingMts(args)
     const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
       startingMts,
       end,
@@ -585,32 +554,6 @@ class BalanceHistory {
     )
 
     return res
-  }
-
-  async #lookUpStartMts (args) {
-    const { auth, params } = args ?? {}
-    const {
-      start,
-      timeframe
-    } = params ?? {}
-
-    const ledger = await this.dao.getElemInCollBy(
-      this.ALLOWED_COLLS.LEDGERS,
-      {
-        user_id: auth._id,
-        $lte: { mts: start }
-      },
-      [['mts', -1], ['id', -1]]
-    )
-
-    if (!Number.isInteger(ledger?.mts)) {
-      return start
-    }
-
-    return getStartMtsByTimeframe(
-      ledger.mts,
-      timeframe
-    )
   }
 }
 
