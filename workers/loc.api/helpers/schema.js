@@ -340,6 +340,10 @@ const paramsSchemaForPerformingLoanApi = {
 const paramsSchemaForSummaryByAssetApi = {
   type: 'object',
   properties: {
+
+    start: {
+      type: 'integer'
+    },
     end: {
       type: 'integer'
     }
