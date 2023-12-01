@@ -49,7 +49,7 @@ class SummaryByAsset {
     const auth = await this.authenticator
       .verifyRequestUser({ auth: args?.auth ?? {} })
     const end = args?.params?.end ?? Date.now()
-    const start = moment.utc(end)
+    const start = args?.params?.start ?? moment.utc(end)
       .add(-30, 'days')
       .valueOf()
 
