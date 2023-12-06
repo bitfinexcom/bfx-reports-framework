@@ -49,9 +49,10 @@ class SummaryByAsset {
     const auth = await this.authenticator
       .verifyRequestUser({ auth: args?.auth ?? {} })
     const end = args?.params?.end ?? Date.now()
-    const start = moment.utc(end)
+    const mts30dUntilEnd = moment.utc(end)
       .add(-30, 'days')
       .valueOf()
+    const start = args?.params?.start ?? mts30dUntilEnd
 
     const ledgersPromise = this.#getLedgers({
       auth,
