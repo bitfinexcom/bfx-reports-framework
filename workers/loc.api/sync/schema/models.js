@@ -67,6 +67,7 @@ const _models = new Map([
       shouldNotSyncOnStartupAfterUpdate: 'INT',
       isSyncOnStartupRequired: 'INT',
       authTokenTTLSec: 'INT',
+      isStagingBfxApi: 'INT',
       createdAt: 'BIGINT',
       updatedAt: 'BIGINT',
 
