@@ -39,7 +39,8 @@ const depsTypes = (TYPES) => [
   TYPES.Crypto,
   TYPES.SyncFactory,
   TYPES.WSEventEmitterFactory,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.CONF
 ]
 class Authenticator {
   constructor (
@@ -50,7 +51,8 @@ class Authenticator {
     crypto,
     syncFactory,
     wsEventEmitterFactory,
-    logger
+    logger,
+    conf
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
@@ -60,6 +62,7 @@ class Authenticator {
     this.syncFactory = syncFactory
     this.wsEventEmitterFactory = wsEventEmitterFactory
     this.logger = logger
+    this.conf = conf
 
     /**
      * It may only work for one grenache worker instance
@@ -78,6 +81,12 @@ class Authenticator {
      */
     this.authTokenRefreshIntervalSec = 10 * 60
     this.authTokenInvalidateIntervalsSec = 10 * 60
+  }
+
+  isStagingBfxApi () {
+    const bfxApiUrl = this.conf?.restUrl ?? ''
+
+    return /staging/gi.test(bfxApiUrl)
   }
 
   async signUp (args, opts) {
