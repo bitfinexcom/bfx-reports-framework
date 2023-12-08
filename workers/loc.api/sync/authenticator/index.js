@@ -341,17 +341,21 @@ class Authenticator {
       userData = await this.rService._checkAuthInApi({
         auth: { authToken: newAuthToken, apiKey, apiSecret }
       })
+      userData.isStagingBfxApi = this.isStagingBfxApi()
     } catch (err) {
       if (!isENetError(err)) {
         throw err
       }
+
+      this.logger.debug(err)
     }
 
     const {
       id,
       timezone,
       username: uName,
-      email: emailFromApi
+      email: emailFromApi,
+      isStagingBfxApi
     } = userData ?? {}
     const username = generateSubUserName(
       { username: uName },
@@ -369,6 +373,7 @@ class Authenticator {
       isDataFromDb: isDataFromDb === null
         ? user.isDataFromDb
         : isDataFromDb,
+      isStagingBfxApi,
       ...newAuthToken
         ? { authToken: newAuthToken }
         : null
