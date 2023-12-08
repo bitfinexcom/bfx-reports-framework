@@ -120,7 +120,8 @@ class FrameworkReportService extends ReportService {
         shouldNotSyncOnStartupAfterUpdate,
         isSyncOnStartupRequired,
         authTokenTTLSec,
-        localUsername
+        localUsername,
+        isStagingBfxApi
       } = await this._authenticator.signIn(
         args,
         { isReturnedUser: true }
@@ -154,7 +155,8 @@ class FrameworkReportService extends ReportService {
         shouldNotSyncOnStartupAfterUpdate,
         authTokenTTLSec,
         localUsername,
-        lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null
+        lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null,
+        isStagingBfxApi
       }
     }, 'signIn', args, cb)
   }
