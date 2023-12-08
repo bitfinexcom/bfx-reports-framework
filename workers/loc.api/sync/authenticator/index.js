@@ -225,7 +225,8 @@ class Authenticator {
         shouldNotSyncOnStartupAfterUpdate: 0,
         isSyncOnStartupRequired: 0,
         authTokenTTLSec,
-        localUsername
+        localUsername,
+        isStagingBfxApi: this.isStagingBfxApi()
       },
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
