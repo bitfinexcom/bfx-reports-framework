@@ -98,6 +98,12 @@ class FrameworkReportService extends ReportService {
     }, 'verifyOnBFX', args, cb)
   }
 
+  isStagingBfxApi (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.isStagingBfxApi()
+    }, 'isStagingBfxApi', args, cb)
+  }
+
   signUp (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signUp(args)
