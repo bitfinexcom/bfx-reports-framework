@@ -718,21 +718,21 @@ module.exports = (
         'currency',
         'balance',
         'balanceUsd',
-        'valueChange30dUsd',
-        'valueChange30dPerc',
-        'result30dUsd',
-        'result30dPerc',
-        'volume30dUsd'
+        'balanceChange',
+        'balanceChangePerc',
+        'volume',
+        'volumeUsd',
+        'tradingFees',
+        'marginFundingPayment'
       ])
     })
 
     assert.containsAllKeys(res.body.result.total, [
       'balanceUsd',
-      'valueChange30dUsd',
-      'valueChange30dPerc',
-      'result30dUsd',
-      'result30dPerc',
-      'volume30dUsd'
+      'balanceChangeUsd',
+      'balanceChangePerc',
+      'volumeUsd',
+      'tradingFeesUsd'
     ])
   })
 
@@ -765,21 +765,21 @@ module.exports = (
         'currency',
         'balance',
         'balanceUsd',
-        'valueChange30dUsd',
-        'valueChange30dPerc',
-        'result30dUsd',
-        'result30dPerc',
-        'volume30dUsd'
+        'balanceChange',
+        'balanceChangePerc',
+        'volume',
+        'volumeUsd',
+        'tradingFees',
+        'marginFundingPayment'
       ])
     })
 
     assert.containsAllKeys(res.body.result.total, [
       'balanceUsd',
-      'valueChange30dUsd',
-      'valueChange30dPerc',
-      'result30dUsd',
-      'result30dPerc',
-      'volume30dUsd'
+      'balanceChangeUsd',
+      'balanceChangePerc',
+      'volumeUsd',
+      'tradingFeesUsd'
     ])
   })
 
