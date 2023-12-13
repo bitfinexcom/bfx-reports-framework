@@ -273,7 +273,7 @@ class PositionsSnapshot {
       } = await this._convertPlToUsd(
         pl,
         symbol,
-        end
+        mts
       )
 
       positionsSnapshot.push({
@@ -301,7 +301,7 @@ class PositionsSnapshot {
         )
           ? plUsd / pl
           : await this.currencyConverter
-            .getPrice(symbol, end)
+            .getPrice(symbol, mts)
 
         tickers.push({
           symbol,
