@@ -88,7 +88,7 @@ class Trades {
         feeCurrency,
         symbol
       } = _trade
-      const symb = splitSymbolPairs(symbol)[1]
+      const [baseCurrency, symb] = splitSymbolPairs(symbol)
       const isFeeInUsd = feeCurrency === 'USD'
       const isPriceInUsd = symb === 'USD'
 
@@ -131,6 +131,7 @@ class Trades {
       _trade.calcAmount = calcAmount
       _trade.feeUsd = feeUsd
       _trade.feeForCurrConv = feeForCurrConv
+      _trade.baseCurrency = baseCurrency
 
       return _trade
     })
