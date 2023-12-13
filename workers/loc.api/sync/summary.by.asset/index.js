@@ -50,8 +50,10 @@ class SummaryByAsset {
 
     const tradesPromise = this.trades.getTrades({
       auth,
-      start,
-      end
+      params: {
+        start,
+        end
+      }
     })
     const ledgersPromise = this.#getLedgers({
       auth,
