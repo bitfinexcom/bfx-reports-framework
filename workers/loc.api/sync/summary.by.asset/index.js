@@ -109,9 +109,14 @@ class SummaryByAsset {
     endWallets
   }) {
     const currencyRes = []
-    const currencySet = new Set(ledgers.map((ledger) => (
-      ledger?.currency
-    )))
+    const currencySet = new Set([
+      ...ledgers.map((ledger) => (
+        ledger?.currency
+      )),
+      ...endWallets.map((wallet) => (
+        wallet?.currency
+      ))
+    ])
 
     for (const currency of currencySet) {
       const startWalletsForCurrency = startWallets.filter((wallet) => (
@@ -198,6 +203,16 @@ class SummaryByAsset {
       // In the Ledgers amount of fee is negative value, skip sign for UI
       const tradingFees = Math.abs(calcedTradingFeeLedgers)
       const tradingFeesUsd = Math.abs(calcedTradingFeeUsdLedgers)
+
+      if (
+        calcedEndWalletBalanceUsd < 0.01 &&
+        volume <= 0 &&
+        balanceChange <= 0 &&
+        tradingFees <= 0 &&
+        marginFundingPayment <= 0
+      ) {
+        continue
+      }
 
       const res = {
         currency,
