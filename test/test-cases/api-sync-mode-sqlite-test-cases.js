@@ -31,6 +31,24 @@ module.exports = (
   } = params
   const auth = { token: '' }
 
+  it('it should be successfully performed by the isStagingBfxApi method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        method: 'isStagingBfxApi',
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+  })
+
   it('it should be successfully performed by the getPlatformStatus method', async function () {
     this.timeout(5000)
 
