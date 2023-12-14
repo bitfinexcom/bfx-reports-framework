@@ -485,6 +485,7 @@ module.exports = (
       assert.isBoolean(user.isRestrictedToBeAddedToSubAccount)
       assert.isBoolean(user.isApiKeysAuth)
       assert.isArray(user.subUsers)
+      assert.isBoolean(user.isStagingBfxApi)
 
       user.subUsers.forEach((subUser) => {
         assert.isString(subUser.email)
