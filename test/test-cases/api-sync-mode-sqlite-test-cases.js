@@ -184,6 +184,7 @@ module.exports = (
     assert.isNull(res.body.result.authTokenTTLSec)
     assert.isNull(res.body.result.localUsername)
     assert.isNull(res.body.result.lastSyncMts)
+    assert.isBoolean(res.body.result.isStagingBfxApi)
 
     auth.token = res.body.result.token
   })
@@ -283,6 +284,7 @@ module.exports = (
     assert.isNumber(res.body.result.authTokenTTLSec)
     assert.isNull(res.body.result.localUsername)
     assert.isNull(res.body.result.lastSyncMts)
+    assert.isBoolean(res.body.result.isStagingBfxApi)
   })
 
   it('it should not be successfully performed by the signIn method', async function () {
