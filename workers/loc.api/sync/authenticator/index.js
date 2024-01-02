@@ -391,6 +391,20 @@ class Authenticator {
       { withWorkerThreads, doNotQueueQuery }
     )
 
+    // Need to update `isStagingBfxApi` flag for sub-users if `isSubAccount`
+    if (
+      isSubAccount &&
+      Array.isArray(user?.subUsers) &&
+      user.subUsers.length > 0
+    ) {
+      await this.dao.updateCollBy(
+        this.TABLES_NAMES.USERS,
+        { $in: { _id: user.subUsers.map(({ _id }) => (_id)) } },
+        { isStagingBfxApi },
+        { withWorkerThreads, doNotQueueQuery }
+      )
+    }
+
     if (res && res.changes < 1) {
       throw new AuthError()
     }
