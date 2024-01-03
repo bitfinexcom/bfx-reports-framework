@@ -98,6 +98,12 @@ class FrameworkReportService extends ReportService {
     }, 'verifyOnBFX', args, cb)
   }
 
+  isStagingBfxApi (space, args, cb) {
+    return this._responder(() => {
+      return this._authenticator.isStagingBfxApi()
+    }, 'isStagingBfxApi', args, cb)
+  }
+
   signUp (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signUp(args)
@@ -114,7 +120,8 @@ class FrameworkReportService extends ReportService {
         shouldNotSyncOnStartupAfterUpdate,
         isSyncOnStartupRequired,
         authTokenTTLSec,
-        localUsername
+        localUsername,
+        isStagingBfxApi
       } = await this._authenticator.signIn(
         args,
         { isReturnedUser: true }
@@ -148,7 +155,8 @@ class FrameworkReportService extends ReportService {
         shouldNotSyncOnStartupAfterUpdate,
         authTokenTTLSec,
         localUsername,
-        lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null
+        lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null,
+        isStagingBfxApi
       }
     }, 'signIn', args, cb)
   }
@@ -208,7 +216,8 @@ class FrameworkReportService extends ReportService {
             'isNotProtected',
             'subUsers',
             'isRestrictedToBeAddedToSubAccount',
-            'isApiKeysAuth'
+            'isApiKeysAuth',
+            'isStagingBfxApi'
           ]
         }
       )
