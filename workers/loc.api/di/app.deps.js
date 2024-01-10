@@ -91,11 +91,11 @@ const SubAccountApiData = require('../sync/sub.account.api.data')
 const PositionsAudit = require('../sync/positions.audit')
 const OrderTrades = require('../sync/order.trades')
 const CurrencyConverter = require('../sync/currency.converter')
-const CsvJobData = require('../generate-csv/csv.job.data')
+const ReportFileJobData = require('../generate-report-file/report.file.job.data')
 const {
   fullSnapshotReportCsvWriter,
   fullTaxReportCsvWriter
-} = require('../generate-csv/csv-writer')
+} = require('../generate-report-file/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
 const WeightedAveragesReport = require('../sync/weighted.averages.report')
 const SqliteDbMigrator = require(
@@ -391,8 +391,8 @@ module.exports = ({
       .to(FullTaxReport)
     rebind(TYPES.WeightedAveragesReport)
       .to(WeightedAveragesReport)
-    rebind(TYPES.CsvJobData)
-      .to(CsvJobData)
+    rebind(TYPES.ReportFileJobData)
+      .to(ReportFileJobData)
       .inSingletonScope()
     rebind(TYPES.GetDataFromApi).toConstantValue(
       bindDepsToFn(

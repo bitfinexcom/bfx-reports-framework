@@ -1470,7 +1470,7 @@ class FrameworkReportService extends ReportService {
    */
   getMultipleCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getMultipleCsvJobData',
         args
       )
@@ -1479,7 +1479,7 @@ class FrameworkReportService extends ReportService {
 
   getBalanceHistoryCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getBalanceHistoryCsvJobData',
         args
       )
@@ -1488,7 +1488,7 @@ class FrameworkReportService extends ReportService {
 
   getWinLossCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getWinLossCsvJobData',
         args
       )
@@ -1497,7 +1497,7 @@ class FrameworkReportService extends ReportService {
 
   getPositionsSnapshotCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getPositionsSnapshotCsvJobData',
         args
       )
@@ -1506,7 +1506,7 @@ class FrameworkReportService extends ReportService {
 
   getFullSnapshotReportCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getFullSnapshotReportCsvJobData',
         args
       )
@@ -1515,7 +1515,7 @@ class FrameworkReportService extends ReportService {
 
   getFullTaxReportCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getFullTaxReportCsvJobData',
         args
       )
@@ -1524,7 +1524,7 @@ class FrameworkReportService extends ReportService {
 
   getTradedVolumeCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getTradedVolumeCsvJobData',
         args
       )
@@ -1533,7 +1533,7 @@ class FrameworkReportService extends ReportService {
 
   getTotalFeesReportCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getTotalFeesReportCsvJobData',
         args
       )
@@ -1542,7 +1542,7 @@ class FrameworkReportService extends ReportService {
 
   getPerformingLoanCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getPerformingLoanCsvJobData',
         args
       )
@@ -1563,7 +1563,7 @@ class FrameworkReportService extends ReportService {
 
   getWinLossVSAccountBalanceCsv (space, args, cb) {
     return this._responder(() => {
-      return this._generateCsv(
+      return this._generateReportFile(
         'getWinLossVSAccountBalanceCsvJobData',
         args
       )
