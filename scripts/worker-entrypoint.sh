@@ -18,7 +18,7 @@ set -- node "$@" \
   "--wsPort" "$WORKER_WS_PORT" \
   "--tempFolder" "$TEMP_FOLDER" \
   "--dbFolder" "$DB_FOLDER" \
-  "--csvFolder" "$CSV_FOLDER" \
+  "--reportFolder" "$REPORT_FOLDER" \
   "--logsFolder" "$LOGS_FOLDER" \
   "--grape" "http://$GRAPE_HOST:$GRAPE_APH" \
   "--secretKey" "$SECRET_KEY"
@@ -27,7 +27,7 @@ if [ -n "${SCHEDULER_RULE:-}" ]; then
   set -- "$@" "--schedulerRule" "$SCHEDULER_RULE"
 fi
 if [ "${NGINX_AUTOINDEX:-}" = "on" ]; then
-  set -- "$@" "--remoteCsvUrn" "csv/"
+  set -- "$@" "--remoteReportUrn" "report-files/"
 fi
 
 exec "$@"
