@@ -12,6 +12,7 @@ logs/*
 db/*
 !db/.gitkeep
 csv/
+report-files/
 logs
 package-lock.json
 workers/loc.api/queue/temp/*.csv
