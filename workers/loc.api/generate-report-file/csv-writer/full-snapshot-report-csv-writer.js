@@ -49,7 +49,7 @@ module.exports = (
   const res = await getDataFromApi({
     getData: rService[name].bind(rService),
     args,
-    callerName: 'CSV_WRITER'
+    callerName: 'REPORT_FILE_WRITER'
   })
 
   const {
