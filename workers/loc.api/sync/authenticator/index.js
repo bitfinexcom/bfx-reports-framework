@@ -39,7 +39,8 @@ const depsTypes = (TYPES) => [
   TYPES.Crypto,
   TYPES.SyncFactory,
   TYPES.WSEventEmitterFactory,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.CONF
 ]
 class Authenticator {
   constructor (
@@ -50,7 +51,8 @@ class Authenticator {
     crypto,
     syncFactory,
     wsEventEmitterFactory,
-    logger
+    logger,
+    conf
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
@@ -60,6 +62,7 @@ class Authenticator {
     this.syncFactory = syncFactory
     this.wsEventEmitterFactory = wsEventEmitterFactory
     this.logger = logger
+    this.conf = conf
 
     /**
      * It may only work for one grenache worker instance
@@ -78,6 +81,12 @@ class Authenticator {
      */
     this.authTokenRefreshIntervalSec = 10 * 60
     this.authTokenInvalidateIntervalsSec = 10 * 60
+  }
+
+  isStagingBfxApi () {
+    const bfxApiUrl = this.conf?.restUrl ?? ''
+
+    return /staging/gi.test(bfxApiUrl)
   }
 
   async signUp (args, opts) {
@@ -216,7 +225,8 @@ class Authenticator {
         shouldNotSyncOnStartupAfterUpdate: 0,
         isSyncOnStartupRequired: 0,
         authTokenTTLSec,
-        localUsername
+        localUsername,
+        isStagingBfxApi: this.isStagingBfxApi()
       },
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
@@ -332,17 +342,21 @@ class Authenticator {
       userData = await this.rService._checkAuthInApi({
         auth: { authToken: newAuthToken, apiKey, apiSecret }
       })
+      userData.isStagingBfxApi = this.isStagingBfxApi()
     } catch (err) {
       if (!isENetError(err)) {
         throw err
       }
+
+      this.logger.debug(err)
     }
 
     const {
       id,
       timezone,
       username: uName,
-      email: emailFromApi
+      email: emailFromApi,
+      isStagingBfxApi
     } = userData ?? {}
     const username = generateSubUserName(
       { username: uName },
@@ -360,6 +374,7 @@ class Authenticator {
       isDataFromDb: isDataFromDb === null
         ? user.isDataFromDb
         : isDataFromDb,
+      isStagingBfxApi,
       ...newAuthToken
         ? { authToken: newAuthToken }
         : null
@@ -375,6 +390,20 @@ class Authenticator {
       },
       { withWorkerThreads, doNotQueueQuery }
     )
+
+    // Need to update `isStagingBfxApi` flag for sub-users if `isSubAccount`
+    if (
+      isSubAccount &&
+      Array.isArray(user?.subUsers) &&
+      user.subUsers.length > 0
+    ) {
+      await this.dao.updateCollBy(
+        this.TABLES_NAMES.USERS,
+        { $in: { _id: user.subUsers.map(({ _id }) => (_id)) } },
+        { isStagingBfxApi },
+        { withWorkerThreads, doNotQueueQuery }
+      )
+    }
 
     if (res && res.changes < 1) {
       throw new AuthError()

@@ -9,7 +9,8 @@ const _normalize = (userData) => {
     haveSubUsers,
     isNotProtected,
     shouldNotSyncOnStartupAfterUpdate,
-    isSyncOnStartupRequired
+    isSyncOnStartupRequired,
+    isStagingBfxApi
   } = userData ?? {}
 
   return {
@@ -21,7 +22,8 @@ const _normalize = (userData) => {
     haveSubUsers: !!haveSubUsers,
     isNotProtected: !!isNotProtected,
     shouldNotSyncOnStartupAfterUpdate: !!shouldNotSyncOnStartupAfterUpdate,
-    isSyncOnStartupRequired: !!isSyncOnStartupRequired
+    isSyncOnStartupRequired: !!isSyncOnStartupRequired,
+    isStagingBfxApi: !!isStagingBfxApi
   }
 }
 
