@@ -1606,7 +1606,7 @@ class FrameworkReportService extends ReportService {
         return super.getCandlesFile(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForCandlesCsv')
+      checkParams(args, 'paramsSchemaForCandlesFile')
 
       return super.getCandlesFile(space, args)
     }, 'getCandlesFile', args, cb)

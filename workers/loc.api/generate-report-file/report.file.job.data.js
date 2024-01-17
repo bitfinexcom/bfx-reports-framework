@@ -132,7 +132,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForBalanceHistoryCsv')
+    checkParams(args, 'paramsSchemaForBalanceHistoryFile')
 
     const {
       userId,
@@ -169,7 +169,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossCsv')
+    checkParams(args, 'paramsSchemaForWinLossFile')
 
     const {
       userId,
@@ -206,7 +206,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPositionsSnapshotCsv')
+    checkParams(args, 'paramsSchemaForPositionsSnapshotFile')
 
     const {
       userId,
@@ -257,7 +257,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uInfo,
     opts
   ) {
-    checkParams(args, 'paramsSchemaForFullSnapshotReportCsv')
+    checkParams(args, 'paramsSchemaForFullSnapshotReportFile')
 
     const {
       userId,
@@ -425,7 +425,7 @@ class ReportFileJobData extends BaseReportFileJobData {
       )
     }
 
-    checkParams(args, 'paramsSchemaForFullTaxReportCsv')
+    checkParams(args, 'paramsSchemaForFullTaxReportFile')
 
     const {
       userId,
@@ -519,7 +519,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTradedVolumeCsv')
+    checkParams(args, 'paramsSchemaForTradedVolumeFile')
 
     const {
       userId,
@@ -556,7 +556,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTotalFeesReportCsv')
+    checkParams(args, 'paramsSchemaForTotalFeesReportFile')
 
     const {
       userId,
@@ -594,7 +594,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPerformingLoanCsv')
+    checkParams(args, 'paramsSchemaForPerformingLoanFile')
 
     const {
       userId,
@@ -633,7 +633,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceCsv')
+    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceFile')
 
     const {
       userId,
