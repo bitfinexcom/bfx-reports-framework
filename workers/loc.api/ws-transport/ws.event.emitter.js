@@ -73,6 +73,9 @@ class WSEventEmitter extends AbstractWSEventEmitter {
     })
   }
 
+  /**
+   * @deprecated
+   */
   emitCsvGenerationCompletedToOne (
     handler = () => {},
     auth = {}
@@ -86,6 +89,23 @@ class WSEventEmitter extends AbstractWSEventEmitter {
         ? await handler(user, ...args)
         : handler
     }, 'emitCsvGenerationCompletedToOne')
+  }
+
+  async emitReportFileGenerationCompletedToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    await this.emitCsvGenerationCompletedToOne(handler, auth)
+
+    return this.emit(async (user, ...args) => {
+      if (this.isNotTargetUser(auth, user)) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitReportFileGenerationCompletedToOne')
   }
 
   emitBfxUnamePwdAuthRequiredToOne (
