@@ -242,7 +242,7 @@
       </head>
       <body>
         <main role="main" class="container">
-          <h1 class="mt-5 title">Bitfinex Report CSV</h1>
+          <h1 class="mt-5 title">Bitfinex Report</h1>
           <ol class="breadcrumb"><xsl:call-template name="breadcrumb"><xsl:with-param name="list" select="$path" /></xsl:call-template></ol>
           <div class="list">
             <table class="table" summary="Directory Listing" cellpadding="0" cellspacing="0">
