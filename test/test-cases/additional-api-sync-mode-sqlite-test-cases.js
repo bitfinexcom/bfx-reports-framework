@@ -6,7 +6,7 @@ const {
   queueToPromise
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  testMethodOfGettingCsv
+  testMethodOfGettingReportFile
 } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
@@ -659,7 +659,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getBalanceHistoryCsv method', async function () {
@@ -685,7 +685,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getSummaryByAsset method', async function () {
@@ -830,7 +830,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFullSnapshotReportCsv method', async function () {
@@ -854,7 +854,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFullSnapshotReportCsv method, store csv to local folder', async function () {
@@ -877,7 +877,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
@@ -906,7 +906,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFullTaxReportCsv method', async function () {
@@ -931,7 +931,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFullTaxReportCsv method, store csv to local folder', async function () {
@@ -955,7 +955,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
@@ -985,7 +985,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
@@ -1015,7 +1015,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
@@ -1046,7 +1046,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getTotalFeesReportCsv method', async function () {
@@ -1073,7 +1073,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getPerformingLoanCsv method', async function () {
@@ -1099,7 +1099,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getWinLossVSAccountBalanceCsv method', async function () {
@@ -1125,7 +1125,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getWeightedAveragesReportCsv method', async function () {
@@ -1151,7 +1151,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the removeUser method with token', async function () {

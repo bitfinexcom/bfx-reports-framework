@@ -7,7 +7,7 @@ const {
   queueToPromiseMulti
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  testMethodOfGettingCsv,
+  testMethodOfGettingReportFile,
   testProcQueue
 } = require('bfx-report/test/helpers/helpers.tests')
 
@@ -2757,7 +2757,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should not be successfully performed by the getMultipleCsv method', async function () {
@@ -2817,7 +2817,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getPositionsHistoryCsv method', async function () {
@@ -2844,7 +2844,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getPositionsAuditCsv method', async function () {
@@ -2872,7 +2872,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getWalletsCsv method', async function () {
@@ -2896,7 +2896,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFundingOfferHistoryCsv method', async function () {
@@ -2924,7 +2924,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFundingLoanHistoryCsv method', async function () {
@@ -2951,7 +2951,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFundingCreditHistoryCsv method', async function () {
@@ -2978,7 +2978,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getLedgersCsv method', async function () {
@@ -3005,7 +3005,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getPayInvoiceListCsv method', async function () {
@@ -3032,7 +3032,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getTradesCsv method', async function () {
@@ -3059,7 +3059,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getFundingTradesCsv method', async function () {
@@ -3086,7 +3086,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getPublicTradesCsv method', async function () {
@@ -3114,7 +3114,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should not be successfully performed by the getPublicTradesCsv method, time frame more then a month', async function () {
@@ -3197,7 +3197,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getCandlesCsv method', async function () {
@@ -3226,7 +3226,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getOrderTradesCsv method', async function () {
@@ -3255,7 +3255,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getOrdersCsv method', async function () {
@@ -3281,7 +3281,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getActiveOrdersCsv method', async function () {
@@ -3304,7 +3304,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getMovementsCsv method', async function () {
@@ -3330,7 +3330,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getMovementsCsv method, where amount > 0', async function () {
@@ -3357,7 +3357,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getMovementsCsv method, where amount < 0', async function () {
@@ -3384,7 +3384,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getLoginsCsv method', async function () {
@@ -3410,7 +3410,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getChangeLogsCsv method', async function () {
@@ -3436,7 +3436,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should not be successfully auth by the getLedgersCsv method', async function () {

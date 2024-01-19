@@ -13,7 +13,7 @@ const {
   queueToPromise
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  testMethodOfGettingCsv
+  testMethodOfGettingReportFile
 } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
@@ -864,7 +864,7 @@ describe('API filter', () => {
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getMultipleCsv method', async function () {
@@ -914,6 +914,6 @@ describe('API filter', () => {
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 })
