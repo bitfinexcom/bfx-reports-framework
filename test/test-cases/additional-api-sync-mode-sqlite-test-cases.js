@@ -13,7 +13,7 @@ const {
   getParamsArrToTestTimeframeGrouping
 } = require('../helpers/helpers.core')
 const {
-  testCsvPathHasCommonFolder
+  testReportPathHasCommonFolder
 } = require('../helpers/helpers.tests')
 
 const getSyncProgressTestCase = require('./get-sync-progress-test-case')
@@ -881,7 +881,7 @@ module.exports = (
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
@@ -959,7 +959,7 @@ module.exports = (
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
@@ -989,7 +989,7 @@ module.exports = (
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
@@ -1019,7 +1019,7 @@ module.exports = (
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
