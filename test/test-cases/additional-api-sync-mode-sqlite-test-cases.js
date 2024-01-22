@@ -623,7 +623,7 @@ module.exports = (
     }
   })
 
-  it('it should be successfully performed by the getMultipleCsv method', async function () {
+  it('it should be successfully performed by the getMultipleFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -634,12 +634,12 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMultipleCsv',
+        method: 'getMultipleFile',
         params: {
           email,
           multiExport: [
             {
-              method: 'getTradesCsv',
+              method: 'getTradesFile',
               symbol: ['tBTCUSD', 'tETHUSD'],
               end,
               start,
@@ -647,7 +647,7 @@ module.exports = (
               timezone: 'America/Los_Angeles'
             },
             {
-              method: 'getBalanceHistoryCsv',
+              method: 'getBalanceHistoryFile',
               end,
               start,
               timeframe: 'day'
@@ -662,7 +662,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getBalanceHistoryCsv method', async function () {
+  it('it should be successfully performed by the getBalanceHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -673,7 +673,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getBalanceHistoryCsv',
+        method: 'getBalanceHistoryFile',
         params: {
           end,
           start,
@@ -807,7 +807,7 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should be successfully performed by the getWinLossCsv method', async function () {
+  it('it should be successfully performed by the getWinLossFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -818,7 +818,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWinLossCsv',
+        method: 'getWinLossFile',
         params: {
           end,
           start,
@@ -833,7 +833,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullSnapshotReportCsv method', async function () {
+  it('it should be successfully performed by the getFullSnapshotReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -844,7 +844,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullSnapshotReportCsv',
+        method: 'getFullSnapshotReportFile',
         params: {
           end,
           email
@@ -857,7 +857,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullSnapshotReportCsv method, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullSnapshotReportFile method, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -868,7 +868,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullSnapshotReportCsv',
+        method: 'getFullSnapshotReportFile',
         params: {
           end
         },
@@ -885,7 +885,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getPositionsSnapshotCsv method', async function () {
+  it('it should be successfully performed by the getPositionsSnapshotFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -896,7 +896,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPositionsSnapshotCsv',
+        method: 'getPositionsSnapshotFile',
         params: {
           end,
           email
@@ -909,7 +909,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -920,7 +920,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
           end,
           start,
@@ -934,7 +934,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -945,7 +945,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
           end,
           start
@@ -963,7 +963,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method for starting snapshot, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method for starting snapshot, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -974,7 +974,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
           end,
           start,
@@ -993,7 +993,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method for ending snapshot, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method for ending snapshot, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1004,7 +1004,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
           end,
           start,
@@ -1023,7 +1023,7 @@ module.exports = (
     )
   })
 
-  it('it should be successfully performed by the getTradedVolumeCsv method', async function () {
+  it('it should be successfully performed by the getTradedVolumeFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1034,7 +1034,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getTradedVolumeCsv',
+        method: 'getTradedVolumeFile',
         params: {
           end,
           start,
@@ -1049,7 +1049,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getTotalFeesReportCsv method', async function () {
+  it('it should be successfully performed by the getTotalFeesReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1060,7 +1060,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getTotalFeesReportCsv',
+        method: 'getTotalFeesReportFile',
         params: {
           end,
           start,
@@ -1076,7 +1076,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getPerformingLoanCsv method', async function () {
+  it('it should be successfully performed by the getPerformingLoanFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1087,7 +1087,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPerformingLoanCsv',
+        method: 'getPerformingLoanFile',
         params: {
           end,
           start,
@@ -1102,7 +1102,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getWinLossVSAccountBalanceCsv method', async function () {
+  it('it should be successfully performed by the getWinLossVSAccountBalanceFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1113,7 +1113,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWinLossVSAccountBalanceCsv',
+        method: 'getWinLossVSAccountBalanceFile',
         params: {
           end,
           start,
@@ -1128,7 +1128,7 @@ module.exports = (
     await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getWeightedAveragesReportCsv method', async function () {
+  it('it should be successfully performed by the getWeightedAveragesReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1139,7 +1139,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWeightedAveragesReportCsv',
+        method: 'getWeightedAveragesReportFile',
         params: {
           symbol: 'tBTCUSD',
           end,
