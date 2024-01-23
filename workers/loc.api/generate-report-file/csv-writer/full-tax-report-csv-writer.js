@@ -5,7 +5,7 @@ const {
 } = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
 const {
   streamWriter
-} = require('bfx-report/workers/loc.api/generate-csv/csv-writer/helpers')
+} = require('bfx-report/workers/loc.api/generate-report-file/csv-writer/helpers')
 
 module.exports = (
   rService,
