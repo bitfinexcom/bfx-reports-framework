@@ -119,6 +119,7 @@ const privResponder = require('../responder')
 const ProcessMessageManager = require('../process.message.manager')
 const HTTPRequest = require('../http.request')
 const BfxApiRouter = require('../bfx.api.router')
+const PdfWriter = require('../generate-report-file/pdf-writer')
 
 decorate(injectable(), EventEmitter)
 
@@ -183,6 +184,9 @@ module.exports = ({
         ]
       )
     )
+    rebind(TYPES.PdfWriter)
+      .to(PdfWriter)
+      .inSingletonScope()
     bind(TYPES.PrivResponder)
       .toDynamicValue((ctx) => bindDepsToFn(
         privResponder,
