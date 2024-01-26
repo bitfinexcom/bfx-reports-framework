@@ -1,0 +1,8 @@
+extends /node_modules/bfx-report/workers/loc.api/generate-report-file/pdf-writer/templates/base.pug
+
+block content
+  p
+    :translate(prop='template.fullTaxReport')
+      Full tax report
+  pre
+    | #{JSON.stringify(apiData, null, 2)}
