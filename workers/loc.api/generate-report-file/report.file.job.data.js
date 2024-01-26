@@ -14,6 +14,7 @@ const {
   checkParams,
   getDateString
 } = require('../helpers')
+const TEMPLATE_FILE_NAMES = require('./pdf-writer/template-file-names')
 
 const { decorateInjectable } = require('../di/utils')
 
@@ -508,7 +509,8 @@ class ReportFileJobData extends BaseReportFileJobData {
           mtsUpdated: 'date'
         }
       },
-      csvCustomWriter: this.fullTaxReportCsvWriter
+      csvCustomWriter: this.fullTaxReportCsvWriter,
+      pdfCustomTemplateName: TEMPLATE_FILE_NAMES.FULL_TAX_REPORT
     }
 
     return jobData
