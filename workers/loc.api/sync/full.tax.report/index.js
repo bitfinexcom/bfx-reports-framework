@@ -187,6 +187,11 @@ class FullTaxReport {
     )
 
     return {
+      timestamps: {
+        mtsCreated: Date.now(),
+        start,
+        end
+      },
       startingPositionsSnapshot,
       endingPositionsSnapshot,
       finalState: {
