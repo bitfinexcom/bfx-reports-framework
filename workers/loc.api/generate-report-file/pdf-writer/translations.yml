@@ -1,7 +1,8 @@
 en:
   template:
-    fullTaxReport: Full tax report
+    startingPositionsSnapshot: Starting positions snapshot
+    endingPositionsSnapshot: Ending positions snapshot
 
 ru:
   template:
-    fullTaxReport: Полные налоговые отчеты
+    startingPositionsSnapshot: Снимок стартовых позиций
