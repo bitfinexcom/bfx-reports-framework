@@ -28,8 +28,6 @@ module.exports = (
     ..._params
   }
   const args = { ..._args, params }
-  const { start, end } = params
-  const mtsCreated = Date.now()
 
   queue.emit('progress', 0)
 
@@ -53,6 +51,7 @@ module.exports = (
     callerName: 'REPORT_FILE_WRITER'
   })
   const {
+    timestamps,
     startingPositionsSnapshot,
     endingPositionsSnapshot,
     finalState: {
@@ -75,7 +74,7 @@ module.exports = (
           columns: columnsCsv.timestamps
         },
         writeFn: (stream) => write(
-          [{ mtsCreated, start, end }, {}],
+          [timestamps, {}],
           stream,
           formatSettings.timestamps,
           params
@@ -96,7 +95,7 @@ module.exports = (
         writeFn: (stream) => write(
           [...startingPositionsSnapshot, {}],
           stream,
-          formatSettings.positionsSnapshot,
+          formatSettings.startingPositionsSnapshot,
           params
         )
       },
@@ -115,7 +114,7 @@ module.exports = (
         writeFn: (stream) => write(
           [...endingPositionsSnapshot, {}],
           stream,
-          formatSettings.positionsSnapshot,
+          formatSettings.endingPositionsSnapshot,
           params
         )
       },
@@ -158,7 +157,7 @@ module.exports = (
         writeFn: (stream) => write(
           [...movements, {}],
           stream,
-          formatSettings.movements,
+          formatSettings.finalState.movements,
           params
         )
       },

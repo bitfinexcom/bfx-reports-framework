@@ -500,13 +500,20 @@ class ReportFileJobData extends BaseReportFileJobData {
           start: 'date',
           end: 'date'
         },
-        positionsSnapshot: {
+        startingPositionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
           symbol: 'symbol'
         },
-        movements: {
-          mtsUpdated: 'date'
+        endingPositionsSnapshot: {
+          mtsUpdate: 'date',
+          mtsCreate: 'date',
+          symbol: 'symbol'
+        },
+        finalState: {
+          movements: {
+            mtsUpdated: 'date'
+          }
         }
       },
       csvCustomWriter: this.fullTaxReportCsvWriter,
