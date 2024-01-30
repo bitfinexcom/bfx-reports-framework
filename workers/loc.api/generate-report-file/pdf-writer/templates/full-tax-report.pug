@@ -1,8 +1,38 @@
 extends /node_modules/bfx-report/workers/loc.api/generate-report-file/pdf-writer/templates/base.pug
 
 block content
-  p
-    :translate(prop='template.fullTaxReport')
-      Full tax report
-  pre
-    | #{JSON.stringify(apiData, null, 2)}
+  - const data = Array.isArray(apiData) ? apiData[0] : apiData ?? {}
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.timestamps
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.timestamps
+        .col #{data.timestamps[columnKey]}
+
+  h3.content-title.left-text
+    :translate(prop='template.startingPositionsSnapshot')
+      Starting positions snapshot
+
+  ul.responsive-table.sm
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+        .col #{columnVal}
+    each dataItem, dataIndex in data.startingPositionsSnapshot
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+          .col #{dataItem[columnKey]}
+
+  h3.content-title.left-text
+    :translate(prop='template.endingPositionsSnapshot')
+      Ending positions snapshot
+
+  ul.responsive-table.sm
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+        .col #{columnVal}
+    each dataItem, dataIndex in data.endingPositionsSnapshot
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+          .col #{dataItem[columnKey]}
