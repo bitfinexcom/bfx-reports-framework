@@ -52,3 +52,16 @@ block content
     li.table-row
       each columnVal, columnKey in jobData.columnsCsv.periodBalances
         .col #{data.finalState.startingPeriodBalances[columnKey]}
+
+  h3.content-title.left-text
+    :translate(prop='template.movementsDetails')
+      Movements details
+
+  ul.responsive-table.sm
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.movements
+        .col #{columnVal}
+    each dataItem, dataIndex in data.finalState.movements
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.movements
+          .col #{dataItem[columnKey]}
