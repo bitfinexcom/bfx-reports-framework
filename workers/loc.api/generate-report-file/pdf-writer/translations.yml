@@ -4,6 +4,7 @@ en:
     endingPositionsSnapshot: Ending positions snapshot
     finalState: Final state
     startingPeriodBalances: Starting period balances
+    movementsDetails: Movements details
 
 ru:
   template:
