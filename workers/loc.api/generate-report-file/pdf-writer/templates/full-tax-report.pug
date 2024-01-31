@@ -36,3 +36,19 @@ block content
       li.table-row
         each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
           .col #{dataItem[columnKey]}
+
+  h3.content-title
+    :translate(prop='template.finalState')
+      Final state
+
+  h3.content-title.left-text
+    :translate(prop='template.startingPeriodBalances')
+      Starting period balances
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.periodBalances
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.periodBalances
+        .col #{data.finalState.startingPeriodBalances[columnKey]}
