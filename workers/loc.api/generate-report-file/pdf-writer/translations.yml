@@ -2,6 +2,8 @@ en:
   template:
     startingPositionsSnapshot: Starting positions snapshot
     endingPositionsSnapshot: Ending positions snapshot
+    finalState: Final state
+    startingPeriodBalances: Starting period balances
 
 ru:
   template:
