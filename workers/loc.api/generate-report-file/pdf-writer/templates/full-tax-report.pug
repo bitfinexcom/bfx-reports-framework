@@ -65,3 +65,11 @@ block content
       li.table-row
         each columnVal, columnKey in jobData.columnsCsv.movements
           .col #{dataItem[columnKey]}
+
+  ul.responsive-table.width-by-content
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.movementsTotalAmount
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.movementsTotalAmount
+        .col #{data.finalState[columnKey]}
