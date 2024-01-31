@@ -67,7 +67,7 @@ block content
           .col #{dataItem[columnKey]}
 
   ul.responsive-table.sm.width-by-content
-    li.table-header.no-margin-top
+    li.table-header
       each columnVal, columnKey in jobData.columnsCsv.movementsTotalAmount
         .col #{columnVal}
     li.table-row
@@ -78,10 +78,18 @@ block content
     :translate(prop='template.endingPeriodBalances')
       Ending period balances
 
-  ul.responsive-table
+  ul.responsive-table.no-margin-bottom
     li.table-header
       each columnVal, columnKey in jobData.columnsCsv.periodBalances
         .col #{columnVal}
     li.table-row
       each columnVal, columnKey in jobData.columnsCsv.periodBalances
         .col #{data.finalState.endingPeriodBalances[columnKey]}
+
+  ul.responsive-table.width-by-content
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.totalResult
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.totalResult
+        .col #{data.finalState[columnKey]}
