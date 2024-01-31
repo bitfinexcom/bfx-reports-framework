@@ -5,6 +5,7 @@ en:
     finalState: Final state
     startingPeriodBalances: Starting period balances
     movementsDetails: Movements details
+    endingPeriodBalances: Ending period balances
 
 ru:
   template:
