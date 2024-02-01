@@ -6,6 +6,10 @@ en:
     startingPeriodBalances: Starting period balances
     movementsDetails: Movements details
     endingPeriodBalances: Ending period balances
+    positions: Positions
+    wallets: Wallets
+    positionsTickers: Positions tickers
+    walletsTickers: Wallets tickers
 
 ru:
   template:
