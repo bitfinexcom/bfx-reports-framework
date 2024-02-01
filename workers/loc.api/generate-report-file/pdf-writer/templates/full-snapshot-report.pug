@@ -1,0 +1,80 @@
+extends /node_modules/bfx-report/workers/loc.api/generate-report-file/pdf-writer/templates/base.pug
+
+block content
+  - const data = Array.isArray(apiData) ? apiData[0] : apiData ?? {}
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.timestamps
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.timestamps
+        .col #{data.timestamps[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.positions')
+      Positions
+
+  ul.responsive-table.sm.no-margin-bottom
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+        .col #{columnVal}
+    each dataItem, dataIndex in data.positionsSnapshot
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+          .col #{dataItem[columnKey]}
+
+  ul.responsive-table.sm.width-by-content
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.positionsTotalPlUsd
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.positionsTotalPlUsd
+        .col #{data[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.wallets')
+      Wallets
+
+  ul.responsive-table.no-margin-bottom
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.walletsSnapshot
+        .col #{columnVal}
+    each dataItem, dataIndex in data.walletsSnapshot
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.walletsSnapshot
+          .col #{dataItem[columnKey]}
+
+  ul.responsive-table.width-by-content
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.walletsTotalBalanceUsd
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in jobData.columnsCsv.walletsTotalBalanceUsd
+        .col #{data[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.positionsTickers')
+      Positions tickers
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.positionsTickers
+        .col #{columnVal}
+    each dataItem, dataIndex in data.positionsTickers
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.positionsTickers
+          .col #{dataItem[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.walletsTickers')
+      Wallets tickers
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in jobData.columnsCsv.walletsTickers
+        .col #{columnVal}
+    each dataItem, dataIndex in data.walletsTickers
+      li.table-row
+        each columnVal, columnKey in jobData.columnsCsv.walletsTickers
+          .col #{dataItem[columnKey]}
