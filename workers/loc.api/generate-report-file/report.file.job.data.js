@@ -350,10 +350,10 @@ class ReportFileJobData extends BaseReportFileJobData {
           amount: 'AMOUNT'
         },
         positionsTotalPlUsd: {
-          plUsd: 'POSITIONS TOTAL P/L USD'
+          positionsTotalPlUsd: 'POSITIONS TOTAL P/L USD'
         },
         walletsTotalBalanceUsd: {
-          balanceUsd: 'WALLETS TOTAL BALANCE USD'
+          walletsTotalBalanceUsd: 'WALLETS TOTAL BALANCE USD'
         }
       },
       formatSettings: {
@@ -377,7 +377,8 @@ class ReportFileJobData extends BaseReportFileJobData {
           symbol: 'symbol'
         }
       },
-      csvCustomWriter: this.fullSnapshotReportCsvWriter
+      csvCustomWriter: this.fullSnapshotReportCsvWriter,
+      pdfCustomTemplateName: TEMPLATE_FILE_NAMES.FULL_SNAPSHOT_REPORT
     }
 
     return jobData
