@@ -5,10 +5,10 @@ block content
 
   ul.responsive-table
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.timestamps
+      each columnVal, columnKey in reportColumns.timestamps
         .col #{columnVal}
     li.table-row
-      each columnVal, columnKey in jobData.columnsCsv.timestamps
+      each columnVal, columnKey in reportColumns.timestamps
         .col #{data.timestamps[columnKey]}
 
   h3.content-title.left-text.table-title
@@ -17,19 +17,19 @@ block content
 
   ul.responsive-table.sm.no-margin-bottom
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+      each columnVal, columnKey in reportColumns.positionsSnapshot
         .col #{columnVal}
     each dataItem, dataIndex in data.positionsSnapshot
       li.table-row
-        each columnVal, columnKey in jobData.columnsCsv.positionsSnapshot
+        each columnVal, columnKey in reportColumns.positionsSnapshot
           .col #{dataItem[columnKey]}
 
   ul.responsive-table.sm.width-by-content
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.positionsTotalPlUsd
+      each columnVal, columnKey in reportColumns.positionsTotalPlUsd
         .col #{columnVal}
     li.table-row
-      each columnVal, columnKey in jobData.columnsCsv.positionsTotalPlUsd
+      each columnVal, columnKey in reportColumns.positionsTotalPlUsd
         .col #{data[columnKey]}
 
   h3.content-title.left-text.table-title
@@ -38,19 +38,19 @@ block content
 
   ul.responsive-table.no-margin-bottom
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.walletsSnapshot
+      each columnVal, columnKey in reportColumns.walletsSnapshot
         .col #{columnVal}
     each dataItem, dataIndex in data.walletsSnapshot
       li.table-row
-        each columnVal, columnKey in jobData.columnsCsv.walletsSnapshot
+        each columnVal, columnKey in reportColumns.walletsSnapshot
           .col #{dataItem[columnKey]}
 
   ul.responsive-table.width-by-content
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.walletsTotalBalanceUsd
+      each columnVal, columnKey in reportColumns.walletsTotalBalanceUsd
         .col #{columnVal}
     li.table-row
-      each columnVal, columnKey in jobData.columnsCsv.walletsTotalBalanceUsd
+      each columnVal, columnKey in reportColumns.walletsTotalBalanceUsd
         .col #{data[columnKey]}
 
   h3.content-title.left-text.table-title
@@ -59,11 +59,11 @@ block content
 
   ul.responsive-table
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.positionsTickers
+      each columnVal, columnKey in reportColumns.positionsTickers
         .col #{columnVal}
     each dataItem, dataIndex in data.positionsTickers
       li.table-row
-        each columnVal, columnKey in jobData.columnsCsv.positionsTickers
+        each columnVal, columnKey in reportColumns.positionsTickers
           .col #{dataItem[columnKey]}
 
   h3.content-title.left-text.table-title
@@ -72,9 +72,9 @@ block content
 
   ul.responsive-table
     li.table-header
-      each columnVal, columnKey in jobData.columnsCsv.walletsTickers
+      each columnVal, columnKey in reportColumns.walletsTickers
         .col #{columnVal}
     each dataItem, dataIndex in data.walletsTickers
       li.table-row
-        each columnVal, columnKey in jobData.columnsCsv.walletsTickers
+        each columnVal, columnKey in reportColumns.walletsTickers
           .col #{dataItem[columnKey]}

@@ -451,6 +451,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       name: 'getFullTaxReport',
       fileNamesMap: [['getFullTaxReport', 'full-tax-report_FULL_PERIOD']],
       args: reportFileArgs,
+      /*
+       * Example how to overwrite column order for pdf
+       * columnsPdf: {},
+       */
       columnsCsv: {
         timestamps: {
           mtsCreated: 'CREATED',
