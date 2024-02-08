@@ -11,5 +11,8 @@ module.exports = {
 
   REQUEST_GET_BACKUP_FILES_METADATA: 'request:get-backup-files-metadata',
 
-  REQUEST_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE: 'request:update-users-sync-on-startup-required-state'
+  REQUEST_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE: 'request:update-users-sync-on-startup-required-state',
+
+  CREATED_PDF_BUFFER: 'response:created-pdf-buffer',
+  ERROR_PDF_CREATION: 'error:pdf-creation'
 }
