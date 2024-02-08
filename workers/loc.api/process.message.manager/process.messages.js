@@ -28,5 +28,7 @@ module.exports = {
 
   RESPONSE_GET_BACKUP_FILES_METADATA: 'response:get-backup-files-metadata',
 
-  RESPONSE_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE: 'response:update-users-sync-on-startup-required-state'
+  RESPONSE_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE: 'response:update-users-sync-on-startup-required-state',
+
+  CREATE_PDF: 'request:create-pdf'
 }
