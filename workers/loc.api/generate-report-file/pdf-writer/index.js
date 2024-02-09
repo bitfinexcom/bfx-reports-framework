@@ -1,5 +1,6 @@
 'use strict'
 
+const fs = require('fs/promises')
 const path = require('path')
 const argv = require('yargs').argv
 const { v4: uuidv4 } = require('uuid')
@@ -9,6 +10,9 @@ const pdf = require('html-pdf')
 const MainPdfWriter = require(
   'bfx-report/workers/loc.api/generate-report-file/pdf-writer'
 )
+const {
+  createUniqueFileName
+} = require('bfx-report/workers/loc.api/queue/helpers/utils')
 
 const TEMPLATE_FILE_NAMES = require('./template-file-names')
 
@@ -83,23 +87,45 @@ class PdfWriter extends MainPdfWriter {
   async createPDFBufferUnderElectron (args) {
     const uid = `uid-${uuidv4()}-${Date.now()}`
 
+    const uniqueFileName = await createUniqueFileName(
+      this.rootFolderPath,
+      { isHTMLRequired: true }
+    )
+    await fs.writeFile(uniqueFileName, args?.template)
+
     const { promise } = this.processMessageManager.addStateToWait(
       this.processMessageManager.PROCESS_STATES.RESPONSE_PDF_CREATION,
       ({ data }) => data?.uid === uid
     )
     this.processMessageManager.sendState(
       this.processMessageManager.PROCESS_MESSAGES.REQUEST_PDF_CREATION,
-      { ...args, uid }
+      {
+        templateFilePath: uniqueFileName,
+        format: args?.format,
+        orientation: args?.orientation,
+        uid
+      }
     )
 
     const {
       err,
-      buffer
+      buffer,
+      pdfFilePath
     } = (await promise) ?? {}
 
     if (err) {
       // TODO: Need to add custom error class
       throw new Error(err)
+    }
+
+    if (
+      pdfFilePath &&
+      typeof pdfFilePath === 'string'
+    ) {
+      const fileBuffer = await fs.readFile(pdfFilePath)
+      await fs.rm(pdfFilePath, { force: true, maxRetries: 3 })
+
+      return fileBuffer
     }
 
     return Buffer.from(buffer)
