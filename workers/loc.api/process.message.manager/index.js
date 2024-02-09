@@ -92,7 +92,7 @@ class ProcessMessageManager {
     return onMessage(...args, this.logger)
   }
 
-  addStateToWait (state) {
+  addStateToWait (state, checkHandler) {
     if (!this.SET_PROCESS_STATES.has(state)) {
       throw new ProcessStateSendingError()
     }
@@ -107,7 +107,13 @@ class ProcessMessageManager {
       resolve: () => {},
       reject: () => {},
       close: (err, data) => {
-        if (job.hasClosed) {
+        if (
+          job.hasClosed ||
+          (
+            typeof checkHandler === 'function' &&
+            !checkHandler({ err, data })
+          )
+        ) {
           return
         }
         if (Number.isInteger(job.index)) {
