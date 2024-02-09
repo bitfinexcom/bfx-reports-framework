@@ -12,9 +12,28 @@ const MainPdfWriter = require(
 
 const TEMPLATE_FILE_NAMES = require('./template-file-names')
 
+const { decorateInjectable } = require('../../di/utils')
+
+const depsTypes = (TYPES) => [
+  TYPES.ROOT_FOLDER_PATH,
+  TYPES.HasGrcService,
+  TYPES.GrcBfxReq,
+  TYPES.ProcessMessageManager
+]
 class PdfWriter extends MainPdfWriter {
-  constructor (...deps) {
-    super(...deps)
+  constructor (
+    rootFolderPath,
+    hasGrcService,
+    grcBfxReq,
+    processMessageManager
+  ) {
+    super(
+      rootFolderPath,
+      hasGrcService,
+      grcBfxReq
+    )
+
+    this.processMessageManager = processMessageManager
 
     this.isElectronjsEnv = argv.isElectronjsEnv
 
@@ -61,35 +80,32 @@ class PdfWriter extends MainPdfWriter {
     })
   }
 
-  // TODO: Need to rework with using ProcessMessageManager
   async createPDFBufferUnderElectron (args) {
     const uid = `uid-${uuidv4()}-${Date.now()}`
 
-    return await new Promise((resolve, reject) => {
-      process.on('message', (mess) => {
-        if (
-          mess?.state !== 'response:created-pdf-buffer' &&
-          mess?.state !== 'error:pdf-creation' &&
-          mess?.data?.uid !== uid
-        ) {
-          return
-        }
-        if (mess?.state === 'error:pdf-creation') {
-          reject(new Error(mess?.data?.error))
-        }
+    const { promise } = this.processMessageManager.addStateToWait(
+      this.processMessageManager.PROCESS_STATES.RESPONSE_PDF_CREATION,
+      ({ data }) => data?.uid === uid
+    )
+    this.processMessageManager.sendState(
+      this.processMessageManager.PROCESS_MESSAGES.REQUEST_PDF_CREATION,
+      { ...args, uid }
+    )
 
-        resolve(Buffer.from(mess?.data?.buffer))
-      })
+    const {
+      err,
+      buffer
+    } = (await promise) ?? {}
 
-      process.send({
-        state: 'request:create-pdf',
-        data: {
-          ...args,
-          uid
-        }
-      })
-    })
+    if (err) {
+      // TODO: Need to add custom error class
+      throw new Error(err)
+    }
+
+    return Buffer.from(buffer)
   }
 }
+
+decorateInjectable(PdfWriter, depsTypes)
 
 module.exports = PdfWriter

@@ -30,5 +30,5 @@ module.exports = {
 
   RESPONSE_UPDATE_USERS_SYNC_ON_STARTUP_REQUIRED_STATE: 'response:update-users-sync-on-startup-required-state',
 
-  CREATE_PDF: 'request:create-pdf'
+  REQUEST_PDF_CREATION: 'request:pdf-creation'
 }
