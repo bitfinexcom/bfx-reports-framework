@@ -15,6 +15,9 @@ const {
 } = require('bfx-report/workers/loc.api/queue/helpers/utils')
 
 const TEMPLATE_FILE_NAMES = require('./template-file-names')
+const {
+  PDFBufferUnderElectronCreationError
+} = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -114,8 +117,7 @@ class PdfWriter extends MainPdfWriter {
     } = (await promise) ?? {}
 
     if (err) {
-      // TODO: Need to add custom error class
-      throw new Error(err)
+      throw new PDFBufferUnderElectronCreationError(err)
     }
 
     if (
