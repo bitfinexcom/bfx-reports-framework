@@ -30,7 +30,8 @@ module.exports = (
       isSubAccount
     },
     end,
-    start
+    start,
+    isPDFRequired
   } = params
   const auth = { token: '' }
 
@@ -637,6 +638,7 @@ module.exports = (
         method: 'getMultipleFile',
         params: {
           email,
+          isPDFRequired,
           multiExport: [
             {
               method: 'getTradesFile',
@@ -675,6 +677,7 @@ module.exports = (
         auth,
         method: 'getBalanceHistoryFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -820,6 +823,7 @@ module.exports = (
         auth,
         method: 'getWinLossFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -846,6 +850,7 @@ module.exports = (
         auth,
         method: 'getFullSnapshotReportFile',
         params: {
+          isPDFRequired,
           end,
           email
         },
@@ -870,6 +875,7 @@ module.exports = (
         auth,
         method: 'getFullSnapshotReportFile',
         params: {
+          isPDFRequired,
           end
         },
         id: 5
@@ -898,6 +904,7 @@ module.exports = (
         auth,
         method: 'getPositionsSnapshotFile',
         params: {
+          isPDFRequired,
           end,
           email
         },
@@ -922,6 +929,7 @@ module.exports = (
         auth,
         method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           email
@@ -947,6 +955,7 @@ module.exports = (
         auth,
         method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start
         },
@@ -976,6 +985,7 @@ module.exports = (
         auth,
         method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           isStartSnapshot: true
@@ -1006,6 +1016,7 @@ module.exports = (
         auth,
         method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           isEndSnapshot: true
@@ -1036,6 +1047,7 @@ module.exports = (
         auth,
         method: 'getTradedVolumeFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1062,6 +1074,7 @@ module.exports = (
         auth,
         method: 'getTotalFeesReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1089,6 +1102,7 @@ module.exports = (
         auth,
         method: 'getPerformingLoanFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1115,6 +1129,7 @@ module.exports = (
         auth,
         method: 'getWinLossVSAccountBalanceFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1131,6 +1146,11 @@ module.exports = (
   it('it should be successfully performed by the getWeightedAveragesReportFile method', async function () {
     this.timeout(60000)
 
+    // TODO: Wait for implementation of pdf template in the next release
+    if (isPDFRequired) {
+      this.skip()
+    }
+
     const procPromise = queueToPromise(params.processorQueue)
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
@@ -1141,6 +1161,7 @@ module.exports = (
         auth,
         method: 'getWeightedAveragesReportFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
