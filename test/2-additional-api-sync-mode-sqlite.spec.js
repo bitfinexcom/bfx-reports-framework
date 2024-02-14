@@ -105,8 +105,17 @@ describe('Additional sync mode API with SQLite', () => {
   })
 
   describe('Use BFX API keys', () => {
-    signUpTestCase(agent, params)
-    additionalApiSyncModeSqliteTestCases(agent, params)
+    describe('CSV generation', () => {
+      params.isPDFRequired = false
+      signUpTestCase(agent, params)
+      additionalApiSyncModeSqliteTestCases(agent, params)
+    })
+
+    describe('PDF generation', () => {
+      params.isPDFRequired = true
+      signUpTestCase(agent, params)
+      additionalApiSyncModeSqliteTestCases(agent, params)
+    })
   })
 
   describe('Use BFX auth token', () => {
@@ -117,7 +126,16 @@ describe('Additional sync mode API with SQLite', () => {
       await rmAllFiles(tempDirPath, ['README.md'])
     })
 
-    signUpTestCase(agent, paramsWithAuthToken)
-    additionalApiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+    describe('CSV generation', () => {
+      paramsWithAuthToken.isPDFRequired = false
+      signUpTestCase(agent, paramsWithAuthToken)
+      additionalApiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+    })
+
+    describe('PDF generation', () => {
+      paramsWithAuthToken.isPDFRequired = true
+      signUpTestCase(agent, paramsWithAuthToken)
+      additionalApiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+    })
   })
 })
