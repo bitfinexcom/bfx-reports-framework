@@ -106,10 +106,21 @@ describe('Sync mode API with SQLite', () => {
   })
 
   describe('Use BFX API keys', () => {
-    signUpTestCase(agent, params)
-    apiSyncModeSqliteTestCases(agent, params)
-    signUpTestCase(agent, params)
-    removeUserTestCases(agent, params)
+    describe('CSV generation', () => {
+      params.isPDFRequired = false
+      signUpTestCase(agent, params)
+      apiSyncModeSqliteTestCases(agent, params)
+      signUpTestCase(agent, params)
+      removeUserTestCases(agent, params)
+    })
+
+    describe('PDF generation', () => {
+      params.isPDFRequired = true
+      signUpTestCase(agent, params)
+      apiSyncModeSqliteTestCases(agent, params)
+      signUpTestCase(agent, params)
+      removeUserTestCases(agent, params)
+    })
   })
 
   describe('Use BFX auth token', () => {
@@ -120,9 +131,20 @@ describe('Sync mode API with SQLite', () => {
       await rmAllFiles(tempDirPath, ['README.md'])
     })
 
-    signUpTestCase(agent, paramsWithAuthToken)
-    apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
-    signUpTestCase(agent, paramsWithAuthToken)
-    removeUserTestCases(agent, paramsWithAuthToken)
+    describe('CSV generation', () => {
+      paramsWithAuthToken.isPDFRequired = false
+      signUpTestCase(agent, paramsWithAuthToken)
+      apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+      signUpTestCase(agent, paramsWithAuthToken)
+      removeUserTestCases(agent, paramsWithAuthToken)
+    })
+
+    describe('PDF generation', () => {
+      paramsWithAuthToken.isPDFRequired = true
+      signUpTestCase(agent, paramsWithAuthToken)
+      apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+      signUpTestCase(agent, paramsWithAuthToken)
+      removeUserTestCases(agent, paramsWithAuthToken)
+    })
   })
 })
