@@ -27,7 +27,8 @@ module.exports = (
     },
     date,
     end,
-    start
+    start,
+    isPDFRequired
   } = params
   const auth = { token: '' }
 
@@ -2734,6 +2735,7 @@ module.exports = (
         method: 'getMultipleFile',
         params: {
           email,
+          isPDFRequired,
           multiExport: [
             {
               method: 'getTradesFile',
@@ -2771,6 +2773,7 @@ module.exports = (
         method: 'getMultipleFile',
         params: {
           email,
+          isPDFRequired,
           multiExport: [
             {
               symbol: ['tBTCUSD', 'tETHUSD'],
@@ -2806,6 +2809,7 @@ module.exports = (
         auth,
         method: 'getTickersHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -2833,6 +2837,7 @@ module.exports = (
         auth,
         method: 'getPositionsHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -2860,6 +2865,7 @@ module.exports = (
         auth,
         method: 'getPositionsAuditFile',
         params: {
+          isPDFRequired,
           id: [12345],
           symbol: 'tBTCUSD',
           end,
@@ -2888,6 +2894,7 @@ module.exports = (
         auth,
         method: 'getWalletsFile',
         params: {
+          isPDFRequired,
           end,
           email
         },
@@ -2912,6 +2919,7 @@ module.exports = (
         auth,
         method: 'getFundingOfferHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'fUSD',
           end,
           start,
@@ -2940,6 +2948,7 @@ module.exports = (
         auth,
         method: 'getFundingLoanHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'fUSD',
           end,
           start,
@@ -2967,6 +2976,7 @@ module.exports = (
         auth,
         method: 'getFundingCreditHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'fUSD',
           end,
           start,
@@ -2994,6 +3004,7 @@ module.exports = (
         auth,
         method: 'getLedgersFile',
         params: {
+          isPDFRequired,
           symbol: ['BTC'],
           end,
           start,
@@ -3021,6 +3032,7 @@ module.exports = (
         auth,
         method: 'getPayInvoiceListFile',
         params: {
+          isPDFRequired,
           end,
           start,
           limit: 100,
@@ -3048,6 +3060,7 @@ module.exports = (
         auth,
         method: 'getTradesFile',
         params: {
+          isPDFRequired,
           symbol: ['tBTCUSD', 'tETHUSD'],
           end,
           start,
@@ -3075,6 +3088,7 @@ module.exports = (
         auth,
         method: 'getFundingTradesFile',
         params: {
+          isPDFRequired,
           symbol: ['fBTC', 'fETH'],
           end,
           start,
@@ -3102,6 +3116,7 @@ module.exports = (
         auth,
         method: 'getPublicTradesFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start: (new Date()).setDate(date.getDate() - 27),
@@ -3127,6 +3142,7 @@ module.exports = (
         auth,
         method: 'getPublicTradesFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -3156,6 +3172,7 @@ module.exports = (
         auth,
         method: 'getPublicTradesFile',
         params: {
+          isPDFRequired,
           symbol: ['tBTCUSD', 'tETHUSD'],
           end,
           start,
@@ -3188,6 +3205,7 @@ module.exports = (
         auth,
         method: 'getStatusMessagesFile',
         params: {
+          isPDFRequired,
           symbol: ['tBTCF0:USTF0'],
           timezone: 'America/Los_Angeles',
           email
@@ -3213,6 +3231,7 @@ module.exports = (
         auth,
         method: 'getCandlesFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           timeframe: '12h',
           end,
@@ -3242,6 +3261,7 @@ module.exports = (
         auth,
         method: 'getOrderTradesFile',
         params: {
+          isPDFRequired,
           id: 12345,
           symbol: 'tBTCUSD',
           end,
@@ -3271,6 +3291,7 @@ module.exports = (
         auth,
         method: 'getOrdersFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -3297,6 +3318,7 @@ module.exports = (
         auth,
         method: 'getActiveOrdersFile',
         params: {
+          isPDFRequired,
           email
         },
         id: 5
@@ -3320,6 +3342,7 @@ module.exports = (
         auth,
         method: 'getMovementsFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3346,6 +3369,7 @@ module.exports = (
         auth,
         method: 'getMovementsFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3373,6 +3397,7 @@ module.exports = (
         auth,
         method: 'getMovementsFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3400,6 +3425,7 @@ module.exports = (
         auth,
         method: 'getLoginsFile',
         params: {
+          isPDFRequired,
           end,
           start,
           limit: 1000,
@@ -3426,6 +3452,7 @@ module.exports = (
         auth,
         method: 'getChangeLogsFile',
         params: {
+          isPDFRequired,
           end,
           start,
           limit: 1000,
@@ -3448,6 +3475,7 @@ module.exports = (
       .send({
         method: 'getLedgersFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3486,6 +3514,7 @@ module.exports = (
           auth,
           method: 'getLedgersFile',
           params: {
+            isPDFRequired,
             symbol: 'BTC',
             end,
             start,
