@@ -7,7 +7,7 @@ const {
   queueToPromiseMulti
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  testMethodOfGettingCsv,
+  testMethodOfGettingReportFile,
   testProcQueue
 } = require('bfx-report/test/helpers/helpers.tests')
 
@@ -27,7 +27,8 @@ module.exports = (
     },
     date,
     end,
-    start
+    start,
+    isPDFRequired
   } = params
   const auth = { token: '' }
 
@@ -2720,7 +2721,7 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should be successfully performed by the getMultipleCsv method', async function () {
+  it('it should be successfully performed by the getMultipleFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2731,12 +2732,13 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMultipleCsv',
+        method: 'getMultipleFile',
         params: {
           email,
+          isPDFRequired,
           multiExport: [
             {
-              method: 'getTradesCsv',
+              method: 'getTradesFile',
               symbol: ['tBTCUSD', 'tETHUSD'],
               end,
               start,
@@ -2744,7 +2746,7 @@ module.exports = (
               timezone: 'America/Los_Angeles'
             },
             {
-              method: 'getTickersHistoryCsv',
+              method: 'getTickersHistoryFile',
               symbol: 'BTC',
               end,
               start,
@@ -2757,10 +2759,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should not be successfully performed by the getMultipleCsv method', async function () {
+  it('it should not be successfully performed by the getMultipleFile method', async function () {
     this.timeout(60000)
 
     const res = await agent
@@ -2768,9 +2770,10 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMultipleCsv',
+        method: 'getMultipleFile',
         params: {
           email,
+          isPDFRequired,
           multiExport: [
             {
               symbol: ['tBTCUSD', 'tETHUSD'],
@@ -2793,7 +2796,7 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should be successfully performed by the getTickersHistoryCsv method', async function () {
+  it('it should be successfully performed by the getTickersHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2804,8 +2807,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getTickersHistoryCsv',
+        method: 'getTickersHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -2817,10 +2821,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getPositionsHistoryCsv method', async function () {
+  it('it should be successfully performed by the getPositionsHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2831,8 +2835,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPositionsHistoryCsv',
+        method: 'getPositionsHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -2844,10 +2849,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getPositionsAuditCsv method', async function () {
+  it('it should be successfully performed by the getPositionsAuditFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2858,8 +2863,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPositionsAuditCsv',
+        method: 'getPositionsAuditFile',
         params: {
+          isPDFRequired,
           id: [12345],
           symbol: 'tBTCUSD',
           end,
@@ -2872,10 +2878,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getWalletsCsv method', async function () {
+  it('it should be successfully performed by the getWalletsFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2886,8 +2892,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWalletsCsv',
+        method: 'getWalletsFile',
         params: {
+          isPDFRequired,
           end,
           email
         },
@@ -2896,10 +2903,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFundingOfferHistoryCsv method', async function () {
+  it('it should be successfully performed by the getFundingOfferHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2910,8 +2917,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFundingOfferHistoryCsv',
+        method: 'getFundingOfferHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'fUSD',
           end,
           start,
@@ -2924,10 +2932,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFundingLoanHistoryCsv method', async function () {
+  it('it should be successfully performed by the getFundingLoanHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2938,8 +2946,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFundingLoanHistoryCsv',
+        method: 'getFundingLoanHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'fUSD',
           end,
           start,
@@ -2951,10 +2960,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFundingCreditHistoryCsv method', async function () {
+  it('it should be successfully performed by the getFundingCreditHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2965,8 +2974,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFundingCreditHistoryCsv',
+        method: 'getFundingCreditHistoryFile',
         params: {
+          isPDFRequired,
           symbol: 'fUSD',
           end,
           start,
@@ -2978,10 +2988,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getLedgersCsv method', async function () {
+  it('it should be successfully performed by the getLedgersFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -2992,8 +3002,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getLedgersCsv',
+        method: 'getLedgersFile',
         params: {
+          isPDFRequired,
           symbol: ['BTC'],
           end,
           start,
@@ -3005,10 +3016,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getPayInvoiceListCsv method', async function () {
+  it('it should be successfully performed by the getPayInvoiceListFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3019,8 +3030,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPayInvoiceListCsv',
+        method: 'getPayInvoiceListFile',
         params: {
+          isPDFRequired,
           end,
           start,
           limit: 100,
@@ -3032,10 +3044,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getTradesCsv method', async function () {
+  it('it should be successfully performed by the getTradesFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3046,8 +3058,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getTradesCsv',
+        method: 'getTradesFile',
         params: {
+          isPDFRequired,
           symbol: ['tBTCUSD', 'tETHUSD'],
           end,
           start,
@@ -3059,10 +3072,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFundingTradesCsv method', async function () {
+  it('it should be successfully performed by the getFundingTradesFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3073,8 +3086,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFundingTradesCsv',
+        method: 'getFundingTradesFile',
         params: {
+          isPDFRequired,
           symbol: ['fBTC', 'fETH'],
           end,
           start,
@@ -3086,10 +3100,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getPublicTradesCsv method', async function () {
+  it('it should be successfully performed by the getPublicTradesFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3100,8 +3114,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPublicTradesCsv',
+        method: 'getPublicTradesFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start: (new Date()).setDate(date.getDate() - 27),
@@ -3114,10 +3129,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should not be successfully performed by the getPublicTradesCsv method, time frame more then a month', async function () {
+  it('it should not be successfully performed by the getPublicTradesFile method, time frame more then a month', async function () {
     this.timeout(60000)
 
     const res = await agent
@@ -3125,8 +3140,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPublicTradesCsv',
+        method: 'getPublicTradesFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -3146,7 +3162,7 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should not be successfully performed by the getPublicTradesCsv method, with symbol array', async function () {
+  it('it should not be successfully performed by the getPublicTradesFile method, with symbol array', async function () {
     this.timeout(60000)
 
     const res = await agent
@@ -3154,8 +3170,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPublicTradesCsv',
+        method: 'getPublicTradesFile',
         params: {
+          isPDFRequired,
           symbol: ['tBTCUSD', 'tETHUSD'],
           end,
           start,
@@ -3175,7 +3192,7 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should be successfully performed by the getStatusMessagesCsv method', async function () {
+  it('it should be successfully performed by the getStatusMessagesFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3186,8 +3203,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getStatusMessagesCsv',
+        method: 'getStatusMessagesFile',
         params: {
+          isPDFRequired,
           symbol: ['tBTCF0:USTF0'],
           timezone: 'America/Los_Angeles',
           email
@@ -3197,10 +3215,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getCandlesCsv method', async function () {
+  it('it should be successfully performed by the getCandlesFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3211,8 +3229,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getCandlesCsv',
+        method: 'getCandlesFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           timeframe: '12h',
           end,
@@ -3226,10 +3245,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getOrderTradesCsv method', async function () {
+  it('it should be successfully performed by the getOrderTradesFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3240,8 +3259,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getOrderTradesCsv',
+        method: 'getOrderTradesFile',
         params: {
+          isPDFRequired,
           id: 12345,
           symbol: 'tBTCUSD',
           end,
@@ -3255,10 +3275,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getOrdersCsv method', async function () {
+  it('it should be successfully performed by the getOrdersFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3269,8 +3289,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getOrdersCsv',
+        method: 'getOrdersFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -3281,10 +3302,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getActiveOrdersCsv method', async function () {
+  it('it should be successfully performed by the getActiveOrdersFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3295,8 +3316,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getActiveOrdersCsv',
+        method: 'getActiveOrdersFile',
         params: {
+          isPDFRequired,
           email
         },
         id: 5
@@ -3304,10 +3326,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getMovementsCsv method', async function () {
+  it('it should be successfully performed by the getMovementsFile method', async function () {
     this.timeout(3 * 60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3318,8 +3340,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMovementsCsv',
+        method: 'getMovementsFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3330,10 +3353,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getMovementsCsv method, where amount > 0', async function () {
+  it('it should be successfully performed by the getMovementsFile method, where amount > 0', async function () {
     this.timeout(3 * 60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3344,8 +3367,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMovementsCsv',
+        method: 'getMovementsFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3357,10 +3381,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getMovementsCsv method, where amount < 0', async function () {
+  it('it should be successfully performed by the getMovementsFile method, where amount < 0', async function () {
     this.timeout(3 * 60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3371,8 +3395,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMovementsCsv',
+        method: 'getMovementsFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3384,10 +3409,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getLoginsCsv method', async function () {
+  it('it should be successfully performed by the getLoginsFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3398,8 +3423,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getLoginsCsv',
+        method: 'getLoginsFile',
         params: {
+          isPDFRequired,
           end,
           start,
           limit: 1000,
@@ -3410,10 +3436,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getChangeLogsCsv method', async function () {
+  it('it should be successfully performed by the getChangeLogsFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -3424,8 +3450,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getChangeLogsCsv',
+        method: 'getChangeLogsFile',
         params: {
+          isPDFRequired,
           end,
           start,
           limit: 1000,
@@ -3436,18 +3463,19 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should not be successfully auth by the getLedgersCsv method', async function () {
+  it('it should not be successfully auth by the getLedgersFile method', async function () {
     this.timeout(60000)
 
     const res = await agent
       .post(`${basePath}/json-rpc`)
       .type('json')
       .send({
-        method: 'getLedgersCsv',
+        method: 'getLedgersFile',
         params: {
+          isPDFRequired,
           symbol: 'BTC',
           end,
           start,
@@ -3467,7 +3495,7 @@ module.exports = (
     ])
   })
 
-  it('it should be successfully performed by the getLedgersCsv method, with multiple users', async function () {
+  it('it should be successfully performed by the getLedgersFile method, with multiple users', async function () {
     this.timeout(5 * 60000)
 
     const count = 10
@@ -3484,8 +3512,9 @@ module.exports = (
         .type('json')
         .send({
           auth,
-          method: 'getLedgersCsv',
+          method: 'getLedgersFile',
           params: {
+            isPDFRequired,
             symbol: 'BTC',
             end,
             start,

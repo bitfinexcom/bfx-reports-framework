@@ -137,6 +137,10 @@ class FullSnapshotReport {
     ])
 
     return {
+      timestamps: {
+        mtsCreated: Date.now(),
+        end
+      },
       positionsSnapshot,
       walletsSnapshot,
       positionsTickers,

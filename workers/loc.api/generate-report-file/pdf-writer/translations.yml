@@ -1,0 +1,25 @@
+en:
+  template:
+    startingPositionsSnapshot: Starting positions snapshot
+    endingPositionsSnapshot: Ending positions snapshot
+    finalState: Final state
+    startingPeriodBalances: Starting period balances
+    movementsDetails: Movements details
+    endingPeriodBalances: Ending period balances
+    positions: Positions
+    wallets: Wallets
+    positionsTickers: Positions tickers
+    walletsTickers: Wallets tickers
+
+ru:
+  template:
+    startingPositionsSnapshot: Снимок стартовых позиций
+    endingPositionsSnapshot: Снимок конечных позиций
+    finalState: Конечное состояние
+    startingPeriodBalances: Остатки на начало периода
+    movementsDetails: Детали движений
+    endingPeriodBalances: Остатки на конец периода
+    positions: Позиции
+    wallets: Кошельки
+    positionsTickers: Тикеры позиций
+    walletsTickers: Тикеры кошельков

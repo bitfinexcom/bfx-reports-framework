@@ -8,7 +8,7 @@ const schema = require('./schema')
 
 module.exports = (
   args,
-  schemaName = 'paramsSchemaForCsv',
+  schemaName = 'paramsSchemaForFile',
   requireFields = [],
   checkParamsField = false
 ) => {

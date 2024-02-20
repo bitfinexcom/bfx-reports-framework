@@ -6,14 +6,14 @@ const {
   queueToPromise
 } = require('bfx-report/test/helpers/helpers.core')
 const {
-  testMethodOfGettingCsv
+  testMethodOfGettingReportFile
 } = require('bfx-report/test/helpers/helpers.tests')
 
 const {
   getParamsArrToTestTimeframeGrouping
 } = require('../helpers/helpers.core')
 const {
-  testCsvPathHasCommonFolder
+  testReportPathHasCommonFolder
 } = require('../helpers/helpers.tests')
 
 const getSyncProgressTestCase = require('./get-sync-progress-test-case')
@@ -30,7 +30,8 @@ module.exports = (
       isSubAccount
     },
     end,
-    start
+    start,
+    isPDFRequired
   } = params
   const auth = { token: '' }
 
@@ -623,7 +624,7 @@ module.exports = (
     }
   })
 
-  it('it should be successfully performed by the getMultipleCsv method', async function () {
+  it('it should be successfully performed by the getMultipleFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -634,12 +635,13 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getMultipleCsv',
+        method: 'getMultipleFile',
         params: {
           email,
+          isPDFRequired,
           multiExport: [
             {
-              method: 'getTradesCsv',
+              method: 'getTradesFile',
               symbol: ['tBTCUSD', 'tETHUSD'],
               end,
               start,
@@ -647,7 +649,7 @@ module.exports = (
               timezone: 'America/Los_Angeles'
             },
             {
-              method: 'getBalanceHistoryCsv',
+              method: 'getBalanceHistoryFile',
               end,
               start,
               timeframe: 'day'
@@ -659,10 +661,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getBalanceHistoryCsv method', async function () {
+  it('it should be successfully performed by the getBalanceHistoryFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -673,8 +675,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getBalanceHistoryCsv',
+        method: 'getBalanceHistoryFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -685,7 +688,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getSummaryByAsset method', async function () {
@@ -807,7 +810,7 @@ module.exports = (
     assert.propertyVal(res.body, 'id', 5)
   })
 
-  it('it should be successfully performed by the getWinLossCsv method', async function () {
+  it('it should be successfully performed by the getWinLossFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -818,8 +821,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWinLossCsv',
+        method: 'getWinLossFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -830,10 +834,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullSnapshotReportCsv method', async function () {
+  it('it should be successfully performed by the getFullSnapshotReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -844,8 +848,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullSnapshotReportCsv',
+        method: 'getFullSnapshotReportFile',
         params: {
+          isPDFRequired,
           end,
           email
         },
@@ -854,10 +859,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullSnapshotReportCsv method, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullSnapshotReportFile method, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -868,8 +873,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullSnapshotReportCsv',
+        method: 'getFullSnapshotReportFile',
         params: {
+          isPDFRequired,
           end
         },
         id: 5
@@ -877,15 +883,15 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
-  it('it should be successfully performed by the getPositionsSnapshotCsv method', async function () {
+  it('it should be successfully performed by the getPositionsSnapshotFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -896,8 +902,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPositionsSnapshotCsv',
+        method: 'getPositionsSnapshotFile',
         params: {
+          isPDFRequired,
           end,
           email
         },
@@ -906,10 +913,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -920,8 +927,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           email
@@ -931,10 +939,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -945,8 +953,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start
         },
@@ -955,15 +964,15 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method for starting snapshot, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method for starting snapshot, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -974,8 +983,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           isStartSnapshot: true
@@ -985,15 +995,15 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
-  it('it should be successfully performed by the getFullTaxReportCsv method for ending snapshot, store csv to local folder', async function () {
+  it('it should be successfully performed by the getFullTaxReportFile method for ending snapshot, store report file to local folder', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1004,8 +1014,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getFullTaxReportCsv',
+        method: 'getFullTaxReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           isEndSnapshot: true
@@ -1015,15 +1026,15 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(
+    await testMethodOfGettingReportFile(
       procPromise,
       aggrPromise,
       res,
-      testCsvPathHasCommonFolder
+      testReportPathHasCommonFolder
     )
   })
 
-  it('it should be successfully performed by the getTradedVolumeCsv method', async function () {
+  it('it should be successfully performed by the getTradedVolumeFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1034,8 +1045,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getTradedVolumeCsv',
+        method: 'getTradedVolumeFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1046,10 +1058,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getTotalFeesReportCsv method', async function () {
+  it('it should be successfully performed by the getTotalFeesReportFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1060,8 +1072,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getTotalFeesReportCsv',
+        method: 'getTotalFeesReportFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1073,10 +1086,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getPerformingLoanCsv method', async function () {
+  it('it should be successfully performed by the getPerformingLoanFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1087,8 +1100,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getPerformingLoanCsv',
+        method: 'getPerformingLoanFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1099,10 +1113,10 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getWinLossVSAccountBalanceCsv method', async function () {
+  it('it should be successfully performed by the getWinLossVSAccountBalanceFile method', async function () {
     this.timeout(60000)
 
     const procPromise = queueToPromise(params.processorQueue)
@@ -1113,8 +1127,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWinLossVSAccountBalanceCsv',
+        method: 'getWinLossVSAccountBalanceFile',
         params: {
+          isPDFRequired,
           end,
           start,
           timeframe: 'day',
@@ -1125,11 +1140,16 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
-  it('it should be successfully performed by the getWeightedAveragesReportCsv method', async function () {
+  it('it should be successfully performed by the getWeightedAveragesReportFile method', async function () {
     this.timeout(60000)
+
+    // TODO: Wait for implementation of pdf template in the next release
+    if (isPDFRequired) {
+      this.skip()
+    }
 
     const procPromise = queueToPromise(params.processorQueue)
     const aggrPromise = queueToPromise(params.aggregatorQueue)
@@ -1139,8 +1159,9 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getWeightedAveragesReportCsv',
+        method: 'getWeightedAveragesReportFile',
         params: {
+          isPDFRequired,
           symbol: 'tBTCUSD',
           end,
           start,
@@ -1151,7 +1172,7 @@ module.exports = (
       .expect('Content-Type', /json/)
       .expect(200)
 
-    await testMethodOfGettingCsv(procPromise, aggrPromise, res)
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the removeUser method with token', async function () {

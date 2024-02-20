@@ -39,7 +39,7 @@ let mockRESTv2Srv = null
 const basePath = '/api'
 const tempDirPath = path.join(__dirname, '..', 'workers/loc.api/queue/temp')
 const dbDirPath = path.join(__dirname, '..', 'db')
-const csvDirPath = path.join(__dirname, '..', 'csv')
+const reportFolderPath = path.join(__dirname, '..', 'report-files')
 const date = new Date()
 const end = date.getTime()
 const start = (new Date()).setDate(date.getDate() - 90)
@@ -78,7 +78,7 @@ describe('Sync mode API with SQLite', () => {
 
     mockRESTv2Srv = createMockRESTv2SrvWithDate(start, end, 100)
 
-    await rmRf(csvDirPath)
+    await rmRf(reportFolderPath)
     await rmAllFiles(tempDirPath, ['README.md'])
     await rmDB(dbDirPath)
     const env = await startEnvironment(false, false, 1)
@@ -98,7 +98,7 @@ describe('Sync mode API with SQLite', () => {
     await stopEnvironment()
     await rmDB(dbDirPath)
     await rmAllFiles(tempDirPath, ['README.md'])
-    await rmRf(csvDirPath)
+    await rmRf(reportFolderPath)
 
     try {
       await mockRESTv2Srv.close()
@@ -106,23 +106,45 @@ describe('Sync mode API with SQLite', () => {
   })
 
   describe('Use BFX API keys', () => {
-    signUpTestCase(agent, params)
-    apiSyncModeSqliteTestCases(agent, params)
-    signUpTestCase(agent, params)
-    removeUserTestCases(agent, params)
+    describe('CSV generation', () => {
+      params.isPDFRequired = false
+      signUpTestCase(agent, params)
+      apiSyncModeSqliteTestCases(agent, params)
+      signUpTestCase(agent, params)
+      removeUserTestCases(agent, params)
+    })
+
+    describe('PDF generation', () => {
+      params.isPDFRequired = true
+      signUpTestCase(agent, params)
+      apiSyncModeSqliteTestCases(agent, params)
+      signUpTestCase(agent, params)
+      removeUserTestCases(agent, params)
+    })
   })
 
   describe('Use BFX auth token', () => {
     before(async function () {
       this.timeout(20000)
 
-      await rmRf(csvDirPath)
+      await rmRf(reportFolderPath)
       await rmAllFiles(tempDirPath, ['README.md'])
     })
 
-    signUpTestCase(agent, paramsWithAuthToken)
-    apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
-    signUpTestCase(agent, paramsWithAuthToken)
-    removeUserTestCases(agent, paramsWithAuthToken)
+    describe('CSV generation', () => {
+      paramsWithAuthToken.isPDFRequired = false
+      signUpTestCase(agent, paramsWithAuthToken)
+      apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+      signUpTestCase(agent, paramsWithAuthToken)
+      removeUserTestCases(agent, paramsWithAuthToken)
+    })
+
+    describe('PDF generation', () => {
+      paramsWithAuthToken.isPDFRequired = true
+      signUpTestCase(agent, paramsWithAuthToken)
+      apiSyncModeSqliteTestCases(agent, paramsWithAuthToken)
+      signUpTestCase(agent, paramsWithAuthToken)
+      removeUserTestCases(agent, paramsWithAuthToken)
+    })
   })
 })

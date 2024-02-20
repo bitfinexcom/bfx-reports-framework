@@ -40,6 +40,9 @@ class ProcessMessageManager {
     )
 
     this._mainHandler = null
+
+    this.isInited = false
+    this.areDepsInjected = false
   }
 
   setDeps (
@@ -47,12 +50,22 @@ class ProcessMessageManager {
     dbBackupManager,
     recalcSubAccountLedgersBalancesHook
   ) {
+    if (this.areDepsInjected) {
+      return
+    }
+
     this.dao = dao
     this.dbBackupManager = dbBackupManager
     this.recalcSubAccountLedgersBalancesHook = recalcSubAccountLedgersBalancesHook
+
+    this.areDepsInjected = true
   }
 
   init () {
+    if (this.isInited) {
+      return this
+    }
+
     this._mainHandler = onMessage(async (err, state, data) => {
       if (!this.SET_PROCESS_STATES.has(state)) {
         return
@@ -71,11 +84,14 @@ class ProcessMessageManager {
       this._processQueuePromises(state, err, data)
     }, this.logger)
 
+    this.isInited = true
+
     return this
   }
 
   stop () {
     offMessage(this._mainHandler)
+    this.isInited = false
   }
 
   sendState (state, data) {
@@ -92,7 +108,7 @@ class ProcessMessageManager {
     return onMessage(...args, this.logger)
   }
 
-  addStateToWait (state) {
+  addStateToWait (state, checkHandler) {
     if (!this.SET_PROCESS_STATES.has(state)) {
       throw new ProcessStateSendingError()
     }
@@ -107,7 +123,13 @@ class ProcessMessageManager {
       resolve: () => {},
       reject: () => {},
       close: (err, data) => {
-        if (job.hasClosed) {
+        if (
+          job.hasClosed ||
+          (
+            typeof checkHandler === 'function' &&
+            !checkHandler({ err, data })
+          )
+        ) {
           return
         }
         if (Number.isInteger(job.index)) {

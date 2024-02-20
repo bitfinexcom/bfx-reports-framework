@@ -48,7 +48,7 @@ server {
     add_header Cache-Control "public";
   }
 
-  location /csv {
+  location /report-files {
     auth_request /api/auth;
 
     autoindex ${NGINX_AUTOINDEX};
@@ -56,12 +56,12 @@ server {
     xslt_stylesheet /etc/nginx/autoindex-format.xslt path='$uri';
 
     try_files $uri/ =404;
-    alias ${CSV_FOLDER};
+    alias ${REPORT_FOLDER};
 
     if ($arg_token ~ ".+") {
       add_header Set-Cookie "token=$arg_token; Max-Age=3600; SameSite=strict; HttpOnly";
     }
-    if ($request_filename ~ "^.*/(.+\.(zip|csv))$") {
+    if ($request_filename ~ "^.*/(.+\.(zip|csv|pdf))$") {
       set $fname $1;
       add_header Content-Disposition 'attachment; filename="$fname"';
     }

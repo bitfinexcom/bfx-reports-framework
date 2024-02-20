@@ -536,14 +536,34 @@ describe('Sub-account', () => {
     }
 
     describe('Sync mode API', () => {
-      before(beforeFn)
+      describe('CSV generation', () => {
+        before(beforeFn)
 
-      apiSyncModeSqliteTestCases(agent, params)
+        params.isPDFRequired = false
+        apiSyncModeSqliteTestCases(agent, params)
+      })
+
+      describe('PDF generation', () => {
+        before(beforeFn)
+
+        params.isPDFRequired = true
+        apiSyncModeSqliteTestCases(agent, params)
+      })
     })
     describe('Additional sync mode API', () => {
-      before(beforeFn)
+      describe('CSV generation', () => {
+        before(beforeFn)
 
-      additionalApiSyncModeSqliteTestCases(agent, params)
+        params.isPDFRequired = false
+        additionalApiSyncModeSqliteTestCases(agent, params)
+      })
+
+      describe('PDF generation', () => {
+        before(beforeFn)
+
+        params.isPDFRequired = true
+        additionalApiSyncModeSqliteTestCases(agent, params)
+      })
     })
     describe('Removing sub-account API', () => {
       before(beforeFn)
