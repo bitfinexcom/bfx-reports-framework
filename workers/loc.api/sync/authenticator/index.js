@@ -7,7 +7,8 @@ const {
   ArgsParamsError
 } = require('bfx-report/workers/loc.api/errors')
 const {
-  isENetError
+  isENetError,
+  isAuthError
 } = require('bfx-report/workers/loc.api/helpers')
 
 const { serializeVal } = require('../dao/helpers')
@@ -1385,6 +1386,10 @@ class Authenticator {
           authToken: prevAuthToken
         })
       } catch (err) {
+        if (isAuthError(err)) {
+          clearInterval(newAuthTokenRefreshInterval)
+        }
+
         this.logger.debug(err)
 
         await this.wsEventEmitterFactory()
