@@ -61,7 +61,9 @@ class PdfWriter extends MainPdfWriter {
     const {
       template = 'No data',
       format = 'portrait',
-      orientation = 'Letter'
+      orientation = 'Letter',
+      headerHeight = '70mm',
+      footerHeight = '28mm'
     } = args ?? {}
 
     if (this.isElectronjsEnv) {
@@ -72,8 +74,18 @@ class PdfWriter extends MainPdfWriter {
       })
     }
 
+    const headerOpt = headerHeight
+      ? { header: { height: headerHeight } }
+      : {}
+    const footerOpt = footerHeight
+      ? { footer: { height: footerHeight } }
+      : {}
+
     return await new Promise((resolve, reject) => {
       pdf.create(template, {
+        ...headerOpt,
+        ...footerOpt,
+
         format,
         orientation,
         type: 'pdf',
