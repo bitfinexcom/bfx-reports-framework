@@ -18,7 +18,7 @@ block content
     :translate(prop='template.positions')
       Positions
 
-  ul.responsive-table.sm.no-margin-bottom
+  ul.responsive-table.no-margin-bottom
     li.table-header
       each columnVal, columnKey in reportColumns.positionsSnapshot
         .col #{columnVal}
@@ -27,7 +27,7 @@ block content
         each columnVal, columnKey in reportColumns.positionsSnapshot
           .col #{dataItem[columnKey]}
 
-  ul.responsive-table.sm.width-by-content
+  ul.responsive-table.width-by-content
     li.table-header
       each columnVal, columnKey in reportColumns.positionsTotalPlUsd
         .col #{columnVal}
