@@ -62,7 +62,7 @@ class PdfWriter extends MainPdfWriter {
       template = 'No data',
       format = 'portrait',
       orientation = 'Letter',
-      headerHeight = '54mm',
+      headerHeight = '65mm',
       footerHeight = '28mm'
     } = args ?? {}
 
