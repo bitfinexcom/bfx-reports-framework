@@ -15,7 +15,7 @@ block content
     :translate(prop='template.startingPositionsSnapshot')
       Starting positions snapshot
 
-  ul.responsive-table.sm
+  ul.responsive-table
     li.table-header
       each columnVal, columnKey in reportColumns.positionsSnapshot
         .col #{columnVal}
@@ -28,7 +28,7 @@ block content
     :translate(prop='template.endingPositionsSnapshot')
       Ending positions snapshot
 
-  ul.responsive-table.sm
+  ul.responsive-table
     li.table-header
       each columnVal, columnKey in reportColumns.positionsSnapshot
         .col #{columnVal}
@@ -57,7 +57,7 @@ block content
     :translate(prop='template.movementsDetails')
       Movements details
 
-  ul.responsive-table.sm.no-margin-bottom
+  ul.responsive-table.no-margin-bottom
     li.table-header
       each columnVal, columnKey in reportColumns.movements
         .col #{columnVal}
@@ -66,7 +66,7 @@ block content
         each columnVal, columnKey in reportColumns.movements
           .col #{dataItem[columnKey]}
 
-  ul.responsive-table.sm.width-by-content
+  ul.responsive-table.width-by-content
     li.table-header
       each columnVal, columnKey in reportColumns.movementsTotalAmount
         .col #{columnVal}
