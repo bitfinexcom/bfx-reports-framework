@@ -130,7 +130,7 @@ Options:
 During the setup process, the user will be asked some questions
 
 - if no Docker/docker-compose are found, the user will be prompted to install them
-- to remove all Log and DB and CSV files to setup the app from scratch
+- to remove all Log and DB and report files to setup the app from scratch
 - to choose syncing repository branch (master/staging), by default master
 - to set NGINX port, by default 80
 - to set NGINX host, by default localhost

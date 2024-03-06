@@ -14,8 +14,8 @@
     "signedUrlExpireTime": 28800
   },
   "isSpamRestrictionMode": true,
-  "isAddedUniqueEndingToCsvName": true,
-  "isСompress": true,
+  "isAddedUniqueEndingToReportFileName": true,
+  "isCompress": true,
   "isLoggerDisabled": false,
   "dbDriver": "better-sqlite",
   "verboseSql": false,

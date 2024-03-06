@@ -73,7 +73,7 @@ const RecalcSubAccountLedgersBalancesHook = require(
 )
 const BetterSqliteDAO = require('../sync/dao/dao.better.sqlite')
 const {
-  PublicСollsСonfAccessors
+  PublicCollsConfAccessors
 } = require('../sync/colls.accessors')
 const Movements = require('../sync/movements')
 const WinLossVSAccountBalance = require('../sync/win.loss.vs.account.balance')
@@ -91,11 +91,11 @@ const SubAccountApiData = require('../sync/sub.account.api.data')
 const PositionsAudit = require('../sync/positions.audit')
 const OrderTrades = require('../sync/order.trades')
 const CurrencyConverter = require('../sync/currency.converter')
-const CsvJobData = require('../generate-csv/csv.job.data')
+const ReportFileJobData = require('../generate-report-file/report.file.job.data')
 const {
   fullSnapshotReportCsvWriter,
   fullTaxReportCsvWriter
-} = require('../generate-csv/csv-writer')
+} = require('../generate-report-file/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
 const WeightedAveragesReport = require('../sync/weighted.averages.report')
 const SqliteDbMigrator = require(
@@ -119,6 +119,7 @@ const privResponder = require('../responder')
 const ProcessMessageManager = require('../process.message.manager')
 const HTTPRequest = require('../http.request')
 const BfxApiRouter = require('../bfx.api.router')
+const PdfWriter = require('../generate-report-file/pdf-writer')
 
 decorate(injectable(), EventEmitter)
 
@@ -142,7 +143,7 @@ module.exports = ({
           ['_progress', TYPES.Progress],
           ['_syncSchema', TYPES.SyncSchema],
           ['_dao', TYPES.DAO],
-          ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors],
+          ['_publicCollsConfAccessors', TYPES.PublicCollsConfAccessors],
           ['_wallets', TYPES.Wallets],
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
@@ -183,6 +184,9 @@ module.exports = ({
         ]
       )
     )
+    rebind(TYPES.PdfWriter)
+      .to(PdfWriter)
+      .inSingletonScope()
     bind(TYPES.PrivResponder)
       .toDynamicValue((ctx) => bindDepsToFn(
         privResponder,
@@ -212,8 +216,8 @@ module.exports = ({
     bind(TYPES.WSEventEmitter)
       .to(WSEventEmitter)
       .inSingletonScope()
-    bind(TYPES.PublicСollsСonfAccessors)
-      .to(PublicСollsСonfAccessors)
+    bind(TYPES.PublicCollsConfAccessors)
+      .to(PublicCollsConfAccessors)
       .inSingletonScope()
     bind(TYPES.Progress)
       .to(Progress)
@@ -391,8 +395,8 @@ module.exports = ({
       .to(FullTaxReport)
     rebind(TYPES.WeightedAveragesReport)
       .to(WeightedAveragesReport)
-    rebind(TYPES.CsvJobData)
-      .to(CsvJobData)
+    rebind(TYPES.ReportFileJobData)
+      .to(ReportFileJobData)
       .inSingletonScope()
     rebind(TYPES.GetDataFromApi).toConstantValue(
       bindDepsToFn(

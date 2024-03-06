@@ -194,13 +194,13 @@ fi
 
 if askUser "\
 The app will be setup from scratch!\n\
-All Log and DB and CSV files will be removed!\n\
+All Log and DB and report files will be removed!\n\
 Are you sure?\
 "; then
   rm -rf "$ROOT/logs"
-  rm -rf "$ROOT/csv"
+  rm -rf "$ROOT/report-files"
   mkdir "$ROOT/logs" 2>/dev/null
-  mkdir "$ROOT/csv" 2>/dev/null
+  mkdir "$ROOT/report-files" 2>/dev/null
 
   if [ $isDBFoldedRemoved == 1 ]; then
     find "$ROOT/db" ! -path "$ROOT/db/.gitkeep" -type f -exec rm -rf {} +

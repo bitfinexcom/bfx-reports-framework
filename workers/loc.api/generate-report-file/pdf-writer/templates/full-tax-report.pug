@@ -1,0 +1,95 @@
+extends /node_modules/bfx-report/workers/loc.api/generate-report-file/pdf-writer/templates/base.pug
+
+block content
+  - const data = Array.isArray(apiData) ? apiData[0] : apiData ?? {}
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in reportColumns.timestamps
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in reportColumns.timestamps
+        .col #{data.timestamps[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.startingPositionsSnapshot')
+      Starting positions snapshot
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in reportColumns.positionsSnapshot
+        .col #{columnVal}
+    each dataItem, dataIndex in data.startingPositionsSnapshot
+      li.table-row
+        each columnVal, columnKey in reportColumns.positionsSnapshot
+          .col #{dataItem[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.endingPositionsSnapshot')
+      Ending positions snapshot
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in reportColumns.positionsSnapshot
+        .col #{columnVal}
+    each dataItem, dataIndex in data.endingPositionsSnapshot
+      li.table-row
+        each columnVal, columnKey in reportColumns.positionsSnapshot
+          .col #{dataItem[columnKey]}
+
+  h3.content-title.uppercase-text
+    :translate(prop='template.finalState')
+      Final state
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.startingPeriodBalances')
+      Starting period balances
+
+  ul.responsive-table
+    li.table-header
+      each columnVal, columnKey in reportColumns.periodBalances
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in reportColumns.periodBalances
+        .col #{data.finalState.startingPeriodBalances[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.movementsDetails')
+      Movements details
+
+  ul.responsive-table.no-margin-bottom
+    li.table-header
+      each columnVal, columnKey in reportColumns.movements
+        .col #{columnVal}
+    each dataItem, dataIndex in data.finalState.movements
+      li.table-row
+        each columnVal, columnKey in reportColumns.movements
+          .col #{dataItem[columnKey]}
+
+  ul.responsive-table.width-by-content
+    li.table-header
+      each columnVal, columnKey in reportColumns.movementsTotalAmount
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in reportColumns.movementsTotalAmount
+        .col #{data.finalState[columnKey]}
+
+  h3.content-title.left-text.table-title
+    :translate(prop='template.endingPeriodBalances')
+      Ending period balances
+
+  ul.responsive-table.no-margin-bottom
+    li.table-header
+      each columnVal, columnKey in reportColumns.periodBalances
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in reportColumns.periodBalances
+        .col #{data.finalState.endingPeriodBalances[columnKey]}
+
+  ul.responsive-table.width-by-content
+    li.table-header
+      each columnVal, columnKey in reportColumns.totalResult
+        .col #{columnVal}
+    li.table-row
+      each columnVal, columnKey in reportColumns.totalResult
+        .col #{data.finalState[columnKey]}

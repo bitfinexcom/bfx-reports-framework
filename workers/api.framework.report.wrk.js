@@ -157,13 +157,17 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     await wsTransport.start()
 
     aggregatorQueue.on('completed', (res) => {
-      const { csvFilesMetadata, userInfo } = res ?? {}
+      const {
+        reportFilesMetadata,
+        csvFilesMetadata, // For compatibility with old implementation
+        userInfo
+      } = res ?? {}
 
-      wsEventEmitter.emitCsvGenerationCompletedToOne(
-        { csvFilesMetadata },
+      wsEventEmitter.emitReportFileGenerationCompletedToOne(
+        { reportFilesMetadata: reportFilesMetadata ?? csvFilesMetadata },
         userInfo
       ).then(() => {}, (err) => {
-        this.logger.error(`WS_EVENT_EMITTER:CSV_COMPLETED: ${err.stack || err}`)
+        this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_COMPLETED: ${err.stack || err}`)
       })
     })
 

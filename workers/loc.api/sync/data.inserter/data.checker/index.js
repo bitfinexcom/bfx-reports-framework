@@ -237,7 +237,7 @@ class DataChecker {
       ? ['symbol', 'timeframe']
       : ['symbol']
 
-    const publicСollsСonf = await this.dao.getElemsInCollBy(
+    const publicCollsConf = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.PUBLIC_COLLS_CONF,
       {
         filter: { confName },
@@ -247,11 +247,11 @@ class DataChecker {
       }
     )
 
-    if (isEmpty(publicСollsСonf)) {
+    if (isEmpty(publicCollsConf)) {
       return
     }
 
-    for (const confs of publicСollsСonf) {
+    for (const confs of publicCollsConf) {
       if (this._isInterrupted) {
         return
       }

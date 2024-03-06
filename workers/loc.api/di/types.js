@@ -28,7 +28,7 @@ module.exports = {
   DB: Symbol.for('DB'),
   DAO: Symbol.for('DAO'),
   BetterSqliteDAO: Symbol.for('BetterSqliteDAO'),
-  PublicСollsСonfAccessors: Symbol.for('PublicСollsСonfAccessors'),
+  PublicCollsConfAccessors: Symbol.for('PublicCollsConfAccessors'),
   SearchClosePriceAndSumAmount: Symbol.for('SearchClosePriceAndSumAmount'),
   Wallets: Symbol.for('Wallets'),
   BalanceHistory: Symbol.for('BalanceHistory'),

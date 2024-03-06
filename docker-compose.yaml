@@ -55,7 +55,7 @@ services:
     volumes:
       - temp:/home/node/bfx-reports-framework/temp
       - ./db:/home/node/bfx-reports-framework/db
-      - ./csv:/home/node/bfx-reports-framework/csv
+      - ./report-files:/home/node/bfx-reports-framework/report-files
       - ./logs:/home/node/bfx-reports-framework/logs
     environment:
       <<: *common-variables
@@ -63,7 +63,7 @@ services:
       WORKER_WS_PORT: "1455"
       TEMP_FOLDER: "/home/node/bfx-reports-framework/temp"
       DB_FOLDER: "/home/node/bfx-reports-framework/db"
-      CSV_FOLDER: "/home/node/bfx-reports-framework/csv"
+      REPORT_FOLDER: "/home/node/bfx-reports-framework/report-files"
       LOGS_FOLDER: "/home/node/bfx-reports-framework/logs"
       SECRET_KEY: ${SECRET_KEY} # Required
       SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
@@ -122,10 +122,10 @@ services:
       - ./nginx-configs/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx-configs/templates:/etc/nginx/templates
       - ./logs:/var/log/nginx/bfx-reports-framework
-      - ./csv:/var/www/csv
+      - ./report-files:/var/www/report-files
     environment:
       <<: *common-variables
-      CSV_FOLDER: "/var/www/csv"
+      REPORT_FOLDER: "/var/www/report-files"
       MAINTENANCE_STATIC_FOLDER: "/var/www/maintenance"
       FRONT_BUILD_FOLDER: "/var/www/html"
       LOGS_FOLDER: "/var/log/nginx/bfx-reports-framework"

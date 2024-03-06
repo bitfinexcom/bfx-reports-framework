@@ -2,11 +2,11 @@
 
 const { omit } = require('lib-js-util-base')
 
-const BaseCsvJobData = require(
-  'bfx-report/workers/loc.api/generate-csv/csv.job.data'
+const BaseReportFileJobData = require(
+  'bfx-report/workers/loc.api/generate-report-file/report.file.job.data'
 )
 const {
-  getCsvArgs,
+  getReportFileArgs,
   checkJobAndGetUserData
 } = require('bfx-report/workers/loc.api/helpers')
 
@@ -14,6 +14,7 @@ const {
   checkParams,
   getDateString
 } = require('../helpers')
+const TEMPLATE_FILE_NAMES = require('./pdf-writer/template-file-names')
 
 const { decorateInjectable } = require('../di/utils')
 
@@ -23,7 +24,7 @@ const depsTypes = (TYPES) => [
   TYPES.FullTaxReportCsvWriter,
   TYPES.WeightedAveragesReportCsvWriter
 ]
-class CsvJobData extends BaseCsvJobData {
+class ReportFileJobData extends BaseReportFileJobData {
   constructor (
     rService,
     fullSnapshotReportCsvWriter,
@@ -50,12 +51,12 @@ class CsvJobData extends BaseCsvJobData {
       }, {})
   }
 
-  async getMovementsCsvJobData (
+  async getMovementsFileJobData (
     args,
     uId,
     uInfo
   ) {
-    const _jobData = await super.getMovementsCsvJobData(
+    const _jobData = await super.getMovementsFileJobData(
       args,
       uId,
       uInfo
@@ -76,12 +77,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getLedgersCsvJobData (
+  async getLedgersFileJobData (
     args,
     uId,
     uInfo
   ) {
-    const _jobData = await super.getLedgersCsvJobData(
+    const _jobData = await super.getLedgersFileJobData(
       args,
       uId,
       uInfo
@@ -105,12 +106,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getWalletsCsvJobData (
+  async getWalletsFileJobData (
     args,
     uId,
     uInfo
   ) {
-    const _jobData = await super.getWalletsCsvJobData(
+    const _jobData = await super.getWalletsFileJobData(
       args,
       uId,
       uInfo
@@ -127,12 +128,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getBalanceHistoryCsvJobData (
+  async getBalanceHistoryFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForBalanceHistoryCsv')
+    checkParams(args, 'paramsSchemaForBalanceHistoryFile')
 
     const {
       userId,
@@ -143,14 +144,14 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
 
     const jobData = {
       userInfo,
       userId,
       name: 'getBalanceHistory',
       fileNamesMap: [['getBalanceHistory', 'balance-history']],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
@@ -164,12 +165,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getWinLossCsvJobData (
+  async getWinLossFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossCsv')
+    checkParams(args, 'paramsSchemaForWinLossFile')
 
     const {
       userId,
@@ -180,14 +181,14 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
 
     const jobData = {
       userInfo,
       userId,
       name: 'getWinLoss',
       fileNamesMap: [['getWinLoss', 'win-loss']],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
@@ -201,12 +202,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getPositionsSnapshotCsvJobData (
+  async getPositionsSnapshotFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPositionsSnapshotCsv')
+    checkParams(args, 'paramsSchemaForPositionsSnapshotFile')
 
     const {
       userId,
@@ -217,14 +218,14 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
 
     const jobData = {
       userInfo,
       userId,
       name: 'getPositionsSnapshot',
       fileNamesMap: [['getPositionsSnapshot', 'positions-snapshot']],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         id: '#',
@@ -251,13 +252,13 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getFullSnapshotReportCsvJobData (
+  async getFullSnapshotReportFileJobData (
     args,
     uId,
     uInfo,
     opts
   ) {
-    checkParams(args, 'paramsSchemaForFullSnapshotReportCsv')
+    checkParams(args, 'paramsSchemaForFullSnapshotReportFile')
 
     const {
       userId,
@@ -300,7 +301,7 @@ class CsvJobData extends BaseCsvJobData {
       ? _chunkCommonFolder
       : `${uName}full-snapshot-report_TO_${endDate}`
 
-    const csvArgs = getCsvArgs(
+    const reportFileArgs = getReportFileArgs(
       args,
       null,
       { isBaseNameInName: true }
@@ -312,7 +313,7 @@ class CsvJobData extends BaseCsvJobData {
       userId,
       name: 'getFullSnapshotReport',
       fileNamesMap: [['getFullSnapshotReport', fileName]],
-      args: csvArgs,
+      args: reportFileArgs,
       columnsCsv: {
         timestamps: {
           mtsCreated: 'CREATED',
@@ -349,10 +350,10 @@ class CsvJobData extends BaseCsvJobData {
           amount: 'AMOUNT'
         },
         positionsTotalPlUsd: {
-          plUsd: 'POSITIONS TOTAL P/L USD'
+          positionsTotalPlUsd: 'POSITIONS TOTAL P/L USD'
         },
         walletsTotalBalanceUsd: {
-          balanceUsd: 'WALLETS TOTAL BALANCE USD'
+          walletsTotalBalanceUsd: 'WALLETS TOTAL BALANCE USD'
         }
       },
       formatSettings: {
@@ -376,13 +377,14 @@ class CsvJobData extends BaseCsvJobData {
           symbol: 'symbol'
         }
       },
-      csvCustomWriter: this.fullSnapshotReportCsvWriter
+      csvCustomWriter: this.fullSnapshotReportCsvWriter,
+      pdfCustomTemplateName: TEMPLATE_FILE_NAMES.FULL_SNAPSHOT_REPORT
     }
 
     return jobData
   }
 
-  async getFullTaxReportCsvJobData (
+  async getFullTaxReportFileJobData (
     args,
     uId,
     uInfo
@@ -408,7 +410,7 @@ class CsvJobData extends BaseCsvJobData {
     if (isStartSnapshot || isEndSnapshot) {
       const mts = isStartSnapshot ? start : end
 
-      return this.getFullSnapshotReportCsvJobData(
+      return this.getFullSnapshotReportFileJobData(
         {
           ...args,
           params: {
@@ -425,7 +427,7 @@ class CsvJobData extends BaseCsvJobData {
       )
     }
 
-    checkParams(args, 'paramsSchemaForFullTaxReportCsv')
+    checkParams(args, 'paramsSchemaForFullTaxReportFile')
 
     const {
       userId,
@@ -436,7 +438,7 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(
+    const reportFileArgs = getReportFileArgs(
       args,
       null,
       { isBaseNameInName: true }
@@ -448,7 +450,11 @@ class CsvJobData extends BaseCsvJobData {
       userId,
       name: 'getFullTaxReport',
       fileNamesMap: [['getFullTaxReport', 'full-tax-report_FULL_PERIOD']],
-      args: csvArgs,
+      args: reportFileArgs,
+      /*
+       * Example how to overwrite column order for pdf
+       * columnsPdf: {},
+       */
       columnsCsv: {
         timestamps: {
           mtsCreated: 'CREATED',
@@ -499,27 +505,35 @@ class CsvJobData extends BaseCsvJobData {
           start: 'date',
           end: 'date'
         },
-        positionsSnapshot: {
+        startingPositionsSnapshot: {
           mtsUpdate: 'date',
           mtsCreate: 'date',
           symbol: 'symbol'
         },
-        movements: {
-          mtsUpdated: 'date'
+        endingPositionsSnapshot: {
+          mtsUpdate: 'date',
+          mtsCreate: 'date',
+          symbol: 'symbol'
+        },
+        finalState: {
+          movements: {
+            mtsUpdated: 'date'
+          }
         }
       },
-      csvCustomWriter: this.fullTaxReportCsvWriter
+      csvCustomWriter: this.fullTaxReportCsvWriter,
+      pdfCustomTemplateName: TEMPLATE_FILE_NAMES.FULL_TAX_REPORT
     }
 
     return jobData
   }
 
-  async getTradedVolumeCsvJobData (
+  async getTradedVolumeFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTradedVolumeCsv')
+    checkParams(args, 'paramsSchemaForTradedVolumeFile')
 
     const {
       userId,
@@ -530,14 +544,14 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
 
     const jobData = {
       userInfo,
       userId,
       name: 'getTradedVolume',
       fileNamesMap: [['getTradedVolume', 'traded-volume']],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
@@ -551,12 +565,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getTotalFeesReportCsvJobData (
+  async getTotalFeesReportFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTotalFeesReportCsv')
+    checkParams(args, 'paramsSchemaForTotalFeesReportFile')
 
     const {
       userId,
@@ -567,14 +581,14 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
 
     const jobData = {
       userInfo,
       userId,
       name: 'getTotalFeesReport',
       fileNamesMap: [['getTotalFeesReport', 'total-fees-report']],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
@@ -589,12 +603,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getPerformingLoanCsvJobData (
+  async getPerformingLoanFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPerformingLoanCsv')
+    checkParams(args, 'paramsSchemaForPerformingLoanFile')
 
     const {
       userId,
@@ -605,14 +619,14 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
 
     const jobData = {
       userInfo,
       userId,
       name: 'getPerformingLoan',
       fileNamesMap: [['getPerformingLoan', 'performing-loan']],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         USD: 'USD',
@@ -628,12 +642,12 @@ class CsvJobData extends BaseCsvJobData {
     return jobData
   }
 
-  async getWinLossVSAccountBalanceCsvJobData (
+  async getWinLossVSAccountBalanceFileJobData (
     args,
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceCsv')
+    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceFile')
 
     const {
       userId,
@@ -644,7 +658,7 @@ class CsvJobData extends BaseCsvJobData {
       uInfo
     )
 
-    const csvArgs = getCsvArgs(args)
+    const reportFileArgs = getReportFileArgs(args)
     const suffix = args?.params?.isVSPrevDayBalance
       ? 'balance'
       : 'deposits'
@@ -657,7 +671,7 @@ class CsvJobData extends BaseCsvJobData {
         'getWinLossVSAccountBalance',
         `win-loss-percentage-gains-vs-${suffix}`
       ]],
-      args: csvArgs,
+      args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
         perc: 'PERCENT',
@@ -672,6 +686,6 @@ class CsvJobData extends BaseCsvJobData {
   }
 }
 
-decorateInjectable(CsvJobData, depsTypes)
+decorateInjectable(ReportFileJobData, depsTypes)
 
-module.exports = CsvJobData
+module.exports = ReportFileJobData

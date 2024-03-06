@@ -3,7 +3,7 @@
 const { cloneDeep } = require('lib-js-util-base')
 
 const {
-  paramsSchemaForCsv,
+  paramsSchemaForFile,
   paramsSchemaForCandlesApi: baseParamsSchemaForCandlesApi
 } = require('bfx-report/workers/loc.api/helpers/schema')
 
@@ -60,7 +60,7 @@ const paramsSchemaForCandlesApi = {
   }
 }
 
-const paramsSchemaForEditAllPublicСollsСonfs = {
+const paramsSchemaForEditAllPublicCollsConfs = {
   type: 'object',
   properties: {
     candlesConf: {
@@ -111,7 +111,7 @@ const paramsSchemaForEditAllPublicСollsСonfs = {
   }
 }
 
-const paramsSchemaForEditPublicСollsСonf = {
+const paramsSchemaForEditPublicCollsConf = {
   type: ['array', 'object'],
   if: {
     type: 'array'
@@ -136,7 +136,7 @@ const paramsSchemaForEditPublicСollsСonf = {
   }
 }
 
-const paramsSchemaForEditCandlesСonf = {
+const paramsSchemaForEditCandlesConf = {
   type: ['array', 'object'],
   if: {
     type: 'array'
@@ -352,9 +352,9 @@ const paramsSchemaForSummaryByAssetApi = {
 const {
   timezone,
   dateFormat
-} = { ...paramsSchemaForCsv.properties }
+} = { ...paramsSchemaForFile.properties }
 
-const paramsSchemaForBalanceHistoryCsv = {
+const paramsSchemaForBalanceHistoryFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForBalanceHistoryApi.properties),
@@ -363,7 +363,7 @@ const paramsSchemaForBalanceHistoryCsv = {
   }
 }
 
-const paramsSchemaForWinLossCsv = {
+const paramsSchemaForWinLossFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForWinLossApi.properties),
@@ -372,7 +372,7 @@ const paramsSchemaForWinLossCsv = {
   }
 }
 
-const paramsSchemaForWinLossVSAccountBalanceCsv = {
+const paramsSchemaForWinLossVSAccountBalanceFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForWinLossVSAccountBalanceApi.properties),
@@ -381,7 +381,7 @@ const paramsSchemaForWinLossVSAccountBalanceCsv = {
   }
 }
 
-const paramsSchemaForPositionsSnapshotCsv = {
+const paramsSchemaForPositionsSnapshotFile = {
   type: 'object',
   properties: {
     end: {
@@ -392,7 +392,7 @@ const paramsSchemaForPositionsSnapshotCsv = {
   }
 }
 
-const paramsSchemaForFullSnapshotReportCsv = {
+const paramsSchemaForFullSnapshotReportFile = {
   type: 'object',
   properties: {
     end: {
@@ -403,7 +403,7 @@ const paramsSchemaForFullSnapshotReportCsv = {
   }
 }
 
-const paramsSchemaForFullTaxReportCsv = {
+const paramsSchemaForFullTaxReportFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForFullTaxReportApi.properties),
@@ -412,7 +412,7 @@ const paramsSchemaForFullTaxReportCsv = {
   }
 }
 
-const paramsSchemaForTradedVolumeCsv = {
+const paramsSchemaForTradedVolumeFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForTradedVolumeApi.properties),
@@ -421,7 +421,7 @@ const paramsSchemaForTradedVolumeCsv = {
   }
 }
 
-const paramsSchemaForTotalFeesReportCsv = {
+const paramsSchemaForTotalFeesReportFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForTotalFeesReportApi.properties),
@@ -430,7 +430,7 @@ const paramsSchemaForTotalFeesReportCsv = {
   }
 }
 
-const paramsSchemaForPerformingLoanCsv = {
+const paramsSchemaForPerformingLoanFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForPerformingLoanApi.properties),
@@ -439,7 +439,7 @@ const paramsSchemaForPerformingLoanCsv = {
   }
 }
 
-const paramsSchemaForCandlesCsv = {
+const paramsSchemaForCandlesFile = {
   type: 'object',
   properties: {
     ...cloneDeep(paramsSchemaForCandlesApi.properties),
@@ -449,9 +449,9 @@ const paramsSchemaForCandlesCsv = {
 }
 
 module.exports = {
-  paramsSchemaForEditAllPublicСollsСonfs,
-  paramsSchemaForEditPublicСollsСonf,
-  paramsSchemaForEditCandlesСonf,
+  paramsSchemaForEditAllPublicCollsConfs,
+  paramsSchemaForEditPublicCollsConf,
+  paramsSchemaForEditCandlesConf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
   paramsSchemaForBalanceHistoryApi,
@@ -465,14 +465,14 @@ module.exports = {
   paramsSchemaForPerformingLoanApi,
   paramsSchemaForCandlesApi,
   paramsSchemaForSummaryByAssetApi,
-  paramsSchemaForBalanceHistoryCsv,
-  paramsSchemaForWinLossCsv,
-  paramsSchemaForWinLossVSAccountBalanceCsv,
-  paramsSchemaForPositionsSnapshotCsv,
-  paramsSchemaForFullSnapshotReportCsv,
-  paramsSchemaForFullTaxReportCsv,
-  paramsSchemaForTradedVolumeCsv,
-  paramsSchemaForTotalFeesReportCsv,
-  paramsSchemaForPerformingLoanCsv,
-  paramsSchemaForCandlesCsv
+  paramsSchemaForBalanceHistoryFile,
+  paramsSchemaForWinLossFile,
+  paramsSchemaForWinLossVSAccountBalanceFile,
+  paramsSchemaForPositionsSnapshotFile,
+  paramsSchemaForFullSnapshotReportFile,
+  paramsSchemaForFullTaxReportFile,
+  paramsSchemaForTradedVolumeFile,
+  paramsSchemaForTotalFeesReportFile,
+  paramsSchemaForPerformingLoanFile,
+  paramsSchemaForCandlesFile
 }
