@@ -60,7 +60,7 @@ const paramsSchemaForCandlesApi = {
   }
 }
 
-const paramsSchemaForEditAllPublicСollsСonfs = {
+const paramsSchemaForEditAllPublicCollsConfs = {
   type: 'object',
   properties: {
     candlesConf: {
@@ -111,7 +111,7 @@ const paramsSchemaForEditAllPublicСollsСonfs = {
   }
 }
 
-const paramsSchemaForEditPublicСollsСonf = {
+const paramsSchemaForEditPublicCollsConf = {
   type: ['array', 'object'],
   if: {
     type: 'array'
@@ -136,7 +136,7 @@ const paramsSchemaForEditPublicСollsСonf = {
   }
 }
 
-const paramsSchemaForEditCandlesСonf = {
+const paramsSchemaForEditCandlesConf = {
   type: ['array', 'object'],
   if: {
     type: 'array'
@@ -449,9 +449,9 @@ const paramsSchemaForCandlesFile = {
 }
 
 module.exports = {
-  paramsSchemaForEditAllPublicСollsСonfs,
-  paramsSchemaForEditPublicСollsСonf,
-  paramsSchemaForEditCandlesСonf,
+  paramsSchemaForEditAllPublicCollsConfs,
+  paramsSchemaForEditPublicCollsConf,
+  paramsSchemaForEditCandlesConf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
   paramsSchemaForBalanceHistoryApi,

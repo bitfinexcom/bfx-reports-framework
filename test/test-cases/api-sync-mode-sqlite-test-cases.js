@@ -910,7 +910,7 @@ module.exports = (
     assert.propertyVal(res.body.result[0], 'start', start)
   })
 
-  it('it should be successfully performed by the editAllPublicСollsСonfs method', async function () {
+  it('it should be successfully performed by the editAllPublicCollsConfs method', async function () {
     this.timeout(5000)
 
     const res = await agent
@@ -918,7 +918,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'editAllPublicСollsСonfs',
+        method: 'editAllPublicCollsConfs',
         params: {
           publicTradesConf: [
             {
@@ -967,7 +967,7 @@ module.exports = (
 
   getSyncProgressTestCase(agent, { basePath, auth })
 
-  it('it should be successfully performed by the getAllPublicСollsСonfs method', async function () {
+  it('it should be successfully performed by the getAllPublicCollsConfs method', async function () {
     this.timeout(5000)
 
     const res = await agent
@@ -975,7 +975,7 @@ module.exports = (
       .type('json')
       .send({
         auth,
-        method: 'getAllPublicСollsСonfs',
+        method: 'getAllPublicCollsConfs',
         id: 5
       })
       .expect('Content-Type', /json/)

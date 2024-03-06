@@ -26,7 +26,7 @@ const depsTypes = (TYPES) => [
   TYPES.TABLES_NAMES,
   TYPES.Authenticator
 ]
-class PublicСollsСonfAccessors {
+class PublicCollsConfAccessors {
   constructor (
     dao,
     TABLES_NAMES,
@@ -68,7 +68,7 @@ class PublicСollsСonfAccessors {
     ))
   }
 
-  async editAllPublicСollsСonfs (args) {
+  async editAllPublicCollsConfs (args) {
     const { params } = { ...args }
     const _params = pick(
       params,
@@ -83,7 +83,7 @@ class PublicСollsСonfAccessors {
         params
       }
 
-      await this.editPublicСollsСonf(confName, _args)
+      await this.editPublicCollsConf(confName, _args)
 
       const syncedColl = this.confNamesMap.get(confName)
 
@@ -95,7 +95,7 @@ class PublicСollsСonfAccessors {
     return syncedColls
   }
 
-  async editPublicСollsСonf (confName, args) {
+  async editPublicCollsConf (confName, args) {
     const data = Array.isArray(args.params)
       ? [...args.params]
       : [args.params]
@@ -185,20 +185,20 @@ class PublicСollsСonfAccessors {
     )
   }
 
-  async getAllPublicСollsСonfs (args) {
+  async getAllPublicCollsConfs (args) {
     await this.authenticator.verifyRequestUser(args)
 
     const confNames = [...this.confNamesMap.keys()]
     const res = {}
 
     for (const confName of confNames) {
-      res[confName] = await this.getPublicСollsСonf(confName, args)
+      res[confName] = await this.getPublicCollsConf(confName, args)
     }
 
     return res
   }
 
-  async getPublicСollsСonf (confName, args) {
+  async getPublicCollsConf (confName, args) {
     const { _id } = await this.authenticator.verifyRequestUser(args)
     const { params } = { ...args }
     const {
@@ -422,7 +422,7 @@ class PublicСollsСonfAccessors {
       notCheckNextPage
     } = { ...params }
 
-    const confs = await this.getPublicСollsСonf(
+    const confs = await this.getPublicCollsConf(
       confName,
       args
     )
@@ -491,6 +491,6 @@ class PublicСollsСonfAccessors {
   }
 }
 
-decorateInjectable(PublicСollsСonfAccessors, depsTypes)
+decorateInjectable(PublicCollsConfAccessors, depsTypes)
 
-module.exports = PublicСollsСonfAccessors
+module.exports = PublicCollsConfAccessors

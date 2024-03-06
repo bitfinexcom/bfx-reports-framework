@@ -465,38 +465,38 @@ class FrameworkReportService extends ReportService {
 
   getPublicTradesConf (space, args = {}, cb) {
     return this._privResponder(() => {
-      return this._publicСollsСonfAccessors
-        .getPublicСollsСonf('publicTradesConf', args)
+      return this._publicCollsConfAccessors
+        .getPublicCollsConf('publicTradesConf', args)
     }, 'getPublicTradesConf', args, cb)
   }
 
   getTickersHistoryConf (space, args = {}, cb) {
     return this._privResponder(() => {
-      return this._publicСollsСonfAccessors
-        .getPublicСollsСonf('tickersHistoryConf', args)
+      return this._publicCollsConfAccessors
+        .getPublicCollsConf('tickersHistoryConf', args)
     }, 'getTickersHistoryConf', args, cb)
   }
 
   getStatusMessagesConf (space, args = {}, cb) {
     return this._privResponder(() => {
-      return this._publicСollsСonfAccessors
-        .getPublicСollsСonf('statusMessagesConf', args)
+      return this._publicCollsConfAccessors
+        .getPublicCollsConf('statusMessagesConf', args)
     }, 'getStatusMessagesConf', args, cb)
   }
 
   getCandlesConf (space, args = {}, cb) {
     return this._privResponder(() => {
-      return this._publicСollsСonfAccessors
-        .getPublicСollsСonf('candlesConf', args)
+      return this._publicCollsConfAccessors
+        .getPublicCollsConf('candlesConf', args)
     }, 'getCandlesConf', args, cb)
   }
 
   editPublicTradesConf (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
 
-      await this._publicСollsСonfAccessors
-        .editPublicСollsСonf('publicTradesConf', args)
+      await this._publicCollsConfAccessors
+        .editPublicCollsConf('publicTradesConf', args)
 
       if (isNotSyncRequired(args)) {
         return true
@@ -514,10 +514,10 @@ class FrameworkReportService extends ReportService {
 
   editTickersHistoryConf (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
 
-      await this._publicСollsСonfAccessors
-        .editPublicСollsСonf('tickersHistoryConf', args)
+      await this._publicCollsConfAccessors
+        .editPublicCollsConf('tickersHistoryConf', args)
 
       if (isNotSyncRequired(args)) {
         return true
@@ -535,10 +535,10 @@ class FrameworkReportService extends ReportService {
 
   editStatusMessagesConf (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicСollsСonf')
+      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
 
-      await this._publicСollsСonfAccessors
-        .editPublicСollsСonf('statusMessagesConf', args)
+      await this._publicCollsConfAccessors
+        .editPublicCollsConf('statusMessagesConf', args)
 
       if (isNotSyncRequired(args)) {
         return true
@@ -556,10 +556,10 @@ class FrameworkReportService extends ReportService {
 
   editCandlesConf (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditCandlesСonf')
+      checkParams(args, 'paramsSchemaForEditCandlesConf')
 
-      await this._publicСollsСonfAccessors
-        .editPublicСollsСonf('candlesConf', args)
+      await this._publicCollsConfAccessors
+        .editPublicCollsConf('candlesConf', args)
 
       if (isNotSyncRequired(args)) {
         return true
@@ -575,12 +575,12 @@ class FrameworkReportService extends ReportService {
     }, 'editCandlesConf', args, cb)
   }
 
-  editAllPublicСollsСonfs (space, args = {}, cb) {
+  editAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditAllPublicСollsСonfs')
+      checkParams(args, 'paramsSchemaForEditAllPublicCollsConfs')
 
-      const syncedColls = await this._publicСollsСonfAccessors
-        .editAllPublicСollsСonfs(args)
+      const syncedColls = await this._publicCollsConfAccessors
+        .editAllPublicCollsConfs(args)
 
       if (isNotSyncRequired(args)) {
         return true
@@ -596,10 +596,10 @@ class FrameworkReportService extends ReportService {
     }, 'editCandlesConf', args, cb)
   }
 
-  getAllPublicСollsСonfs (space, args = {}, cb) {
+  getAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(() => {
-      return this._publicСollsСonfAccessors
-        .getAllPublicСollsСonfs(args)
+      return this._publicCollsConfAccessors
+        .getAllPublicCollsConfs(args)
     }, 'editCandlesConf', args, cb)
   }
 
@@ -879,7 +879,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForApi', ['symbol'])
 
-      return this._publicСollsСonfAccessors
+      return this._publicCollsConfAccessors
         .getPublicData(
           (args) => super.getTickersHistory(space, args),
           args,
@@ -903,7 +903,7 @@ class FrameworkReportService extends ReportService {
 
       checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
 
-      return this._publicСollsСonfAccessors
+      return this._publicCollsConfAccessors
         .getPublicData(
           (args) => super.getPublicTrades(space, args),
           args,
@@ -949,7 +949,7 @@ class FrameworkReportService extends ReportService {
         }
       }
 
-      return this._publicСollsСonfAccessors
+      return this._publicCollsConfAccessors
         .getPublicData(
           (args) => super.getStatusMessages(space, args),
           preparedArgs,
@@ -987,7 +987,7 @@ class FrameworkReportService extends ReportService {
         }
       }
 
-      return this._publicСollsСonfAccessors
+      return this._publicCollsConfAccessors
         .getPublicData(
           (args) => super.getCandles(space, args),
           argsWithParamsByDefault,

@@ -73,7 +73,7 @@ const RecalcSubAccountLedgersBalancesHook = require(
 )
 const BetterSqliteDAO = require('../sync/dao/dao.better.sqlite')
 const {
-  PublicСollsСonfAccessors
+  PublicCollsConfAccessors
 } = require('../sync/colls.accessors')
 const Movements = require('../sync/movements')
 const WinLossVSAccountBalance = require('../sync/win.loss.vs.account.balance')
@@ -143,7 +143,7 @@ module.exports = ({
           ['_progress', TYPES.Progress],
           ['_syncSchema', TYPES.SyncSchema],
           ['_dao', TYPES.DAO],
-          ['_publicСollsСonfAccessors', TYPES.PublicСollsСonfAccessors],
+          ['_publicCollsConfAccessors', TYPES.PublicCollsConfAccessors],
           ['_wallets', TYPES.Wallets],
           ['_balanceHistory', TYPES.BalanceHistory],
           ['_winLoss', TYPES.WinLoss],
@@ -216,8 +216,8 @@ module.exports = ({
     bind(TYPES.WSEventEmitter)
       .to(WSEventEmitter)
       .inSingletonScope()
-    bind(TYPES.PublicСollsСonfAccessors)
-      .to(PublicСollsСonfAccessors)
+    bind(TYPES.PublicCollsConfAccessors)
+      .to(PublicCollsConfAccessors)
       .inSingletonScope()
     bind(TYPES.Progress)
       .to(Progress)

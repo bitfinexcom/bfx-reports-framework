@@ -1,9 +1,9 @@
 'use strict'
 
-const PublicСollsСonfAccessors = require(
+const PublicCollsConfAccessors = require(
   './public.colls.conf.accessors'
 )
 
 module.exports = {
-  PublicСollsСonfAccessors
+  PublicCollsConfAccessors
 }
