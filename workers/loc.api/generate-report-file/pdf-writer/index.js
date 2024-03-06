@@ -89,6 +89,7 @@ class PdfWriter extends MainPdfWriter {
         format,
         orientation,
         type: 'pdf',
+        timeout: 90000,
         childProcessOptions: {
           env: { OPENSSL_CONF: '/dev/null' }
         }
