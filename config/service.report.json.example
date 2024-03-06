@@ -15,7 +15,7 @@
   },
   "isSpamRestrictionMode": true,
   "isAddedUniqueEndingToReportFileName": true,
-  "isСompress": true,
+  "isCompress": true,
   "isLoggerDisabled": false,
   "dbDriver": "better-sqlite",
   "verboseSql": false,
