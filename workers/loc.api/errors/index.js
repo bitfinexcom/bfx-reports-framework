@@ -248,17 +248,6 @@ class AuthTokenTTLSettingError extends ArgsParamsError {
   }
 }
 
-class PDFBufferUnderElectronCreationError extends BaseError {
-  constructor (electronErrStr) {
-    const _args = getErrorArgs(
-      { data: { electronErrStr } },
-      'ERR_PDF_BUFFER_UNDER_ELECTRON_HAS_NOT_BEEN_CREATED'
-    )
-
-    super(_args)
-  }
-}
-
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -295,6 +284,5 @@ module.exports = {
   LastSyncedInfoGettingError,
   SyncInfoUpdatingError,
   AuthTokenGenerationError,
-  AuthTokenTTLSettingError,
-  PDFBufferUnderElectronCreationError
+  AuthTokenTTLSettingError
 }

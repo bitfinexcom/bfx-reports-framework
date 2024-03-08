@@ -33,6 +33,10 @@ const argv = require('yargs')
   .help('help')
   .argv
 
+const {
+  PDFBufferUnderElectronCreationError
+} = require('bfx-report/workers/loc.api/errors')
+
 const appDeps = require('./loc.api/di/app.deps')
 const TYPES = require('./loc.api/di/types')
 
@@ -147,6 +151,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       ...deps
     })
 
+    const processorQueue = this.lokue_processor.q
     const aggregatorQueue = this.lokue_aggregator.q
     const conf = this.conf[this.group]
     const wsTransport = this.container.get(TYPES.WSTransport)
@@ -156,6 +161,18 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
     await wsTransport.start()
 
+    processorQueue.on('error:base', (err, job) => {
+      if (!(err instanceof PDFBufferUnderElectronCreationError)) {
+        return
+      }
+
+      wsEventEmitter.emitReportFileGenerationFailedToOne(
+        { reportFilesMetadata: null },
+        job?.data?.userInfo
+      ).then(() => {}, (err) => {
+        this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_FAILED: ${err.stack || err}`)
+      })
+    })
     aggregatorQueue.on('completed', (res) => {
       const {
         reportFilesMetadata,
