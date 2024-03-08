@@ -108,6 +108,21 @@ class WSEventEmitter extends AbstractWSEventEmitter {
     }, 'emitReportFileGenerationCompletedToOne')
   }
 
+  emitReportFileGenerationFailedToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emit(async (user, ...args) => {
+      if (this.isNotTargetUser(auth, user)) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitReportFileGenerationFailedToOne')
+  }
+
   emitBfxUnamePwdAuthRequiredToOne (
     handler = () => {},
     auth = {}
