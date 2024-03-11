@@ -17,7 +17,7 @@ const {
 const TEMPLATE_FILE_NAMES = require('./template-file-names')
 const {
   PDFBufferUnderElectronCreationError
-} = require('../../errors')
+} = require('bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../../di/utils')
 
