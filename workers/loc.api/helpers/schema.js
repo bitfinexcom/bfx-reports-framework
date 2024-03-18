@@ -214,6 +214,18 @@ const paramsSchemaForFullTaxReportApi = {
   }
 }
 
+const paramsSchemaForTransactionTaxReportApi = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    },
+    start: {
+      type: 'integer'
+    }
+  }
+}
+
 const paramsSchemaForWinLossApi = {
   type: 'object',
   properties: {
@@ -412,6 +424,15 @@ const paramsSchemaForFullTaxReportFile = {
   }
 }
 
+const paramsSchemaForTransactionTaxReportFile = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForTransactionTaxReportApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 const paramsSchemaForTradedVolumeFile = {
   type: 'object',
   properties: {
@@ -460,6 +481,7 @@ module.exports = {
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
+  paramsSchemaForTransactionTaxReportApi,
   paramsSchemaForTradedVolumeApi,
   paramsSchemaForTotalFeesReportApi,
   paramsSchemaForPerformingLoanApi,
@@ -471,6 +493,7 @@ module.exports = {
   paramsSchemaForPositionsSnapshotFile,
   paramsSchemaForFullSnapshotReportFile,
   paramsSchemaForFullTaxReportFile,
+  paramsSchemaForTransactionTaxReportFile,
   paramsSchemaForTradedVolumeFile,
   paramsSchemaForTotalFeesReportFile,
   paramsSchemaForPerformingLoanFile,
