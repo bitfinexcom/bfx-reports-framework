@@ -528,6 +528,51 @@ class ReportFileJobData extends BaseReportFileJobData {
     return jobData
   }
 
+  // TODO:
+  async getTransactionTaxReportFileJobData (
+    args,
+    uId,
+    uInfo
+  ) {
+    checkParams(args, 'paramsSchemaForTransactionTaxReportFile')
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
+      uId,
+      uInfo
+    )
+
+    const reportFileArgs = getReportFileArgs(args)
+
+    const jobData = {
+      userInfo,
+      userId,
+      name: 'getTransactionTaxReport',
+      fileNamesMap: [['getTransactionTaxReport', 'transaction-tax-report']],
+      args: reportFileArgs,
+      propNameForPagination: null,
+      columnsCsv: {
+        symbol: 'DESCRIPTION OF PROPERTY',
+        amount: 'amount',
+        mtsAcquired: 'DATE ACQUIRED',
+        mtsSold: 'DATE SOLD',
+        proceeds: 'PROCEEDS',
+        cost: 'COST',
+        gainOrLoss: 'GAIN OR LOSS'
+      },
+      formatSettings: {
+        symbol: 'symbol',
+        mtsAcquired: 'date',
+        mtsSold: 'date'
+      }
+    }
+
+    return jobData
+  }
+
   async getTradedVolumeFileJobData (
     args,
     uId,
