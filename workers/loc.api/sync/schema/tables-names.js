@@ -23,7 +23,7 @@ module.exports = {
   MARGIN_CURRENCY_LIST: 'marginCurrencyList',
   CANDLES: 'candles',
   STATUS_MESSAGES: 'statusMessages',
-  PUBLIC_COLLS_CONF: 'publicСollsСonf',
+  PUBLIC_COLLS_CONF: 'publicCollsConf',
   SCHEDULER: 'scheduler',
   SYNC_MODE: 'syncMode',
   PROGRESS: 'progress',
