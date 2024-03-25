@@ -9,7 +9,8 @@ const {
   isForexSymb
 } = require('../helpers')
 const {
-  CurrencyConversionError
+  CurrencyConversionError,
+  CurrencyPairSeparationError
 } = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -157,8 +158,7 @@ class TransactionTaxReport {
           !firstSymb ||
           !lastSymb
         ) {
-          // TODO:
-          throw new Error('ERR_CURRENCY PAIR HAS NOT BEEN SEPARATED CORRECTLY')
+          throw new CurrencyPairSeparationError()
         }
 
         const saleAmount = execAmount < 0
@@ -207,8 +207,7 @@ class TransactionTaxReport {
             !firstSymbForLookup ||
             !lastSymbForLookup
           ) {
-            // TODO:
-            throw new Error('ERR_CURRENCY PAIR HAS NOT BEEN SEPARATED CORRECTLY')
+            throw new CurrencyPairSeparationError()
           }
 
           if (
