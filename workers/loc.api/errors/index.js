@@ -248,6 +248,12 @@ class AuthTokenTTLSettingError extends ArgsParamsError {
   }
 }
 
+class CurrencyConversionError extends BaseError {
+  constructor (message = 'ERR_CURRENCY_HAS_NOT_BEEN_CONVERTED_TO_USD') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -284,5 +290,6 @@ module.exports = {
   LastSyncedInfoGettingError,
   SyncInfoUpdatingError,
   AuthTokenGenerationError,
-  AuthTokenTTLSettingError
+  AuthTokenTTLSettingError,
+  CurrencyConversionError
 }
