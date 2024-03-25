@@ -41,7 +41,6 @@ class TransactionTaxReport {
       .get(this.ALLOWED_COLLS.TRADES)
   }
 
-  // TODO:
   async getTransactionTaxReport (args = {}) {
     const { auth, params } = args ?? {}
     const {
@@ -51,7 +50,7 @@ class TransactionTaxReport {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
 
-    const trades = await this.trades.getTrades({
+    const tradesForCurrPeriod = await this.trades.getTrades({
       auth: user,
       params: {
         start,
@@ -60,15 +59,53 @@ class TransactionTaxReport {
     })
 
     if (
+      !Array.isArray(tradesForCurrPeriod) ||
+      tradesForCurrPeriod.length === 0
+    ) {
+      return []
+    }
+
+    const tradesForPrevPeriod = start > 0
+      ? await this.trades.getTrades({
+        auth: user,
+        params: {
+          start: 0,
+          end: start - 1
+        }
+      })
+      : []
+
+    const { tradesWithUnrealizedProfit } = await this.#lookUpTrades(
+      tradesForPrevPeriod
+    )
+    tradesForCurrPeriod.push(...tradesWithUnrealizedProfit)
+    const { tradesWithRealizedProfit } = await this.#lookUpTrades(
+      tradesForCurrPeriod
+    )
+
+    return tradesWithRealizedProfit
+  }
+
+  async #lookUpTrades (trades) {
+    if (
       !Array.isArray(trades) ||
       trades.length === 0
     ) {
       return []
     }
 
-    // TODO: need to remove
-    // console.log('[trades]:'.bgBlue, trades)
     const tradesWithRealizedProfit = []
+    const tradesWithUnrealizedProfit = []
+
+    if (
+      !Array.isArray(trades) ||
+      trades.length === 0
+    ) {
+      return {
+        tradesWithRealizedProfit,
+        tradesWithUnrealizedProfit
+      }
+    }
 
     for (const [i, trade] of trades.entries()) {
       const {
@@ -100,7 +137,7 @@ class TransactionTaxReport {
        *  - buy ETC:BTC -> amount 5, price 0.5 (here needs to be considered as 2 trxs: buy ETC and sale BTC)
        *  - sale ETC:BTC -> amount -2, price 0.6 (here needs to be considered as 2 trxs: sale ETC and buy BTC)
        *  - sale ETC:USD -> amount -3, price 4000
-       *  - sale UST:EUR - > amount -3, price 0.9 (here needs to be considered EUR and converted to USD)
+       *  - sale UST:EUR - > amount -3, price 0.9 (here needs to be considered EUR price and converted to USD)
        */
       const isDistinctSale = execAmount < 0
       const isSaleBetweenCrypto = (
@@ -129,13 +166,6 @@ class TransactionTaxReport {
         const saleAsset = isDistinctSale
           ? firstSymb
           : lastSymb
-
-        // TODO: need to remove
-        // if (saleAsset === 'XLM') {
-        //   console.log('[execAmount]:', execAmount)
-        //   console.log('[execPrice]:', execPrice)
-        //   console.log('[salePrice]:', salePrice)
-        // }
 
         for (const [j, tradeForLookup] of trades.entries()) {
           let {
@@ -260,20 +290,48 @@ class TransactionTaxReport {
       trade.isSaleTrx = isSaleTrx
       trade.isSaleTrxHistFilled = isSaleTrxHistFilled
       trade.saleFilledAmount = saleFilledAmount
-      trade.saleFilledAmount = buyTrxsForRealizedProfit
+      trade.buyTrxsForRealizedProfit = buyTrxsForRealizedProfit
     }
 
-    // TODO: Data structure example
-    // [{
-    //   asset: 'BTC',
-    //   amount: 0.001,
-    //   mtsAcquired: Date.now(),
-    //   mtsSold: Date.now(),
-    //   proceeds: 2.86,
-    //   cost: 26.932,
-    //   gainOrLoss: -24.072
-    // }]
-    return tradesWithRealizedProfit
+    for (const trade of trades) {
+      if (
+        !trade?.isBuyTrx ||
+        trade?.isRealizedProfitDetected
+      ) {
+        continue
+      }
+
+      tradesWithUnrealizedProfit.push(trade)
+    }
+
+    /*
+     * Data structure examples:
+     *   - for tradesWithRealizedProfit:
+     *     [{
+     *       asset: 'BTC',
+     *       amount: 0.001,
+     *       mtsAcquired: Date.now(),
+     *       mtsSold: Date.now(),
+     *       proceeds: 2.86,
+     *       cost: 26.932,
+     *       gainOrLoss: -24.072
+     *     }]
+     *
+     *   - for tradesWithUnrealizedProfit:
+     *     [{
+     *       ...trade,
+     *       isBuyTrx: true,
+     *       isBuyTrxHistFilled: false,
+     *       isRealizedProfitDetected: false,
+     *       buyFilledAmount: 0.001,
+     *       proceeds: 2.86,
+     *       saleTrxsForRealizedProfit: []
+     *     }]
+     */
+    return {
+      tradesWithRealizedProfit,
+      tradesWithUnrealizedProfit
+    }
   }
 
   // TODO:
