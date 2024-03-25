@@ -8,6 +8,9 @@ const {
 const {
   isForexSymb
 } = require('../helpers')
+const {
+  CurrencyConversionError
+} = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -148,8 +151,7 @@ class TransactionTaxReport {
 
       if (isSaleTrx) {
         if (!Number.isFinite(amountUsd)) {
-          // TODO:
-          throw new Error('ERR_CURRENCY_HAS_NOT_BEEN_CONVERTED_TO_USD')
+          throw new CurrencyConversionError()
         }
         if (
           !firstSymb ||
@@ -199,8 +201,7 @@ class TransactionTaxReport {
           ] = splitSymbolPairs(tradeForLookup.symbol)
 
           if (!Number.isFinite(tradeForLookup.amountUsd)) {
-            // TODO:
-            throw new Error('ERR_CURRENCY_HAS_NOT_BEEN_CONVERTED_TO_USD')
+            throw new CurrencyConversionError()
           }
           if (
             !firstSymbForLookup ||
