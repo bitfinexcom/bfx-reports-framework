@@ -1,5 +1,6 @@
 'use strict'
 
+const { setImmediate } = require('node:timers/promises')
 const { pick } = require('lib-js-util-base')
 const {
   splitSymbolPairs
@@ -80,24 +81,22 @@ class TransactionTaxReport {
       })
       : []
 
+    const isBackIterativeLookUp = true
     const { tradesWithUnrealizedProfit } = await this.#lookUpTrades(
-      tradesForPrevPeriod
+      tradesForPrevPeriod, { isBackIterativeLookUp }
     )
     tradesForCurrPeriod.push(...tradesWithUnrealizedProfit)
     const { tradesWithRealizedProfit } = await this.#lookUpTrades(
-      tradesForCurrPeriod
+      tradesForCurrPeriod, { isBackIterativeLookUp }
     )
 
     return tradesWithRealizedProfit
   }
 
-  async #lookUpTrades (trades) {
-    if (
-      !Array.isArray(trades) ||
-      trades.length === 0
-    ) {
-      return []
-    }
+  async #lookUpTrades (trades, opts) {
+    const {
+      isBackIterativeLookUp = false
+    } = opts ?? {}
 
     const tradesWithRealizedProfit = []
     const tradesWithUnrealizedProfit = []
@@ -112,9 +111,25 @@ class TransactionTaxReport {
       }
     }
 
-    const tradeIterator = getBackIterable(trades)
+    let lastLoopUnlockMts = Date.now()
+    const tradeIterator = isBackIterativeLookUp
+      ? getBackIterable(trades)
+      : trades
 
     for (const [i, trade] of tradeIterator.entries()) {
+      const currentLoopUnlockMts = Date.now()
+
+      /*
+       * Trx hist restoring is a hard sync operation,
+       * to prevent EventLoop locking more than 1sec
+       * it needs to resolve async queue
+       */
+      if ((currentLoopUnlockMts - lastLoopUnlockMts) > 1000) {
+        await setImmediate()
+
+        lastLoopUnlockMts = currentLoopUnlockMts
+      }
+
       let isSaleTrx = false
       let isSaleTrxHistFilled = false
       let saleFilledAmount = 0
@@ -274,18 +289,6 @@ class TransactionTaxReport {
             tradeForLookup.mtsSold = trade.mtsCreate
             tradeForLookup.cost = Math.abs(tradeForLookup.amountUsd)
             tradeForLookup.gainOrLoss = tradeForLookup.proceeds - tradeForLookup.cost
-
-            tradesWithRealizedProfit.push(
-              pick(tradeForLookup, [
-                'asset',
-                'amount',
-                'mtsAcquired',
-                'mtsSold',
-                'proceeds',
-                'cost',
-                'gainOrLoss'
-              ])
-            )
           }
         }
       }
@@ -297,14 +300,26 @@ class TransactionTaxReport {
     }
 
     for (const trade of trades) {
-      if (
-        !trade?.isBuyTrx ||
-        trade?.isRealizedProfitDetected
-      ) {
+      if (!trade?.isBuyTrx) {
+        continue
+      }
+      if (!trade?.isRealizedProfitDetected) {
+        tradesWithUnrealizedProfit.push(trade)
+
         continue
       }
 
-      tradesWithUnrealizedProfit.push(trade)
+      tradesWithRealizedProfit.push(
+        pick(trade, [
+          'asset',
+          'amount',
+          'mtsAcquired',
+          'mtsSold',
+          'proceeds',
+          'cost',
+          'gainOrLoss'
+        ])
+      )
     }
 
     /*
