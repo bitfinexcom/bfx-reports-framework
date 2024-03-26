@@ -6,7 +6,8 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const {
-  isForexSymb
+  isForexSymb,
+  getBackIterable
 } = require('../helpers')
 const {
   CurrencyConversionError,
@@ -111,30 +112,32 @@ class TransactionTaxReport {
       }
     }
 
-    for (const [i, trade] of trades.entries()) {
-      const {
-        symbol,
-        execPrice,
-        execAmount,
-        amountUsd // cacled amount: `execAmount * execPrice`, if lastSymb is not USD it converts to USD
-      } = trade ?? {}
+    const tradeIterator = getBackIterable(trades)
 
+    for (const [i, trade] of tradeIterator.entries()) {
       let isSaleTrx = false
       let isSaleTrxHistFilled = false
       let saleFilledAmount = 0
       const buyTrxsForRealizedProfit = []
 
       if (
-        !symbol ||
-        !Number.isFinite(execPrice) ||
-        execPrice === 0 ||
-        !Number.isFinite(execAmount) ||
-        execAmount === 0
+        !trade?.symbol ||
+        !Number.isFinite(trade?.execPrice) ||
+        trade.execPrice === 0 ||
+        !Number.isFinite(trade?.execAmount) ||
+        trade.execAmount === 0
       ) {
         continue
       }
 
-      const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
+      const [firstSymb, lastSymb] = (
+        trade?.firstSymb &&
+        trade?.lastSymb
+      )
+        ? [trade?.firstSymb, trade?.lastSymb]
+        : splitSymbolPairs(trade.symbol)
+      trade.firstSymb = firstSymb
+      trade.lastSymb = lastSymb
 
       /*
        * Exapmle of considered trxs as sale:
@@ -143,15 +146,15 @@ class TransactionTaxReport {
        *  - sale ETC:USD -> amount -3, price 4000
        *  - sale UST:EUR - > amount -3, price 0.9 (here needs to be considered EUR price and converted to USD)
        */
-      const isDistinctSale = execAmount < 0
+      const isDistinctSale = trade.execAmount < 0
       const isSaleBetweenCrypto = (
-        execAmount > 0 &&
+        trade.execAmount > 0 &&
         !isForexSymb(lastSymb)
       )
       isSaleTrx = isDistinctSale || isSaleBetweenCrypto
 
       if (isSaleTrx) {
-        if (!Number.isFinite(amountUsd)) {
+        if (!Number.isFinite(trade.amountUsd)) {
           throw new CurrencyConversionError()
         }
         if (
@@ -161,44 +164,51 @@ class TransactionTaxReport {
           throw new CurrencyPairSeparationError()
         }
 
-        const saleAmount = execAmount < 0
-          ? Math.abs(execAmount)
-          : Math.abs(execAmount * execPrice)
-        const salePrice = Math.abs(amountUsd) / saleAmount
+        const saleAmount = trade.execAmount < 0
+          ? Math.abs(trade.execAmount)
+          : Math.abs(trade.execAmount * trade.execPrice)
+        const salePrice = Math.abs(trade.amountUsd) / saleAmount
         const saleAsset = isDistinctSale
           ? firstSymb
           : lastSymb
 
         for (const [j, tradeForLookup] of trades.entries()) {
-          let {
-            isBuyTrx = false,
-            isBuyTrxHistFilled = false,
-            isRealizedProfitDetected = false,
-            buyFilledAmount = 0,
-            proceeds = 0
-          } = tradeForLookup ?? {}
-          const saleTrxsForRealizedProfit = tradeForLookup
-            ?.saleTrxsForRealizedProfit ?? []
-
+          if (j <= i) {
+            continue
+          }
           if (isSaleTrxHistFilled) {
             break
           }
           if (
-            j <= i ||
-            isBuyTrxHistFilled ||
-            !symbol ||
+            tradeForLookup?.isBuyTrxHistFilled ||
+            !tradeForLookup?.symbol ||
             !Number.isFinite(tradeForLookup?.execAmount) ||
             tradeForLookup.execAmount === 0 ||
-            !Number.isFinite(tradeForLookup.execPrice) ||
+            !Number.isFinite(tradeForLookup?.execPrice) ||
             tradeForLookup.execPrice === 0
           ) {
             continue
           }
 
-          const [
-            firstSymbForLookup,
-            lastSymbForLookup
-          ] = splitSymbolPairs(tradeForLookup.symbol)
+          tradeForLookup.isBuyTrx = tradeForLookup.isBuyTrx ?? false
+          tradeForLookup.isBuyTrxHistFilled = tradeForLookup
+            .isBuyTrxHistFilled ?? false
+          tradeForLookup.isRealizedProfitDetected = tradeForLookup
+            .isRealizedProfitDetected ?? false
+          tradeForLookup.buyFilledAmount = tradeForLookup
+            .buyFilledAmount ?? 0
+          tradeForLookup.proceeds = tradeForLookup.proceeds ?? 0
+          tradeForLookup.saleTrxsForRealizedProfit = tradeForLookup
+            .saleTrxsForRealizedProfit ?? []
+
+          const [firstSymbForLookup, lastSymbForLookup] = (
+            tradeForLookup?.firstSymb &&
+            tradeForLookup?.lastSymb
+          )
+            ? [tradeForLookup?.firstSymb, tradeForLookup?.lastSymb]
+            : splitSymbolPairs(tradeForLookup.symbol)
+          tradeForLookup.firstSymb = firstSymbForLookup
+          tradeForLookup.lastSymb = lastSymbForLookup
 
           if (!Number.isFinite(tradeForLookup.amountUsd)) {
             throw new CurrencyConversionError()
@@ -225,52 +235,45 @@ class TransactionTaxReport {
             continue
           }
 
-          isBuyTrx = true
-          saleTrxsForRealizedProfit.push(trade)
+          tradeForLookup.isBuyTrx = true
+          tradeForLookup.saleTrxsForRealizedProfit.push(trade)
           buyTrxsForRealizedProfit.push(tradeForLookup)
 
           const buyAmount = tradeForLookup.execAmount > 0
             ? Math.abs(tradeForLookup.execAmount)
             : Math.abs(tradeForLookup.execAmount * tradeForLookup.execPrice)
-          const buyRestAmount = buyAmount - buyFilledAmount
+          const buyRestAmount = buyAmount - tradeForLookup.buyFilledAmount
           const saleRestAmount = saleAmount - saleFilledAmount
 
           if (buyRestAmount < saleRestAmount) {
-            buyFilledAmount = buyAmount
+            tradeForLookup.buyFilledAmount = buyAmount
             saleFilledAmount += buyRestAmount
-            proceeds += buyRestAmount * salePrice
-            isRealizedProfitDetected = true
-            isBuyTrxHistFilled = true
+            tradeForLookup.proceeds += buyRestAmount * salePrice
+            tradeForLookup.isRealizedProfitDetected = true
+            tradeForLookup.isBuyTrxHistFilled = true
           }
           if (buyRestAmount > saleRestAmount) {
-            buyFilledAmount += saleRestAmount
+            tradeForLookup.buyFilledAmount += saleRestAmount
             saleFilledAmount = saleAmount
-            proceeds += saleRestAmount * salePrice
+            tradeForLookup.proceeds += saleRestAmount * salePrice
             isSaleTrxHistFilled = true
           }
           if (buyRestAmount === saleRestAmount) {
-            buyFilledAmount = buyAmount
+            tradeForLookup.buyFilledAmount = buyAmount
             saleFilledAmount = saleAmount
-            proceeds += buyRestAmount * salePrice
-            isRealizedProfitDetected = true
-            isBuyTrxHistFilled = true
+            tradeForLookup.proceeds += buyRestAmount * salePrice
+            tradeForLookup.isRealizedProfitDetected = true
+            tradeForLookup.isBuyTrxHistFilled = true
             isSaleTrxHistFilled = true
           }
 
-          tradeForLookup.isBuyTrx = isBuyTrx
-          tradeForLookup.isBuyTrxHistFilled = isBuyTrxHistFilled
-          tradeForLookup.isRealizedProfitDetected = isRealizedProfitDetected
-          tradeForLookup.buyFilledAmount = buyFilledAmount
-          tradeForLookup.proceeds = proceeds
-          tradeForLookup.saleTrxsForRealizedProfit = saleTrxsForRealizedProfit
-
-          if (isRealizedProfitDetected) {
+          if (tradeForLookup.isRealizedProfitDetected) {
             tradeForLookup.asset = asset
             tradeForLookup.amount = Math.abs(tradeForLookup.execAmount)
             tradeForLookup.mtsAcquired = tradeForLookup.mtsCreate
             tradeForLookup.mtsSold = trade.mtsCreate
             tradeForLookup.cost = Math.abs(tradeForLookup.amountUsd)
-            tradeForLookup.gainOrLoss = proceeds - tradeForLookup.cost
+            tradeForLookup.gainOrLoss = tradeForLookup.proceeds - tradeForLookup.cost
 
             tradesWithRealizedProfit.push(
               pick(tradeForLookup, [
