@@ -1,5 +1,7 @@
 'use strict'
 
+const fs = require('node:fs')
+
 const WrkReportServiceApi = require(
   'bfx-report/workers/api.service.report.wrk'
 )
@@ -143,6 +145,31 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     }
 
     this.setInitFacs(facs)
+    this.rmLokueDbIfJSONDamaged()
+  }
+
+  rmLokueDbIfJSONDamaged () {
+    for (const fac of this.conf.init.facilities) {
+      // eslint-disable-next-line no-unused-vars
+      const [type, facName, ns, label, opts] = fac
+
+      if (facName !== 'bfx-facs-lokue') {
+        continue
+      }
+
+      const { dbPathAbsolute, name } = opts
+      const baseLokueDbFileName = ['lokue', name, label].join('_')
+      const pathToLokueDbFile = path.join(
+        dbPathAbsolute,
+        `${baseLokueDbFileName}.db.json`
+      )
+
+      try {
+        require(pathToLokueDbFile)
+      } catch (err) {
+        fs.rmSync(pathToLokueDbFile, { force: true, maxRetries: 3 })
+      }
+    }
   }
 
   async initService (deps) {
