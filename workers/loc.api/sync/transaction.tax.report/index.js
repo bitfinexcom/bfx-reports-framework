@@ -71,18 +71,21 @@ class TransactionTaxReport {
     }
 
     const tradesForPrevPeriod = start > 0
-      ? await this.trades.getTrades({
-        auth: user,
-        params: {
-          start: 0,
-          end: start - 1
-        }
+      ? await this.#getTrades({
+        user,
+        start: 0,
+        end: start - 1
       })
       : []
 
     const isBackIterativeLookUp = true
     const { buyTradesWithUnrealizedProfit } = await this.#lookUpTrades(
-      tradesForPrevPeriod, { isBackIterativeLookUp }
+      tradesForPrevPeriod,
+      {
+        isBackIterativeLookUp,
+        buyTradesWithUnrealizedProfit: true,
+        isNotGainOrLossRequired: true
+      }
     )
     tradesForCurrPeriod.push(...buyTradesWithUnrealizedProfit)
     const { saleTradesWithRealizedProfit } = await this.#lookUpTrades(
@@ -94,7 +97,9 @@ class TransactionTaxReport {
 
   async #lookUpTrades (trades, opts) {
     const {
-      isBackIterativeLookUp = false
+      isBackIterativeLookUp = false,
+      isBuyTradesWithUnrealizedProfitRequired = false,
+      isNotGainOrLossRequired = false
     } = opts ?? {}
 
     const saleTradesWithRealizedProfit = []
@@ -172,7 +177,10 @@ class TransactionTaxReport {
       if (!trade.isSaleTrx) {
         continue
       }
-      if (!Number.isFinite(trade.amountUsd)) {
+      if (
+        !isNotGainOrLossRequired &&
+        !Number.isFinite(trade.amountUsd)
+      ) {
         throw new CurrencyConversionError()
       }
       if (
@@ -185,18 +193,20 @@ class TransactionTaxReport {
       const saleAmount = trade.execAmount < 0
         ? Math.abs(trade.execAmount)
         : Math.abs(trade.execAmount * trade.execPrice)
-      const salePrice = Math.abs(trade.amountUsd) / saleAmount
+      const salePrice = isNotGainOrLossRequired
+        ? 0
+        : Math.abs(trade.amountUsd) / saleAmount
       const saleAsset = isDistinctSale
         ? firstSymb
         : lastSymb
 
-      for (const [j, tradeForLookup] of trades.entries()) {
-        if (j <= i) {
-          continue
-        }
+      for (let j = i + 1; trades.length > j; j += 1) {
         if (trade.isSaleTrxHistFilled) {
           break
         }
+
+        const tradeForLookup = trades[j]
+
         if (
           tradeForLookup?.isBuyTrxHistFilled ||
           !tradeForLookup?.symbol ||
@@ -226,7 +236,10 @@ class TransactionTaxReport {
         tradeForLookup.firstSymb = firstSymbForLookup
         tradeForLookup.lastSymb = lastSymbForLookup
 
-        if (!Number.isFinite(tradeForLookup.amountUsd)) {
+        if (
+          !isNotGainOrLossRequired &&
+          !Number.isFinite(tradeForLookup.amountUsd)
+        ) {
           throw new CurrencyConversionError()
         }
         if (
@@ -258,7 +271,9 @@ class TransactionTaxReport {
         const buyAmount = tradeForLookup.execAmount > 0
           ? Math.abs(tradeForLookup.execAmount)
           : Math.abs(tradeForLookup.execAmount * tradeForLookup.execPrice)
-        const buyPrice = Math.abs(tradeForLookup.amountUsd) / buyAmount
+        const buyPrice = isNotGainOrLossRequired
+          ? 0
+          : Math.abs(tradeForLookup.amountUsd) / buyAmount
         const buyRestAmount = buyAmount - tradeForLookup.buyFilledAmount
         const saleRestAmount = saleAmount - trade.saleFilledAmount
 
@@ -290,8 +305,12 @@ class TransactionTaxReport {
           tradeForLookup.buyAmount = buyAmount
           tradeForLookup.mtsAcquiredForBuyTrx = tradeForLookup.mtsCreate
           tradeForLookup.mtsSoldForBuyTrx = trade.mtsCreate
-          tradeForLookup.costForBuyTrx = Math.abs(tradeForLookup.amountUsd)
-          tradeForLookup.gainOrLossForBuyTrx = tradeForLookup.proceedsForBuyTrx - tradeForLookup.costForBuyTrx
+          tradeForLookup.costForBuyTrx = isNotGainOrLossRequired
+            ? 0
+            : Math.abs(tradeForLookup.amountUsd)
+          tradeForLookup.gainOrLossForBuyTrx = isNotGainOrLossRequired
+            ? 0
+            : tradeForLookup.proceedsForBuyTrx - tradeForLookup.costForBuyTrx
         }
       }
 
@@ -305,20 +324,28 @@ class TransactionTaxReport {
           ? trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
           : trade.buyTrxsForRealizedProfit[0]?.mtsCreate
         trade.mtsSoldForSaleTrx = trade.mtsCreate
-        trade.proceedsForSaleTrx = Math.abs(trade.amountUsd)
-        trade.gainOrLoss = trade.proceedsForSaleTrx - trade.costForSaleTrx
+        trade.proceedsForSaleTrx = isNotGainOrLossRequired
+          ? 0
+          : Math.abs(trade.amountUsd)
+        trade.gainOrLoss = isNotGainOrLossRequired
+          ? 0
+          : trade.proceedsForSaleTrx - trade.costForSaleTrx
       }
     }
 
     for (const trade of trades) {
       if (
+        isBuyTradesWithUnrealizedProfitRequired &&
         trade?.isBuyTrx &&
         !trade?.isBuyTrxHistFilled
       ) {
         buyTradesWithUnrealizedProfit.push(trade)
       }
 
-      if (!trade?.isSaleTrxHistFilled) {
+      if (
+        isBuyTradesWithUnrealizedProfitRequired ||
+        !trade?.isSaleTrxHistFilled
+      ) {
         continue
       }
 
@@ -339,7 +366,6 @@ class TransactionTaxReport {
     }
   }
 
-  // TODO:
   async #getTrades ({
     user,
     start,
