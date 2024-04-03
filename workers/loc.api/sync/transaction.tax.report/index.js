@@ -1,5 +1,6 @@
 'use strict'
 
+const { orderBy } = require('lodash')
 const { setImmediate } = require('node:timers/promises')
 const {
   splitSymbolPairs
@@ -22,7 +23,9 @@ const depsTypes = (TYPES) => [
   TYPES.SyncSchema,
   TYPES.ALLOWED_COLLS,
   TYPES.SYNC_API_METHODS,
-  TYPES.Trades
+  TYPES.Movements,
+  TYPES.RService,
+  TYPES.GetDataFromApi
 ]
 class TransactionTaxReport {
   constructor (
@@ -31,17 +34,19 @@ class TransactionTaxReport {
     syncSchema,
     ALLOWED_COLLS,
     SYNC_API_METHODS,
-    trades
+    movements,
+    rService,
+    getDataFromApi
   ) {
     this.dao = dao
     this.authenticator = authenticator
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.SYNC_API_METHODS = SYNC_API_METHODS
-    this.trades = trades
+    this.movements = movements
+    this.rService = rService
+    this.getDataFromApi = getDataFromApi
 
-    this.tradesMethodColl = this.syncSchema.getMethodCollMap()
-      .get(this.SYNC_API_METHODS.TRADES)
     this.tradesModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.TRADES)
   }
@@ -55,23 +60,26 @@ class TransactionTaxReport {
     const user = await this.authenticator
       .verifyRequestUser({ auth })
 
-    const tradesForCurrPeriod = await this.trades.getTrades({
-      auth: user,
-      params: {
-        start,
-        end
-      }
+    const {
+      trxs: trxsForCurrPeriod,
+      trxsForConvToUsd
+    } = await this.#getTrxs({
+      user,
+      start,
+      end
     })
 
     if (
-      !Array.isArray(tradesForCurrPeriod) ||
-      tradesForCurrPeriod.length === 0
+      !Array.isArray(trxsForCurrPeriod) ||
+      trxsForCurrPeriod.length === 0
     ) {
       return []
     }
 
-    const tradesForPrevPeriod = start > 0
-      ? await this.#getTrades({
+    const {
+      trxs: trxsForPrevPeriod
+    } = start > 0
+      ? await this.#getTrxs({
         user,
         start: 0,
         end: start - 1
@@ -80,16 +88,21 @@ class TransactionTaxReport {
 
     const isBackIterativeLookUp = true
     const { buyTradesWithUnrealizedProfit } = await this.#lookUpTrades(
-      tradesForPrevPeriod,
+      trxsForPrevPeriod,
       {
         isBackIterativeLookUp,
         buyTradesWithUnrealizedProfit: true,
         isNotGainOrLossRequired: true
       }
     )
-    tradesForCurrPeriod.push(...buyTradesWithUnrealizedProfit)
+
+    trxsForCurrPeriod.push(...buyTradesWithUnrealizedProfit)
+    trxsForConvToUsd.push(...buyTradesWithUnrealizedProfit
+      .filter((trx) => trx?.lastSymb !== 'USD'))
+    await this.#convertCurrencies(trxsForConvToUsd)
+
     const { saleTradesWithRealizedProfit } = await this.#lookUpTrades(
-      tradesForCurrPeriod, { isBackIterativeLookUp }
+      trxsForCurrPeriod, { isBackIterativeLookUp }
     )
 
     return saleTradesWithRealizedProfit
@@ -178,12 +191,6 @@ class TransactionTaxReport {
         continue
       }
       if (
-        !isNotGainOrLossRequired &&
-        !Number.isFinite(trade.amountUsd)
-      ) {
-        throw new CurrencyConversionError()
-      }
-      if (
         !firstSymb ||
         !lastSymb
       ) {
@@ -193,12 +200,17 @@ class TransactionTaxReport {
       const saleAmount = trade.execAmount < 0
         ? Math.abs(trade.execAmount)
         : Math.abs(trade.execAmount * trade.execPrice)
-      const salePrice = isNotGainOrLossRequired
-        ? 0
-        : Math.abs(trade.amountUsd) / saleAmount
+      const _salePrice = isDistinctSale
+        ? trade.firstSymbPrise
+        : trade.lastSymbPrise
+      const salePrice = isNotGainOrLossRequired ? 0 : _salePrice
       const saleAsset = isDistinctSale
         ? firstSymb
         : lastSymb
+
+      if (!Number.isFinite(salePrice)) {
+        throw new CurrencyConversionError()
+      }
 
       for (let j = i + 1; trades.length > j; j += 1) {
         if (trade.isSaleTrxHistFilled) {
@@ -237,12 +249,6 @@ class TransactionTaxReport {
         tradeForLookup.lastSymb = lastSymbForLookup
 
         if (
-          !isNotGainOrLossRequired &&
-          !Number.isFinite(tradeForLookup.amountUsd)
-        ) {
-          throw new CurrencyConversionError()
-        }
-        if (
           !firstSymbForLookup ||
           !lastSymbForLookup
         ) {
@@ -271,11 +277,16 @@ class TransactionTaxReport {
         const buyAmount = tradeForLookup.execAmount > 0
           ? Math.abs(tradeForLookup.execAmount)
           : Math.abs(tradeForLookup.execAmount * tradeForLookup.execPrice)
-        const buyPrice = isNotGainOrLossRequired
-          ? 0
-          : Math.abs(tradeForLookup.amountUsd) / buyAmount
+        const _buyPrice = tradeForLookup.execAmount > 0
+          ? tradeForLookup.firstSymbPrise
+          : tradeForLookup.lastSymbPrise
+        const buyPrice = isNotGainOrLossRequired ? 0 : _buyPrice
         const buyRestAmount = buyAmount - tradeForLookup.buyFilledAmount
         const saleRestAmount = saleAmount - trade.saleFilledAmount
+
+        if (!Number.isFinite(buyPrice)) {
+          throw new CurrencyConversionError()
+        }
 
         if (buyRestAmount < saleRestAmount) {
           tradeForLookup.buyFilledAmount = buyAmount
@@ -305,12 +316,8 @@ class TransactionTaxReport {
           tradeForLookup.buyAmount = buyAmount
           tradeForLookup.mtsAcquiredForBuyTrx = tradeForLookup.mtsCreate
           tradeForLookup.mtsSoldForBuyTrx = trade.mtsCreate
-          tradeForLookup.costForBuyTrx = isNotGainOrLossRequired
-            ? 0
-            : Math.abs(tradeForLookup.amountUsd)
-          tradeForLookup.gainOrLossForBuyTrx = isNotGainOrLossRequired
-            ? 0
-            : tradeForLookup.proceedsForBuyTrx - tradeForLookup.costForBuyTrx
+          tradeForLookup.costForBuyTrx = buyAmount * buyPrice
+          tradeForLookup.gainOrLossForBuyTrx = tradeForLookup.proceedsForBuyTrx - tradeForLookup.costForBuyTrx
         }
       }
 
@@ -324,12 +331,8 @@ class TransactionTaxReport {
           ? trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
           : trade.buyTrxsForRealizedProfit[0]?.mtsCreate
         trade.mtsSoldForSaleTrx = trade.mtsCreate
-        trade.proceedsForSaleTrx = isNotGainOrLossRequired
-          ? 0
-          : Math.abs(trade.amountUsd)
-        trade.gainOrLoss = isNotGainOrLossRequired
-          ? 0
-          : trade.proceedsForSaleTrx - trade.costForSaleTrx
+        trade.proceedsForSaleTrx = saleAmount * salePrice
+        trade.gainOrLoss = trade.proceedsForSaleTrx - trade.costForSaleTrx
       }
     }
 
@@ -344,7 +347,8 @@ class TransactionTaxReport {
 
       if (
         isBuyTradesWithUnrealizedProfitRequired ||
-        !trade?.isSaleTrxHistFilled
+        !trade?.isSaleTrxHistFilled ||
+        trade?.isMovements
       ) {
         continue
       }
@@ -394,6 +398,151 @@ class TransactionTaxReport {
         isExcludePrivate: true
       }
     )
+  }
+
+  async #getTrxs (params) {
+    const {
+      user,
+      start,
+      end
+    } = params ?? {}
+
+    const tradesPromise = this.#getTrades(params)
+    const movementsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      isWithdrawals: true,
+      isDeposits: true
+    })
+
+    const [
+      trades,
+      movements
+    ] = await Promise.all([
+      tradesPromise,
+      movementsPromise
+    ])
+
+    const remapedTrxs = []
+    const remapedTrxsForConvToUsd = []
+
+    for (const trade of trades) {
+      if (
+        !trade?.symbol ||
+        !Number.isFinite(trade?.execAmount) ||
+        trade.execAmount === 0 ||
+        !Number.isFinite(trade?.execPrice) ||
+        trade.execPrice === 0 ||
+        !Number.isFinite(trade?.mtsCreate)
+      ) {
+        continue
+      }
+
+      const [firstSymb, lastSymb] = splitSymbolPairs(trade.symbol)
+      trade.firstSymb = firstSymb
+      trade.lastSymb = lastSymb
+      trade.firstSymbPrise = null
+      trade.lastSymbPrise = null
+
+      remapedTrxs.push(trade)
+
+      if (lastSymb === 'USD') {
+        trade.firstSymbPrise = trade.execPrice
+        trade.lastSymbPrise = 1
+
+        continue
+      }
+
+      remapedTrxsForConvToUsd.push(trade)
+    }
+
+    if (remapedTrxs.length === 0) {
+      return {
+        trx: [],
+        trxForConvToUsd: []
+      }
+    }
+
+    for (const movement of movements) {
+      if (
+        !movement?.currency ||
+        isForexSymb(movement.currency) ||
+        !Number.isFinite(movement?.amount) ||
+        movement.amount === 0 ||
+        !Number.isFinite(movement?.mtsUpdated)
+      ) {
+        continue
+      }
+
+      const firstSymb = movement.currency
+      const lastSymb = 'USD'
+      const symbSeparator = firstSymb.length > 3
+        ? ':'
+        : ''
+
+      const remapedMovement = {
+        isMovements: true,
+        symbol: `t${firstSymb}${symbSeparator}${lastSymb}`,
+        mtsCreate: movement.mtsUpdated,
+        firstSymb,
+        lastSymb,
+        firstSymbPrise: null,
+        lastSymbPrise: 1,
+        execAmount: movement.amount,
+        // execPrice = firstSymbPrise and should be set when converting currencies
+        execPrice: 0
+      }
+
+      remapedTrxs.push(remapedMovement)
+      remapedTrxsForConvToUsd.push(remapedMovement)
+    }
+
+    const trxs = orderBy(
+      remapedTrxs,
+      ['mtsCreate'],
+      ['desc']
+    )
+    const trxsForConvToUsd = orderBy(
+      remapedTrxsForConvToUsd,
+      ['mtsCreate'],
+      ['desc']
+    )
+
+    return {
+      trxs,
+      trxsForConvToUsd
+    }
+  }
+
+  // TODO:
+  async #convertCurrencies (trxs) {}
+
+  async #getPublicTrades (params) {
+    const {
+      symbol,
+      start = 0,
+      end = Date.now(),
+      sort = -1
+    } = params ?? {}
+    const args = {
+      isNotMoreThanInnerMax: true,
+      params: { symbol, start, end, sort }
+    }
+
+    const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+      .bind(this.rService)
+
+    const res = await this.getDataFromApi({
+      getData: (s, args) => getDataFn(args),
+      args,
+      callerName: 'TRANSACTION_TAX_REPORT',
+      eNetErrorAttemptsTimeframeMin: 10,
+      eNetErrorAttemptsTimeoutMs: 10000,
+      shouldNotInterrupt: true
+    })
+
+    return res
   }
 }
 
