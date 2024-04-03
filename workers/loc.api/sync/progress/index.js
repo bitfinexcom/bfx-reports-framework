@@ -95,8 +95,14 @@ class Progress extends EventEmitter {
       return
     }
 
+    const serializedError = (
+      progress?.serializedError ??
+      progress?.stack ??
+      progress
+    )
+
     this.logger.error(
-      `PROGRESS:SYNC: ${progress.stack || progress}`
+      `PROGRESS:SYNC: ${serializedError}`
     )
   }
 
