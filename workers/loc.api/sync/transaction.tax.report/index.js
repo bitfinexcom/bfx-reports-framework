@@ -1,6 +1,5 @@
 'use strict'
 
-const { orderBy } = require('lodash')
 const { setImmediate } = require('node:timers/promises')
 const {
   splitSymbolPairs
@@ -84,7 +83,7 @@ class TransactionTaxReport {
         start: 0,
         end: start - 1
       })
-      : []
+      : { trxs: [] }
 
     const isBackIterativeLookUp = true
     const { buyTradesWithUnrealizedProfit } = await this.#lookUpTrades(
@@ -408,22 +407,30 @@ class TransactionTaxReport {
     } = params ?? {}
 
     const tradesPromise = this.#getTrades(params)
-    const movementsPromise = this.movements.getMovements({
+    const withdrawalsPromise = this.movements.getMovements({
       auth: user,
       start,
       end,
-      isWithdrawals: true,
+      isWithdrawals: true
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
       isDeposits: true
     })
 
     const [
       trades,
-      movements
+      withdrawals,
+      deposits
     ] = await Promise.all([
       tradesPromise,
-      movementsPromise
+      withdrawalsPromise,
+      depositsPromise
     ])
 
+    const movements = [...withdrawals, ...deposits]
     const remapedTrxs = []
     const remapedTrxsForConvToUsd = []
 
@@ -460,7 +467,7 @@ class TransactionTaxReport {
     if (remapedTrxs.length === 0) {
       return {
         trx: [],
-        trxForConvToUsd: []
+        trxsForConvToUsd: []
       }
     }
 
@@ -490,7 +497,7 @@ class TransactionTaxReport {
         firstSymbPrise: null,
         lastSymbPrise: 1,
         execAmount: movement.amount,
-        // execPrice = firstSymbPrise and should be set when converting currencies
+        // NOTE: execPrice = firstSymbPrise and should be set when converting currencies
         execPrice: 0
       }
 
@@ -498,16 +505,10 @@ class TransactionTaxReport {
       remapedTrxsForConvToUsd.push(remapedMovement)
     }
 
-    const trxs = orderBy(
-      remapedTrxs,
-      ['mtsCreate'],
-      ['desc']
-    )
-    const trxsForConvToUsd = orderBy(
-      remapedTrxsForConvToUsd,
-      ['mtsCreate'],
-      ['desc']
-    )
+    const trxs = remapedTrxs
+      .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
+    const trxsForConvToUsd = remapedTrxsForConvToUsd
+      .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
 
     return {
       trxs,
@@ -516,18 +517,171 @@ class TransactionTaxReport {
   }
 
   // TODO:
-  async #convertCurrencies (trxs) {}
+  async #convertCurrencies (trxs) {
+    const trxMapByCcy = new Map()
+
+    for (const trx of trxs) {
+      const isNotFirstSymbForex = !isForexSymb(trx.firstSymb)
+      const isNotLastSymbForex = !isForexSymb(trx.lastSymb)
+
+      if (isNotFirstSymbForex) {
+        if (!trxMapByCcy.has(trx.firstSymb)) {
+          trxMapByCcy.set(trx.firstSymb, [])
+        }
+
+        trxMapByCcy.get(trx.firstSymb).push({
+          isNotFirstSymbForex,
+          isNotLastSymbForex,
+          mainPrisePropName: 'firstSymbPrise',
+          secondPrisePropName: 'lastSymbPrise',
+          trx
+        })
+      }
+      if (isNotLastSymbForex) {
+        if (!trxMapByCcy.has(trx.lastSymb)) {
+          trxMapByCcy.set(trx.lastSymb, [])
+        }
+
+        trxMapByCcy.get(trx.lastSymb).push({
+          isNotFirstSymbForex,
+          isNotLastSymbForex,
+          mainPrisePropName: 'lastSymbPrise',
+          secondPrisePropName: 'firstSymbPrise',
+          trx
+        })
+      }
+    }
+    for (const [symbol, trxData] of trxMapByCcy.entries()) {
+      // TODO:
+      const start = (
+        trxData[trxData.length - 1].trx.mtsCreate +
+        1000 * 60
+      )
+      const end = trxData[0].trx.mtsCreate
+
+      const pubTrades = await this.#getPublicTradesRange({
+        symbol,
+        start,
+        end
+      })
+
+      for (const trxDataItem of trxData) {
+        let lastIndex = 0
+
+        for (let i = lastIndex + 1; pubTrades.length > i; i += 1) {
+          const pubTrade = pubTrades[i]
+          const isLastPubTrade = (i + 1) === pubTrades.length
+
+          if (
+            (
+              pubTrade?.mts > trxDataItem.trx.mtsCreate &&
+              !isLastPubTrade
+            ) ||
+            !Number.isFinite(pubTrade?.price) ||
+            pubTrade.price === 0
+          ) {
+            continue
+          }
+
+          lastIndex = i
+          trxDataItem.trx[trxDataItem.mainPrisePropName] = pubTrade.price
+
+          if (trxDataItem.trx.isMovements) {
+            trxDataItem.trx.execPrice = pubTrade.price
+
+            break
+          }
+          if (
+            !Number.isFinite(trxDataItem.trx.execPrice) ||
+            trxDataItem.trx.execPrice === 0
+          ) {
+            break
+          }
+          if (
+            trxDataItem.isNotFirstSymbForex &&
+            !trxDataItem.isNotFirstSymbForex
+          ) {
+            trxDataItem.trx[trxDataItem.secondPrisePropName] = pubTrade.price / trxDataItem.trx.execPrice
+          }
+          if (
+            !trxDataItem.isNotFirstSymbForex &&
+            trxDataItem.isNotFirstSymbForex
+          ) {
+            trxDataItem.trx[trxDataItem.secondPrisePropName] = pubTrade.price * trxDataItem.trx.execPrice
+          }
+
+          break
+        }
+      }
+    }
+  }
+
+  async #getPublicTradesRange (params) {
+    const symbol = params?.symbol
+    const start = params?.start
+    let end = params?.end
+    let timeoutMts = Date.now()
+    const res = []
+
+    while (true) {
+      const currMts = Date.now()
+      const mtsDiff = currMts - timeoutMts
+
+      if (mtsDiff > 1000 * 60 * 60 * 12) {
+        // TODO:
+        throw new Error('ERR_TRX_TAX_REPORT_GENERATION_TIMEOUT_ERROR')
+      }
+
+      timeoutMts = currMts
+
+      const { res: pubTrades } = await this.#getPublicTrades({
+        symbol: `t${symbol}USD`,
+        start,
+        end
+      })
+
+      if (
+        !Array.isArray(pubTrades) ||
+        pubTrades.length === 0 ||
+        !Number.isFinite(pubTrades[0]?.mts) ||
+        !Number.isFinite(pubTrades[pubTrades.length - 1]?.mts) ||
+        (
+          res.length !== 0 &&
+          pubTrades[0]?.mts >= res[res.length - 1]?.mts
+        ) ||
+        pubTrades[pubTrades.length - 1]?.mts <= start
+      ) {
+        res.push(...pubTrades)
+
+        break
+      }
+
+      end = pubTrades[pubTrades.length - 1].mts - 1
+      res.push(...pubTrades)
+    }
+
+    return res
+  }
 
   async #getPublicTrades (params) {
     const {
       symbol,
       start = 0,
       end = Date.now(),
-      sort = -1
+      sort = -1,
+      limit = 10000
     } = params ?? {}
     const args = {
       isNotMoreThanInnerMax: true,
-      params: { symbol, start, end, sort }
+      params: {
+        symbol,
+        start,
+        end,
+        sort,
+        limit,
+        notCheckNextPage: true,
+        notThrowError: true
+      }
     }
 
     const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
