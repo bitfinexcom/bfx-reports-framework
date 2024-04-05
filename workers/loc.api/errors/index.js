@@ -260,6 +260,12 @@ class CurrencyPairSeparationError extends BaseError {
   }
 }
 
+class TrxTaxReportGenerationTimeoutError extends BaseError {
+  constructor (message = 'ERR_TRX_TAX_REPORT_GENERATION_TIMEOUT') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -298,5 +304,6 @@ module.exports = {
   AuthTokenGenerationError,
   AuthTokenTTLSettingError,
   CurrencyConversionError,
-  CurrencyPairSeparationError
+  CurrencyPairSeparationError,
+  TrxTaxReportGenerationTimeoutError
 }
