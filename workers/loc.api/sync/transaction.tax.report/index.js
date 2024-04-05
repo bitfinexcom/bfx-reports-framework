@@ -11,7 +11,8 @@ const {
 } = require('../helpers')
 const {
   CurrencyConversionError,
-  CurrencyPairSeparationError
+  CurrencyPairSeparationError,
+  TrxTaxReportGenerationTimeoutError
 } = require('../../errors')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -672,8 +673,7 @@ class TransactionTaxReport {
       const mtsDiff = currMts - timeoutMts
 
       if (mtsDiff > 1000 * 60 * 60 * 12) {
-        // TODO:
-        throw new Error('ERR_TRX_TAX_REPORT_GENERATION_TIMEOUT_ERROR')
+        throw new TrxTaxReportGenerationTimeoutError()
       }
 
       timeoutMts = currMts
