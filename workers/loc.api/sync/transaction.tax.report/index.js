@@ -320,19 +320,17 @@ class TransactionTaxReport {
         }
       }
 
-      if (trade.isSaleTrxHistFilled) {
-        trade.saleAsset = saleAsset
-        trade.saleAmount = saleAmount
-        trade.mtsAcquiredForSaleTrx = (
-          trade.buyTrxsForRealizedProfit[0]?.mtsCreate >
-          trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
-        )
-          ? trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
-          : trade.buyTrxsForRealizedProfit[0]?.mtsCreate
-        trade.mtsSoldForSaleTrx = trade.mtsCreate
-        trade.proceedsForSaleTrx = saleAmount * salePrice
-        trade.gainOrLoss = trade.proceedsForSaleTrx - trade.costForSaleTrx
-      }
+      trade.saleAsset = saleAsset
+      trade.saleAmount = saleAmount
+      trade.mtsAcquiredForSaleTrx = (
+        trade.buyTrxsForRealizedProfit[0]?.mtsCreate >
+        trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
+      )
+        ? trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
+        : trade.buyTrxsForRealizedProfit[0]?.mtsCreate
+      trade.mtsSoldForSaleTrx = trade.mtsCreate
+      trade.proceedsForSaleTrx = saleAmount * salePrice
+      trade.gainOrLoss = trade.proceedsForSaleTrx - trade.costForSaleTrx
     }
 
     for (const trade of trades) {
@@ -346,7 +344,7 @@ class TransactionTaxReport {
 
       if (
         isBuyTradesWithUnrealizedProfitRequired ||
-        !trade?.isSaleTrxHistFilled ||
+        !trade?.isSaleTrx ||
         trade?.isMovements
       ) {
         continue
@@ -516,54 +514,21 @@ class TransactionTaxReport {
     }
   }
 
-  // TODO:
   async #convertCurrencies (trxs) {
-    const trxMapByCcy = new Map()
+    const trxMapByCcy = this.#getTrxMapByCcy(trxs)
 
-    for (const trx of trxs) {
-      const isNotFirstSymbForex = !isForexSymb(trx.firstSymb)
-      const isNotLastSymbForex = !isForexSymb(trx.lastSymb)
-
-      if (isNotFirstSymbForex) {
-        if (!trxMapByCcy.has(trx.firstSymb)) {
-          trxMapByCcy.set(trx.firstSymb, [])
-        }
-
-        trxMapByCcy.get(trx.firstSymb).push({
-          isNotFirstSymbForex,
-          isNotLastSymbForex,
-          mainPrisePropName: 'firstSymbPrise',
-          secondPrisePropName: 'lastSymbPrise',
-          trx
-        })
-      }
-      if (isNotLastSymbForex) {
-        if (!trxMapByCcy.has(trx.lastSymb)) {
-          trxMapByCcy.set(trx.lastSymb, [])
-        }
-
-        trxMapByCcy.get(trx.lastSymb).push({
-          isNotFirstSymbForex,
-          isNotLastSymbForex,
-          mainPrisePropName: 'lastSymbPrise',
-          secondPrisePropName: 'firstSymbPrise',
-          trx
-        })
-      }
-    }
     for (const [symbol, trxData] of trxMapByCcy.entries()) {
-      // TODO:
-      const start = (
-        trxData[trxData.length - 1].trx.mtsCreate +
-        1000 * 60
-      )
-      const end = trxData[0].trx.mtsCreate
-
-      const pubTrades = await this.#getPublicTradesRange({
+      const pubTrades = []
+      const pubTradeChunkPayloads = this.#getPubTradeChunkPayloads(
         symbol,
-        start,
-        end
-      })
+        trxData
+      )
+
+      for (const chunkPayload of pubTradeChunkPayloads) {
+        const chunk = await this.#getPublicTradeChunk(chunkPayload)
+
+        pubTrades.push(...chunk)
+      }
 
       for (const trxDataItem of trxData) {
         let lastIndex = 0
@@ -601,13 +566,17 @@ class TransactionTaxReport {
             trxDataItem.isNotFirstSymbForex &&
             !trxDataItem.isNotFirstSymbForex
           ) {
-            trxDataItem.trx[trxDataItem.secondPrisePropName] = pubTrade.price / trxDataItem.trx.execPrice
+            trxDataItem.trx[trxDataItem.secondPrisePropName] = (
+              pubTrade.price / trxDataItem.trx.execPrice
+            )
           }
           if (
             !trxDataItem.isNotFirstSymbForex &&
             trxDataItem.isNotFirstSymbForex
           ) {
-            trxDataItem.trx[trxDataItem.secondPrisePropName] = pubTrade.price * trxDataItem.trx.execPrice
+            trxDataItem.trx[trxDataItem.secondPrisePropName] = (
+              pubTrade.price * trxDataItem.trx.execPrice
+            )
           }
 
           break
@@ -616,7 +585,82 @@ class TransactionTaxReport {
     }
   }
 
-  async #getPublicTradesRange (params) {
+  #getTrxMapByCcy (trxs) {
+    const trxMapByCcy = new Map()
+
+    for (const trx of trxs) {
+      const isNotFirstSymbForex = !isForexSymb(trx.firstSymb)
+      const isNotLastSymbForex = !isForexSymb(trx.lastSymb)
+
+      if (isNotFirstSymbForex) {
+        if (!trxMapByCcy.has(trx.firstSymb)) {
+          trxMapByCcy.set(trx.firstSymb, [])
+        }
+
+        trxMapByCcy.get(trx.firstSymb).push({
+          isNotFirstSymbForex,
+          isNotLastSymbForex,
+          mainPrisePropName: 'firstSymbPrise',
+          secondPrisePropName: 'lastSymbPrise',
+          trx
+        })
+      }
+      if (isNotLastSymbForex) {
+        if (!trxMapByCcy.has(trx.lastSymb)) {
+          trxMapByCcy.set(trx.lastSymb, [])
+        }
+
+        trxMapByCcy.get(trx.lastSymb).push({
+          isNotFirstSymbForex,
+          isNotLastSymbForex,
+          mainPrisePropName: 'lastSymbPrise',
+          secondPrisePropName: 'firstSymbPrise',
+          trx
+        })
+      }
+    }
+
+    return trxMapByCcy
+  }
+
+  #getPubTradeChunkPayloads (symbol, trxData) {
+    const pubTradeChunkPayloads = []
+
+    for (const { trx } of trxData) {
+      const lastPayloads = pubTradeChunkPayloads[pubTradeChunkPayloads.length - 1]
+      const lastMts = lastPayloads?.start ?? lastPayloads?.end
+      const currMts = trx.mtsCreate
+
+      if (!lastPayloads?.end) {
+        pubTradeChunkPayloads.push({
+          symbol,
+          end: currMts,
+          start: null
+        })
+
+        continue
+      }
+
+      const mtsDiff = lastMts - currMts
+      const maxAllowedTimeframe = 1000 * 60 * 60 * 24
+
+      if (mtsDiff < maxAllowedTimeframe) {
+        lastPayloads.start = currMts
+
+        continue
+      }
+
+      pubTradeChunkPayloads.push({
+        symbol,
+        end: currMts,
+        start: null
+      })
+    }
+
+    return pubTradeChunkPayloads
+  }
+
+  async #getPublicTradeChunk (params) {
     const symbol = params?.symbol
     const start = params?.start
     let end = params?.end
@@ -636,13 +680,14 @@ class TransactionTaxReport {
 
       const { res: pubTrades } = await this.#getPublicTrades({
         symbol: `t${symbol}USD`,
-        start,
+        start: 0,
         end
       })
 
       if (
         !Array.isArray(pubTrades) ||
         pubTrades.length === 0 ||
+        !Number.isFinite(start) ||
         !Number.isFinite(pubTrades[0]?.mts) ||
         !Number.isFinite(pubTrades[pubTrades.length - 1]?.mts) ||
         (
