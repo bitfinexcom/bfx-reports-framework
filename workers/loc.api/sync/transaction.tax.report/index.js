@@ -25,7 +25,9 @@ const depsTypes = (TYPES) => [
   TYPES.SYNC_API_METHODS,
   TYPES.Movements,
   TYPES.RService,
-  TYPES.GetDataFromApi
+  TYPES.GetDataFromApi,
+  TYPES.WSEventEmitterFactory,
+  TYPES.Logger
 ]
 class TransactionTaxReport {
   constructor (
@@ -36,7 +38,9 @@ class TransactionTaxReport {
     SYNC_API_METHODS,
     movements,
     rService,
-    getDataFromApi
+    getDataFromApi,
+    wsEventEmitterFactory,
+    logger
   ) {
     this.dao = dao
     this.authenticator = authenticator
@@ -46,9 +50,28 @@ class TransactionTaxReport {
     this.movements = movements
     this.rService = rService
     this.getDataFromApi = getDataFromApi
+    this.wsEventEmitterFactory = wsEventEmitterFactory
+    this.logger = logger
 
     this.tradesModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.TRADES)
+  }
+
+  async makeTrxTaxReportInBackground (args = {}) {
+    const { auth, params } = args ?? {}
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+    const _args = { auth: user, params }
+
+    this.wsEventEmitterFactory()
+      .emitTrxTaxReportGenerationInBackgroundToOne(() => {
+        return this.getTransactionTaxReport(_args)
+      }, user)
+      .then(() => {}, (err) => {
+        this.logger.error(`TRX_TAX_REPORT_GEN_FAILED: ${err.stack || err}`)
+      })
+
+    return true
   }
 
   async getTransactionTaxReport (args = {}) {
