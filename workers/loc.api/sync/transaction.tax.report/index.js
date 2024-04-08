@@ -11,7 +11,8 @@ const {
   TrxTaxReportGenerationTimeoutError
 } = require('../../errors')
 const {
-  lookUpTrades
+  lookUpTrades,
+  getTrxMapByCcy
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -278,7 +279,7 @@ class TransactionTaxReport {
   }
 
   async #convertCurrencies (trxs) {
-    const trxMapByCcy = this.#getTrxMapByCcy(trxs)
+    const trxMapByCcy = getTrxMapByCcy(trxs)
 
     for (const [symbol, trxData] of trxMapByCcy.entries()) {
       const pubTrades = []
@@ -346,45 +347,6 @@ class TransactionTaxReport {
         }
       }
     }
-  }
-
-  // TODO:
-  #getTrxMapByCcy (trxs) {
-    const trxMapByCcy = new Map()
-
-    for (const trx of trxs) {
-      const isNotFirstSymbForex = !isForexSymb(trx.firstSymb)
-      const isNotLastSymbForex = !isForexSymb(trx.lastSymb)
-
-      if (isNotFirstSymbForex) {
-        if (!trxMapByCcy.has(trx.firstSymb)) {
-          trxMapByCcy.set(trx.firstSymb, [])
-        }
-
-        trxMapByCcy.get(trx.firstSymb).push({
-          isNotFirstSymbForex,
-          isNotLastSymbForex,
-          mainPrisePropName: 'firstSymbPrise',
-          secondPrisePropName: 'lastSymbPrise',
-          trx
-        })
-      }
-      if (isNotLastSymbForex) {
-        if (!trxMapByCcy.has(trx.lastSymb)) {
-          trxMapByCcy.set(trx.lastSymb, [])
-        }
-
-        trxMapByCcy.get(trx.lastSymb).push({
-          isNotFirstSymbForex,
-          isNotLastSymbForex,
-          mainPrisePropName: 'lastSymbPrise',
-          secondPrisePropName: 'firstSymbPrise',
-          trx
-        })
-      }
-    }
-
-    return trxMapByCcy
   }
 
   // TODO:
