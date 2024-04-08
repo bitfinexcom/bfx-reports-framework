@@ -554,7 +554,7 @@ class ReportFileJobData extends BaseReportFileJobData {
       args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
-        symbol: 'DESCRIPTION OF PROPERTY',
+        asset: 'DESCRIPTION OF PROPERTY',
         amount: 'AMOUNT',
         mtsAcquired: 'DATE ACQUIRED',
         mtsSold: 'DATE SOLD',
@@ -563,7 +563,7 @@ class ReportFileJobData extends BaseReportFileJobData {
         gainOrLoss: 'GAIN OR LOSS'
       },
       formatSettings: {
-        symbol: 'symbol',
+        asset: 'symbol',
         mtsAcquired: 'date',
         mtsSold: 'date'
       }
