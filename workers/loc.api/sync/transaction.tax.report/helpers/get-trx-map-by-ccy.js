@@ -4,7 +4,7 @@ const {
   isForexSymb
 } = require('../../helpers')
 
-module.exports = async (trxs) => {
+module.exports = (trxs) => {
   const trxMapByCcy = new Map()
 
   for (const trx of trxs) {

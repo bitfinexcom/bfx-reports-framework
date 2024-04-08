@@ -12,7 +12,8 @@ const {
 } = require('../../errors')
 const {
   lookUpTrades,
-  getTrxMapByCcy
+  getTrxMapByCcy,
+  getPubTradeChunkPayloads
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -283,7 +284,7 @@ class TransactionTaxReport {
 
     for (const [symbol, trxData] of trxMapByCcy.entries()) {
       const pubTrades = []
-      const pubTradeChunkPayloads = this.#getPubTradeChunkPayloads(
+      const pubTradeChunkPayloads = getPubTradeChunkPayloads(
         symbol,
         trxData
       )
@@ -347,44 +348,6 @@ class TransactionTaxReport {
         }
       }
     }
-  }
-
-  // TODO:
-  #getPubTradeChunkPayloads (symbol, trxData) {
-    const pubTradeChunkPayloads = []
-
-    for (const { trx } of trxData) {
-      const lastPayloads = pubTradeChunkPayloads[pubTradeChunkPayloads.length - 1]
-      const lastMts = lastPayloads?.start ?? lastPayloads?.end
-      const currMts = trx.mtsCreate
-
-      if (!lastPayloads?.end) {
-        pubTradeChunkPayloads.push({
-          symbol,
-          end: currMts,
-          start: null
-        })
-
-        continue
-      }
-
-      const mtsDiff = lastMts - currMts
-      const maxAllowedTimeframe = 1000 * 60 * 60 * 24
-
-      if (mtsDiff < maxAllowedTimeframe) {
-        lastPayloads.start = currMts
-
-        continue
-      }
-
-      pubTradeChunkPayloads.push({
-        symbol,
-        end: currMts,
-        start: null
-      })
-    }
-
-    return pubTradeChunkPayloads
   }
 
   async #getPublicTradeChunk (params) {
