@@ -528,7 +528,6 @@ class ReportFileJobData extends BaseReportFileJobData {
     return jobData
   }
 
-  // TODO:
   async getTransactionTaxReportFileJobData (
     args,
     uId,
@@ -556,7 +555,7 @@ class ReportFileJobData extends BaseReportFileJobData {
       propNameForPagination: null,
       columnsCsv: {
         symbol: 'DESCRIPTION OF PROPERTY',
-        amount: 'amount',
+        amount: 'AMOUNT',
         mtsAcquired: 'DATE ACQUIRED',
         mtsSold: 'DATE SOLD',
         proceeds: 'PROCEEDS',
