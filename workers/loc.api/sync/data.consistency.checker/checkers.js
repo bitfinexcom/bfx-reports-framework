@@ -103,7 +103,6 @@ class Checkers {
       })
   }
 
-  // TODO:
   [CHECKER_NAMES.TRANSACTION_TAX_REPORT] (auth) {
     return this.syncCollsManager
       .haveCollsBeenSyncedUpToDate({
@@ -111,7 +110,8 @@ class Checkers {
         params: {
           schema: [
             this.SYNC_API_METHODS.TRADES,
-            this.SYNC_API_METHODS.CANDLES
+            this.SYNC_API_METHODS.LEDGERS,
+            this.SYNC_API_METHODS.MOVEMENTS
           ]
         }
       })
