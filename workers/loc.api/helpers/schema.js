@@ -222,6 +222,13 @@ const paramsSchemaForTransactionTaxReportApi = {
     },
     start: {
       type: 'integer'
+    },
+    strategy: {
+      type: 'string',
+      enum: [
+        'FIFO',
+        'LIFO'
+      ]
     }
   }
 }

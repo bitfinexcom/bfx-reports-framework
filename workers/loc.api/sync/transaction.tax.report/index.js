@@ -14,7 +14,7 @@ const {
   lookUpTrades,
   getTrxMapByCcy,
   getPubTradeChunkPayloads,
-  checkParamsAndSetDefault
+  TRX_TAX_STRATEGIES
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -77,15 +77,15 @@ class TransactionTaxReport {
   }
 
   async getTransactionTaxReport (args = {}) {
-    const { auth, params } = checkParamsAndSetDefault(args)
-    const {
-      start = 0,
-      end = Date.now(),
-      isFIFO,
-      isLIFO
-    } = params ?? {}
+    const { auth, params } = args ?? {}
+    const start = params.start ?? 0
+    const end = params.end ?? Date.now()
+    const strategy = params.strategy ?? TRX_TAX_STRATEGIES.LIFO
     const user = await this.authenticator
       .verifyRequestUser({ auth })
+
+    const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO
+    const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
 
     const {
       trxs: trxsForCurrPeriod,
