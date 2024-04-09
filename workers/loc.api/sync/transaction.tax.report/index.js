@@ -13,7 +13,8 @@ const {
 const {
   lookUpTrades,
   getTrxMapByCcy,
-  getPubTradeChunkPayloads
+  getPubTradeChunkPayloads,
+  checkParamsAndSetDefault
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -76,10 +77,12 @@ class TransactionTaxReport {
   }
 
   async getTransactionTaxReport (args = {}) {
-    const { auth, params } = args ?? {}
+    const { auth, params } = checkParamsAndSetDefault(args)
     const {
       start = 0,
-      end = Date.now()
+      end = Date.now(),
+      isFIFO,
+      isLIFO
     } = params ?? {}
     const user = await this.authenticator
       .verifyRequestUser({ auth })
@@ -110,11 +113,14 @@ class TransactionTaxReport {
       })
       : { trxs: [] }
 
-    const isBackIterativeLookUp = true
+    const isBackIterativeSaleLookUp = isFIFO && !isLIFO
+    const isBackIterativeBuyLookUp = isFIFO && !isLIFO
+
     const { buyTradesWithUnrealizedProfit } = await lookUpTrades(
       trxsForPrevPeriod,
       {
-        isBackIterativeLookUp,
+        isBackIterativeSaleLookUp,
+        isBackIterativeBuyLookUp,
         buyTradesWithUnrealizedProfit: true,
         isNotGainOrLossRequired: true
       }
@@ -126,7 +132,11 @@ class TransactionTaxReport {
     await this.#convertCurrencies(trxsForConvToUsd)
 
     const { saleTradesWithRealizedProfit } = await lookUpTrades(
-      trxsForCurrPeriod, { isBackIterativeLookUp }
+      trxsForCurrPeriod,
+      {
+        isBackIterativeSaleLookUp,
+        isBackIterativeBuyLookUp
+      }
     )
 
     return saleTradesWithRealizedProfit

@@ -17,7 +17,8 @@ const {
 
 module.exports = async (trades, opts) => {
   const {
-    isBackIterativeLookUp = false,
+    isBackIterativeSaleLookUp = false,
+    isBackIterativeBuyLookUp = false,
     isBuyTradesWithUnrealizedProfitRequired = false,
     isNotGainOrLossRequired = false
   } = opts ?? {}
@@ -36,7 +37,7 @@ module.exports = async (trades, opts) => {
   }
 
   let lastLoopUnlockMts = Date.now()
-  const tradeIterator = isBackIterativeLookUp
+  const tradeIterator = isBackIterativeSaleLookUp
     ? getBackIterable(trades)
     : trades
 
@@ -119,7 +120,21 @@ module.exports = async (trades, opts) => {
       throw new CurrencyConversionError()
     }
 
-    for (let j = i + 1; trades.length > j; j += 1) {
+    const startPoint = isBackIterativeBuyLookUp
+      ? trades.length - 1
+      : i + 1
+    const checkPoint = (j) => (
+      isBackIterativeBuyLookUp
+        ? i < j
+        : trades.length > j
+    )
+    const shiftPoint = (j) => (
+      isBackIterativeBuyLookUp
+        ? j - 1
+        : j + 1
+    )
+
+    for (let j = startPoint; checkPoint(j); j = shiftPoint(j)) {
       if (trade.isSaleTrxHistFilled) {
         break
       }
