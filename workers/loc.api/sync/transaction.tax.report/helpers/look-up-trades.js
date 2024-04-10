@@ -65,7 +65,10 @@ module.exports = async (trades, opts) => {
     if (
       !trade?.symbol ||
       !Number.isFinite(trade?.execPrice) ||
-      trade.execPrice === 0 ||
+      (
+        !isBuyTradesWithUnrealizedProfitRequired &&
+        trade.execPrice === 0
+      ) ||
       !Number.isFinite(trade?.execAmount) ||
       trade.execAmount === 0
     ) {
@@ -95,7 +98,10 @@ module.exports = async (trades, opts) => {
     )
     trade.isSaleTrx = isDistinctSale || isSaleBetweenCrypto
 
-    if (!trade.isSaleTrx) {
+    if (
+      !trade.isSaleTrx ||
+      trade.isBuyTradesWithUnrealizedProfitForPrevPeriod
+    ) {
       continue
     }
     if (
@@ -147,7 +153,10 @@ module.exports = async (trades, opts) => {
         !Number.isFinite(tradeForLookup?.execAmount) ||
         tradeForLookup.execAmount === 0 ||
         !Number.isFinite(tradeForLookup?.execPrice) ||
-        tradeForLookup.execPrice === 0
+        (
+          !isBuyTradesWithUnrealizedProfitRequired &&
+          tradeForLookup.execPrice === 0
+        )
       ) {
         continue
       }
@@ -262,11 +271,13 @@ module.exports = async (trades, opts) => {
       trade?.isBuyTrx &&
       !trade?.isBuyTrxHistFilled
     ) {
+      trade.isBuyTradesWithUnrealizedProfitForPrevPeriod = true
       buyTradesWithUnrealizedProfit.push(trade)
     }
 
     if (
       isBuyTradesWithUnrealizedProfitRequired ||
+      trade?.isBuyTradesWithUnrealizedProfitForPrevPeriod ||
       !trade?.isSaleTrx ||
       trade?.isMovements
     ) {
