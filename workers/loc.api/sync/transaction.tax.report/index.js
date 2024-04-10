@@ -121,14 +121,14 @@ class TransactionTaxReport {
       {
         isBackIterativeSaleLookUp,
         isBackIterativeBuyLookUp,
-        buyTradesWithUnrealizedProfit: true,
+        isBuyTradesWithUnrealizedProfitRequired: true,
         isNotGainOrLossRequired: true
       }
     )
 
     trxsForCurrPeriod.push(...buyTradesWithUnrealizedProfit)
     trxsForConvToUsd.push(...buyTradesWithUnrealizedProfit
-      .filter((trx) => trx?.lastSymb !== 'USD'))
+      .filter((trx) => trx?.isMovements || trx?.lastSymb !== 'USD'))
     await this.#convertCurrencies(trxsForConvToUsd)
 
     const { saleTradesWithRealizedProfit } = await lookUpTrades(
@@ -235,13 +235,6 @@ class TransactionTaxReport {
       }
 
       remapedTrxsForConvToUsd.push(trade)
-    }
-
-    if (remapedTrxs.length === 0) {
-      return {
-        trx: [],
-        trxsForConvToUsd: []
-      }
     }
 
     for (const movement of movements) {
