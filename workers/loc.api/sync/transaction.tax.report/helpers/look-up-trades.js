@@ -1,9 +1,9 @@
 'use strict'
 
 const { setImmediate } = require('node:timers/promises')
-const {
-  splitSymbolPairs
-} = require('bfx-report/workers/loc.api/helpers')
+const splitSymbolPairs = require(
+  'bfx-report/workers/loc.api/helpers/split-symbol-pairs'
+)
 
 const {
   isForexSymb,
