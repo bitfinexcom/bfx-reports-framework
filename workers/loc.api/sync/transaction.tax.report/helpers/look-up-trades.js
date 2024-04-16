@@ -55,12 +55,21 @@ module.exports = async (trades, opts) => {
       lastLoopUnlockMts = currentLoopUnlockMts
     }
 
+    trade.isMovements = trade.isMovements ?? false
+
     trade.isSaleTrx = trade.isSaleTrx ?? false
     trade.isSaleTrxHistFilled = trade.isSaleTrxHistFilled ?? false
     trade.saleFilledAmount = trade.saleFilledAmount ?? 0
     trade.costForSaleTrx = trade.costForSaleTrx ?? 0
     trade.buyTrxsForRealizedProfit = trade
       .buyTrxsForRealizedProfit ?? []
+
+    trade.isBuyTrx = trade.isBuyTrx ?? false
+    trade.isBuyTrxHistFilled = trade.isBuyTrxHistFilled ?? false
+    trade.buyFilledAmount = trade.buyFilledAmount ?? 0
+    trade.proceedsForBuyTrx = trade.proceedsForBuyTrx ?? 0
+    trade.saleTrxsForRealizedProfit = trade
+      .saleTrxsForRealizedProfit ?? []
 
     if (
       !trade?.symbol ||
@@ -91,12 +100,17 @@ module.exports = async (trades, opts) => {
      *  - sale ETC:USD -> amount -3, price 4000
      *  - sale UST:EUR - > amount -3, price 0.9 (here needs to be considered EUR price and converted to USD)
      */
+    const isLastSymbForex = isForexSymb(lastSymb)
     const isDistinctSale = trade.execAmount < 0
     const isSaleBetweenCrypto = (
       trade.execAmount > 0 &&
-      !isForexSymb(lastSymb)
+      !isLastSymbForex
     )
     trade.isSaleTrx = isDistinctSale || isSaleBetweenCrypto
+    trade.isBuyTrx = (
+      trade.execAmount > 0 ||
+      !isLastSymbForex
+    )
 
     if (
       !trade.isSaleTrx ||
@@ -193,6 +207,8 @@ module.exports = async (trades, opts) => {
         continue
       }
 
+      tradeForLookup.isBuyTrx = true
+
       const buyAsset = tradeForLookup.execAmount > 0
         ? firstSymbForLookup
         : lastSymbForLookup
@@ -201,7 +217,6 @@ module.exports = async (trades, opts) => {
         continue
       }
 
-      tradeForLookup.isBuyTrx = true
       tradeForLookup.saleTrxsForRealizedProfit.push(trade)
       trade.buyTrxsForRealizedProfit.push(tradeForLookup)
 
