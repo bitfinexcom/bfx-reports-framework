@@ -351,4 +351,54 @@ describe('lookUpTrades helper for trx tax report', () => {
       gainOrLoss: 84_725
     })
   })
+
+  it('Lookup sale trx with realized profit considering prev year, FIFO strategy', async function () {
+    const {
+      buyTradesWithUnrealizedProfit
+    } = await lookUpTrades(
+      getMockedTrades(mockTrades),
+      {
+        isBackIterativeSaleLookUp: true,
+        isBackIterativeBuyLookUp: true,
+        isBuyTradesWithUnrealizedProfitRequired: true,
+        isNotGainOrLossRequired: true
+      }
+    )
+    const _mockTradesForNextYear = getMockedTrades(mockTradesForNextYear)
+    _mockTradesForNextYear.push(...buyTradesWithUnrealizedProfit)
+
+    const {
+      saleTradesWithRealizedProfit
+    } = await lookUpTrades(
+      _mockTradesForNextYear,
+      {
+        isBackIterativeSaleLookUp: true,
+        isBackIterativeBuyLookUp: true,
+        isBuyTradesWithUnrealizedProfitRequired: false,
+        isNotGainOrLossRequired: false
+      }
+    )
+
+    assert.isArray(saleTradesWithRealizedProfit)
+    assert.equal(saleTradesWithRealizedProfit.length, 2)
+
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 0, {
+      asset: 'UST',
+      amount: 200,
+      mtsAcquired: Date.UTC(2023, 5, 11),
+      mtsSold: Date.UTC(2024, 3, 27),
+      proceeds: 196,
+      cost: 222,
+      gainOrLoss: -26
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
+      asset: 'BTC',
+      amount: 5,
+      mtsAcquired: Date.UTC(2023, 1, 5),
+      mtsSold: Date.UTC(2024, 2, 17),
+      proceeds: 305_000,
+      cost: 215_000,
+      gainOrLoss: 90_000
+    })
+  })
 })
