@@ -234,7 +234,72 @@ describe('lookUpTrades helper for trx tax report', () => {
       }
     )
 
-    console.log('[saleTradesWithRealizedProfit]:', saleTradesWithRealizedProfit)
+    assert.isArray(saleTradesWithRealizedProfit)
+    assert.equal(saleTradesWithRealizedProfit.length, 7)
+
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 0, {
+      asset: 'UST',
+      amount: 100,
+      mtsAcquired: Date.UTC(2023, 5, 11),
+      mtsSold: Date.UTC(2023, 6, 21),
+      proceeds: 105,
+      cost: 111,
+      gainOrLoss: -6
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
+      asset: 'ETH',
+      amount: 1,
+      mtsAcquired: Date.UTC(2023, 2, 23),
+      mtsSold: Date.UTC(2023, 5, 11),
+      proceeds: 3110,
+      cost: 2601,
+      gainOrLoss: 509
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
+      asset: 'ETH',
+      amount: 1,
+      mtsAcquired: Date.UTC(2023, 2, 23),
+      mtsSold: Date.UTC(2023, 4, 22),
+      proceeds: 2650,
+      cost: 2601,
+      gainOrLoss: 49
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
+      asset: 'ETH',
+      amount: 1,
+      mtsAcquired: Date.UTC(2023, 2, 23),
+      mtsSold: Date.UTC(2023, 4, 10),
+      proceeds: 2000,
+      cost: 2601,
+      gainOrLoss: -601
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
+      asset: 'ETH',
+      amount: 2,
+      mtsAcquired: Date.UTC(2023, 2, 23),
+      mtsSold: Date.UTC(2023, 3, 10),
+      proceeds: 6400,
+      cost: 5202,
+      gainOrLoss: 1198
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
+      asset: 'BTC',
+      amount: 0.5,
+      mtsAcquired: Date.UTC(2023, 0, 10),
+      mtsSold: Date.UTC(2023, 2, 23),
+      proceeds: 25000,
+      cost: 10000,
+      gainOrLoss: 15000
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
+      asset: 'BTC',
+      amount: 2,
+      mtsAcquired: Date.UTC(2023, 0, 10),
+      mtsSold: Date.UTC(2023, 2, 3),
+      proceeds: 66000,
+      cost: 40000,
+      gainOrLoss: 26000
+    })
   })
 
   it('Lookup sale trx with realized profit considering prev year, LIFO strategy', async function () {
