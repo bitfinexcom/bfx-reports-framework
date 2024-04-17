@@ -2,6 +2,16 @@
 
 const { assert } = require('chai')
 
+/*
+ * It's a simple workaround for passing test with
+ * issue `0.1 + 0.2 = 0.30000000000000004`
+ */
+const truncFloat = (num, precision) => {
+  const _precision = precision ?? 13
+
+  return Math.trunc(num * 10 ** _precision) / 10 ** _precision
+}
+
 module.exports = (arr, index, props) => {
   const trade = arr[index]
   const {
@@ -25,9 +35,9 @@ module.exports = (arr, index, props) => {
   assert.isNumber(trade.mtsSold)
   assert.equal(trade.mtsSold, mtsSold)
   assert.isNumber(trade.proceeds)
-  assert.equal(trade.proceeds, proceeds)
+  assert.equal(truncFloat(trade.proceeds), proceeds)
   assert.isNumber(trade.cost)
-  assert.equal(trade.cost, cost)
+  assert.equal(truncFloat(trade.cost), cost)
   assert.isNumber(trade.gainOrLoss)
-  assert.equal(trade.gainOrLoss, gainOrLoss)
+  assert.equal(truncFloat(trade.gainOrLoss), gainOrLoss)
 }
