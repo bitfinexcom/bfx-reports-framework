@@ -107,8 +107,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 5, 11),
-      proceeds: 3110,
-      cost: 2601,
+      proceeds: 3_110,
+      cost: 2_601,
       gainOrLoss: 509
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
@@ -116,8 +116,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 22),
-      proceeds: 2650,
-      cost: 2601,
+      proceeds: 2_650,
+      cost: 2_601,
       gainOrLoss: 49
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
@@ -125,8 +125,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 10),
-      proceeds: 2000,
-      cost: 2601,
+      proceeds: 2_000,
+      cost: 2_601,
       gainOrLoss: -601
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
@@ -134,27 +134,27 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 2,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 3, 10),
-      proceeds: 6400,
-      cost: 5202,
-      gainOrLoss: 1198
+      proceeds: 6_400,
+      cost: 5_202,
+      gainOrLoss: 1_198
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
       asset: 'BTC',
       amount: 0.5,
       mtsAcquired: Date.UTC(2023, 1, 5),
       mtsSold: Date.UTC(2023, 2, 23),
-      proceeds: 25000,
-      cost: 21500,
-      gainOrLoss: 3500
+      proceeds: 25_000,
+      cost: 21_500,
+      gainOrLoss: 3_500
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
       asset: 'BTC',
       amount: 2,
       mtsAcquired: Date.UTC(2023, 1, 5),
       mtsSold: Date.UTC(2023, 2, 3),
-      proceeds: 66000,
-      cost: 86000,
-      gainOrLoss: -20000
+      proceeds: 66_000,
+      cost: 86_000,
+      gainOrLoss: -20_000
     })
   })
 
@@ -251,8 +251,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 5, 11),
-      proceeds: 3110,
-      cost: 2601,
+      proceeds: 3_110,
+      cost: 2_601,
       gainOrLoss: 509
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
@@ -260,8 +260,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 22),
-      proceeds: 2650,
-      cost: 2601,
+      proceeds: 2_650,
+      cost: 2_601,
       gainOrLoss: 49
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
@@ -269,8 +269,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 10),
-      proceeds: 2000,
-      cost: 2601,
+      proceeds: 2_000,
+      cost: 2_601,
       gainOrLoss: -601
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
@@ -278,27 +278,27 @@ describe('lookUpTrades helper for trx tax report', () => {
       amount: 2,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 3, 10),
-      proceeds: 6400,
-      cost: 5202,
-      gainOrLoss: 1198
+      proceeds: 6_400,
+      cost: 5_202,
+      gainOrLoss: 1_198
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
       asset: 'BTC',
       amount: 0.5,
       mtsAcquired: Date.UTC(2023, 0, 10),
       mtsSold: Date.UTC(2023, 2, 23),
-      proceeds: 25000,
-      cost: 10000,
-      gainOrLoss: 15000
+      proceeds: 25_000,
+      cost: 10_000,
+      gainOrLoss: 15_000
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
       asset: 'BTC',
       amount: 2,
       mtsAcquired: Date.UTC(2023, 0, 10),
       mtsSold: Date.UTC(2023, 2, 3),
-      proceeds: 66000,
-      cost: 40000,
-      gainOrLoss: 26000
+      proceeds: 66_000,
+      cost: 40_000,
+      gainOrLoss: 26_000
     })
   })
 
@@ -314,7 +314,6 @@ describe('lookUpTrades helper for trx tax report', () => {
         isNotGainOrLossRequired: true
       }
     )
-    console.log('[buyTradesWithUnrealizedProfit]:', buyTradesWithUnrealizedProfit)
     const _mockTradesForNextYear = getMockedTrades(mockTradesForNextYear)
     _mockTradesForNextYear.push(...buyTradesWithUnrealizedProfit)
 
@@ -330,6 +329,26 @@ describe('lookUpTrades helper for trx tax report', () => {
       }
     )
 
-    console.log('[saleTradesWithRealizedProfit]:', saleTradesWithRealizedProfit)
+    assert.isArray(saleTradesWithRealizedProfit)
+    assert.equal(saleTradesWithRealizedProfit.length, 2)
+
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 0, {
+      asset: 'UST',
+      amount: 200,
+      mtsAcquired: Date.UTC(2023, 5, 11),
+      mtsSold: Date.UTC(2024, 3, 27),
+      proceeds: 196,
+      cost: 222,
+      gainOrLoss: -26
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
+      asset: 'BTC',
+      amount: 5,
+      mtsAcquired: Date.UTC(2023, 1, 5),
+      mtsSold: Date.UTC(2024, 2, 17),
+      proceeds: 305_000,
+      cost: 220_275,
+      gainOrLoss: 84_725
+    })
   })
 })
