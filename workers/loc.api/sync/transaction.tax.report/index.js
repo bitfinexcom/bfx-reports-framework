@@ -222,14 +222,14 @@ class TransactionTaxReport {
       const [firstSymb, lastSymb] = splitSymbolPairs(trade.symbol)
       trade.firstSymb = firstSymb
       trade.lastSymb = lastSymb
-      trade.firstSymbPrise = null
-      trade.lastSymbPrise = null
+      trade.firstSymbPrice = null
+      trade.lastSymbPrice = null
 
       remapedTrxs.push(trade)
 
       if (lastSymb === 'USD') {
-        trade.firstSymbPrise = trade.execPrice
-        trade.lastSymbPrise = 1
+        trade.firstSymbPrice = trade.execPrice
+        trade.lastSymbPrice = 1
 
         continue
       }
@@ -260,10 +260,10 @@ class TransactionTaxReport {
         mtsCreate: movement.mtsUpdated,
         firstSymb,
         lastSymb,
-        firstSymbPrise: null,
-        lastSymbPrise: 1,
+        firstSymbPrice: null,
+        lastSymbPrice: 1,
         execAmount: movement.amount,
-        // NOTE: execPrice = firstSymbPrise and should be set when converting currencies
+        // NOTE: execPrice = firstSymbPrice and should be set when converting currencies
         execPrice: 0
       }
 
@@ -317,7 +317,7 @@ class TransactionTaxReport {
           }
 
           lastIndex = i
-          trxDataItem.trx[trxDataItem.mainPrisePropName] = pubTrade.price
+          trxDataItem.trx[trxDataItem.mainPricePropName] = pubTrade.price
 
           if (trxDataItem.trx.isMovements) {
             trxDataItem.trx.execPrice = pubTrade.price
@@ -334,7 +334,7 @@ class TransactionTaxReport {
             trxDataItem.isNotFirstSymbForex &&
             !trxDataItem.isNotFirstSymbForex
           ) {
-            trxDataItem.trx[trxDataItem.secondPrisePropName] = (
+            trxDataItem.trx[trxDataItem.secondPricePropName] = (
               pubTrade.price / trxDataItem.trx.execPrice
             )
           }
@@ -342,7 +342,7 @@ class TransactionTaxReport {
             !trxDataItem.isNotFirstSymbForex &&
             trxDataItem.isNotFirstSymbForex
           ) {
-            trxDataItem.trx[trxDataItem.secondPrisePropName] = (
+            trxDataItem.trx[trxDataItem.secondPricePropName] = (
               pubTrade.price * trxDataItem.trx.execPrice
             )
           }

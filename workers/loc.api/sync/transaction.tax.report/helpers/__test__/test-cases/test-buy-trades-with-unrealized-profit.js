@@ -26,8 +26,8 @@ module.exports = (arr, index, props) => {
   assert.equal(trade.proceedsForBuyTrx, 0)
   assert.isNumber(trade.proceedsForBuyTrx)
   assert.equal(trade.proceedsForBuyTrx, 0)
-  assert.isNumber(trade.firstSymbPrise)
-  assert.isNumber(trade.lastSymbPrise)
+  assert.isNumber(trade.firstSymbPrice)
+  assert.isNumber(trade.lastSymbPrice)
   assert.isArray(trade.saleTrxsForRealizedProfit)
 
   assert.isBoolean(trade.isMovements)

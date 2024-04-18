@@ -19,8 +19,8 @@ module.exports = (trxs) => {
       trxMapByCcy.get(trx.firstSymb).push({
         isNotFirstSymbForex,
         isNotLastSymbForex,
-        mainPrisePropName: 'firstSymbPrise',
-        secondPrisePropName: 'lastSymbPrise',
+        mainPricePropName: 'firstSymbPrice',
+        secondPricePropName: 'lastSymbPrice',
         trx
       })
     }
@@ -32,8 +32,8 @@ module.exports = (trxs) => {
       trxMapByCcy.get(trx.lastSymb).push({
         isNotFirstSymbForex,
         isNotLastSymbForex,
-        mainPrisePropName: 'lastSymbPrise',
-        secondPrisePropName: 'firstSymbPrise',
+        mainPricePropName: 'lastSymbPrice',
+        secondPricePropName: 'firstSymbPrice',
         trx
       })
     }

@@ -40,24 +40,24 @@ const mockTrades = [
     mtsCreate: Date.UTC(2023, 6, 21),
     execAmount: -100,
     execPrice: 0.9,
-    firstSymbPrise: 1.05,
-    lastSymbPrise: 0.95
+    firstSymbPrice: 1.05,
+    lastSymbPrice: 0.95
   },
   {
     symbol: 'tETHUST',
     mtsCreate: Date.UTC(2023, 5, 11),
     execAmount: -1,
     execPrice: 2800,
-    firstSymbPrise: 3_110,
-    lastSymbPrise: 1.11
+    firstSymbPrice: 3_110,
+    lastSymbPrice: 1.11
   },
   {
     symbol: 'tETHBTC',
     mtsCreate: Date.UTC(2023, 4, 22),
     execAmount: -1,
     execPrice: 0.055,
-    firstSymbPrise: 2_650,
-    lastSymbPrise: 48_000
+    firstSymbPrice: 2_650,
+    lastSymbPrice: 48_000
   },
   {
     symbol: 'tETHUSD',
@@ -83,8 +83,8 @@ const mockTrades = [
     mtsCreate: Date.UTC(2023, 2, 23),
     execAmount: 10,
     execPrice: 0.05,
-    firstSymbPrise: 2_601,
-    lastSymbPrise: 50_000
+    firstSymbPrice: 2_601,
+    lastSymbPrice: 50_000
   },
   {
     symbol: 'tBTCUSD',

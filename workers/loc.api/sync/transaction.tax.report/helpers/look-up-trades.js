@@ -129,8 +129,8 @@ module.exports = async (trades, opts) => {
       ? Math.abs(trade.execAmount)
       : Math.abs(trade.execAmount * trade.execPrice)
     const _salePrice = isDistinctSale
-      ? trade.firstSymbPrise
-      : trade.lastSymbPrise
+      ? trade.firstSymbPrice
+      : trade.lastSymbPrice
     const salePrice = isNotGainOrLossRequired ? 0 : _salePrice
     const saleAsset = isDistinctSale
       ? firstSymb
@@ -224,8 +224,8 @@ module.exports = async (trades, opts) => {
         ? Math.abs(tradeForLookup.execAmount)
         : Math.abs(tradeForLookup.execAmount * tradeForLookup.execPrice)
       const _buyPrice = tradeForLookup.execAmount > 0
-        ? tradeForLookup.firstSymbPrise
-        : tradeForLookup.lastSymbPrise
+        ? tradeForLookup.firstSymbPrice
+        : tradeForLookup.lastSymbPrice
       const buyPrice = isNotGainOrLossRequired ? 0 : _buyPrice
       const buyRestAmount = buyAmount - tradeForLookup.buyFilledAmount
       const saleRestAmount = saleAmount - trade.saleFilledAmount

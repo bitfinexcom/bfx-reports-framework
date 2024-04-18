@@ -19,8 +19,8 @@ module.exports = (mockTrades, opts) => {
 
     firstSymb: null,
     lastSymb: null,
-    firstSymbPrise: null,
-    lastSymbPrise: null
+    firstSymbPrice: null,
+    lastSymbPrice: null
   }
 
   return mockTrades.map((trade, i) => {
@@ -37,8 +37,8 @@ module.exports = (mockTrades, opts) => {
       orderPrice: trade.execPrice,
       firstSymb,
       lastSymb,
-      firstSymbPrise: lastSymb === 'USD' ? trade.execPrice : null,
-      lastSymbPrise: lastSymb === 'USD' ? 1 : null,
+      firstSymbPrice: lastSymb === 'USD' ? trade.execPrice : null,
+      lastSymbPrice: lastSymb === 'USD' ? 1 : null,
 
       ...trade,
 
