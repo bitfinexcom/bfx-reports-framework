@@ -241,7 +241,7 @@ class TransactionTaxReport {
       for (const trxDataItem of trxData) {
         let lastIndex = 0
 
-        for (let i = lastIndex + 1; pubTrades.length > i; i += 1) {
+        for (let i = lastIndex; pubTrades.length > i; i += 1) {
           const pubTrade = pubTrades[i]
           const isLastPubTrade = (i + 1) === pubTrades.length
 
