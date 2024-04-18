@@ -6,6 +6,7 @@ const getPubTradeChunkPayloads = require('./get-pub-trade-chunk-payloads')
 const TRX_TAX_STRATEGIES = require('./trx.tax.strategies')
 const reMapTrades = require('./re-map-trades')
 const reMapMovements = require('./re-map-movements')
+const convertCurrencyBySymbol = require('./convert-currency-by-symbol')
 
 module.exports = {
   lookUpTrades,
@@ -13,5 +14,6 @@ module.exports = {
   getPubTradeChunkPayloads,
   TRX_TAX_STRATEGIES,
   reMapTrades,
-  reMapMovements
+  reMapMovements,
+  convertCurrencyBySymbol
 }
