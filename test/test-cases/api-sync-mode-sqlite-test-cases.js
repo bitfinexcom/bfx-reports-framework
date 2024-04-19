@@ -1808,7 +1808,7 @@ module.exports = (
           symbol: ['tBTCUSD', 'tETHUSD'],
           start: 0,
           end,
-          limit: 10
+          limit: 2
         },
         id: 5
       })
