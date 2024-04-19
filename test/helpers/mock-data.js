@@ -130,7 +130,7 @@ module.exports = new Map([
     'trades',
     [
       [
-        12345,
+        100012345,
         'tBTCUSD',
         _ms,
         12345,
@@ -143,7 +143,33 @@ module.exports = new Map([
         'USD'
       ],
       [
-        10012346,
+        110012345,
+        'tETHUSD',
+        _ms,
+        12345,
+        0.12345,
+        12345,
+        null,
+        null,
+        false,
+        -3.0001,
+        'USD'
+      ],
+      [
+        120012345,
+        'tETHUSD',
+        _ms,
+        12345,
+        -0.11,
+        12355,
+        null,
+        null,
+        false,
+        -3.0001,
+        'USD'
+      ],
+      [
+        130012345,
         'tBTCEUR',
         _ms,
         12345,
@@ -156,7 +182,20 @@ module.exports = new Map([
         'BTC'
       ],
       [
-        20012347,
+        140012345,
+        'tBTCEUR',
+        _ms,
+        12345,
+        -0.11,
+        12355,
+        null,
+        null,
+        false,
+        -0.0001,
+        'BTC'
+      ],
+      [
+        150012347,
         'tBTCGBP',
         _ms,
         12345,
@@ -169,7 +208,20 @@ module.exports = new Map([
         'BTC'
       ],
       [
-        30012345,
+        160012347,
+        'tBTCGBP',
+        _ms,
+        12345,
+        -0.11,
+        12355,
+        null,
+        null,
+        false,
+        -0.0001,
+        'BTC'
+      ],
+      [
+        170012345,
         'tBTCJPY',
         _ms,
         12345,
@@ -180,6 +232,58 @@ module.exports = new Map([
         false,
         -0.0001,
         'BTC'
+      ],
+      [
+        180012345,
+        'tBTCJPY',
+        _ms,
+        12345,
+        -0.11,
+        12355,
+        null,
+        null,
+        false,
+        -0.0001,
+        'BTC'
+      ],
+      [
+        190012345,
+        'tETHBTC',
+        _ms,
+        12345,
+        0.12345,
+        12345,
+        null,
+        null,
+        false,
+        -0.0001,
+        'BTC'
+      ],
+      [
+        200012345,
+        'tETHBTC',
+        _ms,
+        12345,
+        -0.11,
+        12355,
+        null,
+        null,
+        false,
+        -0.0001,
+        'BTC'
+      ],
+      [
+        210012345,
+        'tBTCUSD',
+        _ms,
+        12345,
+        0.12345,
+        12345,
+        null,
+        null,
+        false,
+        -3.0001,
+        'USD'
       ]
     ]
   ],
