@@ -8,8 +8,8 @@ const {
   getTrxMapByCcy,
   getPubTradeChunkPayloads,
   TRX_TAX_STRATEGIES,
-  reMapTrades,
-  reMapMovements,
+  remapTrades,
+  remapMovements,
   convertCurrencyBySymbol
 } = require('./helpers')
 
@@ -200,21 +200,21 @@ class TransactionTaxReport {
     ])
 
     const movements = [...withdrawals, ...deposits]
-    const remapedTrxs = []
-    const remapedTrxsForConvToUsd = []
+    const remappedTrxs = []
+    const remappedTrxsForConvToUsd = []
 
-    reMapTrades(
+    remapTrades(
       trades,
-      { remapedTrxs, remapedTrxsForConvToUsd }
+      { remappedTrxs, remappedTrxsForConvToUsd }
     )
-    reMapMovements(
+    remapMovements(
       movements,
-      { remapedTrxs, remapedTrxsForConvToUsd }
+      { remappedTrxs, remappedTrxsForConvToUsd }
     )
 
-    const trxs = remapedTrxs
+    const trxs = remappedTrxs
       .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
-    const trxsForConvToUsd = remapedTrxsForConvToUsd
+    const trxsForConvToUsd = remappedTrxsForConvToUsd
       .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
 
     return {

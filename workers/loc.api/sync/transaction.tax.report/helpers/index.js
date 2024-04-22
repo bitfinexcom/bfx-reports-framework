@@ -4,8 +4,8 @@ const lookUpTrades = require('./look-up-trades')
 const getTrxMapByCcy = require('./get-trx-map-by-ccy')
 const getPubTradeChunkPayloads = require('./get-pub-trade-chunk-payloads')
 const TRX_TAX_STRATEGIES = require('./trx.tax.strategies')
-const reMapTrades = require('./re-map-trades')
-const reMapMovements = require('./re-map-movements')
+const remapTrades = require('./remap-trades')
+const remapMovements = require('./remap-movements')
 const convertCurrencyBySymbol = require('./convert-currency-by-symbol')
 
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
   getTrxMapByCcy,
   getPubTradeChunkPayloads,
   TRX_TAX_STRATEGIES,
-  reMapTrades,
-  reMapMovements,
+  remapTrades,
+  remapMovements,
   convertCurrencyBySymbol
 }

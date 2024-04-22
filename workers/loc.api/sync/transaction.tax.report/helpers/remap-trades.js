@@ -6,8 +6,8 @@ const {
 
 module.exports = (trades, params) => {
   const {
-    remapedTrxs,
-    remapedTrxsForConvToUsd
+    remappedTrxs,
+    remappedTrxsForConvToUsd
   } = params
 
   for (const trade of trades) {
@@ -28,7 +28,7 @@ module.exports = (trades, params) => {
     trade.firstSymbPrice = null
     trade.lastSymbPrice = null
 
-    remapedTrxs.push(trade)
+    remappedTrxs.push(trade)
 
     if (lastSymb === 'USD') {
       trade.firstSymbPrice = trade.execPrice
@@ -37,7 +37,7 @@ module.exports = (trades, params) => {
       continue
     }
 
-    remapedTrxsForConvToUsd.push(trade)
+    remappedTrxsForConvToUsd.push(trade)
   }
 
   return params

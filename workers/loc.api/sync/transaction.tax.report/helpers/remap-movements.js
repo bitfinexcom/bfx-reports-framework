@@ -6,8 +6,8 @@ const {
 
 module.exports = (movements, params) => {
   const {
-    remapedTrxs,
-    remapedTrxsForConvToUsd
+    remappedTrxs,
+    remappedTrxsForConvToUsd
   } = params
 
   for (const movement of movements) {
@@ -27,7 +27,7 @@ module.exports = (movements, params) => {
       ? ':'
       : ''
 
-    const remapedMovement = {
+    const remappedMovement = {
       isMovements: true,
       symbol: `t${firstSymb}${symbSeparator}${lastSymb}`,
       mtsCreate: movement.mtsUpdated,
@@ -40,8 +40,8 @@ module.exports = (movements, params) => {
       execPrice: 0
     }
 
-    remapedTrxs.push(remapedMovement)
-    remapedTrxsForConvToUsd.push(remapedMovement)
+    remappedTrxs.push(remappedMovement)
+    remappedTrxsForConvToUsd.push(remappedMovement)
   }
 
   return params
