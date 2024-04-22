@@ -1,8 +1,8 @@
 'use strict'
 
-const {
-  splitSymbolPairs
-} = require('bfx-report/workers/loc.api/helpers')
+const splitSymbolPairs = require(
+  'bfx-report/workers/loc.api/helpers/split-symbol-pairs'
+)
 
 module.exports = (trades, params) => {
   const {
