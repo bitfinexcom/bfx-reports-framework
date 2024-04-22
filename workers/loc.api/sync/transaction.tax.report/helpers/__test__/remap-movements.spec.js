@@ -11,8 +11,8 @@ const {
   testRemappedMovements
 } = require('./test-cases')
 
-describe('reMapMovements helper for trx tax report', () => {
-  it('Re-map movements to trade data structure', function () {
+describe('remapMovements helper for trx tax report', () => {
+  it('Remap movements to trx data structure', function () {
     const remappedTrxs = []
     const remappedTrxsForConvToUsd = []
     const params = { remappedTrxs, remappedTrxsForConvToUsd }

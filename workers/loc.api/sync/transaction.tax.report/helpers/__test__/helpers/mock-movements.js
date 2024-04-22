@@ -22,6 +22,21 @@ module.exports = [
     amount: 19.6
   },
   {
+    currency: '',
+    mtsUpdated: Date.UTC(2023, 5, 11),
+    amount: 19.6
+  },
+  {
+    currency: 'LTC',
+    mtsUpdated: Date.UTC(2023, 5, 10),
+    amount: 0
+  },
+  {
+    currency: 'LTC',
+    mtsUpdated: null,
+    amount: 10.2
+  },
+  {
     currency: 'GBP',
     mtsUpdated: Date.UTC(2023, 4, 3),
     amount: 602
