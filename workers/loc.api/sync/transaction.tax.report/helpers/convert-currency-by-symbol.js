@@ -35,7 +35,7 @@ module.exports = (trxData, pubTrades) => {
       }
       if (
         trxDataItem.isNotFirstSymbForex &&
-        !trxDataItem.isNotFirstSymbForex
+        !trxDataItem.isNotLastSymbForex
       ) {
         trxDataItem.trx[trxDataItem.secondPricePropName] = (
           pubTrade.price / trxDataItem.trx.execPrice
@@ -43,7 +43,7 @@ module.exports = (trxData, pubTrades) => {
       }
       if (
         !trxDataItem.isNotFirstSymbForex &&
-        trxDataItem.isNotFirstSymbForex
+        trxDataItem.isNotLastSymbForex
       ) {
         trxDataItem.trx[trxDataItem.secondPricePropName] = (
           pubTrade.price * trxDataItem.trx.execPrice
