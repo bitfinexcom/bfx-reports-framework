@@ -6,6 +6,7 @@ const testRemappedMovements = require('./test-remapped-movements')
 const testRemappedTrades = require('./test-remapped-trades')
 const testTrxMapByCcy = require('./test-trx-map-by-ccy')
 const testPubTradeChunkPayloads = require('./test-pub-trade-chunk-payloads')
+const testConvertedCurrencyBySymbol = require('./test-converted-currency-by-symbol')
 
 module.exports = {
   testBuyTradesWithUnrealizedProfit,
@@ -13,5 +14,6 @@ module.exports = {
   testRemappedMovements,
   testRemappedTrades,
   testTrxMapByCcy,
-  testPubTradeChunkPayloads
+  testPubTradeChunkPayloads,
+  testConvertedCurrencyBySymbol
 }
