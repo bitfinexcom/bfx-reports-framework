@@ -1,16 +1,14 @@
 'use strict'
 
 const {
-  TrxTaxReportGenerationTimeoutError
-} = require('../../errors')
-const {
   lookUpTrades,
   getTrxMapByCcy,
   getPubTradeChunkPayloads,
   TRX_TAX_STRATEGIES,
   remapTrades,
   remapMovements,
-  convertCurrencyBySymbol
+  convertCurrencyBySymbol,
+  getPubTradeChunk
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -138,36 +136,6 @@ class TransactionTaxReport {
     return saleTradesWithRealizedProfit
   }
 
-  async #getTrades ({
-    user,
-    start,
-    end,
-    symbol
-  }) {
-    const symbFilter = (
-      Array.isArray(symbol) &&
-      symbol.length !== 0
-    )
-      ? { $in: { symbol } }
-      : {}
-
-    return this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.TRADES,
-      {
-        filter: {
-          user_id: user._id,
-          $lte: { mtsCreate: end },
-          $gte: { mtsCreate: start },
-          ...symbFilter
-        },
-        sort: [['mtsCreate', -1]],
-        projection: this.tradesModel,
-        exclude: ['user_id'],
-        isExcludePrivate: true
-      }
-    )
-  }
-
   async #getTrxs (params) {
     const {
       user,
@@ -234,7 +202,10 @@ class TransactionTaxReport {
       )
 
       for (const chunkPayload of pubTradeChunkPayloads) {
-        const chunk = await this.#getPublicTradeChunk(chunkPayload)
+        const chunk = await getPubTradeChunk(
+          chunkPayload,
+          (...args) => this.#getPublicTrades(...args)
+        )
 
         pubTrades.push(...chunk)
       }
@@ -243,53 +214,34 @@ class TransactionTaxReport {
     }
   }
 
-  async #getPublicTradeChunk (params) {
-    const symbol = params?.symbol
-    const start = params?.start
-    let end = params?.end
-    let timeoutMts = Date.now()
-    const res = []
+  async #getTrades ({
+    user,
+    start,
+    end,
+    symbol
+  }) {
+    const symbFilter = (
+      Array.isArray(symbol) &&
+      symbol.length !== 0
+    )
+      ? { $in: { symbol } }
+      : {}
 
-    while (true) {
-      const currMts = Date.now()
-      const mtsDiff = currMts - timeoutMts
-
-      if (mtsDiff > 1000 * 60 * 60 * 12) {
-        throw new TrxTaxReportGenerationTimeoutError()
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.TRADES,
+      {
+        filter: {
+          user_id: user._id,
+          $lte: { mtsCreate: end },
+          $gte: { mtsCreate: start },
+          ...symbFilter
+        },
+        sort: [['mtsCreate', -1]],
+        projection: this.tradesModel,
+        exclude: ['user_id'],
+        isExcludePrivate: true
       }
-
-      timeoutMts = currMts
-
-      const { res: pubTrades } = await this.#getPublicTrades({
-        symbol: `t${symbol}USD`,
-        start: 0,
-        end
-      })
-
-      if (!Array.isArray(pubTrades)) {
-        break
-      }
-      if (
-        pubTrades.length === 0 ||
-        !Number.isFinite(start) ||
-        !Number.isFinite(pubTrades[0]?.mts) ||
-        !Number.isFinite(pubTrades[pubTrades.length - 1]?.mts) ||
-        (
-          res.length !== 0 &&
-          pubTrades[0]?.mts >= res[res.length - 1]?.mts
-        ) ||
-        pubTrades[pubTrades.length - 1]?.mts <= start
-      ) {
-        res.push(...pubTrades)
-
-        break
-      }
-
-      end = pubTrades[pubTrades.length - 1].mts - 1
-      res.push(...pubTrades)
-    }
-
-    return res
+    )
   }
 
   async #getPublicTrades (params) {
