@@ -8,6 +8,7 @@ const getMockedTrades = require('./get-mocked-trades')
 const mockMovements = require('./mock-movements')
 const getMockedMovements = require('./get-mocked-movements')
 const getMockedTrxMapByCcy = require('./get-mocked-trx-map-by-ccy')
+const getMockedPubTrades = require('./get-mocked-pub-trades')
 
 module.exports = {
   mockTradesForNextYear,
@@ -15,5 +16,6 @@ module.exports = {
   getMockedTrades,
   mockMovements,
   getMockedMovements,
-  getMockedTrxMapByCcy
+  getMockedTrxMapByCcy,
+  getMockedPubTrades
 }
