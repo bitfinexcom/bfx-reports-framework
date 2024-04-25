@@ -266,8 +266,10 @@ class TransactionTaxReport {
         end
       })
 
+      if (!Array.isArray(pubTrades)) {
+        break
+      }
       if (
-        !Array.isArray(pubTrades) ||
         pubTrades.length === 0 ||
         !Number.isFinite(start) ||
         !Number.isFinite(pubTrades[0]?.mts) ||
