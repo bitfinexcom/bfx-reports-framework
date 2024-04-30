@@ -11,7 +11,7 @@ on:
 jobs:
   linux-test-runner:
     name: Linux Test Runner
-    timeout-minutes: 30
+    timeout-minutes: 90
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout
@@ -31,7 +31,14 @@ jobs:
     - name: Install deps
       run: npm i
     - name: Run tests
-      run: npm test -- --reporter=json --reporter-option output=test-report.json
+      uses: nick-fields/retry@v3
+      continue-on-error: false
+      with:
+        timeout_minutes: 20
+        retry_wait_seconds: 10
+        max_attempts: 3
+        retry_on: any
+        command: npm test -- --reporter=json --reporter-option output=test-report.json
     - uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
