@@ -552,6 +552,7 @@ class DataInserter extends EventEmitter {
 
     let count = 0
     let serialRequestsCount = 0
+    let serialRequestsCountWithEndLessThanStart = 0
     let prevRes = []
 
     while (true) {
@@ -614,6 +615,15 @@ class DataInserter extends EventEmitter {
       }
       if (_args.params.limit < (count + res.length)) {
         res.splice(_args.params.limit - count)
+        isAllData = true
+      }
+
+      // Prevent very rare issue: end <= start
+      if (currIterationArgs.params.start >= currIterationArgs.params.end) {
+        currIterationArgs.params.end = currIterationArgs.params.start + 1
+        serialRequestsCountWithEndLessThanStart += 1
+      }
+      if (serialRequestsCountWithEndLessThanStart > 1) {
         isAllData = true
       }
 
