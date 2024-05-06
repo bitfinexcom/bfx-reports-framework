@@ -1,5 +1,7 @@
 'use strict'
 
+const { pushLargeArr } = require('../../helpers/utils')
+
 const {
   lookUpTrades,
   getTrxMapByCcy,
@@ -120,9 +122,12 @@ class TransactionTaxReport {
       }
     )
 
-    trxsForCurrPeriod.push(...buyTradesWithUnrealizedProfit)
-    trxsForConvToUsd.push(...buyTradesWithUnrealizedProfit
-      .filter((trx) => trx?.isMovements || trx?.lastSymb !== 'USD'))
+    pushLargeArr(trxsForCurrPeriod, buyTradesWithUnrealizedProfit)
+    pushLargeArr(
+      trxsForConvToUsd,
+      buyTradesWithUnrealizedProfit
+        .filter((trx) => trx?.isMovements || trx?.lastSymb !== 'USD')
+    )
     await this.#convertCurrencies(trxsForConvToUsd)
 
     const { saleTradesWithRealizedProfit } = await lookUpTrades(
@@ -207,7 +212,7 @@ class TransactionTaxReport {
           (...args) => this.#getPublicTrades(...args)
         )
 
-        pubTrades.push(...chunk)
+        pushLargeArr(pubTrades, chunk)
       }
 
       convertCurrencyBySymbol(trxData, pubTrades)
