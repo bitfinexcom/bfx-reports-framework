@@ -82,7 +82,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
     ) {
       return {
         balance: _nativeBalance,
-        balanceUsd: _nativeBalanceUsd
+        balanceUsd: _nativeBalanceUsd,
+        _isBalanceRecalced: null
       }
     }
 
@@ -143,7 +144,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
 
     return {
       balance,
-      balanceUsd
+      balanceUsd,
+      _isBalanceRecalced: 1
     }
   }
 
@@ -316,11 +318,17 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
       return
     }
 
+    const authIds = [...auth]
+      .map(([key, auth]) => auth?._id)
+      .filter((id) => Number.isFinite(id))
+    const requiredUserIds = [...new Set(authIds)]
+
     const firstNotRecalcedElem = await this.dao.getElemInCollBy(
       tableName,
       {
         $isNotNull: 'subUserId',
-        $isNull: '_isBalanceRecalced'
+        $isNull: '_isBalanceRecalced',
+        $in: { user_id: requiredUserIds }
       },
       [['mts', 1], ['id', 1]]
     )
@@ -346,6 +354,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
           filter: {
             $gte: { mts },
             $nin: { _id: skipedIds },
+            $in: { user_id: requiredUserIds },
             $isNotNull: 'subUserId'
           },
           sort: [['mts', 1], ['id', 1]],
@@ -377,7 +386,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         const _elem = elem ?? {}
         const {
           balance,
-          balanceUsd
+          balanceUsd,
+          _isBalanceRecalced
         } = await this._getRecalcBalanceAsync(
           auth,
           recordsToGetBalances,
@@ -387,7 +397,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         recalcElems.push(Object.assign(_elem, {
           balance,
           balanceUsd,
-          _isBalanceRecalced: 1
+          _isBalanceRecalced
         }))
       }
 
