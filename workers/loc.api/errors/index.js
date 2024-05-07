@@ -249,14 +249,14 @@ class AuthTokenTTLSettingError extends ArgsParamsError {
 }
 
 class CurrencyConversionError extends BaseError {
-  constructor (message = 'ERR_CURRENCY_HAS_NOT_BEEN_CONVERTED_TO_USD') {
-    super(message)
+  constructor (data, message = 'ERR_CURRENCY_HAS_NOT_BEEN_CONVERTED_TO_USD') {
+    super({ data, message })
   }
 }
 
 class CurrencyPairSeparationError extends BaseError {
-  constructor (message = 'ERR_CURRENCY_PAIR_HAS_NOT_BEEN_SEPARATED_CORRECTLY') {
-    super(message)
+  constructor (data, message = 'ERR_CURRENCY_PAIR_HAS_NOT_BEEN_SEPARATED_CORRECTLY') {
+    super({ data, message })
   }
 }
 
