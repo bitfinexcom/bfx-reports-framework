@@ -122,7 +122,11 @@ module.exports = async (trades, opts) => {
       !firstSymb ||
       !lastSymb
     ) {
-      throw new CurrencyPairSeparationError()
+      throw new CurrencyPairSeparationError({
+        symbol: trade.symbol,
+        firstSymb,
+        lastSymb
+      })
     }
 
     const saleAmount = trade.execAmount < 0
@@ -137,7 +141,10 @@ module.exports = async (trades, opts) => {
       : lastSymb
 
     if (!Number.isFinite(salePrice)) {
-      throw new CurrencyConversionError()
+      throw new CurrencyConversionError({
+        symbol: saleAsset,
+        price: salePrice
+      })
     }
 
     const startPoint = isBackIterativeBuyLookUp
@@ -197,7 +204,11 @@ module.exports = async (trades, opts) => {
         !firstSymbForLookup ||
         !lastSymbForLookup
       ) {
-        throw new CurrencyPairSeparationError()
+        throw new CurrencyPairSeparationError({
+          symbol: tradeForLookup.symbol,
+          firstSymb: firstSymbForLookup,
+          lastSymb: lastSymbForLookup
+        })
       }
 
       if (
@@ -231,7 +242,10 @@ module.exports = async (trades, opts) => {
       const saleRestAmount = saleAmount - trade.saleFilledAmount
 
       if (!Number.isFinite(buyPrice)) {
-        throw new CurrencyConversionError()
+        throw new CurrencyConversionError({
+          symbol: buyAsset,
+          price: buyPrice
+        })
       }
 
       if (buyRestAmount < saleRestAmount) {
