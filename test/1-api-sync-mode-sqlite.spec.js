@@ -93,7 +93,7 @@ describe('Sync mode API with SQLite', () => {
   })
 
   after(async function () {
-    this.timeout(5000)
+    this.timeout(20000)
 
     await stopEnvironment()
     await rmDB(dbDirPath)
