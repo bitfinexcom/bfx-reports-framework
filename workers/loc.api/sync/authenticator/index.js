@@ -10,6 +10,9 @@ const {
   isENetError,
   isAuthError
 } = require('bfx-report/workers/loc.api/helpers')
+const Interrupter = require(
+  'bfx-report/workers/loc.api/interrupter'
+)
 
 const { serializeVal } = require('../dao/helpers')
 const {
@@ -501,6 +504,7 @@ class Authenticator {
       throw new AuthError()
     }
 
+    await this._processInterrupters(user)
     this.removeUserSession({
       email,
       isSubAccount,
@@ -1105,6 +1109,34 @@ class Authenticator {
     return true
   }
 
+  setInterrupterToUserSession (user, interrupter) {
+    const token = this.getUserSessionByEmail(user)?.token
+
+    if (!token) {
+      throw new AuthError()
+    }
+
+    const userSession = this.userSessions.get(token)
+
+    if (!userSession) {
+      throw new AuthError()
+    }
+
+    userSession.interrupters = userSession.interrupters instanceof Set
+      ? userSession.interrupters
+      : new Set()
+
+    if (!(interrupter instanceof Interrupter)) {
+      return
+    }
+
+    interrupter.onceInterrupted(() => {
+      userSession.interrupters.delete(interrupter)
+    })
+
+    userSession.interrupters.add(interrupter)
+  }
+
   setUserSession (user) {
     const {
       token,
@@ -1517,6 +1549,32 @@ class Authenticator {
         typeof localUsername !== 'string'
       )
     )
+  }
+
+  async _processInterrupters (user) {
+    const token = this.getUserSessionByEmail(user)?.token
+    const userSession = this.userSessions.get(token)
+
+    if (
+      !(userSession?.interrupters instanceof Set) ||
+      userSession.interrupters.size === 0
+    ) {
+      return
+    }
+
+    const promises = []
+
+    for (const interrupter of userSession.interrupters.values()) {
+      userSession.interrupters.delete(interrupter)
+
+      if (!(interrupter instanceof Interrupter)) {
+        continue
+      }
+
+      promises.push(interrupter.interrupt())
+    }
+
+    return await Promise.all(promises)
   }
 }
 
