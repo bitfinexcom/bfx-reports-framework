@@ -112,7 +112,8 @@ const {
   syncFactory,
   processMessageManagerFactory,
   syncUserStepDataFactory,
-  wsEventEmitterFactory
+  wsEventEmitterFactory,
+  interrupterFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -343,6 +344,8 @@ module.exports = ({
     bind(TYPES.SyncInterrupter)
       .to(SyncInterrupter)
       .inSingletonScope()
+    bind(TYPES.InterrupterFactory)
+      .toFactory(interrupterFactory)
     bind(TYPES.Movements)
       .to(Movements)
     bind(TYPES.WinLossVSAccountBalance)
