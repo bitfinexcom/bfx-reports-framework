@@ -232,7 +232,7 @@ class TransactionTaxReport {
 
         const chunk = await getPubTradeChunk(
           chunkPayload,
-          (...args) => this.#getPublicTrades(...args, opts)
+          (params) => this.#getPublicTrades(params, opts)
         )
 
         pushLargeArr(pubTrades, chunk)
