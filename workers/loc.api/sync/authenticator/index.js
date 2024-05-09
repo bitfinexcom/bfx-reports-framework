@@ -754,7 +754,7 @@ class Authenticator {
     ) {
       const session = this.getUserSessionByToken(
         token,
-        isReturnedPassword
+        { isReturnedPassword }
       )
       const { authToken, apiKey, apiSecret } = session ?? {}
 
@@ -1110,13 +1110,10 @@ class Authenticator {
   }
 
   setInterrupterToUserSession (user, interrupter) {
-    const token = this.getUserSessionByEmail(user)?.token
-
-    if (!token) {
-      throw new AuthError()
-    }
-
-    const userSession = this.userSessions.get(token)
+    const userSession = this.getUserSessionByEmail(
+      user,
+      { shouldOrigObjRefBeReturned: true }
+    )
 
     if (!userSession) {
       throw new AuthError()
@@ -1167,16 +1164,34 @@ class Authenticator {
     this.userTokenMapByEmail.set(tokenKey, token)
   }
 
-  getUserSessionByToken (token, isReturnedPassword) {
+  getUserSessionByToken (token, opts) {
+    const {
+      isReturnedPassword,
+      shouldOrigObjRefBeReturned
+    } = opts ?? {}
+
     const session = this.userSessions.get(token)
+
+    if (shouldOrigObjRefBeReturned) {
+      return session
+    }
 
     return pickSessionProps(session, isReturnedPassword)
   }
 
-  getUserSessionByEmail (user, isReturnedPassword) {
+  getUserSessionByEmail (user, opts) {
+    const {
+      isReturnedPassword,
+      shouldOrigObjRefBeReturned
+    } = opts ?? {}
+
     const tokenKey = this._getTokenKeyByEmailField(user)
     const token = this.userTokenMapByEmail.get(tokenKey)
     const session = this.userSessions.get(token)
+
+    if (shouldOrigObjRefBeReturned) {
+      return session
+    }
 
     return pickSessionProps(session, isReturnedPassword)
   }
@@ -1552,8 +1567,10 @@ class Authenticator {
   }
 
   async _processInterrupters (user) {
-    const token = this.getUserSessionByEmail(user)?.token
-    const userSession = this.userSessions.get(token)
+    const userSession = this.getUserSessionByEmail(
+      user,
+      { shouldOrigObjRefBeReturned: true }
+    )
 
     if (
       !(userSession?.interrupters instanceof Set) ||
