@@ -10,7 +10,7 @@ module.exports = (ctx) => {
   const authenticator = ctx.container.get(TYPES.Authenticator)
 
   return (params) => {
-    const { user } = params ?? {}
+    const { user, name } = params ?? {}
 
     if (!user) {
       throw new AuthError()
@@ -18,7 +18,7 @@ module.exports = (ctx) => {
 
     const interrupter = ctx.container.get(
       TYPES.Interrupter
-    )
+    ).setName(name)
 
     authenticator.setInterrupterToUserSession(
       user, interrupter
