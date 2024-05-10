@@ -1,5 +1,9 @@
 'use strict'
 
+const INTERRUPTER_NAMES = require(
+  'bfx-report/workers/loc.api/interrupter/interrupter.names'
+)
+
 const { pushLargeArr } = require('../../helpers/utils')
 
 const {
@@ -82,7 +86,10 @@ class TransactionTaxReport {
     const strategy = params.strategy ?? TRX_TAX_STRATEGIES.LIFO
     const user = await this.authenticator
       .verifyRequestUser({ auth })
-    const interrupter = this.interrupterFactory({ user })
+    const interrupter = this.interrupterFactory({
+      user,
+      name: INTERRUPTER_NAMES.TRX_REPORT_INTERRUPTER
+    })
 
     const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO
     const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
