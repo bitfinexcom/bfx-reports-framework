@@ -463,6 +463,14 @@ class FrameworkReportService extends ReportService {
     }, 'stopSyncNow', args, cb)
   }
 
+  interruptOperations (space, args = {}, cb) {
+    return this._privResponder(() => {
+      checkParams(args, 'paramsSchemaForInterruptOperations', ['names'])
+
+      return this._authenticator.interruptOperations(args)
+    }, 'interruptOperations', args, cb)
+  }
+
   getPublicTradesConf (space, args = {}, cb) {
     return this._privResponder(() => {
       return this._publicCollsConfAccessors
