@@ -1134,6 +1134,15 @@ class Authenticator {
     userSession.interrupters.add(interrupter)
   }
 
+  async interruptOperations (args) {
+    await this._processInterrupters(
+      args?.auth,
+      args?.params?.names
+    )
+
+    return true
+  }
+
   setUserSession (user) {
     const {
       token,
@@ -1566,7 +1575,14 @@ class Authenticator {
     )
   }
 
-  async _processInterrupters (user) {
+  async _processInterrupters (user, names) {
+    const _names = Array.isArray(names)
+      ? names
+      : [names]
+    const filteredName = _names.filter((name) => (
+      name &&
+      typeof name === 'string'
+    ))
     const userSession = this.getUserSessionByEmail(
       user,
       { shouldOrigObjRefBeReturned: true }
@@ -1576,12 +1592,17 @@ class Authenticator {
       !(userSession?.interrupters instanceof Set) ||
       userSession.interrupters.size === 0
     ) {
-      return
+      return []
     }
 
     const promises = []
+    const interrupters = [...userSession.interrupters]
+      .filter((int) => (
+        filteredName.length === 0 ||
+        filteredName.some((name) => name === int.name)
+      ))
 
-    for (const interrupter of userSession.interrupters.values()) {
+    for (const interrupter of interrupters) {
       userSession.interrupters.delete(interrupter)
 
       if (!(interrupter instanceof Interrupter)) {
