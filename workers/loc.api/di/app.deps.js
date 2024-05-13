@@ -400,6 +400,7 @@ module.exports = ({
       .to(FullTaxReport)
     bind(TYPES.TransactionTaxReport)
       .to(TransactionTaxReport)
+      .inSingletonScope()
     rebind(TYPES.WeightedAveragesReport)
       .to(WeightedAveragesReport)
     rebind(TYPES.ReportFileJobData)
