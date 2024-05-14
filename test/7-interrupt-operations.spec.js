@@ -190,6 +190,31 @@ describe('Interrupt operations', () => {
     assert.lengthOf(trxTaxReport.body.result, 0)
   })
 
+  it('it should not be successfully performed by the interruptOperations method', async function () {
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'interruptOperations',
+        params: {
+          names: [
+            'FAKE_INTERRUPTER',
+            'TRX_REPORT_INTERRUPTER'
+          ]
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(400)
+
+    assert.isObject(res.body)
+    assert.isObject(res.body.error)
+    assert.propertyVal(res.body.error, 'code', 400)
+    assert.propertyVal(res.body.error, 'message', 'Args params is not valid')
+    assert.propertyVal(res.body, 'id', 5)
+  })
+
   it('it should interrupt transaction tax report after sign-out', async function () {
     this.timeout(60000)
 
