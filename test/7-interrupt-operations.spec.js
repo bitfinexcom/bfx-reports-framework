@@ -163,7 +163,7 @@ describe('Interrupt operations', () => {
           auth,
           method: 'interruptOperations',
           params: {
-            names: ['TRX_REPORT_INTERRUPTER']
+            names: ['TRX_TAX_REPORT_INTERRUPTER']
           },
           id: 5
         })
@@ -200,7 +200,7 @@ describe('Interrupt operations', () => {
         params: {
           names: [
             'FAKE_INTERRUPTER',
-            'TRX_REPORT_INTERRUPTER'
+            'TRX_TAX_REPORT_INTERRUPTER'
           ]
         },
         id: 5

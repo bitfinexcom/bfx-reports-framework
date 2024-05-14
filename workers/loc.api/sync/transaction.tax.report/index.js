@@ -88,7 +88,7 @@ class TransactionTaxReport {
       .verifyRequestUser({ auth })
     const interrupter = this.interrupterFactory({
       user,
-      name: INTERRUPTER_NAMES.TRX_REPORT_INTERRUPTER
+      name: INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER
     })
 
     const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO

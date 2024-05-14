@@ -58,7 +58,7 @@ const paramsSchemaForInterruptOperations = {
       items: {
         type: 'string',
         enum: [
-          'TRX_REPORT_INTERRUPTER'
+          'TRX_TAX_REPORT_INTERRUPTER'
         ]
       }
     }
