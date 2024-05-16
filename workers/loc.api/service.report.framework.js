@@ -256,7 +256,9 @@ class FrameworkReportService extends ReportService {
 
   getPlatformStatus (space, args, cb) {
     return this._responder(async () => {
-      const rest = this._getREST({})
+      const rest = this._getREST({}, {
+        interrupter: args?.interrupter
+      })
 
       const res = await rest.status()
       const isMaintenance = !Array.isArray(res) || !res[0]
@@ -728,7 +730,8 @@ class FrameworkReportService extends ReportService {
           (args) => this._getDataFromApi({
             getData: (space, args) => super.getActivePositions(space, args),
             args,
-            callerName: 'ACTIVE_POSITIONS_GETTER'
+            callerName: 'ACTIVE_POSITIONS_GETTER',
+            shouldNotInterrupt: true
           }),
           args,
           {
@@ -768,7 +771,8 @@ class FrameworkReportService extends ReportService {
               return super.getPositionsAudit(space, args)
             },
             args,
-            callerName: 'POSITIONS_AUDIT_GETTER'
+            callerName: 'POSITIONS_AUDIT_GETTER',
+            shouldNotInterrupt: true
           }),
           args,
           {
