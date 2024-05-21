@@ -1409,6 +1409,17 @@ class FrameworkReportService extends ReportService {
     }, 'getFullTaxReport', args, cb)
   }
 
+  getTransactionTaxReport (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+
+      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+
+      return this._transactionTaxReport.getTransactionTaxReport(args)
+    }, 'getTransactionTaxReport', args, cb)
+  }
+
   getTradedVolume (space, args, cb) {
     return this._privResponder(async () => {
       await this._dataConsistencyChecker
