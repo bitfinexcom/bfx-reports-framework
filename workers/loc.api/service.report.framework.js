@@ -1578,6 +1578,20 @@ class FrameworkReportService extends ReportService {
   /**
    * @deprecated
    */
+  getTransactionTaxReportCsv (...args) { return this.getTransactionTaxReportFile(...args) }
+
+  getTransactionTaxReportFile (space, args, cb) {
+    return this._responder(() => {
+      return this._generateReportFile(
+        'getTransactionTaxReportFileJobData',
+        args
+      )
+    }, 'getTransactionTaxReportFile', args, cb)
+  }
+
+  /**
+   * @deprecated
+   */
   getTradedVolumeCsv (...args) { return this.getTradedVolumeFile(...args) }
 
   getTradedVolumeFile (space, args, cb) {
