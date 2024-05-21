@@ -1409,6 +1409,28 @@ class FrameworkReportService extends ReportService {
     }, 'getFullTaxReport', args, cb)
   }
 
+  getTransactionTaxReport (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+
+      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+
+      return this._transactionTaxReport.getTransactionTaxReport(args)
+    }, 'getTransactionTaxReport', args, cb)
+  }
+
+  makeTrxTaxReportInBackground (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+
+      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+
+      return this._transactionTaxReport.makeTrxTaxReportInBackground(args)
+    }, 'makeTrxTaxReportInBackground', args, cb)
+  }
+
   getTradedVolume (space, args, cb) {
     return this._privResponder(async () => {
       await this._dataConsistencyChecker
@@ -1551,6 +1573,20 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFullTaxReportFile', args, cb)
+  }
+
+  /**
+   * @deprecated
+   */
+  getTransactionTaxReportCsv (...args) { return this.getTransactionTaxReportFile(...args) }
+
+  getTransactionTaxReportFile (space, args, cb) {
+    return this._responder(() => {
+      return this._generateReportFile(
+        'getTransactionTaxReportFileJobData',
+        args
+      )
+    }, 'getTransactionTaxReportFile', args, cb)
   }
 
   /**
