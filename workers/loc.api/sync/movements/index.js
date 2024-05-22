@@ -97,7 +97,8 @@ class Movements {
       end,
       sort: ledgersOrder,
       isWithdrawals,
-      isDeposits
+      isDeposits,
+      isExcludePrivate
     })
 
     const [
@@ -182,7 +183,9 @@ class Movements {
         currency,
         amount,
         amountUsd,
-        subUserId
+        subUserId,
+        _id,
+        exactUsdValue
       } = ledger
 
       return {
@@ -199,7 +202,9 @@ class Movements {
         transactionId: '',
         note: '',
         subUserId,
-        _isFromLedgers: true
+        isLedgers: true,
+        _id,
+        exactUsdValue
       }
     })
   }
