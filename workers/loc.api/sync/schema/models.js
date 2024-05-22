@@ -8,7 +8,7 @@
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
 
-const SUPPORTED_DB_VERSION = 40
+const SUPPORTED_DB_VERSION = 41
 
 const TABLES_NAMES = require('./tables-names')
 const {
@@ -106,6 +106,7 @@ const _models = new Map([
       mts: 'BIGINT',
       amount: 'DECIMAL(22,12)',
       amountUsd: 'DECIMAL(22,12)',
+      exactUsdValue: 'DECIMAL(22,12)',
       balance: 'DECIMAL(22,12)',
       _nativeBalance: 'DECIMAL(22,12)',
       balanceUsd: 'DECIMAL(22,12)',
@@ -154,6 +155,7 @@ const _models = new Map([
       orderID: 'BIGINT',
       execAmount: 'DECIMAL(22,12)',
       execPrice: 'DECIMAL(22,12)',
+      exactUsdValue: 'DECIMAL(22,12)',
       orderType: 'VARCHAR(255)',
       orderPrice: 'DECIMAL(22,12)',
       maker: 'INT',
@@ -280,6 +282,7 @@ const _models = new Map([
       status: 'VARCHAR(255)',
       amount: 'DECIMAL(22,12)',
       amountUsd: 'DECIMAL(22,12)',
+      exactUsdValue: 'DECIMAL(22,12)',
       fees: 'DECIMAL(22,12)',
       destinationAddress: 'VARCHAR(255)',
       transactionId: 'VARCHAR(255)',
