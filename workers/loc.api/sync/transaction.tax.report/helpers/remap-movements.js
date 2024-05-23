@@ -28,10 +28,13 @@ module.exports = (movements, params) => {
       : ''
 
     const remappedMovement = {
+      _id: movement._id,
       // NOTE: it means entries are not taken form trades table
       isAdditionalTrxMovements: true,
       // NOTE: movements can have sub-account transfer entries from ledgers table
       isMovements: !movement.isLedgers,
+      isLedgers: !!movement.isLedgers,
+      isTrades: false,
       symbol: `t${firstSymb}${symbSeparator}${lastSymb}`,
       mtsCreate: movement.mtsUpdated,
       firstSymb,

@@ -27,6 +27,10 @@ module.exports = (trades, params) => {
     trade.lastSymb = lastSymb
     trade.firstSymbPrice = null
     trade.lastSymbPrice = null
+    trade.isAdditionalTrxMovements = false
+    trade.isMovements = false
+    trade.isLedgers = false
+    trade.isTrades = true
 
     remappedTrxs.push(trade)
 
