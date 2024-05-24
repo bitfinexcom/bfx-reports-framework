@@ -1,7 +1,9 @@
 'use strict'
 
 const {
-  TRX_TAX_STRATEGIES
+  TRX_TAX_STRATEGIES,
+  remapTrades,
+  remapMovements
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -74,8 +76,121 @@ class TransactionTaxReport {
     const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO
     const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
 
+    const {
+      trxs: trxsForCurrPeriod,
+      trxsForConvToUsd
+    } = await this.#getTrxs({
+      user,
+      start,
+      end
+    })
+
+    if (
+      !Array.isArray(trxsForCurrPeriod) ||
+      trxsForCurrPeriod.length === 0
+    ) {
+      return []
+    }
+
+    const {
+      trxs: trxsForPrevPeriod
+    } = start > 0
+      ? await this.#getTrxs({
+        user,
+        start: 0,
+        end: start - 1
+      })
+      : { trxs: [] }
+
     // TODO:
     return []
+  }
+
+  async #getTrxs (params) {
+    const {
+      user,
+      start,
+      end
+    } = params ?? {}
+
+    const tradesPromise = this.#getTrades(params)
+    const withdrawalsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      isWithdrawals: true,
+      isExcludePrivate: false
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth: user,
+      start,
+      end,
+      isDeposits: true,
+      isExcludePrivate: false
+    })
+
+    const [
+      trades,
+      withdrawals,
+      deposits
+    ] = await Promise.all([
+      tradesPromise,
+      withdrawalsPromise,
+      depositsPromise
+    ])
+
+    const movements = [...withdrawals, ...deposits]
+    const remappedTrxs = []
+    const remappedTrxsForConvToUsd = []
+
+    remapTrades(
+      trades,
+      { remappedTrxs, remappedTrxsForConvToUsd }
+    )
+    remapMovements(
+      movements,
+      { remappedTrxs, remappedTrxsForConvToUsd }
+    )
+
+    const trxs = remappedTrxs
+      .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
+    const trxsForConvToUsd = remappedTrxsForConvToUsd
+      .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
+
+    return {
+      trxs,
+      trxsForConvToUsd
+    }
+  }
+
+  async #getTrades ({
+    user,
+    start,
+    end,
+    symbol
+  }) {
+    const symbFilter = (
+      Array.isArray(symbol) &&
+      symbol.length !== 0
+    )
+      ? { $in: { symbol } }
+      : {}
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.TRADES,
+      {
+        filter: {
+          user_id: user._id,
+          $lte: { mtsCreate: end },
+          $gte: { mtsCreate: start },
+          ...symbFilter
+        },
+        sort: [['mtsCreate', -1]],
+        projection: this.tradesModel,
+        exclude: ['user_id'],
+        isExcludePrivate: false
+      }
+    )
   }
 }
 
