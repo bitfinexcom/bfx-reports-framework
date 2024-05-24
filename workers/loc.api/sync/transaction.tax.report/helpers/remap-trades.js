@@ -25,8 +25,8 @@ module.exports = (trades, params) => {
     const [firstSymb, lastSymb] = splitSymbolPairs(trade.symbol)
     trade.firstSymb = firstSymb
     trade.lastSymb = lastSymb
-    trade.firstSymbPrice = null
-    trade.lastSymbPrice = null
+    trade.firstSymbPriceUsd = null
+    trade.lastSymbPriceUsd = null
     trade.isAdditionalTrxMovements = false
     trade.isMovements = false
     trade.isLedgers = false
@@ -35,8 +35,8 @@ module.exports = (trades, params) => {
     remappedTrxs.push(trade)
 
     if (lastSymb === 'USD') {
-      trade.firstSymbPrice = trade.execPrice
-      trade.lastSymbPrice = 1
+      trade.firstSymbPriceUsd = trade.execPrice
+      trade.lastSymbPriceUsd = 1
 
       continue
     }
@@ -44,8 +44,8 @@ module.exports = (trades, params) => {
       Number.isFinite(trade.exactUsdValue) &&
       trade.exactUsdValue > 0
     ) {
-      trade.firstSymbPrice = trade.exactUsdValue / trade.execAmount
-      trade.lastSymbPrice = trade.exactUsdValue / trade.execPrice
+      trade.firstSymbPriceUsd = trade.exactUsdValue / trade.execAmount
+      trade.lastSymbPriceUsd = trade.exactUsdValue / trade.execPrice
 
       continue
     }

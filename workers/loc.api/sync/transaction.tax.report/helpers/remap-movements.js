@@ -39,10 +39,10 @@ module.exports = (movements, params) => {
       mtsCreate: movement.mtsUpdated,
       firstSymb,
       lastSymb,
-      firstSymbPrice: null,
-      lastSymbPrice: 1,
+      firstSymbPriceUsd: null,
+      lastSymbPriceUsd: 1,
       execAmount: movement.amount,
-      // NOTE: execPrice = firstSymbPrice and should be set when converting currencies
+      // NOTE: execPrice = firstSymbPriceUsd and should be set when converting currencies
       execPrice: 0,
       // NOTE: exactUsdValue can be null on the first launch, for warm-up it's filling from pub-trades
       exactUsdValue: movement.exactUsdValue
@@ -56,7 +56,7 @@ module.exports = (movements, params) => {
     ) {
       const price = movement.exactUsdValue / movement.amount
 
-      remappedMovement.firstSymbPrice = price
+      remappedMovement.firstSymbPriceUsd = price
       remappedMovement.execPrice = price
 
       continue
