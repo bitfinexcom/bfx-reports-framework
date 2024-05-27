@@ -254,6 +254,12 @@ class CurrencyConversionError extends BaseError {
   }
 }
 
+class CurrencyPairSeparationError extends BaseError {
+  constructor (data, message = 'ERR_CURRENCY_PAIR_HAS_NOT_BEEN_SEPARATED_CORRECTLY') {
+    super({ data, message })
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -291,5 +297,6 @@ module.exports = {
   SyncInfoUpdatingError,
   AuthTokenGenerationError,
   AuthTokenTTLSettingError,
-  CurrencyConversionError
+  CurrencyConversionError,
+  CurrencyPairSeparationError
 }
