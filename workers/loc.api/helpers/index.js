@@ -11,7 +11,8 @@ const {
   pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
   pickAllLowerObjectsNumbers,
-  sumArrayVolumes
+  sumArrayVolumes,
+  pushLargeArr
 } = require('./utils')
 const {
   isSubAccountApiKeys,
@@ -33,5 +34,6 @@ module.exports = {
   pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
   pickAllLowerObjectsNumbers,
-  sumArrayVolumes
+  sumArrayVolumes,
+  pushLargeArr
 }
