@@ -5,15 +5,18 @@ module.exports = (array) => {
     [Symbol.iterator] (areEntriesReturned) {
       return {
         index: array.length,
+        res: {
+          done: false,
+          value: undefined
+        },
         next () {
           this.index -= 1
+          this.res.done = this.index < 0
+          this.res.value = areEntriesReturned
+            ? [this.index, array[this.index]]
+            : array[this.index]
 
-          return {
-            done: this.index < 0,
-            value: areEntriesReturned
-              ? [this.index, array[this.index]]
-              : array[this.index]
-          }
+          return this.res
         }
       }
     },

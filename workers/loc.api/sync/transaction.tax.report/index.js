@@ -1,9 +1,12 @@
 'use strict'
 
+const { pushLargeArr } = require('../../helpers/utils')
+
 const {
   TRX_TAX_STRATEGIES,
   remapTrades,
-  remapMovements
+  remapMovements,
+  lookUpTrades
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -102,8 +105,39 @@ class TransactionTaxReport {
       })
       : { trxs: [] }
 
-    // TODO:
-    return []
+    const isBackIterativeSaleLookUp = isFIFO && !isLIFO
+    const isBackIterativeBuyLookUp = isFIFO && !isLIFO
+
+    const { buyTradesWithUnrealizedProfit } = await lookUpTrades(
+      trxsForPrevPeriod,
+      {
+        isBackIterativeSaleLookUp,
+        isBackIterativeBuyLookUp,
+        isBuyTradesWithUnrealizedProfitRequired: true,
+        isNotGainOrLossRequired: true
+      }
+    )
+
+    pushLargeArr(trxsForCurrPeriod, buyTradesWithUnrealizedProfit)
+    pushLargeArr(
+      trxsForConvToUsd,
+      buyTradesWithUnrealizedProfit
+        .filter((trx) => (
+          !Number.isFinite(trx?.firstSymbPriceUsd) ||
+          !Number.isFinite(trx?.lastSymbPriceUsd)
+        ))
+    )
+    await this.#convertCurrencies(trxsForConvToUsd)
+
+    const { saleTradesWithRealizedProfit } = await lookUpTrades(
+      trxsForCurrPeriod,
+      {
+        isBackIterativeSaleLookUp,
+        isBackIterativeBuyLookUp
+      }
+    )
+
+    return saleTradesWithRealizedProfit
   }
 
   async #getTrxs (params) {
@@ -162,6 +196,9 @@ class TransactionTaxReport {
       trxsForConvToUsd
     }
   }
+
+  // TODO:
+  async #convertCurrencies (trxs, opts) {}
 
   async #getTrades ({
     user,
