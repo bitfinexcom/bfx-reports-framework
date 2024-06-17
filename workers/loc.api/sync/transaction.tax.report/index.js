@@ -229,6 +229,43 @@ class TransactionTaxReport {
       }
     )
   }
+
+  async #getPublicTrades (params, opts) {
+    const {
+      symbol,
+      start = 0,
+      end = Date.now(),
+      sort = -1,
+      limit = 10000
+    } = params ?? {}
+    const { interrupter } = opts
+    const args = {
+      isNotMoreThanInnerMax: true,
+      params: {
+        symbol,
+        start,
+        end,
+        sort,
+        limit,
+        notCheckNextPage: true,
+        notThrowError: true
+      }
+    }
+
+    const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+      .bind(this.rService)
+
+    const res = await this.getDataFromApi({
+      getData: (s, args) => getDataFn(args),
+      args,
+      callerName: 'TRANSACTION_TAX_REPORT',
+      eNetErrorAttemptsTimeframeMin: 10,
+      eNetErrorAttemptsTimeoutMs: 10000,
+      interrupter
+    })
+
+    return res
+  }
 }
 
 decorateInjectable(TransactionTaxReport, depsTypes)
