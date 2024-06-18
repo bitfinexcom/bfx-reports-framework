@@ -6,6 +6,7 @@ const remapTrades = require('./remap-trades')
 const remapMovements = require('./remap-movements')
 const lookUpTrades = require('./look-up-trades')
 const getTrxMapByCcy = require('./get-trx-map-by-ccy')
+const findPublicTrade = require('./find-public-trade')
 
 module.exports = {
   TRX_TAX_STRATEGIES,
@@ -13,5 +14,6 @@ module.exports = {
   remapTrades,
   remapMovements,
   lookUpTrades,
-  getTrxMapByCcy
+  getTrxMapByCcy,
+  findPublicTrade
 }
