@@ -1,12 +1,15 @@
 'use strict'
 
 const { pushLargeArr } = require('../../helpers/utils')
+const { getBackIterable } = require('../helpers')
 
 const {
   TRX_TAX_STRATEGIES,
   remapTrades,
   remapMovements,
-  lookUpTrades
+  lookUpTrades,
+  getTrxMapByCcy,
+  findPublicTrade
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -198,7 +201,45 @@ class TransactionTaxReport {
   }
 
   // TODO:
-  async #convertCurrencies (trxs, opts) {}
+  async #convertCurrencies (trxs, opts) {
+    const trxMapByCcy = getTrxMapByCcy(trxs)
+
+    for (const [symbol, trxData] of trxMapByCcy.entries()) {
+      const trxDataIterator = getBackIterable(trxData)
+      let pubTrades = []
+
+      for (const trxDataItem of trxDataIterator) {
+        const { trx } = trxDataItem
+
+        if (
+          pubTrades.length === 0 ||
+          pubTrades[0]?.mts > trx.mtsCreate ||
+          pubTrades[pubTrades.length - 1]?.mts < trx.mtsCreate
+        ) {
+          pubTrades = await this.#getPublicTrades({
+            symbol: `t${symbol}USD`,
+            start: trx.mtsCreate - 1
+          }, opts)
+        }
+
+        const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
+
+        if (
+          !Number.isFinite(pubTrade?.price) ||
+          pubTrade.price === 0
+        ) {
+          // TODO:
+          throw new Error('ERR_NO_PUBLIC_TRADES_PRICE')
+        }
+
+        if (trx.isAdditionalTrxMovements) {
+          trx.execPrice = pubTrade?.price
+        }
+
+        trx.exactUsdValue = Math.abs(trx.execAmount * pubTrade?.price)
+      }
+    }
+  }
 
   async #getTrades ({
     user,
@@ -235,7 +276,7 @@ class TransactionTaxReport {
       symbol,
       start = 0,
       end = Date.now(),
-      sort = -1,
+      sort = 1,
       limit = 10000
     } = params ?? {}
     const { interrupter } = opts
