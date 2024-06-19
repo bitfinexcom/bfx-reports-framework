@@ -7,6 +7,14 @@ const TrxPriceCalculator = require('./trx.price.calculator')
 // Handle tETHF0:USTF0 symbols
 const symbRegExpNormalizer = /F0$/i
 
+const setCcyCalculator = (map, symb, trxPriceCalculator) => {
+  if (!map.has(symb)) {
+    map.set(symb, [])
+  }
+
+  map.get(symb).push(trxPriceCalculator)
+}
+
 module.exports = (trxs) => {
   const trxMapByCcy = new Map()
 
@@ -23,11 +31,7 @@ module.exports = (trxs) => {
     const isLastSymbInPriorCcyList = priorCcyListIndexForLastSymb >= 0
 
     if (isFirstSymbForex) {
-      if (!trxMapByCcy.has(lastSymb)) {
-        trxMapByCcy.set(lastSymb, [])
-      }
-
-      trxMapByCcy.get(lastSymb).push(new TrxPriceCalculator(
+      setCcyCalculator(trxMapByCcy, lastSymb, new TrxPriceCalculator(
         trx,
         TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME,
         TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME
@@ -36,11 +40,7 @@ module.exports = (trxs) => {
       continue
     }
     if (isLastSymbForex) {
-      if (!trxMapByCcy.has(firstSymb)) {
-        trxMapByCcy.set(firstSymb, [])
-      }
-
-      trxMapByCcy.get(firstSymb).push(new TrxPriceCalculator(
+      setCcyCalculator(trxMapByCcy, firstSymb, new TrxPriceCalculator(
         trx,
         TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME,
         TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME
@@ -55,11 +55,7 @@ module.exports = (trxs) => {
         priorCcyListIndexForFirstSymb <= priorCcyListIndexForLastSymb
       )
     ) {
-      if (!trxMapByCcy.has(firstSymb)) {
-        trxMapByCcy.set(firstSymb, [])
-      }
-
-      trxMapByCcy.get(firstSymb).push(new TrxPriceCalculator(
+      setCcyCalculator(trxMapByCcy, firstSymb, new TrxPriceCalculator(
         trx,
         TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME,
         TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME
@@ -74,11 +70,7 @@ module.exports = (trxs) => {
         priorCcyListIndexForLastSymb <= priorCcyListIndexForFirstSymb
       )
     ) {
-      if (!trxMapByCcy.has(lastSymb)) {
-        trxMapByCcy.set(lastSymb, [])
-      }
-
-      trxMapByCcy.get(lastSymb).push(new TrxPriceCalculator(
+      setCcyCalculator(trxMapByCcy, lastSymb, new TrxPriceCalculator(
         trx,
         TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME,
         TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME
@@ -87,11 +79,7 @@ module.exports = (trxs) => {
       continue
     }
 
-    if (!trxMapByCcy.has(firstSymb)) {
-      trxMapByCcy.set(firstSymb, [])
-    }
-
-    trxMapByCcy.get(firstSymb).push(new TrxPriceCalculator(
+    setCcyCalculator(trxMapByCcy, firstSymb, new TrxPriceCalculator(
       trx,
       TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME,
       TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME
