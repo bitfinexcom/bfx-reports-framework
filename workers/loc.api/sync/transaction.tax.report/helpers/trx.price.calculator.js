@@ -1,5 +1,7 @@
 'use strict'
 
+const { PubTradePriceFindForTrxTaxError } = require('../../../errors')
+
 class TrxPriceCalculator {
   static FIRST_SYMB_PRICE_PROP_NAME = 'firstSymbPrice'
   static LAST_SYMB_PRICE_PROP_NAME = 'lastSymbPrice'
@@ -19,8 +21,7 @@ class TrxPriceCalculator {
       !Number.isFinite(pubTradePrice) ||
       pubTradePrice === 0
     ) {
-      // TODO:
-      throw new Error('ERR_NO_PUBLIC_TRADES_PRICE')
+      throw new PubTradePriceFindForTrxTaxError()
     }
 
     this.trx.exactUsdValue = Math.abs(this.trx.execAmount * pubTradePrice)

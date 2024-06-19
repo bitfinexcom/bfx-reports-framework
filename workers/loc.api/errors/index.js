@@ -266,6 +266,12 @@ class PubTradeFindForTrxTaxError extends BaseError {
   }
 }
 
+class PubTradePriceFindForTrxTaxError extends BaseError {
+  constructor (message = 'ERR_NO_PUBLIC_TRADE_PRICE_FOR_TRX_TAX') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -305,5 +311,6 @@ module.exports = {
   AuthTokenTTLSettingError,
   CurrencyConversionError,
   CurrencyPairSeparationError,
-  PubTradeFindForTrxTaxError
+  PubTradeFindForTrxTaxError,
+  PubTradePriceFindForTrxTaxError
 }
