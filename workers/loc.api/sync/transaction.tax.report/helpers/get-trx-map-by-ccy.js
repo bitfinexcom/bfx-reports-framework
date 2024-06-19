@@ -1,9 +1,8 @@
 'use strict'
 
-const {
-  isForexSymb
-} = require('../../helpers')
+const { isForexSymb } = require('../../helpers')
 const PRIORITY_CURRENCY_LIST = require('./priority.currency.list')
+const TrxPriceCalculator = require('./trx.price.calculator')
 
 // Handle tETHF0:USTF0 symbols
 const symbRegExpNormalizer = /F0$/i
@@ -28,13 +27,11 @@ module.exports = (trxs) => {
         trxMapByCcy.set(lastSymb, [])
       }
 
-      trxMapByCcy.get(lastSymb).push({
-        isFirstSymbForex,
-        isLastSymbForex,
-        convPricePropName: 'lastSymbPrice',
-        calcPricePropName: 'firstSymbPrice',
-        trx
-      })
+      trxMapByCcy.get(lastSymb).push(new TrxPriceCalculator(
+        trx,
+        TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME,
+        TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME
+      ))
 
       continue
     }
@@ -43,13 +40,11 @@ module.exports = (trxs) => {
         trxMapByCcy.set(firstSymb, [])
       }
 
-      trxMapByCcy.get(firstSymb).push({
-        isFirstSymbForex,
-        isLastSymbForex,
-        convPricePropName: 'firstSymbPrice',
-        calcPricePropName: 'lastSymbPrice',
-        trx
-      })
+      trxMapByCcy.get(firstSymb).push(new TrxPriceCalculator(
+        trx,
+        TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME,
+        TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME
+      ))
 
       continue
     }
@@ -64,13 +59,11 @@ module.exports = (trxs) => {
         trxMapByCcy.set(firstSymb, [])
       }
 
-      trxMapByCcy.get(firstSymb).push({
-        isFirstSymbForex,
-        isLastSymbForex,
-        convPricePropName: 'firstSymbPrice',
-        calcPricePropName: 'lastSymbPrice',
-        trx
-      })
+      trxMapByCcy.get(firstSymb).push(new TrxPriceCalculator(
+        trx,
+        TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME,
+        TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME
+      ))
 
       continue
     }
@@ -85,13 +78,11 @@ module.exports = (trxs) => {
         trxMapByCcy.set(lastSymb, [])
       }
 
-      trxMapByCcy.get(lastSymb).push({
-        isFirstSymbForex,
-        isLastSymbForex,
-        convPricePropName: 'lastSymbPrice',
-        calcPricePropName: 'firstSymbPrice',
-        trx
-      })
+      trxMapByCcy.get(lastSymb).push(new TrxPriceCalculator(
+        trx,
+        TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME,
+        TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME
+      ))
 
       continue
     }
@@ -100,13 +91,11 @@ module.exports = (trxs) => {
       trxMapByCcy.set(firstSymb, [])
     }
 
-    trxMapByCcy.get(firstSymb).push({
-      isFirstSymbForex,
-      isLastSymbForex,
-      convPricePropName: 'firstSymbPrice',
-      calcPricePropName: 'lastSymbPrice',
-      trx
-    })
+    trxMapByCcy.get(firstSymb).push(new TrxPriceCalculator(
+      trx,
+      TrxPriceCalculator.FIRST_SYMB_PRICE_PROP_NAME,
+      TrxPriceCalculator.LAST_SYMB_PRICE_PROP_NAME
+    ))
   }
 
   return trxMapByCcy
