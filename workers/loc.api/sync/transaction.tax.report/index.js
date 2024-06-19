@@ -204,12 +204,12 @@ class TransactionTaxReport {
   async #convertCurrencies (trxs, opts) {
     const trxMapByCcy = getTrxMapByCcy(trxs)
 
-    for (const [symbol, trxData] of trxMapByCcy.entries()) {
-      const trxDataIterator = getBackIterable(trxData)
+    for (const [symbol, trxPriceCalculators] of trxMapByCcy.entries()) {
+      const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
       let pubTrades = []
 
-      for (const trxDataItem of trxDataIterator) {
-        const { trx } = trxDataItem
+      for (const trxPriceCalculator of trxPriceCalculatorIterator) {
+        const { trx } = trxPriceCalculator
 
         if (
           pubTrades.length === 0 ||
@@ -223,20 +223,7 @@ class TransactionTaxReport {
         }
 
         const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
-
-        if (
-          !Number.isFinite(pubTrade?.price) ||
-          pubTrade.price === 0
-        ) {
-          // TODO:
-          throw new Error('ERR_NO_PUBLIC_TRADES_PRICE')
-        }
-
-        if (trx.isAdditionalTrxMovements) {
-          trx.execPrice = pubTrade?.price
-        }
-
-        trx.exactUsdValue = Math.abs(trx.execAmount * pubTrade?.price)
+        trxPriceCalculator.calcPrice(pubTrade?.price)
       }
     }
   }
