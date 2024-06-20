@@ -3,8 +3,8 @@
 const { PubTradePriceFindForTrxTaxError } = require('../../../errors')
 
 class TrxPriceCalculator {
-  static FIRST_SYMB_PRICE_PROP_NAME = 'firstSymbPrice'
-  static LAST_SYMB_PRICE_PROP_NAME = 'lastSymbPrice'
+  static FIRST_SYMB_PRICE_PROP_NAME = 'firstSymbPriceUsd'
+  static LAST_SYMB_PRICE_PROP_NAME = 'lastSymbPriceUsd'
 
   constructor (
     trx,
@@ -24,7 +24,6 @@ class TrxPriceCalculator {
       throw new PubTradePriceFindForTrxTaxError()
     }
 
-    this.trx.exactUsdValue = Math.abs(this.trx.execAmount * pubTradePrice)
     this.trx[this.convPricePropName] = pubTradePrice
 
     if (this.trx.isAdditionalTrxMovements) {
@@ -37,12 +36,16 @@ class TrxPriceCalculator {
       return
     }
     if (this.constructor.FIRST_SYMB_PRICE_PROP_NAME === this.calcPricePropName) {
-      this.trx[this.calcPricePropName] = this.#calcFirstSymbPrice(pubTradePrice)
+      const priceUsd = this.#calcFirstSymbPrice(pubTradePrice)
+      this.trx[this.calcPricePropName] = priceUsd
+      this.trx.exactUsdValue = this.trx.execAmount * priceUsd
 
       return
     }
 
-    this.trx[this.calcPricePropName] = this.#calcLastSymbPrice(pubTradePrice)
+    const priceUsd = this.#calcLastSymbPrice(pubTradePrice)
+    this.trx[this.calcPricePropName] = priceUsd
+    this.trx.exactUsdValue = this.trx.execAmount * pubTradePrice
   }
 
   #calcFirstSymbPrice (pubTradePrice) {
