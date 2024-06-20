@@ -2,6 +2,7 @@
 
 const { pushLargeArr } = require('../../helpers/utils')
 const { getBackIterable } = require('../helpers')
+const { PubTradeFindForTrxTaxError } = require('../../errors')
 
 const {
   TRX_TAX_STRATEGIES,
@@ -205,20 +206,39 @@ class TransactionTaxReport {
 
     for (const [symbol, trxPriceCalculators] of trxMapByCcy.entries()) {
       const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
+
       let pubTrades = []
+      let pubTradeStart = pubTrades[0]?.mts
+      let pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
 
       for (const trxPriceCalculator of trxPriceCalculatorIterator) {
         const { trx } = trxPriceCalculator
 
         if (
           pubTrades.length === 0 ||
-          pubTrades[0]?.mts > trx.mtsCreate ||
-          pubTrades[pubTrades.length - 1]?.mts < trx.mtsCreate
+          pubTradeStart > trx.mtsCreate ||
+          pubTradeEnd < trx.mtsCreate
         ) {
-          pubTrades = await this.#getPublicTrades({
-            symbol: `t${symbol}USD`,
-            start: trx.mtsCreate - 1
-          }, opts)
+          const start = trx.mtsCreate - 1
+
+          pubTrades = await this.#getPublicTrades(
+            { symbol: `t${symbol}USD`, start },
+            opts
+          )
+
+          pubTradeStart = start ?? pubTrades[0]?.mts
+          pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+        }
+
+        if (
+          !Array.isArray(pubTrades) ||
+          pubTrades.length === 0 ||
+          !Number.isFinite(pubTradeStart) ||
+          !Number.isFinite(pubTradeEnd) ||
+          pubTradeStart > trx.mtsCreate ||
+          pubTradeEnd < trx.mtsCreate
+        ) {
+          throw new PubTradeFindForTrxTaxError()
         }
 
         const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
@@ -267,7 +287,7 @@ class TransactionTaxReport {
       sort = 1,
       limit = 10000
     } = params ?? {}
-    const { interrupter } = opts
+    const { interrupter } = opts ?? {}
     const args = {
       isNotMoreThanInnerMax: true,
       params: {
@@ -284,7 +304,7 @@ class TransactionTaxReport {
     const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
       .bind(this.rService)
 
-    const res = await this.getDataFromApi({
+    const { res } = await this.getDataFromApi({
       getData: (s, args) => getDataFn(args),
       args,
       callerName: 'TRANSACTION_TAX_REPORT',

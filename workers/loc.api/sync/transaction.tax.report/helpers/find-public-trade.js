@@ -1,19 +1,6 @@
 'use strict'
 
-const { PubTradeFindForTrxTaxError } = require('../../../errors')
-
 module.exports = (pubTrades, mts) => {
-  if (
-    !Array.isArray(pubTrades) ||
-    pubTrades.length === 0 ||
-    !Number.isFinite(pubTrades[0]?.mts) ||
-    !Number.isFinite(pubTrades[pubTrades.length - 1]?.mts) ||
-    pubTrades[0]?.mts > mts ||
-    pubTrades[pubTrades.length - 1]?.mts < mts
-  ) {
-    throw new PubTradeFindForTrxTaxError()
-  }
-
   let startIndex = 0
   let endIndex = pubTrades.length - 1
   let middleIndex = null
