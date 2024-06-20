@@ -52,9 +52,9 @@ module.exports = (movements, params) => {
 
     if (
       Number.isFinite(movement.exactUsdValue) &&
-      movement.exactUsdValue > 0
+      movement.exactUsdValue !== 0
     ) {
-      const price = movement.exactUsdValue / movement.amount
+      const price = Math.abs(movement.exactUsdValue / movement.amount)
 
       remappedMovement.firstSymbPriceUsd = price
       remappedMovement.execPrice = price

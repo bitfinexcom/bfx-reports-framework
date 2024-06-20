@@ -1,12 +1,16 @@
 'use strict'
 
 const { pushLargeArr } = require('../../helpers/utils')
+const { getBackIterable } = require('../helpers')
+const { PubTradeFindForTrxTaxError } = require('../../errors')
 
 const {
   TRX_TAX_STRATEGIES,
   remapTrades,
   remapMovements,
-  lookUpTrades
+  lookUpTrades,
+  getTrxMapByCcy,
+  findPublicTrade
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -197,8 +201,53 @@ class TransactionTaxReport {
     }
   }
 
-  // TODO:
-  async #convertCurrencies (trxs, opts) {}
+  async #convertCurrencies (trxs, opts) {
+    const trxMapByCcy = getTrxMapByCcy(trxs)
+
+    for (const [symbol, trxPriceCalculators] of trxMapByCcy.entries()) {
+      const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
+
+      let pubTrades = []
+      let pubTradeStart = pubTrades[0]?.mts
+      let pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+
+      for (const trxPriceCalculator of trxPriceCalculatorIterator) {
+        const { trx } = trxPriceCalculator
+
+        if (
+          pubTrades.length === 0 ||
+          pubTradeStart > trx.mtsCreate ||
+          pubTradeEnd < trx.mtsCreate
+        ) {
+          const start = trx.mtsCreate - 1
+
+          pubTrades = await this.#getPublicTrades(
+            { symbol: `t${symbol}USD`, start },
+            opts
+          )
+
+          pubTradeStart = start ?? pubTrades[0]?.mts
+          pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+        }
+
+        if (
+          !Array.isArray(pubTrades) ||
+          pubTrades.length === 0 ||
+          !Number.isFinite(pubTradeStart) ||
+          !Number.isFinite(pubTradeEnd) ||
+          pubTradeStart > trx.mtsCreate ||
+          pubTradeEnd < trx.mtsCreate
+        ) {
+          throw new PubTradeFindForTrxTaxError()
+        }
+
+        const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
+        trxPriceCalculator.calcPrice(pubTrade?.price)
+      }
+    }
+
+    await this.#updateExactUsdValueInColls(trxs)
+  }
 
   async #getTrades ({
     user,
@@ -228,6 +277,103 @@ class TransactionTaxReport {
         isExcludePrivate: false
       }
     )
+  }
+
+  async #getPublicTrades (params, opts) {
+    const {
+      symbol,
+      start = 0,
+      end = Date.now(),
+      sort = 1,
+      limit = 10000
+    } = params ?? {}
+    const { interrupter } = opts ?? {}
+    const args = {
+      isNotMoreThanInnerMax: true,
+      params: {
+        symbol,
+        start,
+        end,
+        sort,
+        limit,
+        notCheckNextPage: true,
+        notThrowError: true
+      }
+    }
+
+    const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
+      .bind(this.rService)
+
+    const { res } = await this.getDataFromApi({
+      getData: (s, args) => getDataFn(args),
+      args,
+      callerName: 'TRANSACTION_TAX_REPORT',
+      eNetErrorAttemptsTimeframeMin: 10,
+      eNetErrorAttemptsTimeoutMs: 10000,
+      interrupter
+    })
+
+    return res
+  }
+
+  async #updateExactUsdValueInColls (trxs) {
+    let trades = []
+    let movements = []
+    let ledgers = []
+
+    for (const [i, trx] of trxs.entries()) {
+      const isLast = (i + 1) === trxs.length
+
+      if (trx.isTrades) {
+        trades.push(trx)
+      }
+      if (trx.isMovements) {
+        movements.push(trx)
+      }
+      if (trx.isLedgers) {
+        ledgers.push(trx)
+      }
+
+      if (
+        trades.length >= 20_000 ||
+        isLast
+      ) {
+        await this.dao.updateElemsInCollBy(
+          this.ALLOWED_COLLS.TRADES,
+          trades,
+          ['_id'],
+          ['exactUsdValue']
+        )
+
+        trades = []
+      }
+      if (
+        movements.length >= 20_000 ||
+        isLast
+      ) {
+        await this.dao.updateElemsInCollBy(
+          this.ALLOWED_COLLS.MOVEMENTS,
+          movements,
+          ['_id'],
+          ['exactUsdValue']
+        )
+
+        movements = []
+      }
+      if (
+        ledgers.length >= 20_000 ||
+        isLast
+      ) {
+        await this.dao.updateElemsInCollBy(
+          this.ALLOWED_COLLS.LEDGERS,
+          ledgers,
+          ['_id'],
+          ['exactUsdValue']
+        )
+
+        ledgers = []
+      }
+    }
   }
 }
 

@@ -260,6 +260,18 @@ class CurrencyPairSeparationError extends BaseError {
   }
 }
 
+class PubTradeFindForTrxTaxError extends BaseError {
+  constructor (message = 'ERR_NO_PUBLIC_TRADES_FOR_TRX_TAX') {
+    super(message)
+  }
+}
+
+class PubTradePriceFindForTrxTaxError extends BaseError {
+  constructor (message = 'ERR_NO_PUBLIC_TRADE_PRICE_FOR_TRX_TAX') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -298,5 +310,7 @@ module.exports = {
   AuthTokenGenerationError,
   AuthTokenTTLSettingError,
   CurrencyConversionError,
-  CurrencyPairSeparationError
+  CurrencyPairSeparationError,
+  PubTradeFindForTrxTaxError,
+  PubTradePriceFindForTrxTaxError
 }
