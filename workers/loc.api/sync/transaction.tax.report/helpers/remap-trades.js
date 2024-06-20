@@ -42,10 +42,12 @@ module.exports = (trades, params) => {
     }
     if (
       Number.isFinite(trade.exactUsdValue) &&
-      trade.exactUsdValue > 0
+      trade.exactUsdValue !== 0
     ) {
-      trade.firstSymbPriceUsd = trade.exactUsdValue / trade.execAmount
-      trade.lastSymbPriceUsd = trade.exactUsdValue / trade.execPrice
+      trade.firstSymbPriceUsd = Math.abs(trade.exactUsdValue / trade.execAmount)
+      trade.lastSymbPriceUsd = Math.abs(
+        trade.exactUsdValue / (trade.execAmount * trade.execPrice)
+      )
 
       continue
     }
