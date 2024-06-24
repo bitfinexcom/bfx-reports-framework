@@ -49,6 +49,22 @@ const paramsSchemaForUpdateSubAccount = {
   }
 }
 
+const paramsSchemaForInterruptOperations = {
+  type: 'object',
+  properties: {
+    names: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        type: 'string',
+        enum: [
+          'TRX_TAX_REPORT_INTERRUPTER'
+        ]
+      }
+    }
+  }
+}
+
 const paramsSchemaForCandlesApi = {
   ...cloneDeep(baseParamsSchemaForCandlesApi),
   properties: {
@@ -482,6 +498,7 @@ module.exports = {
   paramsSchemaForEditCandlesConf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
+  paramsSchemaForInterruptOperations,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
   paramsSchemaForWinLossVSAccountBalanceApi,
