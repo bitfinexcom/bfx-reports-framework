@@ -1,5 +1,9 @@
 'use strict'
 
+const INTERRUPTER_NAMES = require(
+  'bfx-report/workers/loc.api/interrupter/interrupter.names'
+)
+
 const { pushLargeArr } = require('../../helpers/utils')
 const { getBackIterable } = require('../helpers')
 const { PubTradeFindForTrxTaxError } = require('../../errors')
@@ -25,7 +29,8 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.GetDataFromApi,
   TYPES.WSEventEmitterFactory,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.InterrupterFactory
 ]
 class TransactionTaxReport {
   constructor (
@@ -38,7 +43,8 @@ class TransactionTaxReport {
     rService,
     getDataFromApi,
     wsEventEmitterFactory,
-    logger
+    logger,
+    interrupterFactory
   ) {
     this.dao = dao
     this.authenticator = authenticator
@@ -50,6 +56,7 @@ class TransactionTaxReport {
     this.getDataFromApi = getDataFromApi
     this.wsEventEmitterFactory = wsEventEmitterFactory
     this.logger = logger
+    this.interrupterFactory = interrupterFactory
 
     this.tradesModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.TRADES)
@@ -79,6 +86,10 @@ class TransactionTaxReport {
     const strategy = params.strategy ?? TRX_TAX_STRATEGIES.LIFO
     const user = await this.authenticator
       .verifyRequestUser({ auth })
+    const interrupter = this.interrupterFactory({
+      user,
+      name: INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER
+    })
 
     const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO
     const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
@@ -96,6 +107,8 @@ class TransactionTaxReport {
       !Array.isArray(trxsForCurrPeriod) ||
       trxsForCurrPeriod.length === 0
     ) {
+      interrupter.emitInterrupted()
+
       return []
     }
 
@@ -118,7 +131,8 @@ class TransactionTaxReport {
         isBackIterativeSaleLookUp,
         isBackIterativeBuyLookUp,
         isBuyTradesWithUnrealizedProfitRequired: true,
-        isNotGainOrLossRequired: true
+        isNotGainOrLossRequired: true,
+        interrupter
       }
     )
 
@@ -131,15 +145,22 @@ class TransactionTaxReport {
           !Number.isFinite(trx?.lastSymbPriceUsd)
         ))
     )
-    await this.#convertCurrencies(trxsForConvToUsd)
+    await this.#convertCurrencies(trxsForConvToUsd, { interrupter })
 
     const { saleTradesWithRealizedProfit } = await lookUpTrades(
       trxsForCurrPeriod,
       {
         isBackIterativeSaleLookUp,
-        isBackIterativeBuyLookUp
+        isBackIterativeBuyLookUp,
+        interrupter
       }
     )
+
+    interrupter.emitInterrupted()
+
+    if (interrupter.hasInterrupted()) {
+      return []
+    }
 
     return saleTradesWithRealizedProfit
   }
@@ -202,9 +223,14 @@ class TransactionTaxReport {
   }
 
   async #convertCurrencies (trxs, opts) {
+    const { interrupter } = opts
     const trxMapByCcy = getTrxMapByCcy(trxs)
 
     for (const [symbol, trxPriceCalculators] of trxMapByCcy.entries()) {
+      if (interrupter.hasInterrupted()) {
+        return
+      }
+
       const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
 
       let pubTrades = []
@@ -212,6 +238,10 @@ class TransactionTaxReport {
       let pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
 
       for (const trxPriceCalculator of trxPriceCalculatorIterator) {
+        if (interrupter.hasInterrupted()) {
+          return
+        }
+
         const { trx } = trxPriceCalculator
 
         if (
