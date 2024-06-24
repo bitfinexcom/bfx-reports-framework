@@ -10,6 +10,9 @@ const {
   isENetError,
   isAuthError
 } = require('bfx-report/workers/loc.api/helpers')
+const Interrupter = require(
+  'bfx-report/workers/loc.api/interrupter'
+)
 
 const { serializeVal } = require('../dao/helpers')
 const {
@@ -501,6 +504,7 @@ class Authenticator {
       throw new AuthError()
     }
 
+    await this._processInterrupters(user)
     this.removeUserSession({
       email,
       isSubAccount,
@@ -750,7 +754,7 @@ class Authenticator {
     ) {
       const session = this.getUserSessionByToken(
         token,
-        isReturnedPassword
+        { isReturnedPassword }
       )
       const { authToken, apiKey, apiSecret } = session ?? {}
 
@@ -1105,6 +1109,40 @@ class Authenticator {
     return true
   }
 
+  setInterrupterToUserSession (user, interrupter) {
+    const userSession = this.getUserSessionByEmail(
+      user,
+      { shouldOrigObjRefBeReturned: true }
+    )
+
+    if (!userSession) {
+      throw new AuthError()
+    }
+
+    userSession.interrupters = userSession.interrupters instanceof Set
+      ? userSession.interrupters
+      : new Set()
+
+    if (!(interrupter instanceof Interrupter)) {
+      return
+    }
+
+    interrupter.onceInterrupted(() => {
+      userSession.interrupters.delete(interrupter)
+    })
+
+    userSession.interrupters.add(interrupter)
+  }
+
+  async interruptOperations (args) {
+    await this._processInterrupters(
+      args?.auth,
+      args?.params?.names
+    )
+
+    return true
+  }
+
   setUserSession (user) {
     const {
       token,
@@ -1135,16 +1173,34 @@ class Authenticator {
     this.userTokenMapByEmail.set(tokenKey, token)
   }
 
-  getUserSessionByToken (token, isReturnedPassword) {
+  getUserSessionByToken (token, opts) {
+    const {
+      isReturnedPassword,
+      shouldOrigObjRefBeReturned
+    } = opts ?? {}
+
     const session = this.userSessions.get(token)
+
+    if (shouldOrigObjRefBeReturned) {
+      return session
+    }
 
     return pickSessionProps(session, isReturnedPassword)
   }
 
-  getUserSessionByEmail (user, isReturnedPassword) {
+  getUserSessionByEmail (user, opts) {
+    const {
+      isReturnedPassword,
+      shouldOrigObjRefBeReturned
+    } = opts ?? {}
+
     const tokenKey = this._getTokenKeyByEmailField(user)
     const token = this.userTokenMapByEmail.get(tokenKey)
     const session = this.userSessions.get(token)
+
+    if (shouldOrigObjRefBeReturned) {
+      return session
+    }
 
     return pickSessionProps(session, isReturnedPassword)
   }
@@ -1517,6 +1573,46 @@ class Authenticator {
         typeof localUsername !== 'string'
       )
     )
+  }
+
+  async _processInterrupters (user, names) {
+    const _names = Array.isArray(names)
+      ? names
+      : [names]
+    const filteredName = _names.filter((name) => (
+      name &&
+      typeof name === 'string'
+    ))
+    const userSession = this.getUserSessionByEmail(
+      user,
+      { shouldOrigObjRefBeReturned: true }
+    )
+
+    if (
+      !(userSession?.interrupters instanceof Set) ||
+      userSession.interrupters.size === 0
+    ) {
+      return []
+    }
+
+    const promises = []
+    const interrupters = [...userSession.interrupters]
+      .filter((int) => (
+        filteredName.length === 0 ||
+        filteredName.some((name) => name === int.name)
+      ))
+
+    for (const interrupter of interrupters) {
+      userSession.interrupters.delete(interrupter)
+
+      if (!(interrupter instanceof Interrupter)) {
+        continue
+      }
+
+      promises.push(interrupter.interrupt())
+    }
+
+    return await Promise.all(promises)
   }
 }
 

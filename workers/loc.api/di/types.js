@@ -70,5 +70,6 @@ module.exports = {
   SyncUserStepDataFactory: Symbol.for('SyncUserStepDataFactory'),
   HTTPRequest: Symbol.for('HTTPRequest'),
   SummaryByAsset: Symbol.for('SummaryByAsset'),
-  TransactionTaxReport: Symbol.for('TransactionTaxReport')
+  TransactionTaxReport: Symbol.for('TransactionTaxReport'),
+  InterrupterFactory: Symbol.for('InterrupterFactory')
 }

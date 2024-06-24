@@ -189,7 +189,8 @@ class SubAccountApiData {
         const res = await this.getDataFromApi({
           getData: (space, args) => method(args),
           args,
-          callerName: 'SUB_ACCOUNT_API_DATA'
+          callerName: 'SUB_ACCOUNT_API_DATA',
+          shouldNotInterrupt: true
         })
 
         resArr.push(res)
