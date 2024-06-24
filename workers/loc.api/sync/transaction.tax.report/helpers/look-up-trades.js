@@ -20,7 +20,8 @@ module.exports = async (trades, opts) => {
     isBackIterativeSaleLookUp = false,
     isBackIterativeBuyLookUp = false,
     isBuyTradesWithUnrealizedProfitRequired = false,
-    isNotGainOrLossRequired = false
+    isNotGainOrLossRequired = false,
+    interrupter
   } = opts ?? {}
 
   const saleTradesWithRealizedProfit = []
@@ -42,6 +43,13 @@ module.exports = async (trades, opts) => {
     : trades
 
   for (const [i, trade] of tradeIterator.entries()) {
+    if (interrupter?.hasInterrupted()) {
+      return {
+        saleTradesWithRealizedProfit,
+        buyTradesWithUnrealizedProfit
+      }
+    }
+
     const currentLoopUnlockMts = Date.now()
 
     /*
@@ -162,6 +170,12 @@ module.exports = async (trades, opts) => {
     )
 
     for (let j = startPoint; checkPoint(j); j = shiftPoint(j)) {
+      if (interrupter?.hasInterrupted()) {
+        return {
+          saleTradesWithRealizedProfit,
+          buyTradesWithUnrealizedProfit
+        }
+      }
       if (trade.isSaleTrxHistFilled) {
         break
       }
