@@ -3,6 +3,9 @@
 const BaseBfxApiRouter = require(
   'bfx-report/workers/loc.api/bfx.api.router'
 )
+const Interrupter = require(
+  'bfx-report/workers/loc.api/interrupter'
+)
 
 const RateLimitChecker = require('./rate.limit.checker')
 
@@ -62,7 +65,7 @@ class BfxApiRouter extends BaseBfxApiRouter {
   /**
    * @override
    */
-  route (methodName, method) {
+  route (methodName, method, interrupter) {
     if (
       !methodName ||
       methodName.startsWith('_')
@@ -83,9 +86,27 @@ class BfxApiRouter extends BaseBfxApiRouter {
 
     if (rateLimitChecker.check()) {
       // Cool down delay
-      return new Promise((resolve) => (
-        setTimeout(resolve, this._coolDownDelayMs))
-      ).then(() => {
+      return new Promise((resolve) => {
+        const onceInterruptHandler = () => {
+          clearTimeout(timeout)
+          resolve()
+        }
+        const setTimeoutHandler = () => {
+          if (interrupter instanceof Interrupter) {
+            interrupter.offInterrupt(onceInterruptHandler)
+          }
+
+          resolve()
+        }
+
+        const timeout = setTimeout(setTimeoutHandler, this._coolDownDelayMs)
+
+        if (!(interrupter instanceof Interrupter)) {
+          return
+        }
+
+        interrupter.onceInterrupt(onceInterruptHandler)
+      }).then(() => {
         rateLimitChecker.add()
 
         return method()
