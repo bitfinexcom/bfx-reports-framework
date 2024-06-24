@@ -7,6 +7,7 @@ const syncFactory = require('./sync-factory')
 const processMessageManagerFactory = require('./process-message-manager-factory')
 const syncUserStepDataFactory = require('./sync-user-step-data-factory')
 const wsEventEmitterFactory = require('./ws-event-emitter-factory')
+const interrupterFactory = require('./interrupter-factory')
 
 module.exports = {
   migrationsFactory,
@@ -15,5 +16,6 @@ module.exports = {
   syncFactory,
   processMessageManagerFactory,
   syncUserStepDataFactory,
-  wsEventEmitterFactory
+  wsEventEmitterFactory,
+  interrupterFactory
 }
