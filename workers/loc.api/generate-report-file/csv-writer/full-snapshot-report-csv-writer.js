@@ -47,7 +47,8 @@ module.exports = (
   const res = await getDataFromApi({
     getData: rService[name].bind(rService),
     args,
-    callerName: 'REPORT_FILE_WRITER'
+    callerName: 'REPORT_FILE_WRITER',
+    shouldNotInterrupt: true
   })
 
   const {
