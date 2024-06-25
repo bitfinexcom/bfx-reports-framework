@@ -17,6 +17,8 @@ const {
   findPublicTrade
 } = require('./helpers')
 
+const isTestEnv = process.env.NODE_ENV === 'test'
+
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -342,6 +344,14 @@ class TransactionTaxReport {
       eNetErrorAttemptsTimeoutMs: 10000,
       interrupter
     })
+
+    if (isTestEnv) {
+      /*
+       * Need to reverse pub-trades array for test env
+       * as mocked test server return data in desc order
+       */
+      return res.reverse()
+    }
 
     return res
   }
