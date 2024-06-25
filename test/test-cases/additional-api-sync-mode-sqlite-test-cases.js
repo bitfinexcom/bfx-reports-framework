@@ -413,6 +413,82 @@ module.exports = (
     }
   })
 
+  it('it should be successfully performed by the getTransactionTaxReport method, LIFO strategy', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTransactionTaxReport',
+        params: {
+          end,
+          start: start + (45 * 24 * 60 * 60 * 1000),
+          strategy: 'LIFO'
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.isAtLeast(res.body.result.length, 1)
+
+    res.body.result.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'asset',
+        'amount',
+        'mtsAcquired',
+        'mtsSold',
+        'proceeds',
+        'cost',
+        'gainOrLoss'
+      ])
+    })
+  })
+
+  it('it should be successfully performed by the getTransactionTaxReport method, FIFO strategy', async function () {
+    this.timeout(60000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTransactionTaxReport',
+        params: {
+          end,
+          start: start + (45 * 24 * 60 * 60 * 1000),
+          strategy: 'FIFO'
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+    assert.isAtLeast(res.body.result.length, 1)
+
+    res.body.result.forEach((item) => {
+      assert.isObject(item)
+      assert.containsAllKeys(item, [
+        'asset',
+        'amount',
+        'mtsAcquired',
+        'mtsSold',
+        'proceeds',
+        'cost',
+        'gainOrLoss'
+      ])
+    })
+  })
+
   it('it should be successfully performed by the getTradedVolume method', async function () {
     this.timeout(60000)
 
@@ -1032,6 +1108,33 @@ module.exports = (
       res,
       testReportPathHasCommonFolder
     )
+  })
+
+  it('it should be successfully performed by the getTransactionTaxReportFile method', async function () {
+    this.timeout(60000)
+
+    const procPromise = queueToPromise(params.processorQueue)
+    const aggrPromise = queueToPromise(params.aggregatorQueue)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getTransactionTaxReportFile',
+        params: {
+          isPDFRequired,
+          end,
+          start,
+          strategy: 'LIFO',
+          email
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    await testMethodOfGettingReportFile(procPromise, aggrPromise, res)
   })
 
   it('it should be successfully performed by the getTradedVolumeFile method', async function () {
