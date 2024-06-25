@@ -1,5 +1,6 @@
 'use strict'
 
+const BigNumber = require('bignumber.js')
 const splitSymbolPairs = require(
   'bfx-report/workers/loc.api/helpers/split-symbol-pairs'
 )
@@ -44,10 +45,14 @@ module.exports = (trades, params) => {
       Number.isFinite(trade.exactUsdValue) &&
       trade.exactUsdValue !== 0
     ) {
-      trade.firstSymbPriceUsd = Math.abs(trade.exactUsdValue / trade.execAmount)
-      trade.lastSymbPriceUsd = Math.abs(
-        trade.exactUsdValue / (trade.execAmount * trade.execPrice)
-      )
+      trade.firstSymbPriceUsd = new BigNumber(trade.exactUsdValue)
+        .div(trade.execAmount)
+        .abs()
+        .toNumber()
+      trade.lastSymbPriceUsd = new BigNumber(trade.exactUsdValue)
+        .div(new BigNumber(trade.execAmount).times(trade.execPrice))
+        .abs()
+        .toNumber()
 
       continue
     }

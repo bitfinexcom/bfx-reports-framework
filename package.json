@@ -10,6 +10,7 @@
     "bfx-facs-scheduler": "git+https://github.com:bitfinexcom/bfx-facs-scheduler.git",
     "bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
     "bfx-svc-boot-js": "https://github.com/bitfinexcom/bfx-svc-boot-js.git",
+    "bignumber.js": "9.1.2",
     "csv": "5.5.3",
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "html-pdf": "3.0.1",

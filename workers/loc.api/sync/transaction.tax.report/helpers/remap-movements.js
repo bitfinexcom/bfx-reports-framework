@@ -1,5 +1,7 @@
 'use strict'
 
+const BigNumber = require('bignumber.js')
+
 const {
   isForexSymb
 } = require('../../helpers')
@@ -54,7 +56,10 @@ module.exports = (movements, params) => {
       Number.isFinite(movement.exactUsdValue) &&
       movement.exactUsdValue !== 0
     ) {
-      const price = Math.abs(movement.exactUsdValue / movement.amount)
+      const price = new BigNumber(movement.exactUsdValue)
+        .div(movement.amount)
+        .abs()
+        .toNumber()
 
       remappedMovement.firstSymbPriceUsd = price
       remappedMovement.execPrice = price
