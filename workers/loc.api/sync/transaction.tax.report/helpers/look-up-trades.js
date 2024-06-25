@@ -1,5 +1,6 @@
 'use strict'
 
+const BigNumber = require('bignumber.js')
 const { setImmediate } = require('node:timers/promises')
 const splitSymbolPairs = require(
   'bfx-report/workers/loc.api/helpers/split-symbol-pairs'
@@ -63,19 +64,24 @@ module.exports = async (trades, opts) => {
       lastLoopUnlockMts = currentLoopUnlockMts
     }
 
-    trade.isAdditionalTrxMovements = trade.isAdditionalTrxMovements ?? false
+    trade.isAdditionalTrxMovements = trade
+      .isAdditionalTrxMovements ?? false
 
     trade.isSaleTrx = trade.isSaleTrx ?? false
     trade.isSaleTrxHistFilled = trade.isSaleTrxHistFilled ?? false
-    trade.saleFilledAmount = trade.saleFilledAmount ?? 0
-    trade.costForSaleTrxUsd = trade.costForSaleTrxUsd ?? 0
+    trade.saleFilledAmount = trade
+      .saleFilledAmount ?? new BigNumber(0)
+    trade.costForSaleTrxUsd = trade
+      .costForSaleTrxUsd ?? new BigNumber(0)
     trade.buyTrxsForRealizedProfit = trade
       .buyTrxsForRealizedProfit ?? []
 
     trade.isBuyTrx = trade.isBuyTrx ?? false
     trade.isBuyTrxHistFilled = trade.isBuyTrxHistFilled ?? false
-    trade.buyFilledAmount = trade.buyFilledAmount ?? 0
-    trade.proceedsForBuyTrxUsd = trade.proceedsForBuyTrxUsd ?? 0
+    trade.buyFilledAmount = trade
+      .buyFilledAmount ?? new BigNumber(0)
+    trade.proceedsForBuyTrxUsd = trade
+      .proceedsForBuyTrxUsd ?? new BigNumber(0)
     trade.saleTrxsForRealizedProfit = trade
       .saleTrxsForRealizedProfit ?? []
 
@@ -138,8 +144,10 @@ module.exports = async (trades, opts) => {
     }
 
     const saleAmount = trade.execAmount < 0
-      ? Math.abs(trade.execAmount)
-      : Math.abs(trade.execAmount * trade.execPrice)
+      ? new BigNumber(trade.execAmount).abs()
+      : new BigNumber(trade.execAmount)
+        .times(trade.execPrice)
+        .abs()
     const _salePriceUsd = isDistinctSale
       ? trade.firstSymbPriceUsd
       : trade.lastSymbPriceUsd
@@ -200,8 +208,9 @@ module.exports = async (trades, opts) => {
       tradeForLookup.isBuyTrxHistFilled = tradeForLookup
         .isBuyTrxHistFilled ?? false
       tradeForLookup.buyFilledAmount = tradeForLookup
-        .buyFilledAmount ?? 0
-      tradeForLookup.proceedsForBuyTrxUsd = tradeForLookup.proceedsForBuyTrxUsd ?? 0
+        .buyFilledAmount ?? new BigNumber(0)
+      tradeForLookup.proceedsForBuyTrxUsd = tradeForLookup
+        .proceedsForBuyTrxUsd ?? new BigNumber(0)
       tradeForLookup.saleTrxsForRealizedProfit = tradeForLookup
         .saleTrxsForRealizedProfit ?? []
 
@@ -246,14 +255,18 @@ module.exports = async (trades, opts) => {
       trade.buyTrxsForRealizedProfit.push(tradeForLookup)
 
       const buyAmount = tradeForLookup.execAmount > 0
-        ? Math.abs(tradeForLookup.execAmount)
-        : Math.abs(tradeForLookup.execAmount * tradeForLookup.execPrice)
+        ? new BigNumber(tradeForLookup.execAmount).abs()
+        : new BigNumber(tradeForLookup.execAmount)
+          .times(tradeForLookup.execPrice)
+          .abs()
       const _buyPriceUsd = tradeForLookup.execAmount > 0
         ? tradeForLookup.firstSymbPriceUsd
         : tradeForLookup.lastSymbPriceUsd
       const buyPriceUsd = isNotGainOrLossRequired ? 0 : _buyPriceUsd
-      const buyRestAmount = buyAmount - tradeForLookup.buyFilledAmount
-      const saleRestAmount = saleAmount - trade.saleFilledAmount
+      const buyRestAmount = buyAmount
+        .minus(tradeForLookup.buyFilledAmount)
+      const saleRestAmount = saleAmount
+        .minus(trade.saleFilledAmount)
 
       if (!Number.isFinite(buyPriceUsd)) {
         throw new CurrencyConversionError({
@@ -262,25 +275,37 @@ module.exports = async (trades, opts) => {
         })
       }
 
-      if (buyRestAmount < saleRestAmount) {
+      if (buyRestAmount.lt(saleRestAmount)) {
         tradeForLookup.buyFilledAmount = buyAmount
-        trade.saleFilledAmount += buyRestAmount
-        tradeForLookup.proceedsForBuyTrxUsd += buyRestAmount * salePriceUsd
-        trade.costForSaleTrxUsd += buyRestAmount * buyPriceUsd
+        trade.saleFilledAmount = trade.saleFilledAmount
+          .plus(buyRestAmount)
+        tradeForLookup.proceedsForBuyTrxUsd = tradeForLookup
+          .proceedsForBuyTrxUsd
+          .plus(buyRestAmount.times(salePriceUsd))
+        trade.costForSaleTrxUsd = trade.costForSaleTrxUsd
+          .plus(buyRestAmount.times(buyPriceUsd))
         tradeForLookup.isBuyTrxHistFilled = true
       }
-      if (buyRestAmount > saleRestAmount) {
-        tradeForLookup.buyFilledAmount += saleRestAmount
+      if (buyRestAmount.gt(saleRestAmount)) {
+        tradeForLookup.buyFilledAmount = tradeForLookup
+          .buyFilledAmount
+          .plus(saleRestAmount)
         trade.saleFilledAmount = saleAmount
-        tradeForLookup.proceedsForBuyTrxUsd += saleRestAmount * salePriceUsd
-        trade.costForSaleTrxUsd += saleRestAmount * buyPriceUsd
+        tradeForLookup.proceedsForBuyTrxUsd = tradeForLookup
+          .proceedsForBuyTrxUsd
+          .plus(saleRestAmount.times(salePriceUsd))
+        trade.costForSaleTrxUsd = trade.costForSaleTrxUsd
+          .plus(saleRestAmount.times(buyPriceUsd))
         trade.isSaleTrxHistFilled = true
       }
-      if (buyRestAmount === saleRestAmount) {
+      if (buyRestAmount.eq(saleRestAmount)) {
         tradeForLookup.buyFilledAmount = buyAmount
         trade.saleFilledAmount = saleAmount
-        tradeForLookup.proceedsForBuyTrxUsd += buyRestAmount * salePriceUsd
-        trade.costForSaleTrxUsd += buyRestAmount * buyPriceUsd
+        tradeForLookup.proceedsForBuyTrxUsd = tradeForLookup
+          .proceedsForBuyTrxUsd
+          .plus(buyRestAmount.times(salePriceUsd))
+        trade.costForSaleTrxUsd = trade.costForSaleTrxUsd
+          .plus(buyRestAmount.times(buyPriceUsd))
         tradeForLookup.isBuyTrxHistFilled = true
         trade.isSaleTrxHistFilled = true
       }
@@ -290,8 +315,10 @@ module.exports = async (trades, opts) => {
         tradeForLookup.buyAmount = buyAmount
         tradeForLookup.mtsAcquiredForBuyTrx = tradeForLookup.mtsCreate
         tradeForLookup.mtsSoldForBuyTrx = trade.mtsCreate
-        tradeForLookup.costForBuyTrxUsd = buyAmount * buyPriceUsd
-        tradeForLookup.gainOrLossForBuyTrxUsd = tradeForLookup.proceedsForBuyTrxUsd - tradeForLookup.costForBuyTrxUsd
+        tradeForLookup.costForBuyTrxUsd = buyAmount.times(buyPriceUsd)
+        tradeForLookup.gainOrLossForBuyTrxUsd = tradeForLookup
+          .proceedsForBuyTrxUsd
+          .minus(tradeForLookup.costForBuyTrxUsd)
       }
     }
 
@@ -304,8 +331,9 @@ module.exports = async (trades, opts) => {
       ? trade.buyTrxsForRealizedProfit[trade.buyTrxsForRealizedProfit.length - 1]?.mtsCreate
       : trade.buyTrxsForRealizedProfit[0]?.mtsCreate
     trade.mtsSoldForSaleTrx = trade.mtsCreate
-    trade.proceedsForSaleTrxUsd = saleAmount * salePriceUsd
-    trade.gainOrLossUsd = trade.proceedsForSaleTrxUsd - trade.costForSaleTrxUsd
+    trade.proceedsForSaleTrxUsd = saleAmount.times(salePriceUsd)
+    trade.gainOrLossUsd = trade.proceedsForSaleTrxUsd
+      .minus(trade.costForSaleTrxUsd)
   }
 
   for (const trade of trades) {
@@ -329,12 +357,12 @@ module.exports = async (trades, opts) => {
 
     saleTradesWithRealizedProfit.push({
       asset: trade.saleAsset,
-      amount: trade.saleAmount,
+      amount: trade.saleAmount.toNumber(),
       mtsAcquired: trade.mtsAcquiredForSaleTrx,
       mtsSold: trade.mtsSoldForSaleTrx,
-      proceeds: trade.proceedsForSaleTrxUsd,
-      cost: trade.costForSaleTrxUsd,
-      gainOrLoss: trade.gainOrLossUsd
+      proceeds: trade.proceedsForSaleTrxUsd.toNumber(),
+      cost: trade.costForSaleTrxUsd.toNumber(),
+      gainOrLoss: trade.gainOrLossUsd.toNumber()
     })
   }
 
