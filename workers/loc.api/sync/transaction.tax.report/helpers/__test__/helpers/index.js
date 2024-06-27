@@ -4,8 +4,10 @@ const {
   mockTradesForNextYear,
   mockTrades
 } = require('./mock-trades')
+const getMockedTrades = require('./get-mocked-trades')
 
 module.exports = {
   mockTradesForNextYear,
-  mockTrades
+  mockTrades,
+  getMockedTrades
 }
