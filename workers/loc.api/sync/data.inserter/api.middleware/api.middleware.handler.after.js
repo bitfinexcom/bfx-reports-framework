@@ -3,7 +3,7 @@
 const SYNC_API_METHODS = require('../../schema/sync.api.methods')
 const {
   addPropsToResIfExist,
-  getFlagsFromLedgerDescription,
+  getFlagsFromStringProp,
   getCategoryFromDescription,
   convertArrayMapToObjectMap
 } = require('./helpers')
@@ -106,12 +106,13 @@ class ApiMiddlewareHandlerAfter {
 
   [SYNC_API_METHODS.LEDGERS] (args, apiRes) {
     const res = apiRes.res.map(item => {
-      const { balance } = { ...item }
+      const { balance } = item ?? {}
 
       return {
         ...item,
-        ...getFlagsFromLedgerDescription(
+        ...getFlagsFromStringProp(
           item,
+          'description',
           [
             {
               fieldName: '_isMarginFundingPayment',
@@ -136,6 +137,29 @@ class ApiMiddlewareHandlerAfter {
           ]
         ),
         _nativeBalance: balance
+      }
+    })
+
+    return {
+      ...apiRes,
+      res
+    }
+  }
+
+  [SYNC_API_METHODS.TRADES] (args, apiRes) {
+    const res = apiRes.res.map((item) => {
+      return {
+        ...item,
+        ...getFlagsFromStringProp(
+          item,
+          'orderType',
+          [
+            {
+              fieldName: '_isExchange',
+              pattern: 'EXCHANGE'
+            }
+          ]
+        )
       }
     })
 
