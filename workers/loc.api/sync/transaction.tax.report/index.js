@@ -237,6 +237,9 @@ class TransactionTaxReport {
       }
 
       const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
+      const symbSeparator = symbol.length > 3
+        ? ':'
+        : ''
 
       let pubTrades = []
       let pubTradeStart = pubTrades[0]?.mts
@@ -257,7 +260,7 @@ class TransactionTaxReport {
           const start = trx.mtsCreate - 1
 
           pubTrades = await this.#getPublicTrades(
-            { symbol: `t${symbol}USD`, start },
+            { symbol: `t${symbol}${symbSeparator}USD`, start },
             opts
           )
 
@@ -279,8 +282,11 @@ class TransactionTaxReport {
             }
 
             for (const [symbol, conversion] of synonymous) {
+              const symbSeparator = symbol.length > 3
+                ? ':'
+                : ''
               const res = await this.#getPublicTrades(
-                { symbol: `t${symbol}USD`, start },
+                { symbol: `t${symbol}${symbSeparator}USD`, start },
                 opts
               )
 
