@@ -261,8 +261,8 @@ class CurrencyPairSeparationError extends BaseError {
 }
 
 class PubTradeFindForTrxTaxError extends BaseError {
-  constructor (message = 'ERR_NO_PUBLIC_TRADES_FOR_TRX_TAX') {
-    super(message)
+  constructor (data, message = 'ERR_NO_PUBLIC_TRADES_FOR_TRX_TAX') {
+    super({ data, message })
   }
 }
 
