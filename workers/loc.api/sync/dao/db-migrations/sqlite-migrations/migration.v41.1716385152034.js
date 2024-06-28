@@ -22,7 +22,16 @@ class MigrationV41 extends AbstractMigration {
     const sqlArr = [
       'ALTER TABLE ledgers ADD COLUMN exactUsdValue DECIMAL(22,12)',
       'ALTER TABLE trades ADD COLUMN exactUsdValue DECIMAL(22,12)',
-      'ALTER TABLE movements ADD COLUMN exactUsdValue DECIMAL(22,12)'
+      'ALTER TABLE movements ADD COLUMN exactUsdValue DECIMAL(22,12)',
+
+      'ALTER TABLE trades ADD COLUMN _isExchange INT',
+      `UPDATE trades SET _isExchange = (
+        SELECT 1 FROM (
+          SELECT * FROM trades AS t
+          WHERE t.orderType COLLATE NOCASE LIKE '%EXCHANGE%'
+            AND t._id = trades._id
+        )
+      )`
     ]
 
     this.addSql(sqlArr)
