@@ -162,12 +162,14 @@ const _models = new Map([
       fee: 'DECIMAL(22,12)',
       feeCurrency: 'VARCHAR(255)',
       subUserId: 'INT',
+      _isExchange: 'INT',
       user_id: 'INT NOT NULL',
 
       [UNIQUE_INDEX_FIELD_NAME]: ['id', 'symbol', 'user_id'],
       [INDEX_FIELD_NAME]: [
         ['user_id', 'symbol', 'mtsCreate'],
         ['user_id', 'orderID', 'mtsCreate'],
+        ['user_id', '_isExchange', 'mtsCreate'],
         ['user_id', 'mtsCreate'],
         ['user_id', 'subUserId', 'mtsCreate',
           'WHERE subUserId IS NOT NULL'],
