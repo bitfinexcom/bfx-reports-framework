@@ -299,6 +299,10 @@ class TransactionTaxReport {
       {
         filter: {
           user_id: user._id,
+          $eq: {
+            user_id: user._id,
+            _isExchange: 1
+          },
           $lte: { mtsCreate: end },
           $gte: { mtsCreate: start },
           ...symbFilter
