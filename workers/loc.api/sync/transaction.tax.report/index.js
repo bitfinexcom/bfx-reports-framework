@@ -32,7 +32,8 @@ const depsTypes = (TYPES) => [
   TYPES.GetDataFromApi,
   TYPES.WSEventEmitterFactory,
   TYPES.Logger,
-  TYPES.InterrupterFactory
+  TYPES.InterrupterFactory,
+  TYPES.CurrencyConverter
 ]
 class TransactionTaxReport {
   constructor (
@@ -46,7 +47,8 @@ class TransactionTaxReport {
     getDataFromApi,
     wsEventEmitterFactory,
     logger,
-    interrupterFactory
+    interrupterFactory,
+    currencyConverter
   ) {
     this.dao = dao
     this.authenticator = authenticator
@@ -59,6 +61,7 @@ class TransactionTaxReport {
     this.wsEventEmitterFactory = wsEventEmitterFactory
     this.logger = logger
     this.interrupterFactory = interrupterFactory
+    this.currencyConverter = currencyConverter
 
     this.tradesModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.TRADES)
@@ -234,6 +237,9 @@ class TransactionTaxReport {
       }
 
       const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
+      const symbSeparator = symbol.length > 3
+        ? ':'
+        : ''
 
       let pubTrades = []
       let pubTradeStart = pubTrades[0]?.mts
@@ -254,9 +260,54 @@ class TransactionTaxReport {
           const start = trx.mtsCreate - 1
 
           pubTrades = await this.#getPublicTrades(
-            { symbol: `t${symbol}USD`, start },
+            { symbol: `t${symbol}${symbSeparator}USD`, start },
             opts
           )
+
+          if (
+            !Array.isArray(pubTrades) ||
+            pubTrades.length === 0
+          ) {
+            const ccySynonymous = await this.currencyConverter
+              .getCurrenciesSynonymous()
+            const synonymous = ccySynonymous.get(symbol)
+
+            if (!synonymous) {
+              throw new PubTradeFindForTrxTaxError({
+                symbol,
+                pubTradeStart,
+                pubTradeEnd,
+                requiredMts: trx.mtsCreate
+              })
+            }
+
+            for (const [symbol, conversion] of synonymous) {
+              const symbSeparator = symbol.length > 3
+                ? ':'
+                : ''
+              const res = await this.#getPublicTrades(
+                { symbol: `t${symbol}${symbSeparator}USD`, start },
+                opts
+              )
+
+              if (
+                !Array.isArray(res) ||
+                res.length === 0
+              ) {
+                continue
+              }
+
+              pubTrades = res.map((item) => {
+                if (Number.isFinite(item?.price)) {
+                  item.price = item.price * conversion
+                }
+
+                return item
+              })
+
+              break
+            }
+          }
 
           pubTradeStart = start ?? pubTrades[0]?.mts
           pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
@@ -270,7 +321,12 @@ class TransactionTaxReport {
           pubTradeStart > trx.mtsCreate ||
           pubTradeEnd < trx.mtsCreate
         ) {
-          throw new PubTradeFindForTrxTaxError()
+          throw new PubTradeFindForTrxTaxError({
+            symbol,
+            pubTradeStart,
+            pubTradeEnd,
+            requiredMts: trx.mtsCreate
+          })
         }
 
         const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
