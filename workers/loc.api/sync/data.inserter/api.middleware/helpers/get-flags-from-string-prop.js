@@ -1,14 +1,13 @@
 'use strict'
 
 module.exports = (
-  ledger,
+  item,
+  stringPropName,
   schemas = []
 ) => {
-  if (
-    !ledger ||
-    typeof ledger !== 'object' ||
-    typeof ledger.description !== 'string'
-  ) {
+  const stringProp = item?.[stringPropName]
+
+  if (typeof stringProp !== 'string') {
     return {}
   }
 
@@ -18,12 +17,12 @@ module.exports = (
       pattern,
       handler,
       isCaseSensitivity
-    } = { ...schema }
+    } = schema ?? {}
 
     if (typeof handler === 'function') {
       return {
         ...accum,
-        [fieldName]: handler(ledger.description)
+        [fieldName]: handler(stringProp)
       }
     }
 
@@ -34,7 +33,7 @@ module.exports = (
 
     return {
       ...accum,
-      [fieldName]: regExp.test(ledger.description)
+      [fieldName]: regExp.test(stringProp)
     }
   }, {})
 }
