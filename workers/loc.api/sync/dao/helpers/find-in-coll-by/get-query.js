@@ -44,7 +44,7 @@ module.exports = (args, methodColl, opts) => {
     group,
     groupProj
   } = getGroupQuery(methodColl)
-  const subQuery = getSubQuery(methodColl)
+  const { subQuery, subQueryValues } = getSubQuery(methodColl)
   const projection = getProjectionQuery(
     _model,
     exclude,
@@ -65,6 +65,6 @@ module.exports = (args, methodColl, opts) => {
 
   return {
     sql,
-    sqlParams: { ...values, ...limitVal }
+    sqlParams: { ...values, ...subQueryValues, ...limitVal }
   }
 }

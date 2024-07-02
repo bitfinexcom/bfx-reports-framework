@@ -16,7 +16,10 @@ module.exports = (
     '_isMarginFundingPayment',
     '_isAffiliateRebate',
     '_isStakingPayments',
-    '_isSubAccountsTransfer'
+    '_isSubAccountsTransfer',
+    '_isInvoicePayOrder',
+    '_isAirdropOnWallet',
+    '_isExchange'
   ]
 ) => {
   if (

@@ -988,6 +988,7 @@ class BetterSqliteDAO extends DAO {
       filter = {},
       sort = [],
       subQuery = {
+        filter: {},
         sort: []
       },
       groupFns = [],
@@ -1003,7 +1004,10 @@ class BetterSqliteDAO extends DAO {
       group,
       groupProj
     } = getGroupQuery({ groupFns, groupResBy })
-    const _subQuery = getSubQuery({ name: collName, subQuery })
+    const {
+      subQuery: _subQuery,
+      subQueryValues
+    } = getSubQuery({ name: collName, subQuery })
     const _sort = getOrderQuery(sort)
     const {
       where,
@@ -1035,7 +1039,7 @@ class BetterSqliteDAO extends DAO {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
-      params: { ...values, ...limitVal }
+      params: { ...values, ...subQueryValues, ...limitVal }
     }, { withWorkerThreads: true })
   }
 

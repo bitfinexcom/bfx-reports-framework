@@ -24,6 +24,24 @@ class MigrationV41 extends AbstractMigration {
       'ALTER TABLE trades ADD COLUMN exactUsdValue DECIMAL(22,12)',
       'ALTER TABLE movements ADD COLUMN exactUsdValue DECIMAL(22,12)',
 
+      'ALTER TABLE ledgers ADD COLUMN _isInvoicePayOrder INT',
+      `UPDATE ledgers SET _isInvoicePayOrder = (
+        SELECT 1 FROM (
+          SELECT * FROM ledgers AS l
+          WHERE l.description COLLATE NOCASE LIKE '%InvoicePay Order%'
+            AND l._id = ledgers._id
+        )
+      )`,
+
+      'ALTER TABLE ledgers ADD COLUMN _isAirdropOnWallet INT',
+      `UPDATE ledgers SET _isAirdropOnWallet = (
+        SELECT 1 FROM (
+          SELECT * FROM ledgers AS l
+          WHERE l.description COLLATE NOCASE LIKE '%Airdrop on wallet%'
+            AND l._id = ledgers._id
+        )
+      )`,
+
       'ALTER TABLE trades ADD COLUMN _isExchange INT',
       `UPDATE trades SET _isExchange = (
         SELECT 1 FROM (
