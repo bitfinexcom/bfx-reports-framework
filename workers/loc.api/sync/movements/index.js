@@ -43,7 +43,8 @@ class Movements {
       isExcludePrivate = true,
       isWithdrawals = false,
       isDeposits = false,
-      isMovementsWithoutSATransferLedgers = false
+      isMovementsWithoutSATransferLedgers = false,
+      areExtraPaymentsIncluded = false
     } = params ?? {}
 
     const user = await this.authenticator
@@ -96,7 +97,8 @@ class Movements {
       sort: ledgersOrder,
       isWithdrawals,
       isDeposits,
-      isExcludePrivate
+      isExcludePrivate,
+      areExtraPaymentsIncluded
     })
 
     if (isMovementsWithoutSATransferLedgers) {
@@ -229,7 +231,8 @@ class Movements {
       exclude = ['user_id'],
       isExcludePrivate = true,
       isWithdrawals = false,
-      isDeposits = false
+      isDeposits = false,
+      areExtraPaymentsIncluded = false
     } = params ?? {}
 
     const withdrawalsFilter = isWithdrawals
@@ -244,19 +247,25 @@ class Movements {
       depositsFilter,
       _filter
     )
+    const extraPaymentsFilter = areExtraPaymentsIncluded
+      ? {
+          $or: {
+            $eq: {
+              _isInvoicePayOrder: 1,
+              _isAirdropOnWallet: 1,
+              _isMarginFundingPayment: 1,
+              _isAffiliateRebate: 1,
+              _isStakingPayments: 1
+            }
+          }
+        }
+      : { $or: { $eq: { _isInvoicePayOrder: 1 } } }
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.LEDGERS,
       {
         subQuery: {
-          filter: {
-            $or: {
-              $eq: {
-                _isInvoicePayOrder: 1,
-                _isAirdropOnWallet: 1
-              }
-            }
-          }
+          filter: extraPaymentsFilter
         },
         filter: {
           $lte: { mts: end },

@@ -183,14 +183,16 @@ class TransactionTaxReport {
       start,
       end,
       isWithdrawals: true,
-      isExcludePrivate: false
+      isExcludePrivate: false,
+      areExtraPaymentsIncluded: true
     })
     const depositsPromise = this.movements.getMovements({
       auth: user,
       start,
       end,
       isDeposits: true,
-      isExcludePrivate: false
+      isExcludePrivate: false,
+      areExtraPaymentsIncluded: true
     })
 
     const [
