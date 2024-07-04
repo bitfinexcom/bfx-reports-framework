@@ -122,8 +122,14 @@ module.exports = async (trades, opts) => {
     )
     trade.isSaleTrx = isDistinctSale || isSaleBetweenCrypto
     trade.isBuyTrx = (
-      trade.execAmount > 0 ||
-      !isLastSymbForex
+      (
+        trade.execAmount > 0 ||
+        !isLastSymbForex
+      ) &&
+      (
+        !trade.isTaxablePayment ||
+        !isForexSymb(trade)
+      )
     )
 
     if (
@@ -235,8 +241,14 @@ module.exports = async (trades, opts) => {
       }
 
       if (
-        tradeForLookup.execAmount < 0 &&
-        isForexSymb(lastSymbForLookup)
+        (
+          tradeForLookup.execAmount < 0 &&
+          isForexSymb(lastSymbForLookup)
+        ) ||
+        (
+          tradeForLookup.isTaxablePayment &&
+          isForexSymb(firstSymbForLookup)
+        )
       ) {
         continue
       }
@@ -350,8 +362,28 @@ module.exports = async (trades, opts) => {
       isBuyTradesWithUnrealizedProfitRequired ||
       trade?.isBuyTradesWithUnrealizedProfitForPrevPeriod ||
       !trade?.isSaleTrx ||
-      trade?.isAdditionalTrxMovements
+      (
+        trade?.isAdditionalTrxMovements &&
+        !trade.isTaxablePayment
+      )
     ) {
+      continue
+    }
+    if (trade.isTaxablePayment) {
+      const proceeds = new BigNumber(trade.execAmount)
+        .times(trade.firstSymbPriceUsd)
+        .toNumber()
+
+      saleTradesWithRealizedProfit.push({
+        asset: trade.firstSymb,
+        amount: trade.execAmount,
+        mtsAcquired: trade.mtsCreate,
+        mtsSold: [],
+        proceeds,
+        cost: 0,
+        gainOrLoss: proceeds
+      })
+
       continue
     }
 
