@@ -3,6 +3,8 @@
 const { orderBy } = require('lodash')
 const { merge } = require('lib-js-util-base')
 
+const { pushLargeArr } = require('../../helpers/utils')
+
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -41,7 +43,8 @@ class Movements {
       isExcludePrivate = true,
       isWithdrawals = false,
       isDeposits = false,
-      isMovementsWithoutSATransferLedgers = false
+      isMovementsWithoutSATransferLedgers = false,
+      areExtraPaymentsIncluded = false
     } = params ?? {}
 
     const user = await this.authenticator
@@ -86,11 +89,44 @@ class Movements {
       }
     )
 
+    const ledgersOrder = this._getLedgersOrder(sort)
+    const extraMovementsPromise = this.getExtraMovements({
+      auth: user,
+      start,
+      end,
+      sort: ledgersOrder,
+      isWithdrawals,
+      isDeposits,
+      isExcludePrivate,
+      areExtraPaymentsIncluded
+    })
+
     if (isMovementsWithoutSATransferLedgers) {
-      return movementsPromise
+      const [
+        movements,
+        extraMovements
+      ] = await Promise.all([
+        movementsPromise,
+        extraMovementsPromise
+      ])
+
+      const remapedLedgers = this._remapLedgersToMovements(
+        extraMovements
+      )
+      pushLargeArr(movements, remapedLedgers)
+      const {
+        propNames,
+        orders
+      } = this._getLodashOrder(sort)
+      const orderedRes = orderBy(
+        movements,
+        propNames,
+        orders
+      )
+
+      return orderedRes
     }
 
-    const ledgersOrder = this._getLedgersOrder(sort)
     const ledgersPromise = this.getSubAccountsTransferLedgers({
       auth: user,
       start,
@@ -103,16 +139,19 @@ class Movements {
 
     const [
       movements,
+      extraMovements,
       ledgers
     ] = await Promise.all([
       movementsPromise,
+      extraMovementsPromise,
       ledgersPromise
     ])
 
+    pushLargeArr(extraMovements, ledgers)
     const remapedLedgers = this._remapLedgersToMovements(
-      ledgers
+      extraMovements
     )
-    movements.push(...remapedLedgers)
+    pushLargeArr(movements, remapedLedgers)
 
     const {
       propNames,
@@ -163,6 +202,72 @@ class Movements {
       {
         filter: {
           $eq: { _isSubAccountsTransfer: 1 },
+          $lte: { mts: end },
+          $gte: { mts: start },
+          user_id: auth._id,
+          ...filter
+        },
+        sort,
+        projection,
+        exclude,
+        isExcludePrivate
+      }
+    )
+  }
+
+  /*
+   * Considers the following additional movements from ledgers:
+   *   - `InvoicePay Order`
+   *   - `Airdrop on wallet`
+   */
+  getExtraMovements (params = {}) {
+    const {
+      auth = {},
+      start = 0,
+      end = Date.now(),
+      filter: _filter,
+      sort = [['mts', -1], ['id', -1]],
+      projection = this.ledgersModel,
+      exclude = ['user_id'],
+      isExcludePrivate = true,
+      isWithdrawals = false,
+      isDeposits = false,
+      areExtraPaymentsIncluded = false
+    } = params ?? {}
+
+    const withdrawalsFilter = isWithdrawals
+      ? { $lt: { amount: 0 } }
+      : {}
+    const depositsFilter = isDeposits
+      ? { $gt: { amount: 0 } }
+      : {}
+    const filter = merge(
+      {},
+      withdrawalsFilter,
+      depositsFilter,
+      _filter
+    )
+    const extraPaymentsFilter = areExtraPaymentsIncluded
+      ? {
+          $or: {
+            $eq: {
+              _isInvoicePayOrder: 1,
+              _isAirdropOnWallet: 1,
+              _isMarginFundingPayment: 1,
+              _isAffiliateRebate: 1,
+              _isStakingPayments: 1
+            }
+          }
+        }
+      : { $or: { $eq: { _isInvoicePayOrder: 1 } } }
+
+    return this.dao.getElemsInCollBy(
+      this.ALLOWED_COLLS.LEDGERS,
+      {
+        subQuery: {
+          filter: extraPaymentsFilter
+        },
+        filter: {
           $lte: { mts: end },
           $gte: { mts: start },
           user_id: auth._id,

@@ -133,6 +133,14 @@ class ApiMiddlewareHandlerAfter {
             {
               fieldName: '_isSubAccountsTransfer',
               pattern: '^transfer.+sa[(].+[)]'
+            },
+            {
+              fieldName: '_isInvoicePayOrder',
+              pattern: 'InvoicePay Order'
+            },
+            {
+              fieldName: '_isAirdropOnWallet',
+              pattern: 'Airdrop on wallet'
             }
           ]
         ),

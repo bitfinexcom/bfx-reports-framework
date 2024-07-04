@@ -119,6 +119,8 @@ const _models = new Map([
       _isStakingPayments: 'INT',
       _isSubAccountsTransfer: 'INT',
       _isBalanceRecalced: 'INT',
+      _isInvoicePayOrder: 'INT',
+      _isAirdropOnWallet: 'INT',
       subUserId: 'INT',
       user_id: 'INT NOT NULL',
 
@@ -134,6 +136,8 @@ const _models = new Map([
         ['user_id', '_category', 'mts'],
         ['user_id', 'mts'],
         ['currency', 'mts'],
+        ['_isInvoicePayOrder'],
+        ['_isAirdropOnWallet'],
         ['user_id', 'subUserId', 'mts',
           'WHERE subUserId IS NOT NULL'],
         ['subUserId', 'mts', '_id',
