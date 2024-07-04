@@ -290,7 +290,12 @@ class Movements {
         amountUsd,
         subUserId,
         _id,
-        exactUsdValue
+        exactUsdValue,
+
+        _isAirdropOnWallet,
+        _isMarginFundingPayment,
+        _isAffiliateRebate,
+        _isStakingPayments
       } = ledger
 
       return {
@@ -309,7 +314,12 @@ class Movements {
         subUserId,
         isLedgers: true,
         _id,
-        exactUsdValue
+        exactUsdValue,
+
+        _isAirdropOnWallet,
+        _isMarginFundingPayment,
+        _isAffiliateRebate,
+        _isStakingPayments
       }
     })
   }
