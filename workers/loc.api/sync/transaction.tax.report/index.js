@@ -14,7 +14,8 @@ const {
   remapMovements,
   lookUpTrades,
   getTrxMapByCcy,
-  findPublicTrade
+  findPublicTrade,
+  getCcyPairForConversion
 } = require('./helpers')
 
 const isTestEnv = process.env.NODE_ENV === 'test'
@@ -239,9 +240,6 @@ class TransactionTaxReport {
       }
 
       const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
-      const symbSeparator = symbol.length > 3
-        ? ':'
-        : ''
 
       let pubTrades = []
       let pubTradeStart = pubTrades[0]?.mts
@@ -262,7 +260,10 @@ class TransactionTaxReport {
           const start = trx.mtsCreate - 1
 
           pubTrades = await this.#getPublicTrades(
-            { symbol: `t${symbol}${symbSeparator}USD`, start },
+            {
+              symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
+              start
+            },
             opts
           )
 
@@ -274,7 +275,10 @@ class TransactionTaxReport {
               .getCurrenciesSynonymous()
             const synonymous = ccySynonymous.get(symbol)
 
-            if (!synonymous) {
+            if (
+              !synonymous ||
+              trxPriceCalculator.kindOfCcyForTriangulation
+            ) {
               throw new PubTradeFindForTrxTaxError({
                 symbol,
                 pubTradeStart,
@@ -284,11 +288,11 @@ class TransactionTaxReport {
             }
 
             for (const [symbol, conversion] of synonymous) {
-              const symbSeparator = symbol.length > 3
-                ? ':'
-                : ''
               const res = await this.#getPublicTrades(
-                { symbol: `t${symbol}${symbSeparator}USD`, start },
+                {
+                  symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
+                  start
+                },
                 opts
               )
 
