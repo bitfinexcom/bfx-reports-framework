@@ -16,6 +16,8 @@ const {
   CurrencyPairSeparationError
 } = require('../../../errors')
 
+const getTrxTaxType = require('./get-trx-tax-type')
+
 module.exports = async (trades, opts) => {
   const {
     isBackIterativeSaleLookUp = false,
@@ -383,7 +385,8 @@ module.exports = async (trades, opts) => {
         mtsSold: null,
         proceeds,
         cost: null,
-        gainOrLoss: proceeds
+        gainOrLoss: proceeds,
+        type: getTrxTaxType(trade)
       })
 
       continue
@@ -396,7 +399,8 @@ module.exports = async (trades, opts) => {
       mtsSold: trade.mtsSoldForSaleTrx,
       proceeds: trade.proceedsForSaleTrxUsd.toNumber(),
       cost: trade.costForSaleTrxUsd.toNumber(),
-      gainOrLoss: trade.gainOrLossUsd.toNumber()
+      gainOrLoss: trade.gainOrLossUsd.toNumber(),
+      type: getTrxTaxType(trade)
     })
   }
 
