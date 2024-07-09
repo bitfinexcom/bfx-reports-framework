@@ -6,12 +6,12 @@ module.exports = (symbol, trxPriceCalculator) => {
   if (trxPriceCalculator?.kindOfCcyForTriangulation === TrxPriceCalculator.IS_FOREX_CCY_FOR_TRIANGULATION) {
     const symbSeparator = (
       symbol.length > 3 ||
-      trxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION > 3
+      TrxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION > 3
     )
       ? ':'
       : ''
 
-    return `t${trxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION}${symbSeparator}${symbol}`
+    return `t${TrxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION}${symbSeparator}${symbol}`
   }
 
   const symbSeparator = symbol.length > 3
