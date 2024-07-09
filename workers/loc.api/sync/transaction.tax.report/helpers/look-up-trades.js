@@ -361,10 +361,12 @@ module.exports = async (trades, opts) => {
     if (
       isBuyTradesWithUnrealizedProfitRequired ||
       trade?.isBuyTradesWithUnrealizedProfitForPrevPeriod ||
-      !trade?.isSaleTrx ||
       (
-        trade?.isAdditionalTrxMovements &&
-        !trade.isTaxablePayment
+        !trade?.isTaxablePayment &&
+        (
+          !trade?.isSaleTrx ||
+          trade?.isAdditionalTrxMovements
+        )
       )
     ) {
       continue
@@ -378,9 +380,9 @@ module.exports = async (trades, opts) => {
         asset: trade.firstSymb,
         amount: trade.execAmount,
         mtsAcquired: trade.mtsCreate,
-        mtsSold: [],
+        mtsSold: null,
         proceeds,
-        cost: 0,
+        cost: null,
         gainOrLoss: proceeds
       })
 
