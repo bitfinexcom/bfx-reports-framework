@@ -446,7 +446,8 @@ module.exports = (
         'mtsSold',
         'proceeds',
         'cost',
-        'gainOrLoss'
+        'gainOrLoss',
+        'type'
       ])
     })
   })
@@ -484,7 +485,8 @@ module.exports = (
         'mtsSold',
         'proceeds',
         'cost',
-        'gainOrLoss'
+        'gainOrLoss',
+        'type'
       ])
     })
   })
