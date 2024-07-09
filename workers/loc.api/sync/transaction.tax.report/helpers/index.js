@@ -10,6 +10,7 @@ const getTrxMapByCcy = require('./get-trx-map-by-ccy')
 const findPublicTrade = require('./find-public-trade')
 const TrxPriceCalculator = require('./trx.price.calculator')
 const getCcyPairForConversion = require('./get-ccy-pair-for-conversion')
+const getTrxTaxType = require('./get-trx-tax-type')
 
 module.exports = {
   TRX_TAX_TYPES,
@@ -21,5 +22,6 @@ module.exports = {
   getTrxMapByCcy,
   findPublicTrade,
   TrxPriceCalculator,
-  getCcyPairForConversion
+  getCcyPairForConversion,
+  getTrxTaxType
 }
