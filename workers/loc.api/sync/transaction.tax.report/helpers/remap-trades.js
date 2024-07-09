@@ -29,6 +29,11 @@ module.exports = (trades, params) => {
     trade.firstSymbPriceUsd = null
     trade.lastSymbPriceUsd = null
     trade.isAdditionalTrxMovements = false
+    trade.isTaxablePayment = false
+    trade.isAirdropOnWallet = false
+    trade.isMarginFundingPayment = false
+    trade.isAffiliateRebate = false
+    trade.isStakingPayments = false
     trade.isMovements = false
     trade.isLedgers = false
     trade.isTrades = true

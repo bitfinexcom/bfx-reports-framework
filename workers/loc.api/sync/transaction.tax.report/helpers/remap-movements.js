@@ -58,7 +58,12 @@ module.exports = (movements, params) => {
       // NOTE: execPrice = firstSymbPriceUsd and should be set when converting currencies
       execPrice: 0,
       // NOTE: exactUsdValue can be null on the first launch, for warm-up it's filling from pub-trades
-      exactUsdValue: movement.exactUsdValue
+      exactUsdValue: movement.exactUsdValue,
+
+      isAirdropOnWallet: !!movement?._isAirdropOnWallet,
+      isMarginFundingPayment: !!movement?._isMarginFundingPayment,
+      isAffiliateRebate: movement?._isAffiliateRebate,
+      isStakingPayments: movement?._isStakingPayments
     }
 
     remappedTrxs.push(remappedMovement)
