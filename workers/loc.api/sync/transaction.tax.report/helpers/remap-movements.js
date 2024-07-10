@@ -62,8 +62,8 @@ module.exports = (movements, params) => {
 
       isAirdropOnWallet: !!movement?._isAirdropOnWallet,
       isMarginFundingPayment: !!movement?._isMarginFundingPayment,
-      isAffiliateRebate: movement?._isAffiliateRebate,
-      isStakingPayments: movement?._isStakingPayments
+      isAffiliateRebate: !!movement?._isAffiliateRebate,
+      isStakingPayments: !!movement?._isStakingPayments
     }
 
     remappedTrxs.push(remappedMovement)
