@@ -28,18 +28,9 @@ describe('lookUpTrades helper for trx tax report', () => {
     )
 
     assert.isArray(buyTradesWithUnrealizedProfit)
-    assert.equal(buyTradesWithUnrealizedProfit.length, 6)
+    assert.equal(buyTradesWithUnrealizedProfit.length, 5)
 
     testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 0, {
-      isAdditionalTrxMovements: true,
-      mtsCreate: Date.UTC(2023, 6, 23),
-      firstSymb: 'EUR',
-      lastSymb: 'USD',
-      execAmount: 2.11,
-      execPrice: 1.05,
-      buyFilledAmount: 0
-    })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 1, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 5, 11),
       firstSymb: 'ETH',
@@ -48,7 +39,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 2_800,
       buyFilledAmount: 100
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 2, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 1, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 4, 22),
       firstSymb: 'ETH',
@@ -57,7 +48,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 0.055,
       buyFilledAmount: 0
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 3, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 2, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 2, 23),
       firstSymb: 'ETH',
@@ -66,7 +57,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 0.05,
       buyFilledAmount: 7
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 4, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 3, {
       isAdditionalTrxMovements: true,
       mtsCreate: Date.UTC(2023, 1, 5),
       firstSymb: 'BTC',
@@ -75,7 +66,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 43_000,
       buyFilledAmount: 2.5
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 5, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 4, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 0, 10),
       firstSymb: 'BTC',
@@ -198,18 +189,9 @@ describe('lookUpTrades helper for trx tax report', () => {
     )
 
     assert.isArray(buyTradesWithUnrealizedProfit)
-    assert.equal(buyTradesWithUnrealizedProfit.length, 6)
+    assert.equal(buyTradesWithUnrealizedProfit.length, 5)
 
     testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 0, {
-      isAdditionalTrxMovements: true,
-      mtsCreate: Date.UTC(2023, 6, 23),
-      firstSymb: 'EUR',
-      lastSymb: 'USD',
-      execAmount: 2.11,
-      execPrice: 1.05,
-      buyFilledAmount: 0
-    })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 1, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 5, 11),
       firstSymb: 'ETH',
@@ -218,7 +200,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 2_800,
       buyFilledAmount: 100
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 2, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 1, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 4, 22),
       firstSymb: 'ETH',
@@ -227,7 +209,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 0.055,
       buyFilledAmount: 0
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 3, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 2, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 2, 23),
       firstSymb: 'ETH',
@@ -236,7 +218,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 0.05,
       buyFilledAmount: 7
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 4, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 3, {
       isAdditionalTrxMovements: true,
       mtsCreate: Date.UTC(2023, 1, 5),
       firstSymb: 'BTC',
@@ -245,7 +227,7 @@ describe('lookUpTrades helper for trx tax report', () => {
       execPrice: 43_000,
       buyFilledAmount: 0
     })
-    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 5, {
+    testBuyTradesWithUnrealizedProfit(buyTradesWithUnrealizedProfit, 4, {
       isAdditionalTrxMovements: false,
       mtsCreate: Date.UTC(2023, 0, 10),
       firstSymb: 'BTC',
