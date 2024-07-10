@@ -91,70 +91,87 @@ describe('lookUpTrades helper for trx tax report', () => {
     )
 
     assert.isArray(saleTradesWithRealizedProfit)
-    assert.equal(saleTradesWithRealizedProfit.length, 7)
+    assert.equal(saleTradesWithRealizedProfit.length, 8)
 
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 0, {
+      asset: 'EUR',
+      amount: 2.11,
+      mtsAcquired: Date.UTC(2023, 6, 23),
+      mtsSold: null,
+      proceeds: 2.2155,
+      cost: null,
+      gainOrLoss: 2.2155,
+      type: 'MARGIN_FUNDING_PAYMENT'
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
       asset: 'UST',
       amount: 100,
       mtsAcquired: Date.UTC(2023, 5, 11),
       mtsSold: Date.UTC(2023, 6, 21),
       proceeds: 105,
       cost: 111,
-      gainOrLoss: -6
+      gainOrLoss: -6,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
       asset: 'ETH',
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 5, 11),
       proceeds: 3_110,
       cost: 2_601,
-      gainOrLoss: 509
+      gainOrLoss: 509,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
       asset: 'ETH',
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 22),
       proceeds: 2_650,
       cost: 2_601,
-      gainOrLoss: 49
+      gainOrLoss: 49,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
       asset: 'ETH',
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 10),
       proceeds: 2_000,
       cost: 2_601,
-      gainOrLoss: -601
+      gainOrLoss: -601,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
       asset: 'ETH',
       amount: 2,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 3, 10),
       proceeds: 6_400,
       cost: 5_202,
-      gainOrLoss: 1_198
+      gainOrLoss: 1_198,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
       asset: 'BTC',
       amount: 0.5,
       mtsAcquired: Date.UTC(2023, 1, 5),
       mtsSold: Date.UTC(2023, 2, 23),
       proceeds: 25_000,
       cost: 21_500,
-      gainOrLoss: 3_500
+      gainOrLoss: 3_500,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 7, {
       asset: 'BTC',
       amount: 2,
       mtsAcquired: Date.UTC(2023, 1, 5),
       mtsSold: Date.UTC(2023, 2, 3),
       proceeds: 66_000,
       cost: 86_000,
-      gainOrLoss: -20_000
+      gainOrLoss: -20_000,
+      type: 'EXCHANGE'
     })
   })
 
@@ -235,70 +252,87 @@ describe('lookUpTrades helper for trx tax report', () => {
     )
 
     assert.isArray(saleTradesWithRealizedProfit)
-    assert.equal(saleTradesWithRealizedProfit.length, 7)
+    assert.equal(saleTradesWithRealizedProfit.length, 8)
 
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 0, {
+      asset: 'EUR',
+      amount: 2.11,
+      mtsAcquired: Date.UTC(2023, 6, 23),
+      mtsSold: null,
+      proceeds: 2.2155,
+      cost: null,
+      gainOrLoss: 2.2155,
+      type: 'MARGIN_FUNDING_PAYMENT'
+    })
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
       asset: 'UST',
       amount: 100,
       mtsAcquired: Date.UTC(2023, 5, 11),
       mtsSold: Date.UTC(2023, 6, 21),
       proceeds: 105,
       cost: 111,
-      gainOrLoss: -6
+      gainOrLoss: -6,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
       asset: 'ETH',
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 5, 11),
       proceeds: 3_110,
       cost: 2_601,
-      gainOrLoss: 509
+      gainOrLoss: 509,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 2, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
       asset: 'ETH',
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 22),
       proceeds: 2_650,
       cost: 2_601,
-      gainOrLoss: 49
+      gainOrLoss: 49,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 3, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
       asset: 'ETH',
       amount: 1,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 4, 10),
       proceeds: 2_000,
       cost: 2_601,
-      gainOrLoss: -601
+      gainOrLoss: -601,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 4, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
       asset: 'ETH',
       amount: 2,
       mtsAcquired: Date.UTC(2023, 2, 23),
       mtsSold: Date.UTC(2023, 3, 10),
       proceeds: 6_400,
       cost: 5_202,
-      gainOrLoss: 1_198
+      gainOrLoss: 1_198,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 5, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
       asset: 'BTC',
       amount: 0.5,
       mtsAcquired: Date.UTC(2023, 0, 10),
       mtsSold: Date.UTC(2023, 2, 23),
       proceeds: 25_000,
       cost: 10_000,
-      gainOrLoss: 15_000
+      gainOrLoss: 15_000,
+      type: 'EXCHANGE'
     })
-    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 6, {
+    testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 7, {
       asset: 'BTC',
       amount: 2,
       mtsAcquired: Date.UTC(2023, 0, 10),
       mtsSold: Date.UTC(2023, 2, 3),
       proceeds: 66_000,
       cost: 40_000,
-      gainOrLoss: 26_000
+      gainOrLoss: 26_000,
+      type: 'EXCHANGE'
     })
   })
 
@@ -339,7 +373,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       mtsSold: Date.UTC(2024, 3, 27),
       proceeds: 196,
       cost: 222,
-      gainOrLoss: -26
+      gainOrLoss: -26,
+      type: 'EXCHANGE'
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
       asset: 'BTC',
@@ -348,7 +383,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       mtsSold: Date.UTC(2024, 2, 17),
       proceeds: 305_000,
       cost: 220_275,
-      gainOrLoss: 84_725
+      gainOrLoss: 84_725,
+      type: 'EXCHANGE'
     })
   })
 
@@ -389,7 +425,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       mtsSold: Date.UTC(2024, 3, 27),
       proceeds: 196,
       cost: 222,
-      gainOrLoss: -26
+      gainOrLoss: -26,
+      type: 'EXCHANGE'
     })
     testSaleTradesWithRealizedProfit(saleTradesWithRealizedProfit, 1, {
       asset: 'BTC',
@@ -398,7 +435,8 @@ describe('lookUpTrades helper for trx tax report', () => {
       mtsSold: Date.UTC(2024, 2, 17),
       proceeds: 305_000,
       cost: 215_000,
-      gainOrLoss: 90_000
+      gainOrLoss: 90_000,
+      type: 'EXCHANGE'
     })
   })
 })

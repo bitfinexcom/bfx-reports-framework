@@ -36,6 +36,17 @@ const mockTradesForNextYear = [
 ]
 const mockTrades = [
   {
+    isAdditionalTrxMovements: true,
+    isTaxablePayment: true,
+    isMarginFundingPayment: true,
+    symbol: 'tEURUSD',
+    mtsCreate: Date.UTC(2023, 6, 23),
+    execAmount: 2.11,
+    execPrice: 1.05,
+    firstSymbPriceUsd: 1.05,
+    lastSymbPriceUsd: 1
+  },
+  {
     symbol: 'tUSTEUR',
     mtsCreate: Date.UTC(2023, 6, 21),
     execAmount: -100,
