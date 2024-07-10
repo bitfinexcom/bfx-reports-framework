@@ -130,7 +130,7 @@ module.exports = async (trades, opts) => {
       ) &&
       (
         !trade.isTaxablePayment ||
-        !isForexSymb(trade)
+        !isForexSymb(firstSymb)
       )
     )
 
