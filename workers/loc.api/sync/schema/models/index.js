@@ -10,29 +10,30 @@
 
 const SUPPORTED_DB_VERSION = 41
 
-const TABLES_NAMES = require('./tables-names')
+const TABLES_NAMES = require('../tables-names')
+const users = require('./users')
+
 const {
   CONSTR_FIELD_NAME,
   TRIGGER_FIELD_NAME,
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME,
   ID_PRIMARY_KEY
-} = require('./const')
+} = require('../const')
 const {
-  CREATE_UPDATE_API_KEYS_TRIGGERS,
   CREATE_UPDATE_MTS_TRIGGERS,
   DELETE_SUB_USERS_TRIGGER
-} = require('./common.triggers')
+} = require('../common.triggers')
 const {
   USER_ID_CONSTRAINT,
   MASTER_USER_ID_CONSTRAINT,
   OWNER_USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT
-} = require('./common.constraints')
+} = require('../common.constraints')
 const {
   getModelsMap: _getModelsMap,
   getModelOf: _getModelOf
-} = require('./helpers')
+} = require('../helpers')
 
 const getModelsMap = (params = {}) => {
   return _getModelsMap({
@@ -48,35 +49,7 @@ const getModelOf = (tableName) => {
 const _models = new Map([
   [
     TABLES_NAMES.USERS,
-    {
-      _id: ID_PRIMARY_KEY,
-      id: 'BIGINT',
-      email: 'VARCHAR(255)',
-      apiKey: 'VARCHAR(255)',
-      apiSecret: 'VARCHAR(255)',
-      authToken: 'VARCHAR(255)',
-      active: 'INT',
-      isDataFromDb: 'INT',
-      timezone: 'VARCHAR(255)',
-      username: 'VARCHAR(255)',
-      localUsername: 'VARCHAR(255)',
-      passwordHash: 'VARCHAR(255)',
-      isNotProtected: 'INT',
-      isSubAccount: 'INT',
-      isSubUser: 'INT',
-      shouldNotSyncOnStartupAfterUpdate: 'INT',
-      isSyncOnStartupRequired: 'INT',
-      authTokenTTLSec: 'INT',
-      isStagingBfxApi: 'INT',
-      createdAt: 'BIGINT',
-      updatedAt: 'BIGINT',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['email', 'username'],
-      [TRIGGER_FIELD_NAME]: [
-        ...CREATE_UPDATE_API_KEYS_TRIGGERS,
-        ...CREATE_UPDATE_MTS_TRIGGERS
-      ]
-    }
+    users
   ],
   [
     TABLES_NAMES.SUB_ACCOUNTS,
