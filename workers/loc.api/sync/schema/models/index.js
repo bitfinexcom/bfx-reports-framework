@@ -15,6 +15,7 @@ const users = require('./users')
 const subAccounts = require('./sub-accounts')
 const ledgers = require('./ledgers')
 const trades = require('./trades')
+const fundingTrades = require('./funding-trades')
 
 const {
   CONSTR_FIELD_NAME,
@@ -66,31 +67,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.FUNDING_TRADES,
-    {
-      _id: ID_PRIMARY_KEY,
-      id: 'BIGINT',
-      symbol: 'VARCHAR(255)',
-      mtsCreate: 'BIGINT',
-      offerID: 'BIGINT',
-      amount: 'DECIMAL(22,12)',
-      rate: 'DECIMAL(22,12)',
-      period: 'BIGINT',
-      maker: 'INT',
-      subUserId: 'INT',
-      user_id: 'INT NOT NULL',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: [
-        ['user_id', 'symbol', 'mtsCreate'],
-        ['user_id', 'mtsCreate'],
-        ['user_id', 'subUserId', 'mtsCreate',
-          'WHERE subUserId IS NOT NULL']
-      ],
-      [CONSTR_FIELD_NAME]: [
-        USER_ID_CONSTRAINT,
-        SUB_USER_ID_CONSTRAINT
-      ]
-    }
+    fundingTrades
   ],
   [
     TABLES_NAMES.PUBLIC_TRADES,
