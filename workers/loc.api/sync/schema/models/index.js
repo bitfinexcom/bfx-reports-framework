@@ -12,6 +12,7 @@ const SUPPORTED_DB_VERSION = 41
 
 const TABLES_NAMES = require('../tables-names')
 const users = require('./users')
+const subAccounts = require('./sub-accounts')
 
 const {
   CONSTR_FIELD_NAME,
@@ -21,12 +22,10 @@ const {
   ID_PRIMARY_KEY
 } = require('../const')
 const {
-  CREATE_UPDATE_MTS_TRIGGERS,
-  DELETE_SUB_USERS_TRIGGER
+  CREATE_UPDATE_MTS_TRIGGERS
 } = require('../common.triggers')
 const {
   USER_ID_CONSTRAINT,
-  MASTER_USER_ID_CONSTRAINT,
   OWNER_USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT
 } = require('../common.constraints')
@@ -53,22 +52,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.SUB_ACCOUNTS,
-    {
-      _id: ID_PRIMARY_KEY,
-      masterUserId: 'INT NOT NULL',
-      subUserId: 'INT NOT NULL',
-      createdAt: 'BIGINT',
-      updatedAt: 'BIGINT',
-
-      [CONSTR_FIELD_NAME]: [
-        MASTER_USER_ID_CONSTRAINT,
-        SUB_USER_ID_CONSTRAINT
-      ],
-      [TRIGGER_FIELD_NAME]: [
-        DELETE_SUB_USERS_TRIGGER,
-        ...CREATE_UPDATE_MTS_TRIGGERS
-      ]
-    }
+    subAccounts
   ],
   [
     TABLES_NAMES.LEDGERS,
