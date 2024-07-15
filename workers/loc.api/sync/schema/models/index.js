@@ -18,6 +18,7 @@ const trades = require('./trades')
 const fundingTrades = require('./funding-trades')
 const publicTrades = require('./public-trades')
 const orders = require('./orders')
+const movements = require('./movements')
 
 const {
   CONSTR_FIELD_NAME,
@@ -81,38 +82,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.MOVEMENTS,
-    {
-      _id: ID_PRIMARY_KEY,
-      id: 'BIGINT',
-      currency: 'VARCHAR(255)',
-      currencyName: 'VARCHAR(255)',
-      mtsStarted: 'BIGINT',
-      mtsUpdated: 'BIGINT',
-      status: 'VARCHAR(255)',
-      amount: 'DECIMAL(22,12)',
-      amountUsd: 'DECIMAL(22,12)',
-      exactUsdValue: 'DECIMAL(22,12)',
-      fees: 'DECIMAL(22,12)',
-      destinationAddress: 'VARCHAR(255)',
-      transactionId: 'VARCHAR(255)',
-      note: 'TEXT',
-      subUserId: 'INT',
-      user_id: 'INT NOT NULL',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-      [INDEX_FIELD_NAME]: [
-        ['user_id', 'status', 'mtsStarted'],
-        ['user_id', 'status', 'mtsUpdated'],
-        ['user_id', 'currency', 'mtsUpdated'],
-        ['user_id', 'mtsUpdated'],
-        ['user_id', 'subUserId', 'mtsUpdated',
-          'WHERE subUserId IS NOT NULL']
-      ],
-      [CONSTR_FIELD_NAME]: [
-        USER_ID_CONSTRAINT,
-        SUB_USER_ID_CONSTRAINT
-      ]
-    }
+    movements
   ],
   [
     TABLES_NAMES.FUNDING_OFFER_HISTORY,
