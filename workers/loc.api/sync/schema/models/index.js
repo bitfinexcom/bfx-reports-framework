@@ -16,6 +16,7 @@ const subAccounts = require('./sub-accounts')
 const ledgers = require('./ledgers')
 const trades = require('./trades')
 const fundingTrades = require('./funding-trades')
+const publicTrades = require('./public-trades')
 
 const {
   CONSTR_FIELD_NAME,
@@ -71,22 +72,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.PUBLIC_TRADES,
-    {
-      _id: ID_PRIMARY_KEY,
-      id: 'BIGINT',
-      mts: 'BIGINT',
-      rate: 'DECIMAL(22,12)',
-      period: 'BIGINT',
-      amount: 'DECIMAL(22,12)',
-      price: 'DECIMAL(22,12)',
-      _symbol: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['id', '_symbol'],
-      [INDEX_FIELD_NAME]: [
-        ['_symbol', 'mts'],
-        ['mts']
-      ]
-    }
+    publicTrades
   ],
   [
     TABLES_NAMES.ORDERS,
