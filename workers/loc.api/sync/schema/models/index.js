@@ -27,6 +27,7 @@ const positionsSnapshot = require('./positions-snapshot')
 const logins = require('./logins')
 const changeLogs = require('./change-logs')
 const payInvoiceList = require('./pay-invoice-list')
+const tickersHistory = require('./tickers-history')
 
 const {
   CONSTR_FIELD_NAME,
@@ -126,19 +127,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.TICKERS_HISTORY,
-    {
-      _id: ID_PRIMARY_KEY,
-      symbol: 'VARCHAR(255)',
-      bid: 'DECIMAL(22,12)',
-      bidPeriod: 'INT',
-      ask: 'DECIMAL(22,12)',
-      mtsUpdate: 'BIGINT',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
-      [INDEX_FIELD_NAME]: [
-        ['symbol', 'mtsUpdate']
-      ]
-    }
+    tickersHistory
   ],
   [
     TABLES_NAMES.STATUS_MESSAGES,
