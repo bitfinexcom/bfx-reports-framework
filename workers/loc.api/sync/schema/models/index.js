@@ -28,6 +28,7 @@ const logins = require('./logins')
 const changeLogs = require('./change-logs')
 const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
+const statusMessages = require('./status-messages')
 
 const {
   CONSTR_FIELD_NAME,
@@ -131,24 +132,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.STATUS_MESSAGES,
-    {
-      _id: ID_PRIMARY_KEY,
-      key: 'VARCHAR(255)',
-      timestamp: 'BIGINT',
-      price: 'DECIMAL(22,12)',
-      priceSpot: 'DECIMAL(22,12)',
-      fundBal: 'DECIMAL(22,12)',
-      fundingAccrued: 'DECIMAL(22,12)',
-      fundingStep: 'DECIMAL(22,12)',
-      clampMin: 'DECIMAL(22,12)',
-      clampMax: 'DECIMAL(22,12)',
-      _type: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['key', '_type'],
-      [INDEX_FIELD_NAME]: [
-        ['key', 'timestamp']
-      ]
-    }
+    statusMessages
   ],
   [
     TABLES_NAMES.PUBLIC_COLLS_CONF,
