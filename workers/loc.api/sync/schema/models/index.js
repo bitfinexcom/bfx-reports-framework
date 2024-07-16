@@ -30,6 +30,13 @@ const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
 const statusMessages = require('./status-messages')
 const publicCollsConf = require('./public-colls-conf')
+const symbols = require('./symbols')
+const mapSymbols = require('./map-symbols')
+const inactiveCurrencies = require('./inactive-currencies')
+const inactiveSymbols = require('./inactive-symbols')
+const futures = require('./futures')
+const currencies = require('./currencies')
+const marginCurrencyList = require('./margin-currency-list')
 
 const {
   CONSTR_FIELD_NAME,
@@ -141,72 +148,31 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.SYMBOLS,
-    {
-      _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
-    }
+    symbols
   ],
   [
     TABLES_NAMES.MAP_SYMBOLS,
-    {
-      _id: ID_PRIMARY_KEY,
-      key: 'VARCHAR(255)',
-      value: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['key']
-    }
+    mapSymbols
   ],
   [
     TABLES_NAMES.INACTIVE_CURRENCIES,
-    {
-      _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
-    }
+    inactiveCurrencies
   ],
   [
     TABLES_NAMES.INACTIVE_SYMBOLS,
-    {
-      _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
-    }
+    inactiveSymbols
   ],
   [
     TABLES_NAMES.FUTURES,
-    {
-      _id: ID_PRIMARY_KEY,
-      pairs: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
-    }
+    futures
   ],
   [
     TABLES_NAMES.CURRENCIES,
-    {
-      _id: ID_PRIMARY_KEY,
-      id: 'VARCHAR(255)',
-      name: 'VARCHAR(255)',
-      pool: 'VARCHAR(255)',
-      explorer: 'TEXT',
-      symbol: 'VARCHAR(255)',
-      walletFx: 'TEXT',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['id']
-    }
+    currencies
   ],
   [
     TABLES_NAMES.MARGIN_CURRENCY_LIST,
-    {
-      _id: ID_PRIMARY_KEY,
-      symbol: 'VARCHAR(255)',
-
-      [UNIQUE_INDEX_FIELD_NAME]: ['symbol']
-    }
+    marginCurrencyList
   ],
   [
     TABLES_NAMES.CANDLES,
