@@ -29,6 +29,7 @@ const changeLogs = require('./change-logs')
 const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
 const statusMessages = require('./status-messages')
+const publicCollsConf = require('./public-colls-conf')
 
 const {
   CONSTR_FIELD_NAME,
@@ -136,22 +137,7 @@ const _models = new Map([
   ],
   [
     TABLES_NAMES.PUBLIC_COLLS_CONF,
-    {
-      _id: ID_PRIMARY_KEY,
-      confName: 'VARCHAR(255)',
-      symbol: 'VARCHAR(255)',
-      start: 'BIGINT',
-      timeframe: 'VARCHAR(255)',
-      createdAt: 'BIGINT',
-      updatedAt: 'BIGINT',
-      user_id: 'INT NOT NULL',
-
-      [UNIQUE_INDEX_FIELD_NAME]: [
-        'symbol', 'user_id', 'confName', 'timeframe'
-      ],
-      [CONSTR_FIELD_NAME]: USER_ID_CONSTRAINT,
-      [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
-    }
+    publicCollsConf
   ],
   [
     TABLES_NAMES.SYMBOLS,
