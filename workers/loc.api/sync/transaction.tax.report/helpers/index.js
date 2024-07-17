@@ -3,6 +3,7 @@
 const TRX_TAX_TYPES = require('./trx.tax.types')
 const TRX_TAX_STRATEGIES = require('./trx.tax.strategies')
 const PRIORITY_CURRENCY_LIST = require('./priority.currency.list')
+const PROGRESS_STATES = require('./progress.states')
 const remapTrades = require('./remap-trades')
 const remapMovements = require('./remap-movements')
 const lookUpTrades = require('./look-up-trades')
@@ -16,6 +17,7 @@ module.exports = {
   TRX_TAX_TYPES,
   TRX_TAX_STRATEGIES,
   PRIORITY_CURRENCY_LIST,
+  PROGRESS_STATES,
   remapTrades,
   remapMovements,
   lookUpTrades,
