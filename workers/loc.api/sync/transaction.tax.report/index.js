@@ -10,6 +10,7 @@ const { PubTradeFindForTrxTaxError } = require('../../errors')
 
 const {
   TRX_TAX_STRATEGIES,
+  PROGRESS_STATES,
   remapTrades,
   remapMovements,
   lookUpTrades,
@@ -96,6 +97,10 @@ class TransactionTaxReport {
       user,
       name: INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER
     })
+    await this.#emitProgress(
+      user,
+      { process: 0, state: PROGRESS_STATES.GENERATION_STARTED }
+    )
 
     const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO
     const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
@@ -114,6 +119,10 @@ class TransactionTaxReport {
       trxsForCurrPeriod.length === 0
     ) {
       interrupter.emitInterrupted()
+      await this.#emitProgress(
+        user,
+        { process: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
+      )
 
       return []
     }
@@ -165,8 +174,18 @@ class TransactionTaxReport {
     interrupter.emitInterrupted()
 
     if (interrupter.hasInterrupted()) {
+      await this.#emitProgress(
+        user,
+        { process: null, state: PROGRESS_STATES.GENERATION_INTERRUPTED }
+      )
+
       return []
     }
+
+    await this.#emitProgress(
+      user,
+      { process: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
+    )
 
     return saleTradesWithRealizedProfit
   }
@@ -480,6 +499,24 @@ class TransactionTaxReport {
         ledgers = []
       }
     }
+  }
+
+  async #emitProgress (user, params) {
+    const {
+      progress = null,
+      state = null
+    } = params ?? {}
+
+    await this.wsEventEmitterFactory()
+      .emitTrxTaxReportGenerationProgressToOne(
+        {
+          progress: Number.isFinite(progress)
+            ? Math.floor(progress)
+            : progress,
+          state
+        },
+        user
+      )
   }
 }
 
