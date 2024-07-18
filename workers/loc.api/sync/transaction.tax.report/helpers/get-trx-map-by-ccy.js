@@ -15,18 +15,32 @@ const setCcyCalculator = (map, symb, trxPriceCalculator) => {
   map.get(symb).push(trxPriceCalculator)
 }
 
+const calcTotalTrxAmount = (trxMapArray) => {
+  return trxMapArray.reduce((accum, [s, calcs]) => {
+    return accum + calcs.length
+  }, 0)
+}
+
 const placeTriangulationCcyAtStart = (map) => {
   if (!map.has(TrxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION)) {
-    return map
+    return {
+      trxMapByCcy: map,
+      totalTrxAmount: calcTotalTrxAmount([...map])
+    }
   }
 
   const triangulationCcyCalculators = map.get(TrxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION)
   map.delete(TrxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION)
 
-  return new Map([
+  const trxMapArray = [
     [TrxPriceCalculator.CRYPTO_CCY_FOR_TRIANGULATION, triangulationCcyCalculators],
     ...map
-  ])
+  ]
+
+  return {
+    trxMapByCcy: new Map(trxMapArray),
+    totalTrxAmount: calcTotalTrxAmount(trxMapArray)
+  }
 }
 
 module.exports = (trxs) => {
