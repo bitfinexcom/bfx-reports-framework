@@ -99,7 +99,7 @@ class TransactionTaxReport {
     })
     await this.#emitProgress(
       user,
-      { process: 0, state: PROGRESS_STATES.GENERATION_STARTED }
+      { progress: 0, state: PROGRESS_STATES.GENERATION_STARTED }
     )
 
     const isFIFO = strategy === TRX_TAX_STRATEGIES.FIFO
@@ -121,7 +121,7 @@ class TransactionTaxReport {
       interrupter.emitInterrupted()
       await this.#emitProgress(
         user,
-        { process: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
+        { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
       )
 
       return []
@@ -160,7 +160,10 @@ class TransactionTaxReport {
           !Number.isFinite(trx?.lastSymbPriceUsd)
         ))
     )
-    await this.#convertCurrencies(trxsForConvToUsd, { interrupter })
+    await this.#convertCurrencies(
+      trxsForConvToUsd,
+      { interrupter, user }
+    )
 
     const { saleTradesWithRealizedProfit } = await lookUpTrades(
       trxsForCurrPeriod,
@@ -176,7 +179,7 @@ class TransactionTaxReport {
     if (interrupter.hasInterrupted()) {
       await this.#emitProgress(
         user,
-        { process: null, state: PROGRESS_STATES.GENERATION_INTERRUPTED }
+        { progress: null, state: PROGRESS_STATES.GENERATION_INTERRUPTED }
       )
 
       return []
@@ -184,7 +187,7 @@ class TransactionTaxReport {
 
     await this.#emitProgress(
       user,
-      { process: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
+      { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
     )
 
     return saleTradesWithRealizedProfit
@@ -250,8 +253,13 @@ class TransactionTaxReport {
   }
 
   async #convertCurrencies (trxs, opts) {
-    const { interrupter } = opts
-    const trxMapByCcy = getTrxMapByCcy(trxs)
+    const { interrupter, user } = opts
+    const {
+      trxMapByCcy,
+      totalTrxAmount
+    } = getTrxMapByCcy(trxs)
+    let count = 0
+    let progress = 0
 
     for (const [symbol, trxPriceCalculators] of trxMapByCcy.entries()) {
       if (interrupter.hasInterrupted()) {
@@ -265,6 +273,8 @@ class TransactionTaxReport {
       let pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
 
       for (const trxPriceCalculator of trxPriceCalculatorIterator) {
+        count += 1
+
         if (interrupter.hasInterrupted()) {
           return
         }
@@ -356,10 +366,28 @@ class TransactionTaxReport {
 
         const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
         trxPriceCalculator.calcPrice(pubTrade?.price)
+        const _progress = (count / totalTrxAmount) * 100
+
+        if (
+          _progress <= 0 ||
+          _progress >= 100
+        ) {
+          continue
+        }
+
+        progress = _progress
+        await this.#emitProgress(
+          user,
+          { progress, state: PROGRESS_STATES.OBTAINING_CURRENCY_PRICES }
+        )
       }
     }
 
     await this.#updateExactUsdValueInColls(trxs)
+    await this.#emitProgress(
+      user,
+      { progress, state: PROGRESS_STATES.TRANSACTION_HISTORY_GENERATION }
+    )
   }
 
   async #getTrades ({
