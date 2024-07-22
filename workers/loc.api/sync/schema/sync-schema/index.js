@@ -11,28 +11,13 @@ const { getModelOf } = require('../models')
 const ledgers = require('./ledgers')
 const trades = require('./trades')
 const fundingTrades = require('./funding-trades')
+const publicTrades = require('./public-trades')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
   [SYNC_API_METHODS.TRADES, trades],
   [SYNC_API_METHODS.FUNDING_TRADES, fundingTrades],
-  [
-    SYNC_API_METHODS.PUBLIC_TRADES,
-    {
-      name: ALLOWED_COLLS.PUBLIC_TRADES,
-      maxLimit: 5000,
-      dateFieldName: 'mts',
-      symbolFieldName: '_symbol',
-      sort: [['mts', -1]],
-      hasNewData: false,
-      start: [],
-      confName: 'publicTradesConf',
-      isSyncRequiredAtLeastOnce: false,
-      additionalApiCallArgs: { isNotMoreThanInnerMax: true },
-      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.PUBLIC_TRADES)
-    }
-  ],
+  [SYNC_API_METHODS.PUBLIC_TRADES, publicTrades],
   [
     SYNC_API_METHODS.STATUS_MESSAGES,
     {
