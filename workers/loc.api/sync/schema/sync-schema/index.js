@@ -9,24 +9,11 @@ const { cloneSchema } = require('../helpers')
 const { getModelOf } = require('../models')
 
 const ledgers = require('./ledgers')
+const trades = require('./trades')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
-  [
-    SYNC_API_METHODS.TRADES,
-    {
-      name: ALLOWED_COLLS.TRADES,
-      maxLimit: 2500,
-      dateFieldName: 'mtsCreate',
-      symbolFieldName: 'symbol',
-      sort: [['mtsCreate', -1]],
-      hasNewData: false,
-      start: [],
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.TRADES)
-    }
-  ],
+  [SYNC_API_METHODS.TRADES, trades],
   [
     SYNC_API_METHODS.FUNDING_TRADES,
     {
