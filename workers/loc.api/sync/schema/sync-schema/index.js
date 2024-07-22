@@ -12,27 +12,14 @@ const ledgers = require('./ledgers')
 const trades = require('./trades')
 const fundingTrades = require('./funding-trades')
 const publicTrades = require('./public-trades')
+const statusMessages = require('./status-messages')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
   [SYNC_API_METHODS.TRADES, trades],
   [SYNC_API_METHODS.FUNDING_TRADES, fundingTrades],
   [SYNC_API_METHODS.PUBLIC_TRADES, publicTrades],
-  [
-    SYNC_API_METHODS.STATUS_MESSAGES,
-    {
-      name: ALLOWED_COLLS.STATUS_MESSAGES,
-      maxLimit: 5000,
-      dateFieldName: 'timestamp',
-      symbolFieldName: 'key',
-      sort: [['timestamp', -1]],
-      hasNewData: false,
-      confName: 'statusMessagesConf',
-      isSyncRequiredAtLeastOnce: false,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.STATUS_MESSAGES)
-    }
-  ],
+  [SYNC_API_METHODS.STATUS_MESSAGES, statusMessages],
   [
     SYNC_API_METHODS.ORDERS,
     {
