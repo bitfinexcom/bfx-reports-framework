@@ -1,32 +1,17 @@
 'use strict'
 
-const TABLES_NAMES = require('./tables-names')
-const ALLOWED_COLLS = require('./allowed.colls')
-const SYNC_API_METHODS = require('./sync.api.methods')
-const COLLS_TYPES = require('./colls.types')
-const { cloneSchema } = require('./helpers')
-const { getModelOf } = require('./models')
+const TABLES_NAMES = require('../tables-names')
+const ALLOWED_COLLS = require('../allowed.colls')
+const SYNC_API_METHODS = require('../sync.api.methods')
+const COLLS_TYPES = require('../colls.types')
 
-const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return cloneSchema(methodCollMap)
-}
+const { cloneSchema } = require('../helpers')
+const { getModelOf } = require('../models')
+
+const ledgers = require('./ledgers')
 
 const _methodCollMap = new Map([
-  [
-    SYNC_API_METHODS.LEDGERS,
-    {
-      name: ALLOWED_COLLS.LEDGERS,
-      maxLimit: 2500,
-      dateFieldName: 'mts',
-      symbolFieldName: 'currency',
-      sort: [['mts', -1], ['id', -1]],
-      hasNewData: false,
-      start: [],
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.LEDGERS)
-    }
-  ],
+  [SYNC_API_METHODS.LEDGERS, ledgers],
   [
     SYNC_API_METHODS.TRADES,
     {
@@ -399,6 +384,10 @@ const _methodCollMap = new Map([
     }
   ]
 ])
+
+const getMethodCollMap = (methodCollMap = _methodCollMap) => {
+  return cloneSchema(methodCollMap)
+}
 
 module.exports = {
   getMethodCollMap
