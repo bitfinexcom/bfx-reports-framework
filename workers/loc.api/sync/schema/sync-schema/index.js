@@ -18,6 +18,7 @@ const movements = require('./movements')
 const fundingOfferHistory = require('./funding-offer-history')
 const fundingLoanHistory = require('./funding-loan-history')
 const fundingCreditHistory = require('./funding-credit-history')
+const positionsHistory = require('./positions-history')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -30,22 +31,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.FUNDING_OFFER_HISTORY, fundingOfferHistory],
   [SYNC_API_METHODS.FUNDING_LOAN_HISTORY, fundingLoanHistory],
   [SYNC_API_METHODS.FUNDING_CREDIT_HISTORY, fundingCreditHistory],
-  [
-    SYNC_API_METHODS.POSITIONS_HISTORY,
-    {
-      name: ALLOWED_COLLS.POSITIONS_HISTORY,
-      maxLimit: 10000,
-      dateFieldName: 'mtsUpdate',
-      symbolFieldName: 'symbol',
-      sort: [['mtsUpdate', -1]],
-      hasNewData: false,
-      start: [],
-      isSyncRequiredAtLeastOnce: false,
-      shouldNotApiMiddlewareBeLaunched: true,
-      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.POSITIONS_HISTORY)
-    }
-  ],
+  [SYNC_API_METHODS.POSITIONS_HISTORY, positionsHistory],
   [
     SYNC_API_METHODS.POSITIONS_SNAPSHOT,
     {
