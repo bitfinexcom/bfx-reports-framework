@@ -15,6 +15,7 @@ const publicTrades = require('./public-trades')
 const statusMessages = require('./status-messages')
 const orders = require('./orders')
 const movements = require('./movements')
+const fundingOfferHistory = require('./funding-offer-history')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -24,21 +25,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.STATUS_MESSAGES, statusMessages],
   [SYNC_API_METHODS.ORDERS, orders],
   [SYNC_API_METHODS.MOVEMENTS, movements],
-  [
-    SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
-    {
-      name: ALLOWED_COLLS.FUNDING_OFFER_HISTORY,
-      maxLimit: 10000,
-      dateFieldName: 'mtsUpdate',
-      symbolFieldName: 'symbol',
-      sort: [['mtsUpdate', -1]],
-      hasNewData: false,
-      start: [],
-      isSyncRequiredAtLeastOnce: false,
-      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.FUNDING_OFFER_HISTORY)
-    }
-  ],
+  [SYNC_API_METHODS.FUNDING_OFFER_HISTORY, fundingOfferHistory],
   [
     SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
     {
