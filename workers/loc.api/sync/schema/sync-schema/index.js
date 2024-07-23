@@ -23,6 +23,7 @@ const positionsSnapshot = require('./positions-snapshot')
 const logins = require('./logins')
 const changeLogs = require('./change-logs')
 const payInvoiceList = require('./pay-invoice-list')
+const tickersHistory = require('./tickers-history')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -40,23 +41,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.LOGINS, logins],
   [SYNC_API_METHODS.CHANGE_LOGS, changeLogs],
   [SYNC_API_METHODS.PAY_INVOICE_LIST, payInvoiceList],
-  [
-    SYNC_API_METHODS.TICKERS_HISTORY,
-    {
-      name: ALLOWED_COLLS.TICKERS_HISTORY,
-      maxLimit: 10000,
-      dateFieldName: 'mtsUpdate',
-      symbolFieldName: 'symbol',
-      sort: [['mtsUpdate', -1]],
-      hasNewData: false,
-      start: [],
-      confName: 'tickersHistoryConf',
-      isSyncRequiredAtLeastOnce: false,
-      additionalApiCallArgs: { isNotMoreThanInnerMax: true },
-      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.TICKERS_HISTORY)
-    }
-  ],
+  [SYNC_API_METHODS.TICKERS_HISTORY, tickersHistory],
   [
     SYNC_API_METHODS.WALLETS,
     {
