@@ -24,6 +24,7 @@ const logins = require('./logins')
 const changeLogs = require('./change-logs')
 const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
+const wallets = require('./wallets')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -42,38 +43,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.CHANGE_LOGS, changeLogs],
   [SYNC_API_METHODS.PAY_INVOICE_LIST, payInvoiceList],
   [SYNC_API_METHODS.TICKERS_HISTORY, tickersHistory],
-  [
-    SYNC_API_METHODS.WALLETS,
-    {
-      name: ALLOWED_COLLS.LEDGERS,
-      dateFieldName: 'mts',
-      symbolFieldName: 'currency',
-      sort: [['mts', -1]],
-      groupFns: ['max(mts)', 'max(id)'],
-      groupResBy: ['wallet', 'currency'],
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.HIDDEN_INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.LEDGERS),
-      dataStructureConverter: (accum, {
-        wallet: type,
-        currency,
-        balance,
-        mts: mtsUpdate
-      } = {}) => {
-        accum.push({
-          type,
-          currency,
-          balance,
-          unsettledInterest: null,
-          balanceAvailable: null,
-          placeHolder: null,
-          mtsUpdate
-        })
-
-        return accum
-      }
-    }
-  ],
+  [SYNC_API_METHODS.WALLETS, wallets],
   [
     SYNC_API_METHODS.SYMBOLS,
     {
