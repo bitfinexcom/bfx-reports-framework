@@ -26,6 +26,7 @@ const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
 const wallets = require('./wallets')
 const symbols = require('./symbols')
+const mapSymbols = require('./map-symbols')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -46,19 +47,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.TICKERS_HISTORY, tickersHistory],
   [SYNC_API_METHODS.WALLETS, wallets],
   [SYNC_API_METHODS.SYMBOLS, symbols],
-  [
-    SYNC_API_METHODS.MAP_SYMBOLS,
-    {
-      name: ALLOWED_COLLS.MAP_SYMBOLS,
-      maxLimit: 10000,
-      projection: ['key', 'value'],
-      sort: [['key', 1]],
-      hasNewData: false,
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.MAP_SYMBOLS)
-    }
-  ],
+  [SYNC_API_METHODS.MAP_SYMBOLS, mapSymbols],
   [
     SYNC_API_METHODS.INACTIVE_CURRENCIES,
     {
