@@ -31,6 +31,7 @@ const inactiveCurrencies = require('./inactive-currencies')
 const inactiveSymbols = require('./inactive-symbols')
 const futures = require('./futures')
 const currencies = require('./currencies')
+const marginCurrencyList = require('./margin-currency-list')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -56,19 +57,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.INACTIVE_SYMBOLS, inactiveSymbols],
   [SYNC_API_METHODS.FUTURES, futures],
   [SYNC_API_METHODS.CURRENCIES, currencies],
-  [
-    SYNC_API_METHODS.MARGIN_CURRENCY_LIST,
-    {
-      name: ALLOWED_COLLS.MARGIN_CURRENCY_LIST,
-      maxLimit: 10000,
-      projection: 'symbol',
-      sort: [['symbol', 1]],
-      hasNewData: false,
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
-      model: getModelOf(TABLES_NAMES.MARGIN_CURRENCY_LIST)
-    }
-  ],
+  [SYNC_API_METHODS.MARGIN_CURRENCY_LIST, marginCurrencyList],
   [
     SYNC_API_METHODS.CANDLES,
     {
