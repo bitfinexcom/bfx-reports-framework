@@ -22,6 +22,7 @@ const positionsHistory = require('./positions-history')
 const positionsSnapshot = require('./positions-snapshot')
 const logins = require('./logins')
 const changeLogs = require('./change-logs')
+const payInvoiceList = require('./pay-invoice-list')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -38,21 +39,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.POSITIONS_SNAPSHOT, positionsSnapshot],
   [SYNC_API_METHODS.LOGINS, logins],
   [SYNC_API_METHODS.CHANGE_LOGS, changeLogs],
-  [
-    SYNC_API_METHODS.PAY_INVOICE_LIST,
-    {
-      name: ALLOWED_COLLS.PAY_INVOICE_LIST,
-      maxLimit: 100,
-      dateFieldName: 't',
-      symbolFieldName: 'currency',
-      sort: [['t', -1]],
-      hasNewData: false,
-      start: [],
-      isSyncRequiredAtLeastOnce: false,
-      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.PAY_INVOICE_LIST)
-    }
-  ],
+  [SYNC_API_METHODS.PAY_INVOICE_LIST, payInvoiceList],
   [
     SYNC_API_METHODS.TICKERS_HISTORY,
     {
