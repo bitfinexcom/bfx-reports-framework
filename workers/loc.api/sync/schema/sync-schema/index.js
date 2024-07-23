@@ -28,6 +28,7 @@ const wallets = require('./wallets')
 const symbols = require('./symbols')
 const mapSymbols = require('./map-symbols')
 const inactiveCurrencies = require('./inactive-currencies')
+const inactiveSymbols = require('./inactive-symbols')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -50,19 +51,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.SYMBOLS, symbols],
   [SYNC_API_METHODS.MAP_SYMBOLS, mapSymbols],
   [SYNC_API_METHODS.INACTIVE_CURRENCIES, inactiveCurrencies],
-  [
-    SYNC_API_METHODS.INACTIVE_SYMBOLS,
-    {
-      name: ALLOWED_COLLS.INACTIVE_SYMBOLS,
-      maxLimit: 10000,
-      projection: 'pairs',
-      sort: [['pairs', 1]],
-      hasNewData: false,
-      isSyncRequiredAtLeastOnce: true,
-      type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
-      model: getModelOf(TABLES_NAMES.INACTIVE_SYMBOLS)
-    }
-  ],
+  [SYNC_API_METHODS.INACTIVE_SYMBOLS, inactiveSymbols],
   [
     SYNC_API_METHODS.FUTURES,
     {
