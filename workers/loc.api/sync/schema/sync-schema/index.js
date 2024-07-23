@@ -1,12 +1,6 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
-const ALLOWED_COLLS = require('../allowed.colls')
 const SYNC_API_METHODS = require('../sync.api.methods')
-const COLLS_TYPES = require('../colls.types')
-
-const { cloneSchema } = require('../helpers')
-const { getModelOf } = require('../models')
 
 const ledgers = require('./ledgers')
 const trades = require('./trades')
@@ -32,6 +26,7 @@ const inactiveSymbols = require('./inactive-symbols')
 const futures = require('./futures')
 const currencies = require('./currencies')
 const marginCurrencyList = require('./margin-currency-list')
+const candles = require('./candles')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -58,25 +53,10 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.FUTURES, futures],
   [SYNC_API_METHODS.CURRENCIES, currencies],
   [SYNC_API_METHODS.MARGIN_CURRENCY_LIST, marginCurrencyList],
-  [
-    SYNC_API_METHODS.CANDLES,
-    {
-      name: ALLOWED_COLLS.CANDLES,
-      maxLimit: 10000,
-      dateFieldName: 'mts',
-      symbolFieldName: '_symbol',
-      timeframeFieldName: '_timeframe',
-      sort: [['mts', -1]],
-      hasNewData: false,
-      start: [],
-      confName: 'candlesConf',
-      isSyncRequiredAtLeastOnce: true,
-      additionalApiCallArgs: { isNotMoreThanInnerMax: true },
-      type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.CANDLES)
-    }
-  ]
+  [SYNC_API_METHODS.CANDLES, candles]
 ])
+
+const { cloneSchema } = require('../helpers')
 
 const getMethodCollMap = (methodCollMap = _methodCollMap) => {
   return cloneSchema(methodCollMap)
