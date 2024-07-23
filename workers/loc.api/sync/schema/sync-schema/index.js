@@ -21,6 +21,7 @@ const fundingCreditHistory = require('./funding-credit-history')
 const positionsHistory = require('./positions-history')
 const positionsSnapshot = require('./positions-snapshot')
 const logins = require('./logins')
+const changeLogs = require('./change-logs')
 
 const _methodCollMap = new Map([
   [SYNC_API_METHODS.LEDGERS, ledgers],
@@ -36,21 +37,7 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.POSITIONS_HISTORY, positionsHistory],
   [SYNC_API_METHODS.POSITIONS_SNAPSHOT, positionsSnapshot],
   [SYNC_API_METHODS.LOGINS, logins],
-  [
-    SYNC_API_METHODS.CHANGE_LOGS,
-    {
-      name: ALLOWED_COLLS.CHANGE_LOGS,
-      maxLimit: 10000,
-      dateFieldName: 'mtsCreate',
-      symbolFieldName: null,
-      sort: [['mtsCreate', -1]],
-      hasNewData: false,
-      start: [],
-      isSyncRequiredAtLeastOnce: false,
-      type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-      model: getModelOf(TABLES_NAMES.CHANGE_LOGS)
-    }
-  ],
+  [SYNC_API_METHODS.CHANGE_LOGS, changeLogs],
   [
     SYNC_API_METHODS.PAY_INVOICE_LIST,
     {
