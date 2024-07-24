@@ -458,15 +458,19 @@ class TransactionTaxReport {
       interrupter
     })
 
+    const pubTrades = Array.isArray(res)
+      ? res
+      : []
+
     if (isTestEnv) {
       /*
        * Need to reverse pub-trades array for test env
        * as mocked test server return data in desc order
        */
-      return res.reverse()
+      return pubTrades.reverse()
     }
 
-    return res
+    return pubTrades
   }
 
   async #updateExactUsdValueInColls (trxs) {
