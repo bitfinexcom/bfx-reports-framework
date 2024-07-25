@@ -35,7 +35,8 @@ const depsTypes = (TYPES) => [
   TYPES.WSEventEmitterFactory,
   TYPES.Logger,
   TYPES.InterrupterFactory,
-  TYPES.CurrencyConverter
+  TYPES.CurrencyConverter,
+  TYPES.ProcessMessageManager
 ]
 class TransactionTaxReport {
   constructor (
@@ -50,7 +51,8 @@ class TransactionTaxReport {
     wsEventEmitterFactory,
     logger,
     interrupterFactory,
-    currencyConverter
+    currencyConverter,
+    processMessageManager
   ) {
     this.dao = dao
     this.authenticator = authenticator
@@ -64,6 +66,7 @@ class TransactionTaxReport {
     this.logger = logger
     this.interrupterFactory = interrupterFactory
     this.currencyConverter = currencyConverter
+    this.processMessageManager = processMessageManager
 
     this.tradesModel = this.syncSchema.getModelsMap()
       .get(this.ALLOWED_COLLS.TRADES)
@@ -75,13 +78,21 @@ class TransactionTaxReport {
       .verifyRequestUser({ auth })
     const _args = { auth: user, params }
 
+    const trxTaxReportPromise = this.getTransactionTaxReport(_args)
+
     this.wsEventEmitterFactory()
       .emitTrxTaxReportGenerationInBackgroundToOne(() => {
-        return this.getTransactionTaxReport(_args)
+        return trxTaxReportPromise
       }, user)
       .then(() => {}, (err) => {
         this.logger.error(`TRX_TAX_REPORT_GEN_FAILED: ${err.stack || err}`)
       })
+
+    trxTaxReportPromise.catch(() => {
+      this.processMessageManager.sendState(
+        this.processMessageManager.PROCESS_MESSAGES.ERROR_TRX_TAX_REPORT
+      )
+    })
 
     return true
   }
@@ -458,15 +469,19 @@ class TransactionTaxReport {
       interrupter
     })
 
+    const pubTrades = Array.isArray(res)
+      ? res
+      : []
+
     if (isTestEnv) {
       /*
        * Need to reverse pub-trades array for test env
        * as mocked test server return data in desc order
        */
-      return res.reverse()
+      return pubTrades.reverse()
     }
 
-    return res
+    return pubTrades
   }
 
   async #updateExactUsdValueInColls (trxs) {
@@ -545,6 +560,14 @@ class TransactionTaxReport {
         },
         user
       )
+
+    if (state !== PROGRESS_STATES.GENERATION_COMPLETED) {
+      return
+    }
+
+    this.processMessageManager.sendState(
+      this.processMessageManager.PROCESS_MESSAGES.READY_TRX_TAX_REPORT
+    )
   }
 }
 
