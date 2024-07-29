@@ -554,7 +554,8 @@ class ReportFileJobData extends BaseReportFileJobData {
       args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
-        asset: 'DESCRIPTION OF PROPERTY',
+        asset: 'CURRENCY',
+        type: 'SOURCE',
         amount: 'AMOUNT',
         mtsAcquired: 'DATE ACQUIRED',
         mtsSold: 'DATE SOLD',
@@ -564,6 +565,7 @@ class ReportFileJobData extends BaseReportFileJobData {
       },
       formatSettings: {
         asset: 'symbol',
+        type: 'lowerCaseWithUpperFirst',
         mtsAcquired: 'date',
         mtsSold: 'date'
       }
