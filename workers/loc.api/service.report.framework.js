@@ -256,7 +256,9 @@ class FrameworkReportService extends ReportService {
 
   getPlatformStatus (space, args, cb) {
     return this._responder(async () => {
-      const rest = this._getREST({})
+      const rest = this._getREST({}, {
+        interrupter: args?.interrupter
+      })
 
       const res = await rest.status()
       const isMaintenance = !Array.isArray(res) || !res[0]
@@ -461,6 +463,14 @@ class FrameworkReportService extends ReportService {
     return this._privResponder(() => {
       return this._sync.stop()
     }, 'stopSyncNow', args, cb)
+  }
+
+  interruptOperations (space, args = {}, cb) {
+    return this._privResponder(() => {
+      checkParams(args, 'paramsSchemaForInterruptOperations', ['names'])
+
+      return this._authenticator.interruptOperations(args)
+    }, 'interruptOperations', args, cb)
   }
 
   getPublicTradesConf (space, args = {}, cb) {
@@ -720,7 +730,8 @@ class FrameworkReportService extends ReportService {
           (args) => this._getDataFromApi({
             getData: (space, args) => super.getActivePositions(space, args),
             args,
-            callerName: 'ACTIVE_POSITIONS_GETTER'
+            callerName: 'ACTIVE_POSITIONS_GETTER',
+            shouldNotInterrupt: true
           }),
           args,
           {
@@ -760,7 +771,8 @@ class FrameworkReportService extends ReportService {
               return super.getPositionsAudit(space, args)
             },
             args,
-            callerName: 'POSITIONS_AUDIT_GETTER'
+            callerName: 'POSITIONS_AUDIT_GETTER',
+            shouldNotInterrupt: true
           }),
           args,
           {
@@ -1409,6 +1421,28 @@ class FrameworkReportService extends ReportService {
     }, 'getFullTaxReport', args, cb)
   }
 
+  getTransactionTaxReport (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+
+      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+
+      return this._transactionTaxReport.getTransactionTaxReport(args)
+    }, 'getTransactionTaxReport', args, cb)
+  }
+
+  makeTrxTaxReportInBackground (space, args, cb) {
+    return this._privResponder(async () => {
+      await this._dataConsistencyChecker
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+
+      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+
+      return this._transactionTaxReport.makeTrxTaxReportInBackground(args)
+    }, 'makeTrxTaxReportInBackground', args, cb)
+  }
+
   getTradedVolume (space, args, cb) {
     return this._privResponder(async () => {
       await this._dataConsistencyChecker
@@ -1551,6 +1585,20 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFullTaxReportFile', args, cb)
+  }
+
+  /**
+   * @deprecated
+   */
+  getTransactionTaxReportCsv (...args) { return this.getTransactionTaxReportFile(...args) }
+
+  getTransactionTaxReportFile (space, args, cb) {
+    return this._responder(() => {
+      return this._generateReportFile(
+        'getTransactionTaxReportFileJobData',
+        args
+      )
+    }, 'getTransactionTaxReportFile', args, cb)
   }
 
   /**

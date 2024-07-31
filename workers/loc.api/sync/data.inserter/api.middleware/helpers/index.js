@@ -3,8 +3,8 @@
 const addPropsToResIfExist = require(
   './add-props-to-res-if-exist'
 )
-const getFlagsFromLedgerDescription = require(
-  './get-flags-from-ledger-description'
+const getFlagsFromStringProp = require(
+  './get-flags-from-string-prop'
 )
 const getCategoryFromDescription = require(
   './get-category-from-description'
@@ -15,7 +15,7 @@ const convertArrayMapToObjectMap = require(
 
 module.exports = {
   addPropsToResIfExist,
-  getFlagsFromLedgerDescription,
+  getFlagsFromStringProp,
   getCategoryFromDescription,
   convertArrayMapToObjectMap
 }

@@ -138,6 +138,36 @@ class WSEventEmitter extends AbstractWSEventEmitter {
     }, 'emitBfxUnamePwdAuthRequired')
   }
 
+  emitTrxTaxReportGenerationInBackgroundToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emit(async (user, ...args) => {
+      if (this.isNotTargetUser(auth, user)) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitTrxTaxReportGenerationInBackgroundToOne')
+  }
+
+  emitTrxTaxReportGenerationProgressToOne (
+    handler = () => {},
+    auth = {}
+  ) {
+    return this.emit(async (user, ...args) => {
+      if (this.isNotTargetUser(auth, user)) {
+        return { isNotEmitted: true }
+      }
+
+      return typeof handler === 'function'
+        ? await handler(user, ...args)
+        : handler
+    }, 'emitTrxTaxReportGenerationProgressToOne')
+  }
+
   async emitRedirectingRequestsStatusToApi (
     handler = () => {}
   ) {

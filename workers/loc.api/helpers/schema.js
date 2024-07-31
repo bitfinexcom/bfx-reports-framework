@@ -49,6 +49,22 @@ const paramsSchemaForUpdateSubAccount = {
   }
 }
 
+const paramsSchemaForInterruptOperations = {
+  type: 'object',
+  properties: {
+    names: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        type: 'string',
+        enum: [
+          'TRX_TAX_REPORT_INTERRUPTER'
+        ]
+      }
+    }
+  }
+}
+
 const paramsSchemaForCandlesApi = {
   ...cloneDeep(baseParamsSchemaForCandlesApi),
   properties: {
@@ -210,6 +226,25 @@ const paramsSchemaForFullTaxReportApi = {
     },
     start: {
       type: 'integer'
+    }
+  }
+}
+
+const paramsSchemaForTransactionTaxReportApi = {
+  type: 'object',
+  properties: {
+    end: {
+      type: 'integer'
+    },
+    start: {
+      type: 'integer'
+    },
+    strategy: {
+      type: 'string',
+      enum: [
+        'FIFO',
+        'LIFO'
+      ]
     }
   }
 }
@@ -412,6 +447,15 @@ const paramsSchemaForFullTaxReportFile = {
   }
 }
 
+const paramsSchemaForTransactionTaxReportFile = {
+  type: 'object',
+  properties: {
+    ...cloneDeep(paramsSchemaForTransactionTaxReportApi.properties),
+    timezone,
+    dateFormat
+  }
+}
+
 const paramsSchemaForTradedVolumeFile = {
   type: 'object',
   properties: {
@@ -454,12 +498,14 @@ module.exports = {
   paramsSchemaForEditCandlesConf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
+  paramsSchemaForInterruptOperations,
   paramsSchemaForBalanceHistoryApi,
   paramsSchemaForWinLossApi,
   paramsSchemaForWinLossVSAccountBalanceApi,
   paramsSchemaForPositionsSnapshotApi,
   paramsSchemaForFullSnapshotReportApi,
   paramsSchemaForFullTaxReportApi,
+  paramsSchemaForTransactionTaxReportApi,
   paramsSchemaForTradedVolumeApi,
   paramsSchemaForTotalFeesReportApi,
   paramsSchemaForPerformingLoanApi,
@@ -471,6 +517,7 @@ module.exports = {
   paramsSchemaForPositionsSnapshotFile,
   paramsSchemaForFullSnapshotReportFile,
   paramsSchemaForFullTaxReportFile,
+  paramsSchemaForTransactionTaxReportFile,
   paramsSchemaForTradedVolumeFile,
   paramsSchemaForTotalFeesReportFile,
   paramsSchemaForPerformingLoanFile,

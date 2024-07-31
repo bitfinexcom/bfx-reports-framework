@@ -97,6 +97,7 @@ const {
   fullTaxReportCsvWriter
 } = require('../generate-report-file/csv-writer')
 const FullTaxReport = require('../sync/full.tax.report')
+const TransactionTaxReport = require('../sync/transaction.tax.report')
 const WeightedAveragesReport = require('../sync/weighted.averages.report')
 const SqliteDbMigrator = require(
   '../sync/dao/db-migrations/sqlite.db.migrator'
@@ -111,7 +112,8 @@ const {
   syncFactory,
   processMessageManagerFactory,
   syncUserStepDataFactory,
-  wsEventEmitterFactory
+  wsEventEmitterFactory,
+  interrupterFactory
 } = require('./factories')
 const Crypto = require('../sync/crypto')
 const Authenticator = require('../sync/authenticator')
@@ -151,6 +153,7 @@ module.exports = ({
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
           ['_fullSnapshotReport', TYPES.FullSnapshotReport],
           ['_fullTaxReport', TYPES.FullTaxReport],
+          ['_transactionTaxReport', TYPES.TransactionTaxReport],
           ['_tradedVolume', TYPES.TradedVolume],
           ['_totalFeesReport', TYPES.TotalFeesReport],
           ['_performingLoan', TYPES.PerformingLoan],
@@ -341,6 +344,8 @@ module.exports = ({
     bind(TYPES.SyncInterrupter)
       .to(SyncInterrupter)
       .inSingletonScope()
+    bind(TYPES.InterrupterFactory)
+      .toFactory(interrupterFactory)
     bind(TYPES.Movements)
       .to(Movements)
     bind(TYPES.WinLossVSAccountBalance)
@@ -393,6 +398,9 @@ module.exports = ({
       )
     bind(TYPES.FullTaxReport)
       .to(FullTaxReport)
+    bind(TYPES.TransactionTaxReport)
+      .to(TransactionTaxReport)
+      .inSingletonScope()
     rebind(TYPES.WeightedAveragesReport)
       .to(WeightedAveragesReport)
     rebind(TYPES.ReportFileJobData)

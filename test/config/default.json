@@ -1,7 +1,9 @@
 {
   "app": {
     "port": 31339,
-    "host": "127.0.0.1"
+    "host": "127.0.0.1",
+    "httpRpcTimeout": 600000,
+    "wsRpcTimeout": 3600000
   },
   "grenacheClient": {
     "query": "rest:report:api",

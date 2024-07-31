@@ -248,6 +248,30 @@ class AuthTokenTTLSettingError extends ArgsParamsError {
   }
 }
 
+class CurrencyConversionError extends BaseError {
+  constructor (data, message = 'ERR_CURRENCY_HAS_NOT_BEEN_CONVERTED_TO_USD') {
+    super({ data, message })
+  }
+}
+
+class CurrencyPairSeparationError extends BaseError {
+  constructor (data, message = 'ERR_CURRENCY_PAIR_HAS_NOT_BEEN_SEPARATED_CORRECTLY') {
+    super({ data, message })
+  }
+}
+
+class PubTradeFindForTrxTaxError extends BaseError {
+  constructor (data, message = 'ERR_NO_PUBLIC_TRADES_FOR_TRX_TAX') {
+    super({ data, message })
+  }
+}
+
+class PubTradePriceFindForTrxTaxError extends BaseError {
+  constructor (message = 'ERR_NO_PUBLIC_TRADE_PRICE_FOR_TRX_TAX') {
+    super(message)
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -284,5 +308,9 @@ module.exports = {
   LastSyncedInfoGettingError,
   SyncInfoUpdatingError,
   AuthTokenGenerationError,
-  AuthTokenTTLSettingError
+  AuthTokenTTLSettingError,
+  CurrencyConversionError,
+  CurrencyPairSeparationError,
+  PubTradeFindForTrxTaxError,
+  PubTradePriceFindForTrxTaxError
 }
