@@ -1500,12 +1500,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * @deprecated
-   * @override
-   */
-  getMultipleCsv (...args) { return this.getMultipleFile(...args) }
-
-  /**
    * @override
    */
   getMultipleFile (space, args, cb) {
@@ -1517,11 +1511,6 @@ class FrameworkReportService extends ReportService {
     }, 'getMultipleFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getBalanceHistoryCsv (...args) { return this.getBalanceHistoryFile(...args) }
-
   getBalanceHistoryFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1530,11 +1519,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getBalanceHistoryFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getWinLossCsv (...args) { return this.getWinLossFile(...args) }
 
   getWinLossFile (space, args, cb) {
     return this._responder(() => {
@@ -1545,11 +1529,6 @@ class FrameworkReportService extends ReportService {
     }, 'getWinLossFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getPositionsSnapshotCsv (...args) { return this.getPositionsSnapshotFile(...args) }
-
   getPositionsSnapshotFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1558,11 +1537,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getPositionsSnapshotFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getFullSnapshotReportCsv (...args) { return this.getFullSnapshotReportFile(...args) }
 
   getFullSnapshotReportFile (space, args, cb) {
     return this._responder(() => {
@@ -1573,11 +1547,6 @@ class FrameworkReportService extends ReportService {
     }, 'getFullSnapshotReportFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getFullTaxReportCsv (...args) { return this.getFullTaxReportFile(...args) }
-
   getFullTaxReportFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1586,11 +1555,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getFullTaxReportFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getTransactionTaxReportCsv (...args) { return this.getTransactionTaxReportFile(...args) }
 
   getTransactionTaxReportFile (space, args, cb) {
     return this._responder(() => {
@@ -1601,11 +1565,6 @@ class FrameworkReportService extends ReportService {
     }, 'getTransactionTaxReportFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getTradedVolumeCsv (...args) { return this.getTradedVolumeFile(...args) }
-
   getTradedVolumeFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1614,11 +1573,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getTradedVolumeFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getTotalFeesReportCsv (...args) { return this.getTotalFeesReportFile(...args) }
 
   getTotalFeesReportFile (space, args, cb) {
     return this._responder(() => {
@@ -1629,11 +1583,6 @@ class FrameworkReportService extends ReportService {
     }, 'getTotalFeesReportFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getPerformingLoanCsv (...args) { return this.getPerformingLoanFile(...args) }
-
   getPerformingLoanFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1642,11 +1591,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getPerformingLoanFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getCandlesCsv (...args) { return this.getCandlesFile(...args) }
 
   getCandlesFile (space, args, cb) {
     return this._responder(async () => {
@@ -1659,11 +1603,6 @@ class FrameworkReportService extends ReportService {
       return super.getCandlesFile(space, args)
     }, 'getCandlesFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getWinLossVSAccountBalanceCsv (...args) { return this.getWinLossVSAccountBalanceFile(...args) }
 
   getWinLossVSAccountBalanceFile (space, args, cb) {
     return this._responder(() => {
