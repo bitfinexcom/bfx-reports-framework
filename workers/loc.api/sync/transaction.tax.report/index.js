@@ -1,5 +1,7 @@
 'use strict'
 
+const { setTimeout } = require('node:timers/promises')
+
 const INTERRUPTER_NAMES = require(
   'bfx-report/workers/loc.api/interrupter/interrupter.names'
 )
@@ -460,28 +462,31 @@ class TransactionTaxReport {
     const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
       .bind(this.rService)
 
-    const { res } = await this.getDataFromApi({
-      getData: (s, args) => getDataFn(args),
-      args,
-      callerName: 'TRANSACTION_TAX_REPORT',
-      eNetErrorAttemptsTimeframeMin: 10,
-      eNetErrorAttemptsTimeoutMs: 10000,
-      interrupter
-    })
+    for (let i = 0; i < 6; i += 1) {
+      const { res } = await this.getDataFromApi({
+        getData: (s, args) => getDataFn(args),
+        args,
+        callerName: 'TRANSACTION_TAX_REPORT',
+        eNetErrorAttemptsTimeframeMin: 10,
+        eNetErrorAttemptsTimeoutMs: 10000,
+        interrupter
+      })
 
-    const pubTrades = Array.isArray(res)
-      ? res
-      : []
+      if (isTestEnv) {
+        /*
+         * Need to reverse pub-trades array for test env
+         * as mocked test server return data in desc order
+         */
+        return res.reverse()
+      }
+      if (Array.isArray(res)) {
+        return res
+      }
 
-    if (isTestEnv) {
-      /*
-       * Need to reverse pub-trades array for test env
-       * as mocked test server return data in desc order
-       */
-      return pubTrades.reverse()
+      await setTimeout(10000)
     }
 
-    return pubTrades
+    return []
   }
 
   async #updateExactUsdValueInColls (trxs) {
