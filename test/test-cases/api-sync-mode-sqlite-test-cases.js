@@ -632,58 +632,6 @@ module.exports = (
     assert.isOk(res.body.result)
   })
 
-  it('it should be successfully performed by the editStatusMessagesConf method', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/json-rpc`)
-      .type('json')
-      .send({
-        auth,
-        method: 'editStatusMessagesConf',
-        params: [
-          {
-            start,
-            symbol: 'tBTCF0:USTF0'
-          }
-        ],
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isBoolean(res.body.result)
-    assert.isOk(res.body.result)
-  })
-
-  getSyncProgressTestCase(agent, { basePath, auth })
-
-  it('it should be successfully performed by the getStatusMessagesConf method', async function () {
-    this.timeout(5000)
-
-    const res = await agent
-      .post(`${basePath}/json-rpc`)
-      .type('json')
-      .send({
-        auth,
-        method: 'getStatusMessagesConf',
-        id: 5
-      })
-      .expect('Content-Type', /json/)
-      .expect(200)
-
-    assert.isObject(res.body)
-    assert.propertyVal(res.body, 'id', 5)
-    assert.isArray(res.body.result)
-    assert.equal(res.body.result.length, 1)
-
-    assert.isObject(res.body.result[0])
-    assert.propertyVal(res.body.result[0], 'symbol', 'tBTCF0:USTF0')
-    assert.propertyVal(res.body.result[0], 'start', start)
-  })
-
   it('it should be successfully performed by the editAllPublicCollsConfs method', async function () {
     this.timeout(5000)
 

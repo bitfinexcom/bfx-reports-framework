@@ -473,36 +473,6 @@ class FrameworkReportService extends ReportService {
     }, 'interruptOperations', args, cb)
   }
 
-  // TODO:
-  getStatusMessagesConf (space, args = {}, cb) {
-    return this._privResponder(() => {
-      return this._publicCollsConfAccessors
-        .getPublicCollsConf('statusMessagesConf', args)
-    }, 'getStatusMessagesConf', args, cb)
-  }
-
-  // TODO:
-  editStatusMessagesConf (space, args = {}, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
-
-      await this._publicCollsConfAccessors
-        .editPublicCollsConf('statusMessagesConf', args)
-
-      if (isNotSyncRequired(args)) {
-        return true
-      }
-
-      await this._sync.start({
-        syncColls: this._ALLOWED_COLLS.STATUS_MESSAGES,
-        isSolveAfterRedirToApi: true,
-        ownerUserId: args?.auth?._id
-      })
-
-      return true
-    }, 'editStatusMessagesConf', args, cb)
-  }
-
   editAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditAllPublicCollsConfs')
