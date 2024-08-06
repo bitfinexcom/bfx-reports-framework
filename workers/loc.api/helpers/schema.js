@@ -152,33 +152,6 @@ const paramsSchemaForEditPublicCollsConf = {
   }
 }
 
-const paramsSchemaForEditCandlesConf = {
-  type: ['array', 'object'],
-  if: {
-    type: 'array'
-  },
-  then: {
-    minItems: 1,
-    items: {
-      type: 'object',
-      required: ['symbol', 'start', 'timeframe'],
-      properties: {
-        symbol: { type: 'string' },
-        start: { type: 'integer' },
-        timeframe: { type: 'string' }
-      }
-    }
-  },
-  else: {
-    required: ['symbol', 'start', 'timeframe'],
-    properties: {
-      symbol: { type: 'string' },
-      start: { type: 'integer' },
-      timeframe: { type: 'string' }
-    }
-  }
-}
-
 const paramsSchemaForBalanceHistoryApi = {
   type: 'object',
   properties: {
@@ -495,7 +468,6 @@ const paramsSchemaForCandlesFile = {
 module.exports = {
   paramsSchemaForEditAllPublicCollsConfs,
   paramsSchemaForEditPublicCollsConf,
-  paramsSchemaForEditCandlesConf,
   paramsSchemaForCreateSubAccount,
   paramsSchemaForUpdateSubAccount,
   paramsSchemaForInterruptOperations,
