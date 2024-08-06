@@ -474,14 +474,6 @@ class FrameworkReportService extends ReportService {
   }
 
   // TODO:
-  getPublicTradesConf (space, args = {}, cb) {
-    return this._privResponder(() => {
-      return this._publicCollsConfAccessors
-        .getPublicCollsConf('publicTradesConf', args)
-    }, 'getPublicTradesConf', args, cb)
-  }
-
-  // TODO:
   getTickersHistoryConf (space, args = {}, cb) {
     return this._privResponder(() => {
       return this._publicCollsConfAccessors
@@ -495,28 +487,6 @@ class FrameworkReportService extends ReportService {
       return this._publicCollsConfAccessors
         .getPublicCollsConf('statusMessagesConf', args)
     }, 'getStatusMessagesConf', args, cb)
-  }
-
-  // TODO:
-  editPublicTradesConf (space, args = {}, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
-
-      await this._publicCollsConfAccessors
-        .editPublicCollsConf('publicTradesConf', args)
-
-      if (isNotSyncRequired(args)) {
-        return true
-      }
-
-      await this._sync.start({
-        syncColls: this._ALLOWED_COLLS.PUBLIC_TRADES,
-        isSolveAfterRedirToApi: true,
-        ownerUserId: args?.auth?._id
-      })
-
-      return true
-    }, 'editPublicTradesConf', args, cb)
   }
 
   // TODO:
