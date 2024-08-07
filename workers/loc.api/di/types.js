@@ -9,6 +9,7 @@ module.exports = {
   SYNC_API_METHODS: Symbol.for('SYNC_API_METHODS'),
   SYNC_QUEUE_STATES: Symbol.for('SYNC_QUEUE_STATES'),
   CHECKER_NAMES: Symbol.for('CHECKER_NAMES'),
+  PUBLIC_COLLS_CONF_NAMES: Symbol.for('PUBLIC_COLLS_CONF_NAMES'),
   FrameworkRServiceDepsSchema: Symbol.for('FrameworkRServiceDepsSchema'),
   GRC_BFX_OPTS: Symbol.for('GRC_BFX_OPTS'),
   ApiMiddlewareHandlerAfter: Symbol.for('ApiMiddlewareHandlerAfter'),
