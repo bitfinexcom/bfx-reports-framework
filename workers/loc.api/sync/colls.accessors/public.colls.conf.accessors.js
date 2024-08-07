@@ -41,7 +41,7 @@ class PublicCollsConfAccessors {
 
     this.confNamesMap = new Map([
       [this.PUBLIC_COLLS_CONF_NAMES.CANDLES_CONF, this.TABLES_NAMES.CANDLES],
-      ['statusMessagesConf', this.TABLES_NAMES.STATUS_MESSAGES],
+      [this.PUBLIC_COLLS_CONF_NAMES.STATUS_MESSAGES_CONF, this.TABLES_NAMES.STATUS_MESSAGES],
       ['tickersHistoryConf', this.TABLES_NAMES.TICKERS_HISTORY],
       ['publicTradesConf', this.TABLES_NAMES.PUBLIC_TRADES]
     ])
