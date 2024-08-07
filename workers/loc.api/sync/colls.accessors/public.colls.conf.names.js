@@ -3,5 +3,6 @@
 module.exports = {
   CANDLES_CONF: 'candlesConf',
   STATUS_MESSAGES_CONF: 'statusMessagesConf',
-  TICKERS_HISTORY_CONF: 'tickersHistoryConf'
+  TICKERS_HISTORY_CONF: 'tickersHistoryConf',
+  PUBLIC_TRADES_CONF: 'publicTradesConf'
 }
