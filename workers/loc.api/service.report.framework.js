@@ -809,7 +809,7 @@ class FrameworkReportService extends ReportService {
           args,
           {
             collName: this._SYNC_API_METHODS.PUBLIC_TRADES,
-            confName: 'publicTradesConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.PUBLIC_TRADES_CONF,
             datePropName: 'mts'
           }
         )
