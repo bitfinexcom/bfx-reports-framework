@@ -24,20 +24,23 @@ const { decorateInjectable } = require('../../di/utils')
 const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
+  TYPES.PUBLIC_COLLS_CONF_NAMES,
   TYPES.Authenticator
 ]
 class PublicCollsConfAccessors {
   constructor (
     dao,
     TABLES_NAMES,
+    PUBLIC_COLLS_CONF_NAMES,
     authenticator
   ) {
     this.dao = dao
     this.TABLES_NAMES = TABLES_NAMES
+    this.PUBLIC_COLLS_CONF_NAMES = PUBLIC_COLLS_CONF_NAMES
     this.authenticator = authenticator
 
     this.confNamesMap = new Map([
-      ['candlesConf', this.TABLES_NAMES.CANDLES],
+      [this.PUBLIC_COLLS_CONF_NAMES.CANDLES_CONF, this.TABLES_NAMES.CANDLES],
       ['statusMessagesConf', this.TABLES_NAMES.STATUS_MESSAGES],
       ['tickersHistoryConf', this.TABLES_NAMES.TICKERS_HISTORY],
       ['publicTradesConf', this.TABLES_NAMES.PUBLIC_TRADES]
@@ -45,7 +48,7 @@ class PublicCollsConfAccessors {
   }
 
   isCandlesConfs (confName) {
-    return confName === 'candlesConf'
+    return confName === this.PUBLIC_COLLS_CONF_NAMES.CANDLES_CONF
   }
 
   isUniqueConf (confName, confs, currConf) {
