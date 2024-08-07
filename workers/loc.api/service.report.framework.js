@@ -855,7 +855,7 @@ class FrameworkReportService extends ReportService {
           preparedArgs,
           {
             collName: this._SYNC_API_METHODS.STATUS_MESSAGES,
-            confName: 'statusMessagesConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.STATUS_MESSAGES_CONF,
             datePropName: 'timestamp'
           }
         )
