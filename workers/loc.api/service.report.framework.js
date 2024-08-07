@@ -785,7 +785,7 @@ class FrameworkReportService extends ReportService {
           args,
           {
             collName: this._SYNC_API_METHODS.TICKERS_HISTORY,
-            confName: 'tickersHistoryConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.TICKERS_HISTORY_CONF,
             datePropName: 'mtsUpdate'
           }
         )
