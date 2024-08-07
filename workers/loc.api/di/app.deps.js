@@ -73,6 +73,7 @@ const RecalcSubAccountLedgersBalancesHook = require(
 )
 const BetterSqliteDAO = require('../sync/dao/dao.better.sqlite')
 const {
+  PUBLIC_COLLS_CONF_NAMES,
   PublicCollsConfAccessors
 } = require('../sync/colls.accessors')
 const Movements = require('../sync/movements')
@@ -140,6 +141,7 @@ module.exports = ({
           ['_SYNC_API_METHODS', TYPES.SYNC_API_METHODS],
           ['_SYNC_QUEUE_STATES', TYPES.SYNC_QUEUE_STATES],
           ['_CHECKER_NAMES', TYPES.CHECKER_NAMES],
+          ['_PUBLIC_COLLS_CONF_NAMES', TYPES.PUBLIC_COLLS_CONF_NAMES],
           ['_prepareResponse', TYPES.PrepareResponse],
           ['_subAccount', TYPES.SubAccount],
           ['_progress', TYPES.Progress],
@@ -206,6 +208,7 @@ module.exports = ({
     bind(TYPES.SYNC_API_METHODS).toConstantValue(SYNC_API_METHODS)
     bind(TYPES.SYNC_QUEUE_STATES).toConstantValue(SYNC_QUEUE_STATES)
     bind(TYPES.CHECKER_NAMES).toConstantValue(CHECKER_NAMES)
+    bind(TYPES.PUBLIC_COLLS_CONF_NAMES).toConstantValue(PUBLIC_COLLS_CONF_NAMES)
     bind(TYPES.GRC_BFX_OPTS).toConstantValue(grcBfxOpts)
     bind(TYPES.ProcessMessageManager)
       .to(ProcessMessageManager)
