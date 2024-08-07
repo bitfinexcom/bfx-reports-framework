@@ -893,7 +893,7 @@ class FrameworkReportService extends ReportService {
           argsWithParamsByDefault,
           {
             collName: this._SYNC_API_METHODS.CANDLES,
-            confName: 'candlesConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.CANDLES_CONF,
             datePropName: 'mts'
           }
         )
