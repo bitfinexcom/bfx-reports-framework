@@ -3,6 +3,9 @@
 const TABLES_NAMES = require('../tables-names')
 const ALLOWED_COLLS = require('../allowed.colls')
 const COLLS_TYPES = require('../colls.types')
+const PUBLIC_COLLS_CONF_NAMES = require(
+  '../../colls.accessors/public.colls.conf.names'
+)
 
 const { getModelOf } = require('../models')
 
@@ -13,7 +16,7 @@ module.exports = {
   symbolFieldName: 'key',
   sort: [['timestamp', -1]],
   hasNewData: false,
-  confName: 'statusMessagesConf',
+  confName: PUBLIC_COLLS_CONF_NAMES.STATUS_MESSAGES_CONF,
   isSyncRequiredAtLeastOnce: false,
   type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
   model: getModelOf(TABLES_NAMES.STATUS_MESSAGES)
