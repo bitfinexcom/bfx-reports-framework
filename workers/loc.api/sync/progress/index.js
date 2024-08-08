@@ -15,14 +15,16 @@ const depsTypes = (TYPES) => [
   TYPES.DAO,
   TYPES.TABLES_NAMES,
   TYPES.WSEventEmitter,
-  TYPES.Logger
+  TYPES.Logger,
+  TYPES.ProcessMessageManager
 ]
 class Progress extends EventEmitter {
   constructor (
     dao,
     TABLES_NAMES,
     wsEventEmitter,
-    logger
+    logger,
+    processMessageManager
   ) {
     super()
 
@@ -30,6 +32,7 @@ class Progress extends EventEmitter {
     this.TABLES_NAMES = TABLES_NAMES
     this.wsEventEmitter = wsEventEmitter
     this.logger = logger
+    this.processMessageManager = processMessageManager
 
     this._availableSyncProgressStates = Object.values(SYNC_PROGRESS_STATES)
 
@@ -61,6 +64,10 @@ class Progress extends EventEmitter {
       isState,
       isError
     )
+    this._sendSyncCompletionStateByIPC({
+      isError,
+      state
+    })
 
     this._hasNotProgressChanged = (
       (isError && this._error !== error) ||
@@ -318,6 +325,34 @@ class Progress extends EventEmitter {
 
   setCandlesLeftTime (leftTime) {
     this._candlesLeftTime = leftTime
+  }
+
+  _sendSyncCompletionStateByIPC (params) {
+    const {
+      isError,
+      state
+    } = params ?? {}
+    const isFinished = state === SYNC_PROGRESS_STATES.FINISHED_PROGRESS
+    const isInterrupted = state === SYNC_PROGRESS_STATES.INTERRUPTED_PROGRESS
+
+    if (isError) {
+      this.processMessageManager.sendState(
+        this.processMessageManager.PROCESS_MESSAGES.ERROR_SYNC
+      )
+
+      return
+    }
+    if (
+      !isFinished &&
+      !isInterrupted
+    ) {
+      return
+    }
+
+    this.processMessageManager.sendState(
+      this.processMessageManager.PROCESS_MESSAGES.READY_SYNC,
+      { isFinished, isInterrupted }
+    )
   }
 }
 
