@@ -1,6 +1,9 @@
 'use strict'
 
 const {
+  DbModelCreationError
+} = require('../../../../errors')
+const {
   CREATE_UPDATE_MTS_TRIGGERS
 } = require('../../common.triggers')
 
@@ -51,7 +54,10 @@ class Model extends BaseModel {
             .every((sName) => sName !== name)
         )
       ) {
-        throw new Error('ERR_WRONG_DB_MODEL_FIELD') // TODO: make an error class
+        throw new DbModelCreationError({
+          modelFieldName: name,
+          modelFieldValue: value
+        })
       }
 
       this[name] = value
