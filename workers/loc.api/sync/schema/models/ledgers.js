@@ -1,43 +1,38 @@
 'use strict'
 
 const {
-  CONSTR_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('../const')
-const {
   USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT
 } = require('../common.constraints')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  id: 'BIGINT',
-  currency: 'VARCHAR(255)',
-  mts: 'BIGINT',
-  amount: 'DECIMAL(22,12)',
-  amountUsd: 'DECIMAL(22,12)',
-  exactUsdValue: 'DECIMAL(22,12)',
-  balance: 'DECIMAL(22,12)',
-  _nativeBalance: 'DECIMAL(22,12)',
-  balanceUsd: 'DECIMAL(22,12)',
-  _nativeBalanceUsd: 'DECIMAL(22,12)',
-  description: 'TEXT',
-  wallet: 'VARCHAR(255)',
-  _category: 'INT',
-  _isMarginFundingPayment: 'INT',
-  _isAffiliateRebate: 'INT',
-  _isStakingPayments: 'INT',
-  _isSubAccountsTransfer: 'INT',
-  _isBalanceRecalced: 'INT',
-  _isInvoicePayOrder: 'INT',
-  _isAirdropOnWallet: 'INT',
-  subUserId: 'INT',
-  user_id: 'INT NOT NULL',
+const Model = require('./model')
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-  [INDEX_FIELD_NAME]: [
+module.exports = new Model({
+  id: Model.BIGINT,
+  currency: Model.VARCHAR,
+  mts: Model.BIGINT,
+  amount: Model.DECIMAL,
+  amountUsd: Model.DECIMAL,
+  exactUsdValue: Model.DECIMAL,
+  balance: Model.DECIMAL,
+  _nativeBalance: Model.DECIMAL,
+  balanceUsd: Model.DECIMAL,
+  _nativeBalanceUsd: Model.DECIMAL,
+  description: Model.TEXT,
+  wallet: Model.VARCHAR,
+  _category: Model.INTEGER,
+  _isMarginFundingPayment: Model.INTEGER,
+  _isAffiliateRebate: Model.INTEGER,
+  _isStakingPayments: Model.INTEGER,
+  _isSubAccountsTransfer: Model.INTEGER,
+  _isBalanceRecalced: Model.INTEGER,
+  _isInvoicePayOrder: Model.INTEGER,
+  _isAirdropOnWallet: Model.INTEGER,
+  subUserId: Model.INTEGER,
+  user_id: Model.INTEGER_NOT_NULL,
+
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+  [Model.INDEX_FIELD_NAME]: [
     ['user_id', 'wallet', 'currency', 'mts'],
     ['user_id', 'wallet', 'mts'],
     ['user_id', 'currency', 'mts'],
@@ -55,8 +50,8 @@ module.exports = {
     ['subUserId', 'mts', '_id',
       'WHERE subUserId IS NOT NULL']
   ],
-  [CONSTR_FIELD_NAME]: [
+  [Model.CONSTR_FIELD_NAME]: [
     USER_ID_CONSTRAINT,
     SUB_USER_ID_CONSTRAINT
   ]
-}
+})
