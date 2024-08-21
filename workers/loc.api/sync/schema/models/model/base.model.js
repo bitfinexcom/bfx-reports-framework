@@ -23,8 +23,9 @@ class BaseModel {
   static TEXT = DB_DATA_TYPES.TEXT
   static TEXT_NOT_NULL = DB_DATA_TYPES.TEXT_NOT_NULL
 
-  static ALL_DB_SERVICE_FIELD_NAMES = Object.values(DB_SERVICE_FIELD_NAMES)
   static ALL_DB_DATA_TYPES = Object.values(DB_DATA_TYPES)
+  static ALL_DB_SERVICE_FIELD_NAMES = Object.values(DB_SERVICE_FIELD_NAMES)
+    .filter((name) => name !== DB_SERVICE_FIELD_NAMES.UID_FIELD_NAME)
 }
 
 Object.freeze(BaseModel)
