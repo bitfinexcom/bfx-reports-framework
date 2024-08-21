@@ -10,6 +10,7 @@ const {
 const BaseModel = require('./base.model')
 
 class Model extends BaseModel {
+  #modelFields = {}
   #opts = {
     hasNoUID: false,
     hasCreateUpdateMtsTriggers: false
@@ -47,10 +48,8 @@ class Model extends BaseModel {
           !Array.isArray(value)
         ) ||
         (
-          BaseModel.ALL_DB_DATA_TYPES
-            .every((type) => type !== value) &&
-          BaseModel.ALL_DB_SERVICE_FIELD_NAMES
-            .every((sName) => sName !== name)
+          this.#isNotDbDataType(value) &&
+          this.#isNotDbServiceField(name)
         )
       ) {
         throw new DbModelCreationError({
@@ -68,10 +67,16 @@ class Model extends BaseModel {
     if (this.#opts.hasCreateUpdateMtsTriggers) {
       this.createdAt = BaseModel.BIGINT
       this.updatedAt = BaseModel.BIGINT
-      this.setTriggers(CREATE_UPDATE_MTS_TRIGGERS)
+      this.#setTriggers(CREATE_UPDATE_MTS_TRIGGERS)
     }
 
+    this.#insertModelFields()
+
     return this
+  }
+
+  getModelFields () {
+    return this.#modelFields
   }
 
   getTriggers () {
@@ -88,7 +93,7 @@ class Model extends BaseModel {
     return [this[BaseModel.TRIGGER_FIELD_NAME]]
   }
 
-  setTriggers (triggers) {
+  #setTriggers (triggers) {
     if (!triggers) {
       return this
     }
@@ -119,6 +124,24 @@ class Model extends BaseModel {
     ]
 
     return this
+  }
+
+  #insertModelFields () {
+    for (const [name, value] of Object.entries(this)) {
+      if (this.#isNotDbServiceField(name)) {
+        this.#modelFields[name] = value
+      }
+    }
+  }
+
+  #isNotDbServiceField (fieldName) {
+    return BaseModel.ALL_DB_SERVICE_FIELD_NAMES
+      .every((sName) => sName !== fieldName)
+  }
+
+  #isNotDbDataType (dbDataType) {
+    return BaseModel.ALL_DB_DATA_TYPES
+      .every((type) => type !== dbDataType)
   }
 }
 
