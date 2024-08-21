@@ -10,35 +10,34 @@ const {
 const BaseModel = require('./base.model')
 
 class Model extends BaseModel {
+  #opts = {
+    hasNoUID: false,
+    hasCreateUpdateMtsTriggers: false
+  }
+
   constructor (dataStructure, opts) {
     super()
 
-    const {
-      hasNoUID = false,
-      hasCreateUpdateMtsTriggers = false
-    } = opts ?? {}
+    this.#opts = opts ?? this.#opts ?? {}
 
     this[BaseModel.UID_FIELD_NAME] = BaseModel.ID_PRIMARY_KEY
 
-    this.#setDataStructure(dataStructure)
-
-    if (hasNoUID) {
-      delete this[BaseModel.UID_FIELD_NAME]
-    }
-    if (hasCreateUpdateMtsTriggers) {
-      const existingTrigers = this.#getExistingTrigers()
-
-      this.createdAt = BaseModel.BIGINT
-      this.updatedAt = BaseModel.BIGINT
-      this[BaseModel.TRIGGER_FIELD_NAME] = [
-        ...existingTrigers,
-        ...CREATE_UPDATE_MTS_TRIGGERS
-      ]
-    }
+    this.setDataStructure(dataStructure)
   }
 
-  #setDataStructure (dataStructure) {
-    for (const [name, value] of Object.entries(dataStructure)) {
+  setDataStructure (dataStructure) {
+    if (!dataStructure) {
+      return this
+    }
+    if (typeof dataStructure !== 'object') {
+      throw new DbModelCreationError()
+    }
+
+    const entries = Array.isArray(dataStructure)
+      ? dataStructure
+      : Object.entries(dataStructure)
+
+    for (const [name, value] of entries) {
       if (
         !name ||
         typeof name !== 'string' ||
@@ -62,9 +61,20 @@ class Model extends BaseModel {
 
       this[name] = value
     }
+
+    if (this.#opts.hasNoUID) {
+      delete this[BaseModel.UID_FIELD_NAME]
+    }
+    if (this.#opts.hasCreateUpdateMtsTriggers) {
+      this.createdAt = BaseModel.BIGINT
+      this.updatedAt = BaseModel.BIGINT
+      this.setTriggers(CREATE_UPDATE_MTS_TRIGGERS)
+    }
+
+    return this
   }
 
-  #getExistingTrigers () {
+  getTriggers () {
     if (Array.isArray(this[BaseModel.TRIGGER_FIELD_NAME])) {
       return this[BaseModel.TRIGGER_FIELD_NAME]
     }
@@ -76,6 +86,39 @@ class Model extends BaseModel {
     }
 
     return [this[BaseModel.TRIGGER_FIELD_NAME]]
+  }
+
+  setTriggers (triggers) {
+    if (!triggers) {
+      return this
+    }
+
+    const newTriggers = Array.isArray(triggers)
+      ? triggers
+      : [triggers]
+
+    for (const trigger of newTriggers) {
+      if (
+        trigger &&
+        typeof trigger === 'string'
+      ) {
+        continue
+      }
+
+      throw new DbModelCreationError({
+        modelFieldName: BaseModel.TRIGGER_FIELD_NAME,
+        modelFieldValue: trigger
+      })
+    }
+
+    const existingTriggers = this.getTriggers()
+
+    this[BaseModel.TRIGGER_FIELD_NAME] = [
+      ...existingTriggers,
+      ...newTriggers
+    ]
+
+    return this
   }
 }
 
