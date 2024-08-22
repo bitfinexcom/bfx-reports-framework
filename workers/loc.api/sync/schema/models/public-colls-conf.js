@@ -11,7 +11,7 @@ const {
 } = require('../common.triggers')
 const {
   USER_ID_CONSTRAINT
-} = require('../common.constraints')
+} = require('./model/common.constraints')
 
 module.exports = {
   _id: ID_PRIMARY_KEY,

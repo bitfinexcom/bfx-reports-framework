@@ -3,7 +3,7 @@
 const {
   USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT
-} = require('../common.constraints')
+} = require('./model/common.constraints')
 
 const Model = require('./model')
 
