@@ -4,9 +4,6 @@ const {
   DbModelCreationError
 } = require('../../../../errors')
 const {
-  CREATE_UPDATE_MTS_TRIGGERS
-} = require('./common.triggers')
-const {
   freezeAndSealObjectDeeply
 } = require('./helpers')
 
@@ -70,7 +67,7 @@ class Model extends BaseModel {
     if (this.#opts.hasCreateUpdateMtsTriggers) {
       this.createdAt = BaseModel.BIGINT
       this.updatedAt = BaseModel.BIGINT
-      this.#setTriggers(CREATE_UPDATE_MTS_TRIGGERS)
+      this.#setTriggers(BaseModel.COMMON_TRIGGERS.CREATE_UPDATE_MTS_TRIGGERS)
     }
 
     this.#insertModelFields()
