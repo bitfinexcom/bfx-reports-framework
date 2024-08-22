@@ -71,8 +71,11 @@ class Model extends BaseModel {
     }
 
     this.#insertModelFields()
-
-    Object.freeze(this)
+    /*
+     * The aim here is to freeze and seal the model
+     * to be immutable for security reasons
+     */
+    this.#freezeAndSealObjectDeeply(this)
 
     return this
   }
@@ -164,6 +167,24 @@ class Model extends BaseModel {
       if (this.#isNotDbServiceField(name)) {
         this.#modelFields[name] = value
       }
+    }
+
+    this.#freezeAndSealObjectDeeply(this.#modelFields)
+  }
+
+  #freezeAndSealObjectDeeply (object) {
+    if (
+      !object ||
+      typeof object !== 'object'
+    ) {
+      return
+    }
+
+    Object.freeze(object)
+    Object.seal(object)
+
+    for (const value of Object.values(object)) {
+      this.#freezeAndSealObjectDeeply(value)
     }
   }
 
