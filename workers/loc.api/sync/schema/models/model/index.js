@@ -83,6 +83,10 @@ class Model extends BaseModel {
     return this.#getServiceFields(BaseModel.TRIGGER_FIELD_NAME)
   }
 
+  getConstraints () {
+    return this.#getServiceFields(BaseModel.CONSTR_FIELD_NAME)
+  }
+
   #getServiceFields (modelFieldName, opts) {
     const { isStringAllowed } = opts ?? {}
 
