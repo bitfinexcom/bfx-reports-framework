@@ -6,6 +6,9 @@ const {
 const {
   CREATE_UPDATE_MTS_TRIGGERS
 } = require('./common.triggers')
+const {
+  freezeAndSealObjectDeeply
+} = require('./helpers')
 
 const BaseModel = require('./base.model')
 
@@ -75,7 +78,7 @@ class Model extends BaseModel {
      * The aim here is to freeze and seal the model
      * to be immutable for security reasons
      */
-    this.#freezeAndSealObjectDeeply(this)
+    freezeAndSealObjectDeeply(this)
 
     return this
   }
@@ -169,23 +172,7 @@ class Model extends BaseModel {
       }
     }
 
-    this.#freezeAndSealObjectDeeply(this.#modelFields)
-  }
-
-  #freezeAndSealObjectDeeply (object) {
-    if (
-      !object ||
-      typeof object !== 'object'
-    ) {
-      return
-    }
-
-    Object.freeze(object)
-    Object.seal(object)
-
-    for (const value of Object.values(object)) {
-      this.#freezeAndSealObjectDeeply(value)
-    }
+    freezeAndSealObjectDeeply(this.#modelFields)
   }
 
   #isNotDbServiceField (fieldName) {
