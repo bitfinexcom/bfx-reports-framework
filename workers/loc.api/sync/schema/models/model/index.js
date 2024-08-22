@@ -72,6 +72,8 @@ class Model extends BaseModel {
 
     this.#insertModelFields()
 
+    Object.freeze(this)
+
     return this
   }
 
