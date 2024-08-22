@@ -4,7 +4,7 @@ const {
   TRIGGER_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME,
   ID_PRIMARY_KEY
-} = require('../const')
+} = require('./model/db.service.field.names')
 const {
   CREATE_UPDATE_API_KEYS_TRIGGERS,
   CREATE_UPDATE_MTS_TRIGGERS

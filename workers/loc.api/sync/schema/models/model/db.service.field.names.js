@@ -1,7 +1,5 @@
 'use strict'
 
-// TODO: need to move into model folder
-
 const UID_FIELD_NAME = '_id'
 const CONSTR_FIELD_NAME = '__constraints__'
 const TRIGGER_FIELD_NAME = '__triggers__'

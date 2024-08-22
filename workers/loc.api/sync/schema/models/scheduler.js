@@ -3,7 +3,7 @@
 const {
   TRIGGER_FIELD_NAME,
   ID_PRIMARY_KEY
-} = require('../const')
+} = require('./model/db.service.field.names')
 const {
   CREATE_UPDATE_MTS_TRIGGERS
 } = require('../common.triggers')

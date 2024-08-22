@@ -1,6 +1,8 @@
 'use strict'
 
-const { CONSTR_FIELD_NAME } = require('../../schema/const')
+const {
+  CONSTR_FIELD_NAME
+} = require('../../schema/models/model/db.service.field.names')
 
 const _getConstraintsQuery = (name, model) => {
   const constraintsArr = Array.isArray(model[CONSTR_FIELD_NAME])

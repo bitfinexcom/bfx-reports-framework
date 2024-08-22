@@ -1,6 +1,6 @@
 'use strict'
 
-const DB_SERVICE_FIELD_NAMES = require('../../const')
+const DB_SERVICE_FIELD_NAMES = require('./db.service.field.names')
 const DB_DATA_TYPES = require('./db.data.types')
 
 class BaseModel {
