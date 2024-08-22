@@ -1,7 +1,15 @@
 'use strict'
 
+const { cloneDeep } = require('lib-js-util-base')
+
 const DB_SERVICE_FIELD_NAMES = require('./db.service.field.names')
 const DB_DATA_TYPES = require('./db.data.types')
+const COMMON_TRIGGERS = require('./common.triggers')
+const COMMON_CONSTRAINTS = require('./common.constraints')
+
+const {
+  freezeAndSealObjectDeeply
+} = require('./helpers')
 
 class BaseModel {
   static CONSTR_FIELD_NAME = DB_SERVICE_FIELD_NAMES.CONSTR_FIELD_NAME
@@ -26,8 +34,17 @@ class BaseModel {
   static ALL_DB_DATA_TYPES = Object.values(DB_DATA_TYPES)
   static ALL_DB_SERVICE_FIELD_NAMES = Object.values(DB_SERVICE_FIELD_NAMES)
     .filter((name) => name !== DB_SERVICE_FIELD_NAMES.UID_FIELD_NAME)
+
+  static COMMON_TRIGGERS = cloneDeep(COMMON_TRIGGERS)
+  static COMMON_CONSTRAINTS = cloneDeep(COMMON_CONSTRAINTS)
 }
 
+freezeAndSealObjectDeeply(
+  BaseModel.ALL_DB_DATA_TYPES,
+  BaseModel.ALL_DB_SERVICE_FIELD_NAMES,
+  BaseModel.COMMON_TRIGGERS,
+  BaseModel.COMMON_CONSTRAINTS
+)
 Object.freeze(BaseModel)
 
 module.exports = BaseModel
