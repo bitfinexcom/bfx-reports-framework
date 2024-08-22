@@ -87,6 +87,14 @@ class Model extends BaseModel {
     return this.#getServiceFields(BaseModel.CONSTR_FIELD_NAME)
   }
 
+  getIndexies () {
+    return this.#getServiceFields(BaseModel.INDEX_FIELD_NAME)
+  }
+
+  getUniqueIndexies () {
+    return this.#getServiceFields(BaseModel.UNIQUE_INDEX_FIELD_NAME)
+  }
+
   #getServiceFields (modelFieldName, opts) {
     const { isStringAllowed } = opts ?? {}
 
