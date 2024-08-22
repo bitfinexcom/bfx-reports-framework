@@ -1,10 +1,5 @@
 'use strict'
 
-const {
-  USER_ID_CONSTRAINT,
-  SUB_USER_ID_CONSTRAINT
-} = require('./model/common.constraints')
-
 const Model = require('./model')
 
 module.exports = new Model({
@@ -51,7 +46,7 @@ module.exports = new Model({
       'WHERE subUserId IS NOT NULL']
   ],
   [Model.CONSTR_FIELD_NAME]: [
-    USER_ID_CONSTRAINT,
-    SUB_USER_ID_CONSTRAINT
+    Model.COMMON_CONSTRAINTS.USER_ID_CONSTRAINT,
+    Model.COMMON_CONSTRAINTS.SUB_USER_ID_CONSTRAINT
   ]
 })
