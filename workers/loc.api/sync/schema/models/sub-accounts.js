@@ -8,7 +8,7 @@ const {
 const {
   CREATE_UPDATE_MTS_TRIGGERS,
   DELETE_SUB_USERS_TRIGGER
-} = require('../common.triggers')
+} = require('./model/common.triggers')
 const {
   MASTER_USER_ID_CONSTRAINT,
   SUB_USER_ID_CONSTRAINT

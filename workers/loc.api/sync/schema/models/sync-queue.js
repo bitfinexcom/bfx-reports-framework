@@ -7,7 +7,7 @@ const {
 } = require('./model/db.service.field.names')
 const {
   CREATE_UPDATE_MTS_TRIGGERS
-} = require('../common.triggers')
+} = require('./model/common.triggers')
 const {
   OWNER_USER_ID_CONSTRAINT
 } = require('./model/common.constraints')

@@ -5,7 +5,7 @@ const {
 } = require('../../../../errors')
 const {
   CREATE_UPDATE_MTS_TRIGGERS
-} = require('../../common.triggers')
+} = require('./common.triggers')
 
 const BaseModel = require('./base.model')
 

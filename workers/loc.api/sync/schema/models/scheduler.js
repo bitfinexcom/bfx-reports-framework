@@ -6,7 +6,7 @@ const {
 } = require('./model/db.service.field.names')
 const {
   CREATE_UPDATE_MTS_TRIGGERS
-} = require('../common.triggers')
+} = require('./model/common.triggers')
 
 module.exports = {
   _id: ID_PRIMARY_KEY,

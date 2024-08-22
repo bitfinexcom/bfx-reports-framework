@@ -8,7 +8,7 @@ const {
 const {
   CREATE_UPDATE_API_KEYS_TRIGGERS,
   CREATE_UPDATE_MTS_TRIGGERS
-} = require('../common.triggers')
+} = require('./model/common.triggers')
 
 module.exports = {
   _id: ID_PRIMARY_KEY,
