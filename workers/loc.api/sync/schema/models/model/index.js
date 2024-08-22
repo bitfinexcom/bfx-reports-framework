@@ -90,11 +90,17 @@ class Model extends BaseModel {
   }
 
   getIndexies () {
-    return this.#getServiceFields(BaseModel.INDEX_FIELD_NAME)
+    return this.#getServiceFields(
+      BaseModel.INDEX_FIELD_NAME,
+      { isStringAllowed: true }
+    )
   }
 
   getUniqueIndexies () {
-    return this.#getServiceFields(BaseModel.UNIQUE_INDEX_FIELD_NAME)
+    return this.#getServiceFields(
+      BaseModel.UNIQUE_INDEX_FIELD_NAME,
+      { isStringAllowed: true }
+    )
   }
 
   #getServiceFields (modelFieldName, opts) {
