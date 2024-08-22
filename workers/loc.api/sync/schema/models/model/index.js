@@ -80,17 +80,30 @@ class Model extends BaseModel {
   }
 
   getTriggers () {
-    if (Array.isArray(this[BaseModel.TRIGGER_FIELD_NAME])) {
-      return this[BaseModel.TRIGGER_FIELD_NAME]
+    return this.#getServiceFields(BaseModel.TRIGGER_FIELD_NAME)
+  }
+
+  #getServiceFields (modelFieldName, opts) {
+    const { isStringAllowed } = opts ?? {}
+
+    if (!modelFieldName) {
+      throw new DbModelCreationError({
+        modelFieldName
+      })
+    }
+    if (Array.isArray(this[modelFieldName])) {
+      return this[modelFieldName]
     }
     if (
-      !this[BaseModel.TRIGGER_FIELD_NAME] ||
-      typeof this[BaseModel.TRIGGER_FIELD_NAME] !== 'string'
+      !this[modelFieldName] ||
+      typeof this[modelFieldName] !== 'string'
     ) {
       return []
     }
 
-    return [this[BaseModel.TRIGGER_FIELD_NAME]]
+    return isStringAllowed
+      ? this[modelFieldName]
+      : [this[modelFieldName]]
   }
 
   #setTriggers (triggers) {
