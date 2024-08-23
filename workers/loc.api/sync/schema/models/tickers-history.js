@@ -1,21 +1,16 @@
 'use strict'
 
-const {
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('./model/db.service.field.names')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  symbol: 'VARCHAR(255)',
-  bid: 'DECIMAL(22,12)',
-  bidPeriod: 'INT',
-  ask: 'DECIMAL(22,12)',
-  mtsUpdate: 'BIGINT',
+module.exports = new Model({
+  symbol: Model.VARCHAR,
+  bid: Model.DECIMAL,
+  bidPeriod: Model.INTEGER,
+  ask: Model.DECIMAL,
+  mtsUpdate: Model.BIGINT,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
-  [INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['mtsUpdate', 'symbol'],
+  [Model.INDEX_FIELD_NAME]: [
     ['symbol', 'mtsUpdate']
   ]
-}
+})
