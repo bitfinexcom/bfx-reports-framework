@@ -1,36 +1,21 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('./model/db.service.field.names')
-const {
-  CREATE_UPDATE_MTS_TRIGGERS
-} = require('./model/common.triggers')
-const {
-  USER_ID_CONSTRAINT,
-  SUB_USER_ID_CONSTRAINT
-} = require('./model/common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  collName: 'VARCHAR(255) NOT NULL',
-  syncedAt: 'BIGINT',
-  baseStart: 'BIGINT',
-  baseEnd: 'BIGINT',
-  isBaseStepReady: 'INT',
-  currStart: 'BIGINT',
-  currEnd: 'BIGINT',
-  isCurrStepReady: 'INT',
-  createdAt: 'BIGINT',
-  updatedAt: 'BIGINT',
-  subUserId: 'INT',
-  user_id: 'INT',
-  syncQueueId: 'INT',
+module.exports = new Model({
+  collName: Model.VARCHAR_NOT_NULL,
+  syncedAt: Model.BIGINT,
+  baseStart: Model.BIGINT,
+  baseEnd: Model.BIGINT,
+  isBaseStepReady: Model.INTEGER,
+  currStart: Model.BIGINT,
+  currEnd: Model.BIGINT,
+  isCurrStepReady: Model.INTEGER,
+  subUserId: Model.INTEGER,
+  user_id: Model.INTEGER,
+  syncQueueId: Model.INTEGER,
 
-  [UNIQUE_INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: [
     // It needs to cover public collections
     ['collName',
       'WHERE user_id IS NULL'],
@@ -41,9 +26,8 @@ module.exports = {
     ['user_id', 'subUserId', 'collName',
       'WHERE user_id IS NOT NULL AND subUserId IS NOT NULL']
   ],
-  [CONSTR_FIELD_NAME]: [
-    USER_ID_CONSTRAINT,
-    SUB_USER_ID_CONSTRAINT
-  ],
-  [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
-}
+  [Model.CONSTR_FIELD_NAME]: [
+    Model.COMMON_CONSTRAINTS.USER_ID_CONSTRAINT,
+    Model.COMMON_CONSTRAINTS.SUB_USER_ID_CONSTRAINT
+  ]
+}, { hasCreateUpdateMtsTriggers: true })
