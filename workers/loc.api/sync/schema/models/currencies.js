@@ -1,18 +1,14 @@
 'use strict'
 
-const {
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('./model/db.service.field.names')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  id: 'VARCHAR(255)',
-  name: 'VARCHAR(255)',
-  pool: 'VARCHAR(255)',
-  explorer: 'TEXT',
-  symbol: 'VARCHAR(255)',
-  walletFx: 'TEXT',
+module.exports = new Model({
+  id: Model.VARCHAR,
+  name: Model.VARCHAR,
+  pool: Model.VARCHAR,
+  explorer: Model.TEXT,
+  symbol: Model.VARCHAR,
+  walletFx: Model.TEXT,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['id']
-}
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['id']
+})
