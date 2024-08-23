@@ -1,5 +1,7 @@
 'use strict'
 
+const { cloneDeep } = require('lib-js-util-base')
+
 const {
   DbModelCreationError
 } = require('../../../../errors')
@@ -26,7 +28,9 @@ class Model extends BaseModel {
     this.setDataStructure(dataStructure)
   }
 
-  setDataStructure (dataStructure) {
+  setDataStructure (dataStructure, opts) {
+    const { isNotFrozen } = opts ?? {}
+
     if (!dataStructure) {
       return this
     }
@@ -70,7 +74,12 @@ class Model extends BaseModel {
       this.#setTriggers(BaseModel.COMMON_TRIGGERS.CREATE_UPDATE_MTS_TRIGGERS)
     }
 
-    this.#insertModelFields()
+    this.#insertModelFields(opts)
+
+    if (isNotFrozen) {
+      return this
+    }
+
     /*
      * The aim here is to freeze and seal the model
      * to be immutable for security reasons
@@ -80,34 +89,49 @@ class Model extends BaseModel {
     return this
   }
 
-  getModelFields () {
-    return this.#modelFields
-  }
-
-  getTriggers () {
-    return this.#getServiceFields(BaseModel.TRIGGER_FIELD_NAME)
-  }
-
-  getConstraints () {
-    return this.#getServiceFields(BaseModel.CONSTR_FIELD_NAME)
-  }
-
-  getIndexies () {
-    return this.#getServiceFields(
-      BaseModel.INDEX_FIELD_NAME,
-      { isStringAllowed: true }
+  clone () {
+    return new Model().setDataStructure(
+      cloneDeep(this),
+      { isNotFrozen: true }
     )
   }
 
-  getUniqueIndexies () {
+  getModelFields (opts) {
+    return opts?.isCloned
+      ? cloneDeep(this.#modelFields)
+      : this.#modelFields
+  }
+
+  getTriggers (opts) {
+    return this.#getServiceFields(
+      BaseModel.TRIGGER_FIELD_NAME,
+      { ...opts, isStringAllowed: false }
+    )
+  }
+
+  getConstraints (opts) {
+    return this.#getServiceFields(
+      BaseModel.CONSTR_FIELD_NAME,
+      { ...opts, isStringAllowed: false }
+    )
+  }
+
+  getIndexies (opts) {
+    return this.#getServiceFields(
+      BaseModel.INDEX_FIELD_NAME,
+      { ...opts, isStringAllowed: true }
+    )
+  }
+
+  getUniqueIndexies (opts) {
     return this.#getServiceFields(
       BaseModel.UNIQUE_INDEX_FIELD_NAME,
-      { isStringAllowed: true }
+      { ...opts, isStringAllowed: true }
     )
   }
 
   #getServiceFields (modelFieldName, opts) {
-    const { isStringAllowed } = opts ?? {}
+    const { isStringAllowed, isCloned } = opts ?? {}
 
     if (!modelFieldName) {
       throw new DbModelCreationError({
@@ -115,7 +139,9 @@ class Model extends BaseModel {
       })
     }
     if (Array.isArray(this[modelFieldName])) {
-      return this[modelFieldName]
+      return isCloned
+        ? cloneDeep(this[modelFieldName])
+        : this[modelFieldName]
     }
     if (
       !this[modelFieldName] ||
@@ -124,9 +150,13 @@ class Model extends BaseModel {
       return []
     }
 
-    return isStringAllowed
+    const modelField = isStringAllowed
       ? this[modelFieldName]
       : [this[modelFieldName]]
+
+    return isCloned
+      ? cloneDeep(modelField)
+      : modelField
   }
 
   #setTriggers (triggers) {
@@ -162,11 +192,17 @@ class Model extends BaseModel {
     return this
   }
 
-  #insertModelFields () {
+  #insertModelFields (opts) {
+    const { isNotFrozen } = opts ?? {}
+
     for (const [name, value] of Object.entries(this)) {
       if (this.#isNotDbServiceField(name)) {
         this.#modelFields[name] = value
       }
+    }
+
+    if (isNotFrozen) {
+      return
     }
 
     freezeAndSealObjectDeeply(this.#modelFields)
