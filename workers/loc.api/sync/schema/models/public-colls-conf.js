@@ -1,31 +1,17 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('./model/db.service.field.names')
-const {
-  CREATE_UPDATE_MTS_TRIGGERS
-} = require('./model/common.triggers')
-const {
-  USER_ID_CONSTRAINT
-} = require('./model/common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  confName: 'VARCHAR(255)',
-  symbol: 'VARCHAR(255)',
-  start: 'BIGINT',
-  timeframe: 'VARCHAR(255)',
-  createdAt: 'BIGINT',
-  updatedAt: 'BIGINT',
-  user_id: 'INT NOT NULL',
+module.exports = new Model({
+  confName: Model.VARCHAR,
+  symbol: Model.VARCHAR,
+  start: Model.BIGINT,
+  timeframe: Model.VARCHAR,
+  user_id: Model.INTEGER_NOT_NULL,
 
-  [UNIQUE_INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: [
     'symbol', 'user_id', 'confName', 'timeframe'
   ],
-  [CONSTR_FIELD_NAME]: USER_ID_CONSTRAINT,
-  [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
-}
+  [Model.CONSTR_FIELD_NAME]: Model.COMMON_CONSTRAINTS
+    .USER_ID_CONSTRAINT
+}, { hasCreateUpdateMtsTriggers: true })
