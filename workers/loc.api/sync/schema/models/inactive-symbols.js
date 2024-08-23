@@ -1,13 +1,9 @@
 'use strict'
 
-const {
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('./model/db.service.field.names')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  pairs: 'VARCHAR(255)',
+module.exports = new Model({
+  pairs: Model.VARCHAR,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['pairs']
-}
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['pairs']
+})
