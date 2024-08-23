@@ -1,38 +1,28 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('./model/db.service.field.names')
-const {
-  USER_ID_CONSTRAINT,
-  SUB_USER_ID_CONSTRAINT
-} = require('./model/common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  id: 'BIGINT',
-  symbol: 'VARCHAR(255)',
-  status: 'VARCHAR(255)',
-  amount: 'DECIMAL(22,12)',
-  basePrice: 'DECIMAL(22,12)',
-  closePrice: 'DECIMAL(22,12)',
-  marginFunding: 'DECIMAL(22,12)',
-  marginFundingType: 'INT',
-  pl: 'DECIMAL(22,12)',
-  plPerc: 'DECIMAL(22,12)',
-  liquidationPrice: 'DECIMAL(22,12)',
-  leverage: 'DECIMAL(22,12)',
-  placeholder: 'TEXT',
-  mtsCreate: 'BIGINT',
-  mtsUpdate: 'BIGINT',
-  subUserId: 'INT',
-  user_id: 'INT NOT NULL',
+module.exports = new Model({
+  id: Model.BIGINT,
+  symbol: Model.VARCHAR,
+  status: Model.VARCHAR,
+  amount: Model.DECIMAL,
+  basePrice: Model.DECIMAL,
+  closePrice: Model.DECIMAL,
+  marginFunding: Model.DECIMAL,
+  marginFundingType: Model.INTEGER,
+  pl: Model.DECIMAL,
+  plPerc: Model.DECIMAL,
+  liquidationPrice: Model.DECIMAL,
+  leverage: Model.DECIMAL,
+  placeholder: Model.TEXT,
+  mtsCreate: Model.BIGINT,
+  mtsUpdate: Model.BIGINT,
+  subUserId: Model.INTEGER,
+  user_id: Model.INTEGER_NOT_NULL,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-  [INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+  [Model.INDEX_FIELD_NAME]: [
     ['user_id', 'symbol', 'mtsUpdate'],
     ['user_id', 'mtsUpdate', 'mtsCreate'],
     ['user_id', 'mtsUpdate'],
@@ -41,8 +31,8 @@ module.exports = {
     ['subUserId', 'id',
       'WHERE subUserId IS NOT NULL']
   ],
-  [CONSTR_FIELD_NAME]: [
-    USER_ID_CONSTRAINT,
-    SUB_USER_ID_CONSTRAINT
+  [Model.CONSTR_FIELD_NAME]: [
+    Model.COMMON_CONSTRAINTS.USER_ID_CONSTRAINT,
+    Model.COMMON_CONSTRAINTS.SUB_USER_ID_CONSTRAINT
   ]
-}
+})
