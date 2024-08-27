@@ -1,26 +1,13 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('../const')
-const {
-  CREATE_UPDATE_MTS_TRIGGERS
-} = require('../common.triggers')
-const {
-  OWNER_USER_ID_CONSTRAINT
-} = require('../common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  collName: 'VARCHAR(255) NOT NULL',
-  state: 'VARCHAR(255)',
-  createdAt: 'BIGINT',
-  updatedAt: 'BIGINT',
-  ownerUserId: 'INT',
-  isOwnerScheduler: 'INT',
+module.exports = new Model({
+  collName: Model.VARCHAR_NOT_NULL,
+  state: Model.VARCHAR,
+  ownerUserId: Model.INTEGER,
+  isOwnerScheduler: Model.INTEGER,
 
-  [CONSTR_FIELD_NAME]: OWNER_USER_ID_CONSTRAINT,
-  [TRIGGER_FIELD_NAME]: CREATE_UPDATE_MTS_TRIGGERS
-}
+  [Model.CONSTR_FIELD_NAME]: Model.COMMON_CONSTRAINTS
+    .OWNER_USER_ID_CONSTRAINT
+}, { hasCreateUpdateMtsTriggers: true })

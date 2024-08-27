@@ -1,49 +1,39 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('../const')
-const {
-  USER_ID_CONSTRAINT,
-  SUB_USER_ID_CONSTRAINT
-} = require('../common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  id: 'BIGINT',
-  symbol: 'VARCHAR(255)',
-  side: 'INT',
-  mtsCreate: 'BIGINT',
-  mtsUpdate: 'BIGINT',
-  amount: 'DECIMAL(22,12)',
-  flags: 'TEXT',
-  status: 'TEXT',
-  rate: 'VARCHAR(255)',
-  period: 'INT',
-  mtsOpening: 'BIGINT',
-  mtsLastPayout: 'BIGINT',
-  notify: 'INT',
-  hidden: 'INT',
-  renew: 'INT',
-  rateReal: 'INT',
-  noClose: 'INT',
-  positionPair: 'VARCHAR(255)',
-  subUserId: 'INT',
-  user_id: 'INT NOT NULL',
+module.exports = new Model({
+  id: Model.BIGINT,
+  symbol: Model.VARCHAR,
+  side: Model.INTEGER,
+  mtsCreate: Model.BIGINT,
+  mtsUpdate: Model.BIGINT,
+  amount: Model.DECIMAL,
+  flags: Model.TEXT,
+  status: Model.TEXT,
+  rate: Model.VARCHAR,
+  period: Model.INTEGER,
+  mtsOpening: Model.BIGINT,
+  mtsLastPayout: Model.BIGINT,
+  notify: Model.INTEGER,
+  hidden: Model.INTEGER,
+  renew: Model.INTEGER,
+  rateReal: Model.INTEGER,
+  noClose: Model.INTEGER,
+  positionPair: Model.VARCHAR,
+  subUserId: Model.INTEGER,
+  user_id: Model.INTEGER_NOT_NULL,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-  [INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+  [Model.INDEX_FIELD_NAME]: [
     ['user_id', 'symbol', 'mtsUpdate'],
     ['user_id', 'status', 'mtsUpdate'],
     ['user_id', 'mtsUpdate'],
     ['user_id', 'subUserId', 'mtsUpdate',
       'WHERE subUserId IS NOT NULL']
   ],
-  [CONSTR_FIELD_NAME]: [
-    USER_ID_CONSTRAINT,
-    SUB_USER_ID_CONSTRAINT
+  [Model.CONSTR_FIELD_NAME]: [
+    Model.COMMON_CONSTRAINTS.USER_ID_CONSTRAINT,
+    Model.COMMON_CONSTRAINTS.SUB_USER_ID_CONSTRAINT
   ]
-}
+})

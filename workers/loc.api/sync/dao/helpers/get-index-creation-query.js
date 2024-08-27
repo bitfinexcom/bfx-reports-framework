@@ -3,7 +3,7 @@
 const {
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
-} = require('../../schema/const')
+} = require('../../schema/models/model/db.service.field.names')
 
 const _getIndexQuery = (
   name,

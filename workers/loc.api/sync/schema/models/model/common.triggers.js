@@ -1,6 +1,6 @@
 'use strict'
 
-const TABLES_NAMES = require('./tables-names')
+const TABLES_NAMES = require('../../tables-names')
 
 /*
  * NOTE: For this triggers there is required
