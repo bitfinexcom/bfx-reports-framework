@@ -1,38 +1,28 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('../const')
-const {
-  USER_ID_CONSTRAINT,
-  SUB_USER_ID_CONSTRAINT
-} = require('../common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  id: 'BIGINT',
-  symbol: 'VARCHAR(255)',
-  mtsCreate: 'BIGINT',
-  offerID: 'BIGINT',
-  amount: 'DECIMAL(22,12)',
-  rate: 'DECIMAL(22,12)',
-  period: 'BIGINT',
-  maker: 'INT',
-  subUserId: 'INT',
-  user_id: 'INT NOT NULL',
+module.exports = new Model({
+  id: Model.BIGINT,
+  symbol: Model.VARCHAR,
+  mtsCreate: Model.BIGINT,
+  offerID: Model.BIGINT,
+  amount: Model.DECIMAL,
+  rate: Model.DECIMAL,
+  period: Model.BIGINT,
+  maker: Model.INTEGER,
+  subUserId: Model.INTEGER,
+  user_id: Model.INTEGER_NOT_NULL,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-  [INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+  [Model.INDEX_FIELD_NAME]: [
     ['user_id', 'symbol', 'mtsCreate'],
     ['user_id', 'mtsCreate'],
     ['user_id', 'subUserId', 'mtsCreate',
       'WHERE subUserId IS NOT NULL']
   ],
-  [CONSTR_FIELD_NAME]: [
-    USER_ID_CONSTRAINT,
-    SUB_USER_ID_CONSTRAINT
+  [Model.CONSTR_FIELD_NAME]: [
+    Model.COMMON_CONSTRAINTS.USER_ID_CONSTRAINT,
+    Model.COMMON_CONSTRAINTS.SUB_USER_ID_CONSTRAINT
   ]
-}
+})

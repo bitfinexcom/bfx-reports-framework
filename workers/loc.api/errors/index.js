@@ -272,6 +272,12 @@ class PubTradePriceFindForTrxTaxError extends BaseError {
   }
 }
 
+class DbModelCreationError extends BaseError {
+  constructor (data, message = 'ERR_WRONG_DB_MODEL_FIELD') {
+    super({ data, message })
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -312,5 +318,6 @@ module.exports = {
   CurrencyConversionError,
   CurrencyPairSeparationError,
   PubTradeFindForTrxTaxError,
-  PubTradePriceFindForTrxTaxError
+  PubTradePriceFindForTrxTaxError,
+  DbModelCreationError
 }

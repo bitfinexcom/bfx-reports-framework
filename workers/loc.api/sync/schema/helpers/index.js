@@ -7,7 +7,7 @@ const {
   TRIGGER_FIELD_NAME,
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
-} = require('../const')
+} = require('../models/model/db.service.field.names')
 
 const cloneSchema = (map, omittedFields = []) => {
   const arr = [...map].map(([key, schema]) => {

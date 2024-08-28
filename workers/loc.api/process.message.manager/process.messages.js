@@ -10,6 +10,9 @@ module.exports = {
   READY_TRX_TAX_REPORT: 'ready:trx-tax-report',
   ERROR_TRX_TAX_REPORT: 'error:trx-tax-report',
 
+  READY_SYNC: 'ready:sync',
+  ERROR_SYNC: 'error:sync',
+
   ALL_TABLE_HAVE_BEEN_CLEARED: 'all-tables-have-been-cleared',
   ALL_TABLE_HAVE_NOT_BEEN_CLEARED: 'all-tables-have-not-been-cleared',
   ALL_TABLE_HAVE_BEEN_REMOVED: 'all-tables-have-been-removed',

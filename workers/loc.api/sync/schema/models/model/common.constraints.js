@@ -1,6 +1,6 @@
 'use strict'
 
-const TABLES_NAMES = require('./tables-names')
+const TABLES_NAMES = require('../../tables-names')
 
 const USER_ID_CONSTRAINT = `\
 CONSTRAINT #{tableName}_fk_user_id

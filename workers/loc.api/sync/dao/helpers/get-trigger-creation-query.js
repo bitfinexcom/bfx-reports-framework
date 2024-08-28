@@ -1,6 +1,8 @@
 'use strict'
 
-const { TRIGGER_FIELD_NAME } = require('../../schema/const')
+const {
+  TRIGGER_FIELD_NAME
+} = require('../../schema/models/model/db.service.field.names')
 
 const _getTriggersQuery = (
   name,

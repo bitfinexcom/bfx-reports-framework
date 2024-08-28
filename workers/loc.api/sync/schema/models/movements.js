@@ -1,36 +1,26 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME,
-  ID_PRIMARY_KEY
-} = require('../const')
-const {
-  USER_ID_CONSTRAINT,
-  SUB_USER_ID_CONSTRAINT
-} = require('../common.constraints')
+const Model = require('./model')
 
-module.exports = {
-  _id: ID_PRIMARY_KEY,
-  id: 'BIGINT',
-  currency: 'VARCHAR(255)',
-  currencyName: 'VARCHAR(255)',
-  mtsStarted: 'BIGINT',
-  mtsUpdated: 'BIGINT',
-  status: 'VARCHAR(255)',
-  amount: 'DECIMAL(22,12)',
-  amountUsd: 'DECIMAL(22,12)',
-  exactUsdValue: 'DECIMAL(22,12)',
-  fees: 'DECIMAL(22,12)',
-  destinationAddress: 'VARCHAR(255)',
-  transactionId: 'VARCHAR(255)',
-  note: 'TEXT',
-  subUserId: 'INT',
-  user_id: 'INT NOT NULL',
+module.exports = new Model({
+  id: Model.BIGINT,
+  currency: Model.VARCHAR,
+  currencyName: Model.VARCHAR,
+  mtsStarted: Model.BIGINT,
+  mtsUpdated: Model.BIGINT,
+  status: Model.VARCHAR,
+  amount: Model.DECIMAL,
+  amountUsd: Model.DECIMAL,
+  exactUsdValue: Model.DECIMAL,
+  fees: Model.DECIMAL,
+  destinationAddress: Model.VARCHAR,
+  transactionId: Model.VARCHAR,
+  note: Model.TEXT,
+  subUserId: Model.INTEGER,
+  user_id: Model.INTEGER_NOT_NULL,
 
-  [UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
-  [INDEX_FIELD_NAME]: [
+  [Model.UNIQUE_INDEX_FIELD_NAME]: ['id', 'user_id'],
+  [Model.INDEX_FIELD_NAME]: [
     ['user_id', 'status', 'mtsStarted'],
     ['user_id', 'status', 'mtsUpdated'],
     ['user_id', 'currency', 'mtsUpdated'],
@@ -38,8 +28,8 @@ module.exports = {
     ['user_id', 'subUserId', 'mtsUpdated',
       'WHERE subUserId IS NOT NULL']
   ],
-  [CONSTR_FIELD_NAME]: [
-    USER_ID_CONSTRAINT,
-    SUB_USER_ID_CONSTRAINT
+  [Model.CONSTR_FIELD_NAME]: [
+    Model.COMMON_CONSTRAINTS.USER_ID_CONSTRAINT,
+    Model.COMMON_CONSTRAINTS.SUB_USER_ID_CONSTRAINT
   ]
-}
+})

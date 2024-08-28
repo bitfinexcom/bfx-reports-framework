@@ -473,118 +473,6 @@ class FrameworkReportService extends ReportService {
     }, 'interruptOperations', args, cb)
   }
 
-  getPublicTradesConf (space, args = {}, cb) {
-    return this._privResponder(() => {
-      return this._publicCollsConfAccessors
-        .getPublicCollsConf('publicTradesConf', args)
-    }, 'getPublicTradesConf', args, cb)
-  }
-
-  getTickersHistoryConf (space, args = {}, cb) {
-    return this._privResponder(() => {
-      return this._publicCollsConfAccessors
-        .getPublicCollsConf('tickersHistoryConf', args)
-    }, 'getTickersHistoryConf', args, cb)
-  }
-
-  getStatusMessagesConf (space, args = {}, cb) {
-    return this._privResponder(() => {
-      return this._publicCollsConfAccessors
-        .getPublicCollsConf('statusMessagesConf', args)
-    }, 'getStatusMessagesConf', args, cb)
-  }
-
-  getCandlesConf (space, args = {}, cb) {
-    return this._privResponder(() => {
-      return this._publicCollsConfAccessors
-        .getPublicCollsConf('candlesConf', args)
-    }, 'getCandlesConf', args, cb)
-  }
-
-  editPublicTradesConf (space, args = {}, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
-
-      await this._publicCollsConfAccessors
-        .editPublicCollsConf('publicTradesConf', args)
-
-      if (isNotSyncRequired(args)) {
-        return true
-      }
-
-      await this._sync.start({
-        syncColls: this._ALLOWED_COLLS.PUBLIC_TRADES,
-        isSolveAfterRedirToApi: true,
-        ownerUserId: args?.auth?._id
-      })
-
-      return true
-    }, 'editPublicTradesConf', args, cb)
-  }
-
-  editTickersHistoryConf (space, args = {}, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
-
-      await this._publicCollsConfAccessors
-        .editPublicCollsConf('tickersHistoryConf', args)
-
-      if (isNotSyncRequired(args)) {
-        return true
-      }
-
-      await this._sync.start({
-        syncColls: this._ALLOWED_COLLS.TICKERS_HISTORY,
-        isSolveAfterRedirToApi: true,
-        ownerUserId: args?.auth?._id
-      })
-
-      return true
-    }, 'editTickersHistoryConf', args, cb)
-  }
-
-  editStatusMessagesConf (space, args = {}, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditPublicCollsConf')
-
-      await this._publicCollsConfAccessors
-        .editPublicCollsConf('statusMessagesConf', args)
-
-      if (isNotSyncRequired(args)) {
-        return true
-      }
-
-      await this._sync.start({
-        syncColls: this._ALLOWED_COLLS.STATUS_MESSAGES,
-        isSolveAfterRedirToApi: true,
-        ownerUserId: args?.auth?._id
-      })
-
-      return true
-    }, 'editStatusMessagesConf', args, cb)
-  }
-
-  editCandlesConf (space, args = {}, cb) {
-    return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditCandlesConf')
-
-      await this._publicCollsConfAccessors
-        .editPublicCollsConf('candlesConf', args)
-
-      if (isNotSyncRequired(args)) {
-        return true
-      }
-
-      await this._sync.start({
-        syncColls: this._ALLOWED_COLLS.CANDLES,
-        isSolveAfterRedirToApi: true,
-        ownerUserId: args?.auth?._id
-      })
-
-      return true
-    }, 'editCandlesConf', args, cb)
-  }
-
   editAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(async () => {
       checkParams(args, 'paramsSchemaForEditAllPublicCollsConfs')
@@ -603,14 +491,14 @@ class FrameworkReportService extends ReportService {
       })
 
       return true
-    }, 'editCandlesConf', args, cb)
+    }, 'editAllPublicCollsConfs', args, cb)
   }
 
   getAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(() => {
       return this._publicCollsConfAccessors
         .getAllPublicCollsConfs(args)
-    }, 'editCandlesConf', args, cb)
+    }, 'getAllPublicCollsConfs', args, cb)
   }
 
   /**
@@ -897,7 +785,7 @@ class FrameworkReportService extends ReportService {
           args,
           {
             collName: this._SYNC_API_METHODS.TICKERS_HISTORY,
-            confName: 'tickersHistoryConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.TICKERS_HISTORY_CONF,
             datePropName: 'mtsUpdate'
           }
         )
@@ -921,7 +809,7 @@ class FrameworkReportService extends ReportService {
           args,
           {
             collName: this._SYNC_API_METHODS.PUBLIC_TRADES,
-            confName: 'publicTradesConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.PUBLIC_TRADES_CONF,
             datePropName: 'mts'
           }
         )
@@ -967,7 +855,7 @@ class FrameworkReportService extends ReportService {
           preparedArgs,
           {
             collName: this._SYNC_API_METHODS.STATUS_MESSAGES,
-            confName: 'statusMessagesConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.STATUS_MESSAGES_CONF,
             datePropName: 'timestamp'
           }
         )
@@ -1005,7 +893,7 @@ class FrameworkReportService extends ReportService {
           argsWithParamsByDefault,
           {
             collName: this._SYNC_API_METHODS.CANDLES,
-            confName: 'candlesConf',
+            confName: this._PUBLIC_COLLS_CONF_NAMES.CANDLES_CONF,
             datePropName: 'mts'
           }
         )
@@ -1500,12 +1388,6 @@ class FrameworkReportService extends ReportService {
   }
 
   /**
-   * @deprecated
-   * @override
-   */
-  getMultipleCsv (...args) { return this.getMultipleFile(...args) }
-
-  /**
    * @override
    */
   getMultipleFile (space, args, cb) {
@@ -1517,11 +1399,6 @@ class FrameworkReportService extends ReportService {
     }, 'getMultipleFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getBalanceHistoryCsv (...args) { return this.getBalanceHistoryFile(...args) }
-
   getBalanceHistoryFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1530,11 +1407,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getBalanceHistoryFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getWinLossCsv (...args) { return this.getWinLossFile(...args) }
 
   getWinLossFile (space, args, cb) {
     return this._responder(() => {
@@ -1545,11 +1417,6 @@ class FrameworkReportService extends ReportService {
     }, 'getWinLossFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getPositionsSnapshotCsv (...args) { return this.getPositionsSnapshotFile(...args) }
-
   getPositionsSnapshotFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1558,11 +1425,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getPositionsSnapshotFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getFullSnapshotReportCsv (...args) { return this.getFullSnapshotReportFile(...args) }
 
   getFullSnapshotReportFile (space, args, cb) {
     return this._responder(() => {
@@ -1573,11 +1435,6 @@ class FrameworkReportService extends ReportService {
     }, 'getFullSnapshotReportFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getFullTaxReportCsv (...args) { return this.getFullTaxReportFile(...args) }
-
   getFullTaxReportFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1586,11 +1443,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getFullTaxReportFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getTransactionTaxReportCsv (...args) { return this.getTransactionTaxReportFile(...args) }
 
   getTransactionTaxReportFile (space, args, cb) {
     return this._responder(() => {
@@ -1601,11 +1453,6 @@ class FrameworkReportService extends ReportService {
     }, 'getTransactionTaxReportFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getTradedVolumeCsv (...args) { return this.getTradedVolumeFile(...args) }
-
   getTradedVolumeFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1614,11 +1461,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getTradedVolumeFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getTotalFeesReportCsv (...args) { return this.getTotalFeesReportFile(...args) }
 
   getTotalFeesReportFile (space, args, cb) {
     return this._responder(() => {
@@ -1629,11 +1471,6 @@ class FrameworkReportService extends ReportService {
     }, 'getTotalFeesReportFile', args, cb)
   }
 
-  /**
-   * @deprecated
-   */
-  getPerformingLoanCsv (...args) { return this.getPerformingLoanFile(...args) }
-
   getPerformingLoanFile (space, args, cb) {
     return this._responder(() => {
       return this._generateReportFile(
@@ -1642,11 +1479,6 @@ class FrameworkReportService extends ReportService {
       )
     }, 'getPerformingLoanFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getCandlesCsv (...args) { return this.getCandlesFile(...args) }
 
   getCandlesFile (space, args, cb) {
     return this._responder(async () => {
@@ -1659,11 +1491,6 @@ class FrameworkReportService extends ReportService {
       return super.getCandlesFile(space, args)
     }, 'getCandlesFile', args, cb)
   }
-
-  /**
-   * @deprecated
-   */
-  getWinLossVSAccountBalanceCsv (...args) { return this.getWinLossVSAccountBalanceFile(...args) }
 
   getWinLossVSAccountBalanceFile (space, args, cb) {
     return this._responder(() => {

@@ -45,7 +45,7 @@ const {
   TRIGGER_FIELD_NAME,
   INDEX_FIELD_NAME,
   UNIQUE_INDEX_FIELD_NAME
-} = require('../schema/const')
+} = require('../schema/models/model/db.service.field.names')
 const ALLOWED_COLLS = require('../schema/allowed.colls')
 const SYNC_QUEUE_STATES = require('../sync.queue/sync.queue.states')
 const DB_WORKER_ACTIONS = require(
