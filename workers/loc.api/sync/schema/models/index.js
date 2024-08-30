@@ -79,15 +79,8 @@ const models = new Map([
   [TABLES_NAMES.SYNC_USER_STEPS, syncUserSteps]
 ])
 
-const {
-  getModelsMap: _getModelsMap
-} = require('../helpers')
-
-const getModelsMap = (params = {}) => {
-  return _getModelsMap({
-    ...params,
-    models: params?.models ?? models
-  })
+const getModelsMap = () => {
+  return new Map(...models)
 }
 
 const getModelOf = (tableName) => {

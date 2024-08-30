@@ -2,13 +2,6 @@
 
 const { omit, cloneDeep } = require('lib-js-util-base')
 
-const {
-  CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME
-} = require('../models/model/db.service.field.names')
-
 const cloneSchema = (map, omittedFields = []) => {
   const arr = [...map].map(([key, schema]) => {
     const normalizedSchema = omit(schema, omittedFields)
@@ -28,21 +21,6 @@ const cloneSchema = (map, omittedFields = []) => {
   return new Map(arr)
 }
 
-const getModelsMap = (params = {}) => {
-  const {
-    models,
-    omittedFields = [
-      CONSTR_FIELD_NAME,
-      TRIGGER_FIELD_NAME,
-      INDEX_FIELD_NAME,
-      UNIQUE_INDEX_FIELD_NAME
-    ]
-  } = { ...params }
-
-  return cloneSchema(models, omittedFields)
-}
-
 module.exports = {
-  cloneSchema,
-  getModelsMap
+  cloneSchema
 }
