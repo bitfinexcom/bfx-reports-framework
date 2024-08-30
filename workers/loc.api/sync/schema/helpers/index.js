@@ -42,12 +42,7 @@ const getModelsMap = (params = {}) => {
   return cloneSchema(models, omittedFields)
 }
 
-const getModelOf = (tableName, models) => {
-  return { ...getModelsMap({ models }).get(tableName) }
-}
-
 module.exports = {
   cloneSchema,
-  getModelsMap,
-  getModelOf
+  getModelsMap
 }
