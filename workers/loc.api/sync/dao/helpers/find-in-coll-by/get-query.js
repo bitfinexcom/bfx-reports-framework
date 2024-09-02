@@ -25,7 +25,10 @@ module.exports = (args, methodColl, opts) => {
     filter
   } = getFilterParams(args, methodColl, { isPublic })
 
-  const _model = { ...model, ...additionalModel }
+  const modelFields = {
+    ...model.getModelFields(),
+    ...additionalModel
+  }
   const exclude = isPublic ? ['_id', 'user_id'] : ['_id']
 
   const {
@@ -46,7 +49,7 @@ module.exports = (args, methodColl, opts) => {
   } = getGroupQuery(methodColl)
   const { subQuery, subQueryValues } = getSubQuery(methodColl)
   const projection = getProjectionQuery(
-    _model,
+    modelFields,
     exclude,
     isExcludePrivate
   )
