@@ -109,6 +109,10 @@ class Model extends BaseModel {
       : this.#modelFieldKeys
   }
 
+  hasModelFieldName (fieldName) {
+    return !!this.#modelFields[fieldName]
+  }
+
   getTriggers (opts) {
     return this.#getServiceFields(
       BaseModel.TRIGGER_FIELD_NAME,
