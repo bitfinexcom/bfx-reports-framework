@@ -104,6 +104,17 @@ class FrameworkReportService extends ReportService {
     }, 'isStagingBfxApi', args, cb)
   }
 
+  getLastFinishedSyncMts (space, args, cb) {
+    return this._privResponder(async () => {
+      const lastFinishedSyncQueueJob = await this._dao
+        .getLastFinishedSyncQueueJob(args?.auth?._id)
+
+      return {
+        lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null
+      }
+    }, 'getLastFinishedSyncMts', args, cb)
+  }
+
   signUp (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.signUp(args)
