@@ -221,14 +221,7 @@ class BetterSqliteDAO extends DAO {
   }
 
   _createTablesIfNotExists (opts = {}) {
-    const models = this._getModelsMap({
-      models: opts?.models,
-      omittedFields: [
-        TRIGGER_FIELD_NAME,
-        INDEX_FIELD_NAME,
-        UNIQUE_INDEX_FIELD_NAME
-      ]
-    })
+    const models = opts?.models ?? this._getModelsMap()
     const sql = getTableCreationQuery(models, opts)
 
     return this.query({
