@@ -213,24 +213,22 @@ class SyncUserStepManager {
     const hasUserIdField = (
       Number.isInteger(userId)
     )
-    const hasUserIdFieldInModel = (
-      typeof model?.user_id === 'string'
-    )
+    const hasUserIdFieldInModel = model
+      .hasModelFieldName('user_id')
     const hasSubUserIdField = (
       Number.isInteger(subUserId)
     )
-    const hasSubUserIdFieldInModel = (
-      typeof model?.subUserId === 'string'
-    )
+    const hasSubUserIdFieldInModel = model
+      .hasModelFieldName('subUserId')
     const hasSymbolField = (
       symbolFieldName &&
-      typeof model?.[symbolFieldName] === 'string' &&
+      model.hasModelFieldName(symbolFieldName) &&
       symbol &&
       typeof symbol === 'string'
     )
     const hasTimeframeField = (
       timeframeFieldName &&
-      typeof model?.[timeframeFieldName] === 'string' &&
+      model.hasModelFieldName(timeframeFieldName) &&
       timeframe &&
       typeof timeframe === 'string'
     )
