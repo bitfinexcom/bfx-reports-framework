@@ -238,10 +238,7 @@ class BetterSqliteDAO extends DAO {
   }
 
   _createIndexisIfNotExists (opts = {}) {
-    const models = this._getModelsMap({
-      models: opts?.models,
-      omittedFields: []
-    })
+    const models = opts?.models ?? this._getModelsMap()
     const sql = getIndexCreationQuery(models, opts)
 
     return this.query({
