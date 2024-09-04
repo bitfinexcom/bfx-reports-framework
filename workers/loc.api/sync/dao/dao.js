@@ -29,6 +29,10 @@ class DAO {
     return this.syncSchema.getModelsMap()
   }
 
+  _getModelOf (tableName) {
+    return this.syncSchema.getModelOf(tableName)
+  }
+
   _getMethodCollMap (params) {
     return this.syncSchema.getMethodCollMap(params)
   }
