@@ -80,7 +80,7 @@ const models = new Map([
 ])
 
 const getModelsMap = () => {
-  return new Map(...models)
+  return new Map(models)
 }
 
 const getModelOf = (tableName) => {
