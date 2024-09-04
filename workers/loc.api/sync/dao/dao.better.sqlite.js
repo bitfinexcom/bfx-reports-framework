@@ -40,12 +40,7 @@ const {
   RemoveElemsLeaveLastNRecordsError
 } = require('../../errors')
 
-const {
-  CONSTR_FIELD_NAME,
-  TRIGGER_FIELD_NAME,
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME
-} = require('../schema/models/model/db.service.field.names')
+const Model = require('../schema/models/model')
 const ALLOWED_COLLS = require('../schema/allowed.colls')
 const SYNC_QUEUE_STATES = require('../sync.queue/sync.queue.states')
 const DB_WORKER_ACTIONS = require(
@@ -481,16 +476,6 @@ class BetterSqliteDAO extends DAO {
       return false
     }
 
-    const modelsMap = this._getModelsMap({
-      omittedFields: [
-        '_id',
-        CONSTR_FIELD_NAME,
-        TRIGGER_FIELD_NAME,
-        INDEX_FIELD_NAME,
-        UNIQUE_INDEX_FIELD_NAME
-      ]
-    })
-
     await this._beginTrans(async () => {
       const tableNames = await this.getTablesNames({ doNotQueueQuery })
       const filteredTempTableNames = tableNames.filter((name) => (
@@ -501,12 +486,16 @@ class BetterSqliteDAO extends DAO {
 
       for (const tempName of filteredTempTableNames) {
         const name = tempName.replace(namePrefix, '')
-        const model = modelsMap.get(name)
-        const projection = Object.keys(model).join(', ')
+        const model = this._getModelOf(name)
 
         if (!model) {
           continue
         }
+
+        const projection = model.getModelFieldKeys()
+          .filter((fieldName) => fieldName !== Model.UID_FIELD_NAME)
+          .join(', ')
+
         if (isStrictEqual) {
           sqlArr.push(`DELETE FROM ${name}`)
         }
