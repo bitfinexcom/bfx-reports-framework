@@ -227,10 +227,7 @@ class BetterSqliteDAO extends DAO {
   }
 
   _createTriggerIfNotExists (opts = {}) {
-    const models = this._getModelsMap({
-      models: opts?.models,
-      omittedFields: []
-    })
+    const models = opts?.models ?? this._getModelsMap()
     const sql = getTriggerCreationQuery(models, opts)
 
     return this.query({
