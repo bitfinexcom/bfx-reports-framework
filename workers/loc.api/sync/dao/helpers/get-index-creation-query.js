@@ -1,10 +1,5 @@
 'use strict'
 
-const {
-  INDEX_FIELD_NAME,
-  UNIQUE_INDEX_FIELD_NAME
-} = require('../../schema/models/model/db.service.field.names')
-
 const _getIndexQuery = (
   name,
   fields = [],
@@ -67,18 +62,20 @@ const _getIndexQueryFromModel = (
     shouldNotAddIfNotExistsStm
   } = opts ?? {}
 
+  const modelUniqueIndexies = model.getUniqueIndexies()
+  const modelIndexies = model.getIndexies()
   const uniqueIndexFields = (
-    model[UNIQUE_INDEX_FIELD_NAME] &&
-    typeof model[UNIQUE_INDEX_FIELD_NAME] === 'string'
+    modelUniqueIndexies &&
+    typeof modelUniqueIndexies === 'string'
   )
-    ? model[UNIQUE_INDEX_FIELD_NAME].split(' ')
-    : model[UNIQUE_INDEX_FIELD_NAME]
+    ? modelUniqueIndexies.split(' ')
+    : modelUniqueIndexies
   const indexFields = (
-    model[INDEX_FIELD_NAME] &&
-    typeof model[INDEX_FIELD_NAME] === 'string'
+    modelIndexies &&
+    typeof modelIndexies === 'string'
   )
-    ? model[INDEX_FIELD_NAME].split(' ')
-    : model[INDEX_FIELD_NAME]
+    ? modelIndexies.split(' ')
+    : modelIndexies
 
   const uniqueIndexiesArr = _getIndexQuery(
     name,
