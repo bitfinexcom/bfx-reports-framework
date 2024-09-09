@@ -25,8 +25,12 @@ class DAO {
     this.processMessageManagerFactory = processMessageManagerFactory
   }
 
-  _getModelsMap (params) {
-    return this.syncSchema.getModelsMap(params)
+  _getModelsMap () {
+    return this.syncSchema.getModelsMap()
+  }
+
+  _getModelOf (tableName) {
+    return this.syncSchema.getModelOf(tableName)
   }
 
   _getMethodCollMap (params) {

@@ -33,8 +33,9 @@ class WeightedAveragesReport extends BaseWeightedAveragesReport {
     this.syncSchema = syncSchema
     this.ALLOWED_COLLS = ALLOWED_COLLS
 
-    this.tradesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.TRADES)
+    this.tradesModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.TRADES)
+      .getModelFields()
 
     // Used to switch data fetching from DB for framework mode
     this._isNotCalcTakenFromBfxApi = true
@@ -63,7 +64,7 @@ class WeightedAveragesReport extends BaseWeightedAveragesReport {
           ...symbFilter
         },
         sort: [['mtsCreate', -1]],
-        projection: this.tradesModel,
+        projection: this.tradesModelFields,
         exclude: ['user_id'],
         isExcludePrivate: true
       }

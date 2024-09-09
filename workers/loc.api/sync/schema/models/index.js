@@ -44,7 +44,7 @@ const progress = require('./progress')
 const syncQueue = require('./sync-queue')
 const syncUserSteps = require('./sync-user-steps')
 
-const _models = new Map([
+const models = new Map([
   [TABLES_NAMES.USERS, users],
   [TABLES_NAMES.SUB_ACCOUNTS, subAccounts],
   [TABLES_NAMES.LEDGERS, ledgers],
@@ -79,20 +79,12 @@ const _models = new Map([
   [TABLES_NAMES.SYNC_USER_STEPS, syncUserSteps]
 ])
 
-const {
-  getModelsMap: _getModelsMap,
-  getModelOf: _getModelOf
-} = require('../helpers')
-
-const getModelsMap = (params = {}) => {
-  return _getModelsMap({
-    ...params,
-    models: params?.models ?? _models
-  })
+const getModelsMap = () => {
+  return new Map(models)
 }
 
 const getModelOf = (tableName) => {
-  return _getModelOf(tableName, _models)
+  return models.get(tableName)
 }
 
 module.exports = {

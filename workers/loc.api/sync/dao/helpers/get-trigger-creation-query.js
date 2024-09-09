@@ -1,9 +1,5 @@
 'use strict'
 
-const {
-  TRIGGER_FIELD_NAME
-} = require('../../schema/models/model/db.service.field.names')
-
 const _getTriggersQuery = (
   name,
   model,
@@ -13,9 +9,10 @@ const _getTriggersQuery = (
     shouldNotAddIfNotExistsStm
   } = opts ?? {}
 
-  const triggersArr = Array.isArray(model[TRIGGER_FIELD_NAME])
-    ? model[TRIGGER_FIELD_NAME]
-    : [model[TRIGGER_FIELD_NAME]]
+  const modelTriggers = model.getTriggers()
+  const triggersArr = Array.isArray(modelTriggers)
+    ? modelTriggers
+    : [modelTriggers]
 
   return triggersArr.reduce((accum, item) => {
     if (

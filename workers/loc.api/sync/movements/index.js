@@ -25,10 +25,12 @@ class Movements {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.authenticator = authenticator
 
-    this.movementsModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.MOVEMENTS)
-    this.ledgersModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.LEDGERS)
+    this.movementsModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.MOVEMENTS)
+      .getModelFields()
+    this.ledgersModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.LEDGERS)
+      .getModelFields()
   }
 
   async getMovements (params = {}) {
@@ -177,7 +179,7 @@ class Movements {
       end = Date.now(),
       filter: _filter,
       sort = [['mts', -1], ['id', -1]],
-      projection = this.ledgersModel,
+      projection = this.ledgersModelFields,
       exclude = ['user_id'],
       isExcludePrivate = true,
       isWithdrawals = false,
@@ -227,7 +229,7 @@ class Movements {
       end = Date.now(),
       filter: _filter,
       sort = [['mts', -1], ['id', -1]],
-      projection = this.ledgersModel,
+      projection = this.ledgersModelFields,
       exclude = ['user_id'],
       isExcludePrivate = true,
       isWithdrawals = false,

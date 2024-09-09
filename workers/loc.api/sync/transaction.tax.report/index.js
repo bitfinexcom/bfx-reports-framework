@@ -70,8 +70,9 @@ class TransactionTaxReport {
     this.currencyConverter = currencyConverter
     this.processMessageManager = processMessageManager
 
-    this.tradesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.TRADES)
+    this.tradesModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.TRADES)
+      .getModelFields()
   }
 
   async makeTrxTaxReportInBackground (args = {}) {
@@ -442,7 +443,7 @@ class TransactionTaxReport {
           ...symbFilter
         },
         sort: [['mtsCreate', -1]],
-        projection: this.tradesModel,
+        projection: this.tradesModelFields,
         exclude: ['user_id'],
         isExcludePrivate: false
       }

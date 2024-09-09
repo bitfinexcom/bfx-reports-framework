@@ -13,6 +13,7 @@ const BaseModel = require('./base.model')
 
 class Model extends BaseModel {
   #modelFields = {}
+  #modelFieldKeys = []
   #opts = {
     hasNoUID: false,
     hasCreateUpdateMtsTriggers: false
@@ -100,6 +101,16 @@ class Model extends BaseModel {
     return opts?.isCloned
       ? cloneDeep(this.#modelFields)
       : this.#modelFields
+  }
+
+  getModelFieldKeys (opts) {
+    return opts?.isCloned
+      ? cloneDeep(this.#modelFieldKeys)
+      : this.#modelFieldKeys
+  }
+
+  hasModelFieldName (fieldName) {
+    return !!this.#modelFields[fieldName]
   }
 
   getTriggers (opts) {
@@ -198,6 +209,7 @@ class Model extends BaseModel {
     for (const [name, value] of Object.entries(this)) {
       if (this.#isNotDbServiceField(name)) {
         this.#modelFields[name] = value
+        this.#modelFieldKeys.push(name)
       }
     }
 
@@ -206,6 +218,7 @@ class Model extends BaseModel {
     }
 
     freezeAndSealObjectDeeply(this.#modelFields)
+    freezeAndSealObjectDeeply(this.#modelFieldKeys)
   }
 
   #isNotDbServiceField (fieldName) {
