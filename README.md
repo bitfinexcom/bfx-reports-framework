@@ -107,8 +107,8 @@ To simplify setup/deploy processes the following bash scripts are provided:
 
 The setup was tested with the following dependencies:
 
-- Docker version 20.10.12
-- docker-compose version 1.29.2
+- Docker version 27.2.0
+- docker-compose version 2.24.6
 - git version 2.24.1
 
 ### Setup process
@@ -225,7 +225,7 @@ The infrastructure configuration is located in the `./terraform` directory of th
 
 The setup was tested with the following dependencies:
 
-- Terraform version 1.1.7
+- Terraform version 1.9.5
 
 > To use Terraform you will need to install it. [This official tutorial](https://learn.hashicorp.com/tutorials/terraform/install-cli) will be useful to install Terraform.
 
