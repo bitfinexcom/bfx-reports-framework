@@ -1,6 +1,6 @@
 FROM node:18.17.1-alpine3.18
 
-ENV BIND_HOST "0.0.0.0"
+ENV BIND_HOST="0.0.0.0"
 
 WORKDIR /home/node/bfx-report-express
 
