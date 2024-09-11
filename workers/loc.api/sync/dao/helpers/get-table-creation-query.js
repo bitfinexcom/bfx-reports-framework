@@ -1,13 +1,10 @@
 'use strict'
 
-const {
-  CONSTR_FIELD_NAME
-} = require('../../schema/models/model/db.service.field.names')
-
 const _getConstraintsQuery = (name, model) => {
-  const constraintsArr = Array.isArray(model[CONSTR_FIELD_NAME])
-    ? model[CONSTR_FIELD_NAME]
-    : [model[CONSTR_FIELD_NAME]]
+  const modelConstraints = model.getConstraints()
+  const constraintsArr = Array.isArray(modelConstraints)
+    ? modelConstraints
+    : [modelConstraints]
 
   return constraintsArr.reduce((accum, item) => {
     const _constraints = (
@@ -43,8 +40,7 @@ module.exports = (models = [], opts = {}) => {
     const _name = `${prefix}${name}`
     const constraints = _getConstraintsQuery(_name, model)
 
-    const keys = Object.keys(model)
-      .filter((field) => field !== CONSTR_FIELD_NAME)
+    const keys = model.getModelFieldKeys()
     const columnDefs = keys.reduce((accum, field, i, arr) => {
       const isLast = arr.length === (i + 1)
       const type = model[field]

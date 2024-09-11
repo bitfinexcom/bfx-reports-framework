@@ -41,8 +41,9 @@ class Trades {
 
     this.tradesMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.TRADES)
-    this.tradesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.TRADES)
+    this.tradesModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.TRADES)
+      .getModelFields()
   }
 
   async _getTrades ({
@@ -71,7 +72,7 @@ class Trades {
           ...symbFilter
         },
         sort: [['mtsCreate', -1]],
-        projection: this.tradesModel,
+        projection: this.tradesModelFields,
         exclude: ['user_id'],
         isExcludePrivate: true
       }

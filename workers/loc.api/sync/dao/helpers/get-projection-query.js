@@ -1,8 +1,13 @@
 'use strict'
 
+const Model = require('../../schema/models/model')
+
 const _getProjArr = (model) => {
   if (Array.isArray(model)) {
     return model
+  }
+  if (model instanceof Model) {
+    return model.getModelFieldKeys()
   }
   if (
     model &&

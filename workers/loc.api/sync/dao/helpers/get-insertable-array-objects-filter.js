@@ -16,10 +16,7 @@ const getFieldsFilters = (
     const _params = { ...params }
     const field = _params[fieldName]
 
-    if (
-      Object.keys(model)
-        .some(key => key === modelFieldName)
-    ) {
+    if (model.hasModelFieldName(modelFieldName)) {
       if (typeof field === 'boolean') {
         return {
           ...accum,

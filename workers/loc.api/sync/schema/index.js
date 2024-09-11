@@ -2,7 +2,8 @@
 
 const {
   SUPPORTED_DB_VERSION,
-  getModelsMap
+  getModelsMap,
+  getModelOf
 } = require('./models')
 const {
   getMethodCollMap
@@ -11,5 +12,6 @@ const {
 module.exports = {
   SUPPORTED_DB_VERSION,
   getMethodCollMap,
-  getModelsMap
+  getModelsMap,
+  getModelOf
 }

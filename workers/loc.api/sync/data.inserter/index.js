@@ -539,11 +539,7 @@ class DataInserter extends EventEmitter {
     _args.params.notThrowError = true
     const currIterationArgs = cloneDeep(_args)
 
-    const { subUserId } = model ?? {}
-    const hasNotSubUserField = (
-      !subUserId ||
-      typeof subUserId !== 'string'
-    )
+    const hasNotSubUserField = !model.hasModelFieldName('subUserId')
     const { auth: _auth } = _args ?? {}
     const { session } = _auth ?? {}
     const sessionAuth = isPublic || hasNotSubUserField

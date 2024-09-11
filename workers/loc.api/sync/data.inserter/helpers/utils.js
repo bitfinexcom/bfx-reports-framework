@@ -16,7 +16,7 @@ const normalizeApiData = (
     return data
   }
 
-  const modelKeys = Object.keys(model)
+  const modelKeys = model.getModelFieldKeys()
 
   if (modelKeys.length === 0) {
     return data

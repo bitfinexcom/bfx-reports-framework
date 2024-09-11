@@ -35,8 +35,9 @@ class PerformingLoan {
 
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
-    this.ledgersModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.LEDGERS)
+    this.ledgersModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.LEDGERS)
+      .getModelFields()
   }
 
   async _getLedgers ({
@@ -47,7 +48,7 @@ class PerformingLoan {
     filter = {
       $eq: { _isMarginFundingPayment: 1 }
     },
-    projection = this.ledgersModel
+    projection = this.ledgersModelFields
   }) {
     const user = await this.authenticator
       .verifyRequestUser({ auth })

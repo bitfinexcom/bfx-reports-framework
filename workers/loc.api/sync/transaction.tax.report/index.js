@@ -70,8 +70,9 @@ class TransactionTaxReport {
     this.currencyConverter = currencyConverter
     this.processMessageManager = processMessageManager
 
-    this.tradesModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.TRADES)
+    this.tradesModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.TRADES)
+      .getModelFields()
   }
 
   async makeTrxTaxReportInBackground (args = {}) {
@@ -187,9 +188,8 @@ class TransactionTaxReport {
       }
     )
 
-    interrupter.emitInterrupted()
-
     if (interrupter.hasInterrupted()) {
+      interrupter.emitInterrupted()
       await this.#emitProgress(
         user,
         { progress: null, state: PROGRESS_STATES.GENERATION_INTERRUPTED }
@@ -198,6 +198,7 @@ class TransactionTaxReport {
       return []
     }
 
+    interrupter.emitInterrupted()
     await this.#emitProgress(
       user,
       { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
@@ -321,6 +322,10 @@ class TransactionTaxReport {
               !synonymous ||
               trxPriceCalculator.kindOfCcyForTriangulation
             ) {
+              if (interrupter.hasInterrupted()) {
+                return
+              }
+
               throw new PubTradeFindForTrxTaxError({
                 symbol,
                 pubTradeStart,
@@ -330,6 +335,10 @@ class TransactionTaxReport {
             }
 
             for (const [symbol, conversion] of synonymous) {
+              if (interrupter.hasInterrupted()) {
+                return
+              }
+
               const res = await this.#getPublicTrades(
                 {
                   symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
@@ -369,6 +378,10 @@ class TransactionTaxReport {
           pubTradeStart > trx.mtsCreate ||
           pubTradeEnd < trx.mtsCreate
         ) {
+          if (interrupter.hasInterrupted()) {
+            return
+          }
+
           throw new PubTradeFindForTrxTaxError({
             symbol,
             pubTradeStart,
@@ -430,7 +443,7 @@ class TransactionTaxReport {
           ...symbFilter
         },
         sort: [['mtsCreate', -1]],
-        projection: this.tradesModel,
+        projection: this.tradesModelFields,
         exclude: ['user_id'],
         isExcludePrivate: false
       }
@@ -462,8 +475,23 @@ class TransactionTaxReport {
     const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
       .bind(this.rService)
 
+    let promiseResolve = () => {}
+    const onceInterruptPromise = new Promise((resolve) => {
+      promiseResolve = () => resolve({ res: [] })
+      interrupter.onceInterrupt(promiseResolve)
+    })
+    const getResponse = (res) => {
+      interrupter.offInterrupt(promiseResolve)
+
+      return res ?? []
+    }
+
     for (let i = 0; i < 6; i += 1) {
-      const { res } = await this.getDataFromApi({
+      if (interrupter.hasInterrupted()) {
+        return getResponse()
+      }
+
+      const pubTradesPromise = this.getDataFromApi({
         getData: (s, args) => getDataFn(args),
         args,
         callerName: 'TRANSACTION_TAX_REPORT',
@@ -472,21 +500,26 @@ class TransactionTaxReport {
         interrupter
       })
 
+      const { res } = await Promise.race([
+        pubTradesPromise,
+        onceInterruptPromise
+      ])
+
       if (isTestEnv) {
         /*
          * Need to reverse pub-trades array for test env
          * as mocked test server return data in desc order
          */
-        return res.reverse()
+        return getResponse(res.reverse())
       }
       if (Array.isArray(res)) {
-        return res
+        return getResponse(res)
       }
 
       await setTimeout(10000)
     }
 
-    return []
+    return getResponse()
   }
 
   async #updateExactUsdValueInColls (trxs) {

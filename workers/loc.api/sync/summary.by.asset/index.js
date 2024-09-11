@@ -34,8 +34,9 @@ class SummaryByAsset {
 
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
-    this.ledgersModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.LEDGERS)
+    this.ledgersModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.LEDGERS)
+      .getModelFields()
     this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
   }
 
@@ -269,7 +270,7 @@ class SummaryByAsset {
           user_id: auth._id
         },
         sort: [['mts', 1], ['id', 1]],
-        projection: this.ledgersModel
+        projection: this.ledgersModelFields
       }
     )
   }

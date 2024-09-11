@@ -38,8 +38,9 @@ class TotalFeesReport {
 
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
-    this.ledgersModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.LEDGERS)
+    this.ledgersModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.LEDGERS)
+      .getModelFields()
   }
 
   async getTotalFeesReport (args = {}) {
@@ -100,7 +101,7 @@ class TotalFeesReport {
     end,
     symbol,
     filter,
-    projection = this.ledgersModel
+    projection = this.ledgersModelFields
   }) {
     const user = await this.authenticator
       .verifyRequestUser({ auth })

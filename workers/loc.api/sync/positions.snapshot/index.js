@@ -45,10 +45,12 @@ class PositionsSnapshot {
     this.currencyConverter = currencyConverter
     this.authenticator = authenticator
 
-    this.positionsHistoryModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.POSITIONS_HISTORY)
-    this.positionsSnapshotModel = this.syncSchema.getModelsMap()
-      .get(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
+    this.positionsHistoryModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.POSITIONS_HISTORY)
+      .getModelFields()
+    this.positionsSnapshotModelFields = this.syncSchema
+      .getModelOf(this.ALLOWED_COLLS.POSITIONS_SNAPSHOT)
+      .getModelFields()
     this.positionsSnapshotMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.POSITIONS_SNAPSHOT)
     this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl.symbolFieldName
@@ -67,7 +69,7 @@ class PositionsSnapshot {
           $gte: { mtsUpdate: endMts }
         },
         sort: [['mtsUpdate', -1]],
-        projection: this.positionsHistoryModel,
+        projection: this.positionsHistoryModelFields,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -105,7 +107,7 @@ class PositionsSnapshot {
           ...lteFilter
         },
         sort: _sort,
-        projection: this.positionsSnapshotModel,
+        projection: this.positionsSnapshotModelFields,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
@@ -662,7 +664,7 @@ class PositionsSnapshot {
           $lte: { mtsUpdate: end }
         },
         sort: [['mtsUpdate', -1], ['id', -1]],
-        projection: this.positionsHistoryModel,
+        projection: this.positionsHistoryModelFields,
         exclude: ['user_id'],
         isExcludePrivate: true
       }
