@@ -1,7 +1,7 @@
 resource "random_password" "sec_string" {
   length = var.length
   special = var.special
-  number = var.number
+  numeric = var.number
   lower = var.lower
   upper = var.upper
 }
