@@ -11,11 +11,18 @@ resource "aws_ssm_parameter" "sec_string" {
   description = "SSM secure string ${var.name}"
   type = "SecureString"
   value = random_password.sec_string.result
+  overwrite = false
 
   tags = merge(
     var.common_tags,
     { Name = "${var.namespace}_${var.name}" }
   )
+
+  lifecycle {
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 data "aws_ssm_parameter" "sec_string" {
