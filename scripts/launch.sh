@@ -11,6 +11,11 @@ COLOR_GREEN="\033[32m"
 COLOR_BLUE="\033[34m"
 COLOR_NORMAL="\033[39m"
 
+DOCKER_COMPOSE_CMD=("docker" "compose")
+"${DOCKER_COMPOSE_CMD[@]}" version 2>/dev/null || DOCKER_COMPOSE_CMD=("docker-compose")
+echo "0-DOCKER_COMPOSE_CMD"
+declare -p DOCKER_COMPOSE_CMD
+
 programname=$0
 
 launchAll=0
@@ -83,11 +88,13 @@ composeCommonFlags="\
   --force-recreate \
   --remove-orphans \
   --timeout 2 \
+  --timestamps \
+  --wait-timeout 180
   $detachedMode \
 "
 
 if [ $launchAll == 1 ]; then
-  docker-compose up $composeCommonFlags \
+  "${DOCKER_COMPOSE_CMD[@]}" up $composeCommonFlags \
 
   cd "$CURRDIR"
   exit 0
@@ -101,7 +108,7 @@ if [ $launchGrapes == 1 ]; then
   grapesServices="grape1 grape2"
 fi
 if [ $launchWorker == 1 ]; then
-  runningServices=$(docker-compose ps --filter "status=running" --services)
+  runningServices=$("${DOCKER_COMPOSE_CMD[@]}" ps --filter "status=running" --services)
   isGrape1Running=$(echo "$runningServices" | { grep 'grape1' || test $? = 1; } | wc -l)
   isGrape2Running=$(echo "$runningServices" | { grep 'grape2' || test $? = 1; } | wc -l)
 
@@ -123,15 +130,15 @@ if [ $launchGrapes == 1 ] \
   || [ $launchExpress == 1 ]
 then
   grapesServices="$(echo -e "${grapesServices}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  docker-compose up $composeCommonFlags \
+  "${DOCKER_COMPOSE_CMD[@]}" up $composeCommonFlags \
     $grapesServices $workerService $expressService
 fi
 if [ $launchNginx == 1 ]; then
-  docker-compose up $composeCommonFlags --no-deps \
+  "${DOCKER_COMPOSE_CMD[@]}" up $composeCommonFlags --no-deps \
     nginx
 fi
 if [ $buildUI == 1 ]; then
-  docker-compose up $composeCommonFlags --no-deps \
+  "${DOCKER_COMPOSE_CMD[@]}" up $composeCommonFlags --no-deps \
     ui-builder
 fi
 
