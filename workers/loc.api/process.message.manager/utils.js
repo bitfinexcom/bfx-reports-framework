@@ -45,7 +45,10 @@ const sendState = (state, data) => {
   ) {
     throw new ProcessStateSendingError()
   }
-  if (typeof process.send !== 'function') {
+  if (
+    typeof process.send !== 'function' ||
+    !process.connected
+  ) {
     return false
   }
 
