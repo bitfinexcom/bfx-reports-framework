@@ -1,0 +1,14 @@
+{
+  "template": {
+    "startingPositionsSnapshot": "Pozisyonların Başlangıç Anlık Görüntüsü",
+    "endingPositionsSnapshot": "Pozisyonların Bitiş Anlık Görüntüsü",
+    "finalState": "Son Durum",
+    "startingPeriodBalances": "Başlangıç ​​Dönemi Bakiyeleri",
+    "movementsDetails": "Hareket Detayları",
+    "endingPeriodBalances": "Bitiş Dönemi Bakiyeleri",
+    "positions": "Poziyonlar",
+    "wallets": "Cüzdanlar",
+    "positionsTickers": "Pozisyon Tickerları",
+    "walletsTickers": "Cüzdan Tickerları"
+  }
+}
