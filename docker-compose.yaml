@@ -1,9 +1,12 @@
-version: '3.9'
-
 x-common-variables: &common-variables
   API_PORT: "31339"
   GRAPE_APH: "30001"
   GRAPE_HOST: "grape1"
+x-logging: &default-logging
+  options:
+    max-size: "10m"
+    max-file: "10"
+  driver: json-file
 
 services:
   grape1:
@@ -20,6 +23,7 @@ services:
       GRAPE_BN: "20002"
       GRAPE_BIND: "grape2"
       NODE_ENV: ${NODE_ENV}
+    logging: *default-logging
 
   grape2:
     container_name: grape2
@@ -39,6 +43,7 @@ services:
       GRAPE_BN: "20001"
       GRAPE_BIND: "grape1"
       NODE_ENV: ${NODE_ENV}
+    logging: *default-logging
 
   worker:
     container_name: worker
@@ -69,6 +74,7 @@ services:
       SCHEDULER_RULE: ${SCHEDULER_RULE} # Non-required
       NGINX_AUTOINDEX: ${NGINX_AUTOINDEX} # Required
       NODE_ENV: ${NODE_ENV}
+    logging: *default-logging
 
   express:
     container_name: express
@@ -91,6 +97,7 @@ services:
     environment:
       <<: *common-variables
       NODE_ENV: ${NODE_ENV}
+    logging: *default-logging
 
   ui-builder:
     build:
@@ -103,6 +110,7 @@ services:
       CI_ENVIRONMENT_NAME: ${UI_ENV} # Non-required
       NGINX_HOST: ${NGINX_HOST} # Required
       NGINX_PORT: ${NGINX_PORT} # Non-required
+    logging: *default-logging
 
   nginx:
     container_name: nginx
@@ -133,6 +141,7 @@ services:
       NGINX_PORT: ${NGINX_PORT} # Non-required
       NGINX_ENV: ${NGINX_ENV} # Non-required
       NGINX_AUTOINDEX: ${NGINX_AUTOINDEX} # Required
+    logging: *default-logging
 
 networks:
   grapes:

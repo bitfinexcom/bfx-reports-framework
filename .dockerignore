@@ -7,3 +7,4 @@ test
 bfx-report-ui/build
 *Dockerfile*
 *docker-compose*
+terraform

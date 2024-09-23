@@ -25,6 +25,7 @@ const depsTypes = (TYPES) => [
   TYPES.ROOT_FOLDER_PATH,
   TYPES.HasGrcService,
   TYPES.GrcBfxReq,
+  TYPES.I18next,
   TYPES.ProcessMessageManager
 ]
 class PdfWriter extends MainPdfWriter {
@@ -32,21 +33,20 @@ class PdfWriter extends MainPdfWriter {
     rootFolderPath,
     hasGrcService,
     grcBfxReq,
+    i18next,
     processMessageManager
   ) {
     super(
       rootFolderPath,
       hasGrcService,
-      grcBfxReq
+      grcBfxReq,
+      i18next
     )
 
     this.processMessageManager = processMessageManager
 
     this.isElectronjsEnv = argv.isElectronjsEnv
 
-    this.addTranslations(this.loadTranslations(
-      path.join(__dirname, 'translations.yml')
-    ))
     this.addTemplates({
       fileNames: TEMPLATE_FILE_NAMES,
       templateFolderPath: path.join(__dirname, 'templates')

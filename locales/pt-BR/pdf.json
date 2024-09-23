@@ -1,0 +1,14 @@
+{
+  "template": {
+    "startingPositionsSnapshot": "Captura das posições iniciais",
+    "endingPositionsSnapshot": "Captura das posições finais",
+    "finalState": "Estado final",
+    "startingPeriodBalances": "Saldos no início do período",
+    "movementsDetails": "Detalhes das movimentações",
+    "endingPeriodBalances": "Saldos no final do período",
+    "positions": "Posições",
+    "wallets": "Carteiras",
+    "positionsTickers": "cotações das posições",
+    "walletsTickers": "cotações das Carteiras"
+  }
+}

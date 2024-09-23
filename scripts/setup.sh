@@ -175,7 +175,10 @@ ${COLOR_NORMAL}" >&2
   fi
 fi
 
-if ! docker-compose --version; then
+DOCKER_COMPOSE_CMD=("docker" "compose")
+"${DOCKER_COMPOSE_CMD[@]}" version 2>/dev/null || DOCKER_COMPOSE_CMD=("docker-compose")
+
+if ! "${DOCKER_COMPOSE_CMD[@]}" version; then
   echo -e "\
 \n${COLOR_RED}Docker-compose has not been found\
 ${COLOR_NORMAL}" >&2
@@ -184,11 +187,11 @@ ${COLOR_NORMAL}" >&2
     # Install Compose on Linux systems
     # https://docs.docker.com/compose/install/#install-compose-on-linux-systems
 
-    curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
     ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null
 
-    docker-compose --version
+    docker-compose version
   fi
 fi
 
