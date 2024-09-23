@@ -101,6 +101,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
   init () {
     super.init()
+    this.addTransLocation(path.join(__dirname, '../locales'))
 
     this.conf[this.group].dbPathAbsolute = path.isAbsolute(argv.dbFolder)
       ? argv.dbFolder

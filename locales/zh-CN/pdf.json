@@ -1,0 +1,14 @@
+{
+  "template": {
+    "startingPositionsSnapshot": "仓位期初快照",
+    "endingPositionsSnapshot": "仓位期末快照",
+    "finalState": "最后状态",
+    "startingPeriodBalances": "期初余额",
+    "movementsDetails": "资金流向明细",
+    "endingPeriodBalances": "期末余额",
+    "positions": "仓位",
+    "wallets": "钱包",
+    "positionsTickers": "仓位牌价",
+    "walletsTickers": "钱包牌价"
+  }
+}

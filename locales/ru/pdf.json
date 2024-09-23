@@ -1,0 +1,14 @@
+{
+  "template": {
+    "startingPositionsSnapshot": "Снимок стартовых позиций",
+    "endingPositionsSnapshot": "Снимок конечных позиций",
+    "finalState": "Конечное состояние",
+    "startingPeriodBalances": "Остатки на начало периода",
+    "movementsDetails": "Детали движений",
+    "endingPeriodBalances": "Остатки на конец периода",
+    "positions": "Позиции",
+    "wallets": "Кошельки",
+    "positionsTickers": "Тикеры позиций",
+    "walletsTickers": "Тикеры кошельков"
+  }
+}
