@@ -270,9 +270,12 @@ class BalanceHistory {
     }
 
     const _mts = mtsMoment.valueOf() - 1
+    const symbSeparator = symb.length > 3
+      ? ':'
+      : ''
 
     const price = this.currencyConverter.getPriceFromData(
-      symb,
+      `t${symb}${symbSeparator}USD`,
       _mts,
       { candles, currenciesSynonymous }
     )
@@ -312,7 +315,7 @@ class BalanceHistory {
             candles,
             mts,
             timeframe,
-            `t${currency}USD`,
+            currency,
             currenciesSynonymous
           )
 
@@ -379,7 +382,7 @@ class BalanceHistory {
         candles,
         mts,
         timeframe,
-        `t${symb}USD`,
+        symb,
         currenciesSynonymous
       )
 
