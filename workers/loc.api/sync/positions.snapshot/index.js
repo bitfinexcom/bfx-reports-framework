@@ -642,9 +642,39 @@ class PositionsSnapshot {
     )
   }
 
-  // TODO:
-  async _getActivePositionsAtStart () {
-    return []
+  async _getActivePositionsAtStart (args) {
+    const user = args?.auth ?? {}
+    const start = args?.params?.start
+
+    const emptyRes = []
+
+    if (
+      !Number.isFinite(start) ||
+      start <= 0
+    ) {
+      return emptyRes
+    }
+
+    const activePositionsSnapshot = await this.dao.getActivePositionsAtStart({
+      userId: user._id, start
+    })
+
+    if (
+      !Array.isArray(activePositionsSnapshot) ||
+      activePositionsSnapshot.length === 0
+    ) {
+      return emptyRes
+    }
+
+    const {
+      positionsSnapshot
+    } = await this._getCalculatedPositions(
+      activePositionsSnapshot,
+      null,
+      { isNotTickersRequired: true }
+    )
+
+    return positionsSnapshot
   }
 
   async getPLSnapshot ({
