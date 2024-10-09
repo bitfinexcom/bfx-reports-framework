@@ -1262,6 +1262,38 @@ class BetterSqliteDAO extends DAO {
       params
     }, { withWorkerThreads: true })
   }
+
+  /**
+   * @override
+   */
+  getActivePositionsAtStart (args) {
+    const {
+      userId,
+      start = 0
+    } = args ?? {}
+
+    if (!Number.isInteger(userId)) {
+      throw new AuthError()
+    }
+
+    const _sort = getOrderQuery([['mtsUpdate', -1], ['id', -1]])
+    const params = { user_id: userId, mtsUpdate: start }
+
+    const sql = `\
+SELECT *, max(mtsUpdate) FROM ${this.TABLES_NAMES.POSITIONS_SNAPSHOT}
+  WHERE user_id = $user_id AND mtsUpdate <= $mtsUpdate AND id NOT IN (
+    SELECT id FROM ${this.TABLES_NAMES.POSITIONS_HISTORY}
+      WHERE user_id = $user_id AND mtsUpdate <= $mtsUpdate
+  )
+  GROUP BY id
+  ${_sort}`
+
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.ALL,
+      sql,
+      params
+    }, { withWorkerThreads: true })
+  }
 }
 
 decorateInjectable(BetterSqliteDAO, depsTypes)
