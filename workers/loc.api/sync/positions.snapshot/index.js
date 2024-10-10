@@ -608,8 +608,7 @@ class PositionsSnapshot {
 
   _filterPositionsSnapshots (
     positionsSnapshots,
-    positionsHistory,
-    mts
+    positionsHistory
   ) {
     if (
       !Array.isArray(positionsSnapshots) ||
@@ -622,7 +621,7 @@ class PositionsSnapshot {
       if (
         Number.isFinite(position?.id) &&
         accum.every((item) => item?.id !== position?.id) &&
-        !this._isClosedPosition(positionsHistory, mts, position?.id)
+        !this._isClosedPosition(positionsHistory, position?.id)
       ) {
         accum.push(position)
       }
@@ -631,13 +630,12 @@ class PositionsSnapshot {
     }, [])
   }
 
-  _isClosedPosition (positionsHistory, mts, id) {
+  _isClosedPosition (positionsHistory, id) {
     return (
       Array.isArray(positionsHistory) &&
       positionsHistory.length > 0 &&
       positionsHistory.some((item) => (
-        item.id === id &&
-        item.mts === mts
+        item.id === id
       ))
     )
   }
