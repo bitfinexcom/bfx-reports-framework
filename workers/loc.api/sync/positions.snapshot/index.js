@@ -7,7 +7,8 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 const {
   groupByTimeframe,
-  getStartMtsByTimeframe
+  getMtsGroupedByTimeframe,
+  calcGroupedData
 } = require('../helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -557,46 +558,57 @@ class PositionsSnapshot {
     }
   }
 
-  _calcPlFromPositionsSnapshots (positionsHistory) {
-    return (
-      positionsSnapshots = [],
-      args = {}
-    ) => {
-      const { mts, timeframe } = args
+  _getPLByTimeframe (activePositionsAtStart) {
+    let prevActivePositions = activePositionsAtStart ?? []
 
-      // Need to filter duplicate and closed positions as it can be for
-      // week and month and year timeframe in daily positions snapshots
-      // if daily timeframe no need to filter it
-      const positions = this._filterPositionsSnapshots(
+    return ({
+      positionsHistoryGroupedByTimeframe = {},
+      plGroupedByTimeframe = {},
+      mtsGroupedByTimeframe: { mts } = {}
+    } = {}) => {
+      const positionsSnapshots = [
+        ...plGroupedByTimeframe?.res ?? [],
+        ...prevActivePositions
+      ]
+      prevActivePositions = this._filterPositionsSnapshots(
         positionsSnapshots,
-        positionsHistory,
-        timeframe,
+        positionsHistoryGroupedByTimeframe?.res ?? [],
         mts
       )
 
-      return positions.reduce((accum, curr) => {
-        const { plUsd } = { ...curr }
-        const symb = 'USD'
+      const accumPLUsd = prevActivePositions.reduce((accum, curr) => {
+        const { plUsd } = curr ?? {}
 
         if (!Number.isFinite(plUsd)) {
           return accum
         }
 
-        return {
-          ...accum,
-          [symb]: Number.isFinite(accum[symb])
-            ? accum[symb] + plUsd
-            : plUsd
-        }
+        accum.USD = Number.isFinite(accum.USD)
+          ? accum.USD + plUsd
+          : plUsd
+
+        return accum
       }, {})
+
+      return accumPLUsd
     }
+  }
+
+  _aggregatePositionsSnapshots () {
+    return (data = []) => data.reduce((accum, curr = {}) => {
+      if (!Array.isArray(accum.res)) {
+        accum.res = []
+      }
+
+      accum.res.push(curr)
+
+      return accum
+    }, {})
   }
 
   _filterPositionsSnapshots (
     positionsSnapshots,
-    positionsHistory,
-    timeframe,
-    mts
+    positionsHistory
   ) {
     if (
       !Array.isArray(positionsSnapshots) ||
@@ -609,10 +621,7 @@ class PositionsSnapshot {
       if (
         Number.isFinite(position?.id) &&
         accum.every((item) => item?.id !== position?.id) &&
-        (
-          timeframe === 'day' ||
-          !this._isClosedPosition(positionsHistory, mts, position?.id)
-        )
+        !this._isClosedPosition(positionsHistory, position?.id)
       ) {
         accum.push(position)
       }
@@ -621,15 +630,49 @@ class PositionsSnapshot {
     }, [])
   }
 
-  _isClosedPosition (positionsHistory, mts, id) {
+  _isClosedPosition (positionsHistory, id) {
     return (
       Array.isArray(positionsHistory) &&
       positionsHistory.length > 0 &&
       positionsHistory.some((item) => (
-        item.id === id &&
-        item.mts === mts
+        item.id === id
       ))
     )
+  }
+
+  async _getActivePositionsAtStart (args) {
+    const user = args?.auth ?? {}
+    const start = args?.params?.start
+
+    const emptyRes = []
+
+    if (
+      !Number.isFinite(start) ||
+      start <= 0
+    ) {
+      return emptyRes
+    }
+
+    const activePositionsSnapshot = await this.dao.getActivePositionsAtStart({
+      userId: user._id, start
+    })
+
+    if (
+      !Array.isArray(activePositionsSnapshot) ||
+      activePositionsSnapshot.length === 0
+    ) {
+      return emptyRes
+    }
+
+    const {
+      positionsSnapshot
+    } = await this._getCalculatedPositions(
+      activePositionsSnapshot,
+      null,
+      { isNotTickersRequired: true }
+    )
+
+    return positionsSnapshot
   }
 
   async getPLSnapshot ({
@@ -669,36 +712,63 @@ class PositionsSnapshot {
         isExcludePrivate: true
       }
     )
+    const activePositionsAtStartPromise = this
+      ._getActivePositionsAtStart(args)
 
     const [
       dailyPositionsSnapshots,
-      positionsHistory
+      positionsHistory,
+      activePositionsAtStart
     ] = await Promise.all([
       dailyPositionsSnapshotsPromise,
-      positionsHistoryPromise
+      positionsHistoryPromise,
+      activePositionsAtStartPromise
     ])
 
-    const positionsHistoryNormByMts = positionsHistory.map((pos) => {
-      if (Number.isFinite(pos?.mtsUpdate)) {
-        pos.mts = getStartMtsByTimeframe(
-          pos.mtsUpdate,
-          timeframe
-        )
-      }
-
-      return pos
-    })
-
-    const plGroupedByTimeframePromise = await groupByTimeframe(
+    const positionsHistoryGroupedByTimeframePromise = groupByTimeframe(
+      positionsHistory,
+      { timeframe, start, end },
+      this.FOREX_SYMBS,
+      'mtsUpdate',
+      this.positionsSnapshotSymbolFieldName,
+      this._aggregatePositionsSnapshots()
+    )
+    const plGroupedByTimeframePromise = groupByTimeframe(
       dailyPositionsSnapshots,
       { timeframe, start, end },
       this.FOREX_SYMBS,
       'mtsUpdate',
       this.positionsSnapshotSymbolFieldName,
-      this._calcPlFromPositionsSnapshots(positionsHistoryNormByMts)
+      this._aggregatePositionsSnapshots()
     )
 
-    return plGroupedByTimeframePromise
+    const [
+      positionsHistoryGroupedByTimeframe,
+      plGroupedByTimeframe
+    ] = await Promise.all([
+      positionsHistoryGroupedByTimeframePromise,
+      plGroupedByTimeframePromise
+    ])
+
+    const mtsGroupedByTimeframe = getMtsGroupedByTimeframe(
+      start,
+      end,
+      timeframe,
+      true
+    )
+
+    const res = await calcGroupedData(
+      {
+        positionsHistoryGroupedByTimeframe,
+        plGroupedByTimeframe,
+        mtsGroupedByTimeframe
+      },
+      true,
+      this._getPLByTimeframe(activePositionsAtStart),
+      true
+    )
+
+    return res
   }
 
   async getSyncedPositionsSnapshot (args) {

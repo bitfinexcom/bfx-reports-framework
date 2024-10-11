@@ -178,6 +178,11 @@ class DAO {
    * @abstract
    */
   async getLastFinishedSyncQueueJob () { throw new ImplementationError() }
+
+  /**
+   * @abstract
+   */
+  async getActivePositionsAtStart () { throw new ImplementationError() }
 }
 
 decorateInjectable(DAO)
