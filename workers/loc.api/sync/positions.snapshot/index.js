@@ -170,8 +170,12 @@ class PositionsSnapshot {
   async _convertPlToUsd (
     pl,
     symbol,
-    end
+    end,
+    opts
   ) {
+    const {
+      shouldTryPublicTradesFirst = false
+    } = opts ?? {}
     const currency = splitSymbolPairs(symbol)[1]
 
     if (
@@ -195,7 +199,8 @@ class PositionsSnapshot {
         convFields: [
           { inputField: 'pl', outputField: 'plUsd' }
         ]
-      }
+      },
+      { shouldTryPublicTradesFirst }
     )
 
     return {
@@ -443,8 +448,13 @@ class PositionsSnapshot {
 
   async _getActivePositions (
     auth,
-    end
+    end,
+    opts
   ) {
+    const {
+      shouldPlBeConvertedToUsd
+    } = opts ?? {}
+
     const activePositions = await this.getDataFromApi({
       getData: this.rService.getActivePositions.bind(this.rService),
       args: { auth },
@@ -461,12 +471,53 @@ class PositionsSnapshot {
       return []
     }
 
-    return activePositions
+    const positions = activePositions
       .filter((position) => {
-        const { mtsCreate } = { ...position }
+        const { mtsCreate } = position ?? {}
 
         return mtsCreate <= end
       })
+
+    if (
+      !shouldPlBeConvertedToUsd ||
+      positions.length === 0
+    ) {
+      return positions
+    }
+
+    const res = []
+
+    for (const position of positions) {
+      const {
+        pl,
+        symbol,
+        mtsUpdate
+      } = position ?? {}
+      const mts = end ?? mtsUpdate
+
+      if (
+        !Number.isFinite(mts) ||
+        !Number.isFinite(pl) ||
+        !symbol
+      ) {
+        continue
+      }
+
+      const {
+        plUsd
+      } = await this._convertPlToUsd(
+        pl,
+        symbol,
+        mts,
+        { shouldTryPublicTradesFirst: true }
+      )
+
+      position.plUsd = plUsd
+
+      res.push(position)
+    }
+
+    return res
   }
 
   _mergePositions (
@@ -558,22 +609,26 @@ class PositionsSnapshot {
     }
   }
 
-  _getPLByTimeframe (activePositionsAtStart) {
+  _getPLByTimeframe (
+    activePositionsAtStart,
+    activePositionsAtEnd
+  ) {
     let prevActivePositions = activePositionsAtStart ?? []
 
     return ({
       positionsHistoryGroupedByTimeframe = {},
       plGroupedByTimeframe = {},
       mtsGroupedByTimeframe: { mts } = {}
-    } = {}) => {
+    } = {}, i, arr) => {
+      const isEndPoint = i === 0
       const positionsSnapshots = [
+        ...(isEndPoint ? activePositionsAtEnd : []) ?? [],
         ...plGroupedByTimeframe?.res ?? [],
         ...prevActivePositions
       ]
       prevActivePositions = this._filterPositionsSnapshots(
         positionsSnapshots,
-        positionsHistoryGroupedByTimeframe?.res ?? [],
-        mts
+        positionsHistoryGroupedByTimeframe?.res ?? []
       )
 
       const accumPLUsd = prevActivePositions.reduce((accum, curr) => {
@@ -715,14 +770,25 @@ class PositionsSnapshot {
     const activePositionsAtStartPromise = this
       ._getActivePositionsAtStart(args)
 
+    /*
+     * Don't throw an error if the active positions
+     * can't be fetched from api, it will be taken from db
+     * with a not very accurate current price from 1D candles
+     */
+    const activePositionsAtEndPromise = this
+      ._getActivePositions(user, end, { shouldPlBeConvertedToUsd: true })
+      .catch(() => [])
+
     const [
       dailyPositionsSnapshots,
       positionsHistory,
-      activePositionsAtStart
+      activePositionsAtStart,
+      activePositionsAtEnd
     ] = await Promise.all([
       dailyPositionsSnapshotsPromise,
       positionsHistoryPromise,
-      activePositionsAtStartPromise
+      activePositionsAtStartPromise,
+      activePositionsAtEndPromise
     ])
 
     const positionsHistoryGroupedByTimeframePromise = groupByTimeframe(
@@ -764,7 +830,10 @@ class PositionsSnapshot {
         mtsGroupedByTimeframe
       },
       true,
-      this._getPLByTimeframe(activePositionsAtStart),
+      this._getPLByTimeframe(
+        activePositionsAtStart,
+        activePositionsAtEnd
+      ),
       true
     )
 
