@@ -5,7 +5,7 @@ const path = require('path')
 const argv = require('yargs').argv
 const { v4: uuidv4 } = require('uuid')
 
-const pdf = require('html-pdf')
+const puppeteer = require('puppeteer')
 
 const MainPdfWriter = require(
   'bfx-report/workers/loc.api/generate-report-file/pdf-writer'
@@ -46,6 +46,7 @@ class PdfWriter extends MainPdfWriter {
     this.processMessageManager = processMessageManager
 
     this.isElectronjsEnv = argv.isElectronjsEnv
+    this.shouldZoomBeAdjusted = false
 
     this.addTemplates({
       fileNames: TEMPLATE_FILE_NAMES,
@@ -61,9 +62,7 @@ class PdfWriter extends MainPdfWriter {
     const {
       template = 'No data',
       format = 'portrait',
-      orientation = 'Letter',
-      headerHeight = '65mm',
-      footerHeight = '28mm'
+      orientation = 'Letter'
     } = args ?? {}
 
     if (this.isElectronjsEnv) {
@@ -74,30 +73,27 @@ class PdfWriter extends MainPdfWriter {
       })
     }
 
-    const headerOpt = headerHeight
-      ? { header: { height: headerHeight } }
-      : {}
-    const footerOpt = footerHeight
-      ? { footer: { height: footerHeight } }
-      : {}
-
-    return await new Promise((resolve, reject) => {
-      pdf.create(template, {
-        ...headerOpt,
-        ...footerOpt,
-
-        format,
-        orientation,
-        type: 'pdf',
-        timeout: 90000,
-        childProcessOptions: {
-          env: { OPENSSL_CONF: '/dev/null' }
-        }
-      }).toBuffer((error, buffer) => {
-        if (error) return reject(error)
-        resolve(buffer)
-      })
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+    await page.setContent(template, {
+      waitUntil: 'domcontentloaded'
     })
+    await page.emulateMediaType('print')
+    const u8ArrayPdf = await page.pdf({
+      landscape: format !== 'portrait',
+      format: orientation,
+      margins: {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0
+      },
+      displayHeaderFooter: true,
+      footerTemplate: this.#getFooterTemplate(args)
+    })
+    await browser.close()
+
+    return Buffer.from(u8ArrayPdf)
   }
 
   async createPDFBufferUnderElectron (args) {
@@ -144,6 +140,21 @@ class PdfWriter extends MainPdfWriter {
     }
 
     return Buffer.from(buffer)
+  }
+
+  #getFooterTemplate (args) {
+    const translate = this.getTranslator(args?.language ?? 'en')
+
+    return `\
+<span style="
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    font-weight: 400;
+    font-size: 8px;
+  ">
+  ${translate('Page', 'template.page')} <span class=pageNumber></span> ${translate('from', 'template.from')} <span class=totalPages></span>
+</span>`
   }
 }
 
