@@ -18,6 +18,7 @@
     "lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
     "lodash": "4.17.21",
     "moment": "2.29.4",
+    "puppeteer": "24.1.0",
     "uuid": "9.0.0",
     "yargs": "17.2.1"
   },
