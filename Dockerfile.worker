@@ -29,7 +29,12 @@ RUN apk update && apk add --no-cache --virtual \
   git \
   openssh \
   bash \
-  chromium
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
