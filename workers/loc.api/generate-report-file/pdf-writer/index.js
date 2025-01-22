@@ -73,7 +73,9 @@ class PdfWriter extends MainPdfWriter {
       })
     }
 
-    const browser = await puppeteer.launch()
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-gpu']
+    })
     const page = await browser.newPage()
     await page.setContent(template, {
       waitUntil: 'domcontentloaded'
