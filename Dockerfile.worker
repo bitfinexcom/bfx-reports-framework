@@ -1,16 +1,37 @@
-FROM node:18.17.1-bookworm
+FROM node:20.18.1-alpine3.20
 
 ARG GRC_VER="0.7.1"
 
 WORKDIR /home/node/grenache-cli
 
-RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends \
-    jq \
-    xxd \
-    git \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk add --no-cache --virtual \
+  .gyp \
+  python3 \
+  make \
+  jq \
+  help2man \
+  gcc \
+  musl-dev \
+  autoconf \
+  automake \
+  libtool \
+  pkgconfig \
+  file \
+  patch \
+  bison \
+  clang \
+  flex \
+  curl \
+  perl \
+  perl-dev \
+  wget \
+  g++ \
+  git \
+  openssh \
+  bash \
+  chromium
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 RUN wget -c https://github.com/bitfinexcom/grenache-cli/releases/download/${GRC_VER}/grenache-cli-${GRC_VER}.tar.xz \
   && tar -xf grenache-cli-${GRC_VER}.tar.xz \
