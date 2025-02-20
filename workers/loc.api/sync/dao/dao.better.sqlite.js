@@ -460,7 +460,8 @@ class BetterSqliteDAO extends DAO {
       namePrefix,
       isNotInTrans,
       doNotQueueQuery,
-      isStrictEqual
+      isStrictEqual,
+      chunkLength = 10_000
     } = opts ?? {}
 
     if (
@@ -476,8 +477,6 @@ class BetterSqliteDAO extends DAO {
         name.includes(namePrefix)
       ))
 
-      const sqlArr = []
-
       for (const tempName of filteredTempTableNames) {
         const name = tempName.replace(namePrefix, '')
         const model = this._getModelOf(name)
@@ -491,21 +490,37 @@ class BetterSqliteDAO extends DAO {
           .join(', ')
 
         if (isStrictEqual) {
-          sqlArr.push(`DELETE FROM ${name}`)
+          await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.RUN,
+            sql: `DELETE FROM ${name}`
+          }, { doNotQueueQuery })
         }
 
-        sqlArr.push(`INSERT OR REPLACE
-          INTO ${name}(${projection})
-          SELECT ${projection} FROM ${tempName}`)
-      }
+        while (true) {
+          await setImmediatePromise()
 
-      for (const sql of sqlArr) {
-        await setImmediatePromise()
+          const countRes = await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.GET,
+            sql: `SELECT COUNT(*) as count FROM ${tempName}`
+          }, { doNotQueueQuery })
+          const count = countRes?.count ?? 0
 
-        await this.query({
-          action: MAIN_DB_WORKER_ACTIONS.RUN,
-          sql
-        }, { doNotQueueQuery })
+          if (count <= 0) {
+            break
+          }
+
+          await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.RUN,
+            sql: `INSERT OR REPLACE
+              INTO ${name}(${projection})
+              SELECT ${projection} FROM ${tempName} LIMIT ${chunkLength}`
+          }, { doNotQueueQuery })
+          await setImmediatePromise()
+          await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.RUN,
+            sql: `DELETE FROM ${tempName} LIMIT ${chunkLength}`
+          }, { doNotQueueQuery })
+        }
       }
     }, { isNotInTrans })
 
