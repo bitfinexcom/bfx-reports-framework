@@ -1041,7 +1041,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: { ...values, ...subQueryValues, ...limitVal }
-    }, { withWorkerThreads: true })
+    }, { withWorkerThreads: false })
   }
 
   /**
@@ -1066,7 +1066,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.GET,
       sql,
       params
-    }, { withWorkerThreads: true })
+    }, { withWorkerThreads: false })
   }
 
   /**
