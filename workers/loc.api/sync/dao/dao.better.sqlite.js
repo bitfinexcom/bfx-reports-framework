@@ -313,10 +313,12 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  optimize () {
+  optimize (opts) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
-      sql: 'optimize'
+      sql: opts?.shouldSizeOfAllTablesBeChecked
+        ? 'optimize = 0x10002'
+        : 'optimize'
     })
   }
 
@@ -531,14 +533,14 @@ class BetterSqliteDAO extends DAO {
    * @override
    */
   async beforeMigrationHook () {
+    // In case if the app is closed with non-finished transaction
+    // try to execute `ROLLBACK` sql query to avoid locking the DB
+    await this._tryToExecuteRollback()
     await this.enableForeignKeys()
     await this._enableWALJournalMode()
     await this._setCacheSize()
     await this._setAnalysisLimit()
-
-    // In case if the app is closed with non-finished transaction
-    // try to execute `ROLLBACK` sql query to avoid locking the DB
-    await this._tryToExecuteRollback()
+    await this.optimize({ shouldSizeOfAllTablesBeChecked: true })
   }
 
   /**
