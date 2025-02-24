@@ -283,6 +283,13 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
+  _setMmapSize (size = 268_435_456) {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: `mmap_size = ${size}`
+    })
+  }
+
   _setAnalysisLimit (limit = 400) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
@@ -539,6 +546,7 @@ class BetterSqliteDAO extends DAO {
     await this.enableForeignKeys()
     await this._enableWALJournalMode()
     await this._setCacheSize()
+    await this._setMmapSize()
     await this._setAnalysisLimit()
     await this.optimize({ shouldSizeOfAllTablesBeChecked: true })
   }
