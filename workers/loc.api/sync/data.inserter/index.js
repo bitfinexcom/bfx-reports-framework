@@ -339,6 +339,8 @@ class DataInserter extends EventEmitter {
       if (progress < 100) {
         await this._setProgress(progress)
       }
+
+      await this._optimizeDb()
     }
 
     return { methodCollMap }
@@ -411,6 +413,8 @@ class DataInserter extends EventEmitter {
       if (progress < 100) {
         await this._setProgress(progress)
       }
+
+      await this._optimizeDb()
     }
 
     return { progress, methodCollMap }
