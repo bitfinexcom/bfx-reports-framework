@@ -276,21 +276,21 @@ class BetterSqliteDAO extends DAO {
     this._initializeWalCheckpointRestart()
   }
 
-  _setCacheSize (size = -256_000) {
+  _setCacheSize (size = -512_000) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `cache_size = ${size}`
     })
   }
 
-  _setPageSize (size = 4096 * 5) {
+  _setPageSize (size = 4096 * 10) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `page_size = ${size}`
     })
   }
 
-  _setMmapSize (size = 268_435_456) {
+  _setMmapSize (size = 512_000_000) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `mmap_size = ${size}`
