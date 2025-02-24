@@ -512,16 +512,22 @@ class BetterSqliteDAO extends DAO {
           }, { doNotQueueQuery })
         }
 
+        const firstIdRes = await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.GET,
+          sql: `SELECT _id FROM ${tempName} ORDER BY _id ASC`
+        }, { doNotQueueQuery })
+
+        const firstId = firstIdRes?._id
+        let startId = firstId
+        let endId = firstId + chunkLength - 1
+
         while (true) {
           await setImmediatePromise()
 
-          const countRes = await this.query({
-            action: MAIN_DB_WORKER_ACTIONS.GET,
-            sql: `SELECT COUNT(*) as count FROM ${tempName}`
-          }, { doNotQueueQuery })
-          const count = countRes?.count ?? 0
-
-          if (count <= 0) {
+          if (
+            !Number.isFinite(startId) ||
+            !Number.isFinite(endId)
+          ) {
             break
           }
 
@@ -529,13 +535,20 @@ class BetterSqliteDAO extends DAO {
             action: MAIN_DB_WORKER_ACTIONS.RUN,
             sql: `INSERT OR REPLACE
               INTO ${name}(${projection})
-              SELECT ${projection} FROM ${tempName} LIMIT ${chunkLength}`
+              SELECT ${projection} FROM ${tempName}
+                WHERE _id >= ${startId} AND _id <= ${endId}
+                ORDER BY _id ASC`
           }, { doNotQueueQuery })
-          await setImmediatePromise()
-          await this.query({
-            action: MAIN_DB_WORKER_ACTIONS.RUN,
-            sql: `DELETE FROM ${tempName} LIMIT ${chunkLength}`
+
+          const startIdRes = await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.GET,
+            sql: `SELECT _id FROM ${tempName}
+              WHERE _id >= ${endId + 1}
+              ORDER BY _id ASC`
           }, { doNotQueueQuery })
+
+          startId = startIdRes?._id
+          endId = startId + chunkLength - 1
         }
       }
     }, { isNotInTrans })
