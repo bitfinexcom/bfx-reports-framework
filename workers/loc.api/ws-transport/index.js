@@ -171,7 +171,7 @@ class WSTransport {
           async () => {
             const user = await this.authenticator.signIn(
               { auth: payload.auth },
-              { isReturnedUser: true }
+              { isReturnedUser: true, doNotQueueQuery: true }
             )
             const {
               email,

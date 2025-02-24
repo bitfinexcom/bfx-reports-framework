@@ -135,7 +135,7 @@ class FrameworkReportService extends ReportService {
         isStagingBfxApi
       } = await this._authenticator.signIn(
         args,
-        { isReturnedUser: true }
+        { isReturnedUser: true, doNotQueueQuery: true }
       )
 
       if (
