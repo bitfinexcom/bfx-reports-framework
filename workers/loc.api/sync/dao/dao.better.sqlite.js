@@ -276,7 +276,7 @@ class BetterSqliteDAO extends DAO {
     this._initializeWalCheckpointRestart()
   }
 
-  _setCacheSize (size = 10000) {
+  _setCacheSize (size = -256_000) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `cache_size = ${size}`
