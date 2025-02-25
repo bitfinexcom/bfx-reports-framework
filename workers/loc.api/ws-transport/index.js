@@ -213,7 +213,7 @@ class WSTransport {
 
         socket.ping(null, false)
       })
-    }, 10000)
+    }, 20_000)
 
     this.transport.socket.on('close', () => {
       this._active = false
