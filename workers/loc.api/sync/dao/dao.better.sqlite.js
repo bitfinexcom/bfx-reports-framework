@@ -1019,7 +1019,8 @@ class BetterSqliteDAO extends DAO {
       projection = [],
       exclude = [],
       isExcludePrivate = false,
-      limit = null
+      limit = null,
+      withWorkerThreads = true
     } = {}
   ) {
     const {
@@ -1062,7 +1063,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: { ...values, ...subQueryValues, ...limitVal }
-    }, { withWorkerThreads: false })
+    }, { withWorkerThreads })
   }
 
   /**
@@ -1071,8 +1072,12 @@ class BetterSqliteDAO extends DAO {
   getElemInCollBy (
     name,
     filter = {},
-    sort = []
+    sort = [],
+    opts
   ) {
+    const {
+      withWorkerThreads = true
+    } = opts ?? {}
     const _sort = getOrderQuery(sort)
     const {
       where,
@@ -1087,7 +1092,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.GET,
       sql,
       params
-    }, { withWorkerThreads: false })
+    }, { withWorkerThreads })
   }
 
   /**
