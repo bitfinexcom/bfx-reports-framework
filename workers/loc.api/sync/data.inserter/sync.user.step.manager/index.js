@@ -409,6 +409,9 @@ class SyncUserStepManager {
           baseEnd: currMts
         })
       }
+      if (syncUserStepData.baseStart === syncUserStepData.baseEnd) {
+        syncUserStepData.isBaseStepReady = true
+      }
     }
 
     return {
