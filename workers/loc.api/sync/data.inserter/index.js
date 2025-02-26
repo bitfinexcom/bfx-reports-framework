@@ -243,8 +243,6 @@ class DataInserter extends EventEmitter {
       pubMethodCollMap
     })
 
-    await this._optimizeDb()
-
     if (this._isInterrupted) {
       return
     }
