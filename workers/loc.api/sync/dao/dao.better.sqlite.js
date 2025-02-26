@@ -356,7 +356,7 @@ class BetterSqliteDAO extends DAO {
       sql: opts?.shouldSizeOfAllTablesBeChecked
         ? 'optimize = 0x10002'
         : 'optimize'
-    })
+    }, { withWorkerThreads: true })
   }
 
   enableForeignKeys () {
