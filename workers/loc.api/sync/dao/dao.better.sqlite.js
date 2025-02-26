@@ -313,7 +313,30 @@ class BetterSqliteDAO extends DAO {
     } catch (err) {}
   }
 
-  _vacuum () {
+  async _vacuum () {
+    const pageSize = await this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'page_size'
+    })
+    const pageCount = await this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'page_count'
+    })
+    const freelistCount = await this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'freelist_count'
+    })
+    const absoluteSize = pageSize * pageCount
+    const freePageSize = pageSize * freelistCount
+
+    if (
+      absoluteSize === 0 ||
+      freePageSize === 0 ||
+      (freePageSize / absoluteSize) < 0.8
+    ) {
+      return
+    }
+
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql: 'VACUUM'
