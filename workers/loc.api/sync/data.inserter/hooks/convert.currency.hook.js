@@ -128,7 +128,8 @@ class ConvertCurrencyHook extends DataInserterHook {
               $isNull: updatedFieldNames
             },
             sort: [['_id', 1]],
-            limit: 10000
+            limit: 10000,
+            withWorkerThreads: false
           }
         )
 
@@ -139,7 +140,8 @@ class ConvertCurrencyHook extends DataInserterHook {
         const convElems = await this.currencyConverter
           .convertByCandles(
             elems,
-            _schema
+            _schema,
+            { withWorkerThreads: false }
           )
 
         if (collName === this.ALLOWED_COLLS.LEDGERS) {
@@ -152,6 +154,7 @@ class ConvertCurrencyHook extends DataInserterHook {
             ['_id'],
             [...updatedFieldNames, '_isBalanceRecalced']
           )
+          await this.dao.optimize()
 
           _id = elems[elems.length - 1]._id
 
@@ -164,6 +167,7 @@ class ConvertCurrencyHook extends DataInserterHook {
           ['_id'],
           updatedFieldNames
         )
+        await this.dao.optimize()
 
         _id = elems[elems.length - 1]._id
       }

@@ -276,10 +276,24 @@ class BetterSqliteDAO extends DAO {
     this._initializeWalCheckpointRestart()
   }
 
-  _setCacheSize (size = 10000) {
+  _setCacheSize (size = -512_000) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
       sql: `cache_size = ${size}`
+    })
+  }
+
+  _setPageSize (size = 4096 * 10) {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: `page_size = ${size}`
+    })
+  }
+
+  _setMmapSize (size = 512_000_000) {
+    return this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: `mmap_size = ${size}`
     })
   }
 
@@ -299,7 +313,30 @@ class BetterSqliteDAO extends DAO {
     } catch (err) {}
   }
 
-  _vacuum () {
+  async _vacuum () {
+    const pageSize = await this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'page_size'
+    })
+    const pageCount = await this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'page_count'
+    })
+    const freelistCount = await this.query({
+      action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
+      sql: 'freelist_count'
+    })
+    const absoluteSize = pageSize * pageCount
+    const freePageSize = pageSize * freelistCount
+
+    if (
+      absoluteSize === 0 ||
+      freePageSize === 0 ||
+      (freePageSize / absoluteSize) < 0.8
+    ) {
+      return
+    }
+
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.RUN,
       sql: 'VACUUM'
@@ -313,11 +350,13 @@ class BetterSqliteDAO extends DAO {
     })
   }
 
-  optimize () {
+  optimize (opts) {
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.EXEC_PRAGMA,
-      sql: 'optimize'
-    })
+      sql: opts?.shouldSizeOfAllTablesBeChecked
+        ? 'optimize = 0x10002'
+        : 'optimize'
+    }, { withWorkerThreads: true })
   }
 
   enableForeignKeys () {
@@ -460,7 +499,8 @@ class BetterSqliteDAO extends DAO {
       namePrefix,
       isNotInTrans,
       doNotQueueQuery,
-      isStrictEqual
+      isStrictEqual,
+      chunkLength = 10_000
     } = opts ?? {}
 
     if (
@@ -476,8 +516,6 @@ class BetterSqliteDAO extends DAO {
         name.includes(namePrefix)
       ))
 
-      const sqlArr = []
-
       for (const tempName of filteredTempTableNames) {
         const name = tempName.replace(namePrefix, '')
         const model = this._getModelOf(name)
@@ -491,21 +529,50 @@ class BetterSqliteDAO extends DAO {
           .join(', ')
 
         if (isStrictEqual) {
-          sqlArr.push(`DELETE FROM ${name}`)
+          await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.RUN,
+            sql: `DELETE FROM ${name}`
+          }, { doNotQueueQuery })
         }
 
-        sqlArr.push(`INSERT OR REPLACE
-          INTO ${name}(${projection})
-          SELECT ${projection} FROM ${tempName}`)
-      }
-
-      for (const sql of sqlArr) {
-        await setImmediatePromise()
-
-        await this.query({
-          action: MAIN_DB_WORKER_ACTIONS.RUN,
-          sql
+        const firstIdRes = await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.GET,
+          sql: `SELECT _id FROM ${tempName} ORDER BY _id ASC`
         }, { doNotQueueQuery })
+
+        const firstId = firstIdRes?._id
+        let startId = firstId
+        let endId = firstId + chunkLength - 1
+
+        while (true) {
+          await setImmediatePromise()
+
+          if (
+            !Number.isFinite(startId) ||
+            !Number.isFinite(endId)
+          ) {
+            break
+          }
+
+          await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.RUN,
+            sql: `INSERT OR REPLACE
+              INTO ${name}(${projection})
+              SELECT ${projection} FROM ${tempName}
+                WHERE _id >= ${startId} AND _id <= ${endId}
+                ORDER BY _id ASC`
+          }, { doNotQueueQuery })
+
+          const startIdRes = await this.query({
+            action: MAIN_DB_WORKER_ACTIONS.GET,
+            sql: `SELECT _id FROM ${tempName}
+              WHERE _id >= ${endId + 1}
+              ORDER BY _id ASC`
+          }, { doNotQueueQuery })
+
+          startId = startIdRes?._id
+          endId = startId + chunkLength - 1
+        }
       }
     }, { isNotInTrans })
 
@@ -516,14 +583,16 @@ class BetterSqliteDAO extends DAO {
    * @override
    */
   async beforeMigrationHook () {
-    await this.enableForeignKeys()
-    await this._enableWALJournalMode()
-    await this._setCacheSize()
-    await this._setAnalysisLimit()
-
     // In case if the app is closed with non-finished transaction
     // try to execute `ROLLBACK` sql query to avoid locking the DB
     await this._tryToExecuteRollback()
+    await this.enableForeignKeys()
+    await this._enableWALJournalMode()
+    await this._setCacheSize()
+    await this._setPageSize()
+    await this._setMmapSize()
+    await this._setAnalysisLimit()
+    await this.optimize({ shouldSizeOfAllTablesBeChecked: true })
   }
 
   /**
@@ -973,7 +1042,8 @@ class BetterSqliteDAO extends DAO {
       projection = [],
       exclude = [],
       isExcludePrivate = false,
-      limit = null
+      limit = null,
+      withWorkerThreads = true
     } = {}
   ) {
     const {
@@ -1016,7 +1086,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.ALL,
       sql,
       params: { ...values, ...subQueryValues, ...limitVal }
-    }, { withWorkerThreads: true })
+    }, { withWorkerThreads })
   }
 
   /**
@@ -1025,8 +1095,12 @@ class BetterSqliteDAO extends DAO {
   getElemInCollBy (
     name,
     filter = {},
-    sort = []
+    sort = [],
+    opts
   ) {
+    const {
+      withWorkerThreads = true
+    } = opts ?? {}
     const _sort = getOrderQuery(sort)
     const {
       where,
@@ -1041,7 +1115,7 @@ class BetterSqliteDAO extends DAO {
       action: MAIN_DB_WORKER_ACTIONS.GET,
       sql,
       params
-    }, { withWorkerThreads: true })
+    }, { withWorkerThreads })
   }
 
   /**

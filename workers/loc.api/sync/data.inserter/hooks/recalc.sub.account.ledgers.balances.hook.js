@@ -254,13 +254,15 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         const itemFromMainTable = await this.dao.getElemInCollBy(
           this.TABLES_NAMES.LEDGERS,
           filter,
-          order
+          order,
+          { withWorkerThreads: false }
         )
         const itemFromTempTable = Number.isInteger(this._opts.syncQueueId)
           ? await this.dao.getElemInCollBy(
             tempTableName,
             filter,
-            order
+            order,
+            { withWorkerThreads: false }
           )
           : null
         const itemsFromDb = [itemFromMainTable, itemFromTempTable]
@@ -330,7 +332,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         $isNull: '_isBalanceRecalced',
         $in: { user_id: requiredUserIds }
       },
-      [['mts', 1], ['id', 1]]
+      [['mts', 1], ['id', 1]],
+      { withWorkerThreads: false }
     )
 
     let { mts } = firstNotRecalcedElem ?? {}
@@ -358,7 +361,8 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
             $isNotNull: 'subUserId'
           },
           sort: [['mts', 1], ['id', 1]],
-          limit: 20000
+          limit: 20000,
+          withWorkerThreads: false
         }
       )
 
@@ -407,6 +411,7 @@ class RecalcSubAccountLedgersBalancesHook extends DataInserterHook {
         ['_id'],
         ['balance', 'balanceUsd', '_isBalanceRecalced']
       )
+      await this.dao.optimize()
 
       const lastElem = elems[elems.length - 1]
 
