@@ -15,6 +15,12 @@ module.exports = (trx) => {
   if (trx?.isStakingPayments) {
     return TRX_TAX_TYPES.STAKING_PAYMENT
   }
+  if (trx?.isMarginTrading) {
+    return TRX_TAX_TYPES.MARGIN_TRADING
+  }
+  if (trx?.isDerivative) {
+    return TRX_TAX_TYPES.DERIVATIVE
+  }
 
   return TRX_TAX_TYPES.EXCHANGE
 }
