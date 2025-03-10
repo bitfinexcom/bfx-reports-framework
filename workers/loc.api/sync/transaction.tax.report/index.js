@@ -18,7 +18,8 @@ const {
   lookUpTrades,
   getTrxMapByCcy,
   findPublicTrade,
-  getCcyPairForConversion
+  getCcyPairForConversion,
+  calcMarginAndDerivTrxs
 } = require('./helpers')
 
 const isTestEnv = process.env.NODE_ENV === 'test'
@@ -120,17 +121,19 @@ class TransactionTaxReport {
     const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
 
     const {
-      trxs: trxsForCurrPeriod,
+      exchangeTrxs: trxsForCurrPeriod,
+      marginAndDerivTrxs,
       trxsForConvToUsd
     } = await this.#getTrxs({
       user,
       start,
-      end
+      end,
+      shouldAllTradesBeFetched: true
     })
 
     if (
-      !Array.isArray(trxsForCurrPeriod) ||
-      trxsForCurrPeriod.length === 0
+      trxsForCurrPeriod.length === 0 &&
+      marginAndDerivTrxs.length === 0
     ) {
       interrupter.emitInterrupted()
       await this.#emitProgress(
@@ -142,8 +145,11 @@ class TransactionTaxReport {
     }
 
     const {
-      trxs: trxsForPrevPeriod
-    } = start > 0
+      exchangeTrxs: trxsForPrevPeriod
+    } = (
+      start > 0 &&
+      trxsForCurrPeriod.length > 0
+    )
       ? await this.#getTrxs({
         user,
         start: 0,
@@ -186,6 +192,14 @@ class TransactionTaxReport {
         isBackIterativeBuyLookUp,
         interrupter
       }
+    )
+    const marginAndDerivTrxsWithRealizedProfit = await calcMarginAndDerivTrxs(
+      marginAndDerivTrxs,
+      { interrupter }
+    )
+    pushLargeArr(
+      saleTradesWithRealizedProfit,
+      marginAndDerivTrxsWithRealizedProfit
     )
 
     if (interrupter.hasInterrupted()) {
@@ -243,25 +257,34 @@ class TransactionTaxReport {
     ])
 
     const movements = [...withdrawals, ...deposits]
-    const remappedTrxs = []
+    const remappedExchangeTrxs = []
+    const remappedMarginAndDerivTrxs = []
     const remappedTrxsForConvToUsd = []
 
     remapTrades(
       trades,
-      { remappedTrxs, remappedTrxsForConvToUsd }
+      {
+        remappedExchangeTrxs,
+        remappedMarginAndDerivTrxs,
+        remappedTrxsForConvToUsd
+      }
     )
     remapMovements(
       movements,
-      { remappedTrxs, remappedTrxsForConvToUsd }
+      {
+        remappedExchangeTrxs,
+        remappedTrxsForConvToUsd
+      }
     )
 
-    const trxs = remappedTrxs
+    const exchangeTrxs = remappedExchangeTrxs
       .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
     const trxsForConvToUsd = remappedTrxsForConvToUsd
       .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
 
     return {
-      trxs,
+      exchangeTrxs,
+      marginAndDerivTrxs: remappedMarginAndDerivTrxs,
       trxsForConvToUsd
     }
   }
@@ -420,7 +443,8 @@ class TransactionTaxReport {
     user,
     start,
     end,
-    symbol
+    symbol,
+    shouldAllTradesBeFetched
   }) {
     const symbFilter = (
       Array.isArray(symbol) &&
@@ -428,6 +452,9 @@ class TransactionTaxReport {
     )
       ? { $in: { symbol } }
       : {}
+    const exchangeFilter = shouldAllTradesBeFetched
+      ? {}
+      : { _isExchange: 1 }
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.TRADES,
@@ -436,7 +463,7 @@ class TransactionTaxReport {
           user_id: user._id,
           $eq: {
             user_id: user._id,
-            _isExchange: 1
+            ...exchangeFilter
           },
           $lte: { mtsCreate: end },
           $gte: { mtsCreate: start },
