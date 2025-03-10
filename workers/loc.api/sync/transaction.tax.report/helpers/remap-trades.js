@@ -7,7 +7,7 @@ const splitSymbolPairs = require(
 
 module.exports = (trades, params) => {
   const {
-    remappedTrxs,
+    remappedExchangeTrxs,
     remappedMarginAndDerivTrxs,
     remappedTrxsForConvToUsd
   } = params
@@ -41,8 +41,9 @@ module.exports = (trades, params) => {
     trade.isDerivative = firstSymb.endsWith('F0')
     trade.isMarginTrading = !trade._isExchange
 
-    remappedTrxs.push(trade)
-
+    if (trade._isExchange) {
+      remappedExchangeTrxs.push(trade)
+    }
     if (
       trade.isMarginTrading ||
       trade.isDerivative
