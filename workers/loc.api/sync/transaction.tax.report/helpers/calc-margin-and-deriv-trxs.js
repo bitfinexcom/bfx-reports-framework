@@ -60,6 +60,55 @@ const calcBuyWeightedPriceUsd = (trade) => {
   return trade.totalCostUsd.div(trade.totalBuyAmount)
 }
 
+const calcTotalSellAmount = (
+  mapOfLastProcessedTradesByPairs,
+  trade
+) => {
+  const prevTrade = mapOfLastProcessedTradesByPairs.get(trade.symbol)
+  const currAmount = trade.isSaleTrx
+    ? new BigNumber(trade.execAmount).abs()
+    : new BigNumber(0)
+
+  if (!(prevTrade?.totalSellAmount instanceof BigNumber)) {
+    return currAmount
+  }
+
+  return prevTrade.totalSellAmount.plus(currAmount)
+}
+
+const calcTotalProceedsUsd = (
+  mapOfLastProcessedTradesByPairs,
+  trade
+) => {
+  const prevTrade = mapOfLastProcessedTradesByPairs.get(trade.symbol)
+  const currAmount = trade.isSaleTrx
+    ? new BigNumber(trade.execAmount).abs()
+    : new BigNumber(0)
+  const currPriceUsd = trade.isSaleTrx
+    ? new BigNumber(trade.firstSymbPriceUsd)
+    : new BigNumber(0)
+
+  if (!(prevTrade?.totalProceedsUsd instanceof BigNumber)) {
+    return currAmount.times(currPriceUsd)
+  }
+
+  return prevTrade.totalProceedsUsd
+    .plus(currAmount.times(currPriceUsd))
+}
+
+const calcSellWeightedPriceUsd = (trade) => {
+  if (
+    !(trade?.totalSellAmount instanceof BigNumber) ||
+    !(trade?.totalProceedsUsd instanceof BigNumber) ||
+    trade.totalSellAmount.eq(0) ||
+    trade.totalProceedsUsd.eq(0)
+  ) {
+    return new BigNumber(0)
+  }
+
+  return trade.totalProceedsUsd.div(trade.totalSellAmount)
+}
+
 // TODO:
 module.exports = async (trades, opts) => {
   const {
@@ -114,6 +163,12 @@ module.exports = async (trades, opts) => {
       .totalCostUsd ?? new BigNumber(0)
     trade.buyWeightedPriceUsd = trade
       .buyWeightedPriceUsd ?? new BigNumber(0)
+    trade.totalSellAmount = trade
+      .totalSellAmount ?? new BigNumber(0)
+    trade.totalProceedsUsd = trade
+      .totalProceedsUsd ?? new BigNumber(0)
+    trade.sellWeightedPriceUsd = trade
+      .sellWeightedPriceUsd ?? new BigNumber(0)
 
     if (
       !trade?.symbol ||
@@ -168,6 +223,15 @@ module.exports = async (trades, opts) => {
       trade
     )
     trade.buyWeightedPriceUsd = calcBuyWeightedPriceUsd(trade)
+    trade.totalSellAmount = calcTotalSellAmount(
+      mapOfLastProcessedTradesByPairs,
+      trade
+    )
+    trade.totalProceedsUsd = calcTotalProceedsUsd(
+      mapOfLastProcessedTradesByPairs,
+      trade
+    )
+    trade.sellWeightedPriceUsd = calcSellWeightedPriceUsd(trade)
 
     mapOfLastProcessedTradesByPairs.set(trade.symbol, trade)
   }
