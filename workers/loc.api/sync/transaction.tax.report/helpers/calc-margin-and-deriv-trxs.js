@@ -109,6 +109,22 @@ const calcSellWeightedPriceUsd = (trade) => {
   return trade.totalProceedsUsd.div(trade.totalSellAmount)
 }
 
+const calcRealizedPnLUsd = (trade) => {
+  if (
+    !(trade?.totalSellAmount instanceof BigNumber) ||
+    !(trade?.buyWeightedPriceUsd instanceof BigNumber) ||
+    !(trade?.sellWeightedPriceUsd instanceof BigNumber) ||
+    trade.totalSellAmount.eq(0) ||
+    trade.buyWeightedPriceUsd.eq(0) ||
+    trade.sellWeightedPriceUsd.eq(0)
+  ) {
+    return new BigNumber(0)
+  }
+
+  return trade.totalSellAmount
+    .times(trade.sellWeightedPriceUsd.minus(trade.buyWeightedPriceUsd))
+}
+
 // TODO:
 module.exports = async (trades, opts) => {
   const {
@@ -232,6 +248,7 @@ module.exports = async (trades, opts) => {
       trade
     )
     trade.sellWeightedPriceUsd = calcSellWeightedPriceUsd(trade)
+    trade.realizedPnLUsd = calcRealizedPnLUsd(trade)
 
     mapOfLastProcessedTradesByPairs.set(trade.symbol, trade)
   }
