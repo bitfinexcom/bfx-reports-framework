@@ -11,6 +11,8 @@ const {
   CurrencyPairSeparationError
 } = require('../../../errors')
 
+const getTrxTaxType = require('./get-trx-tax-type')
+
 const calcTotalBuyAmount = (
   mapOfLastProcessedTradesByPairs,
   trade
@@ -131,19 +133,7 @@ module.exports = async (trades, opts) => {
     interrupter
   } = opts ?? {}
 
-  // TODO: mocked deriv
-  const res = [
-    {
-      asset: 'BTCF0:USTF0',
-      amount: 123,
-      mtsAcquired: null,
-      mtsSold: null,
-      proceeds: 200,
-      cost: 100,
-      gainOrLoss: 123,
-      type: 'DERIVATIVE'
-    }
-  ]
+  const res = []
 
   if (
     !Array.isArray(trades) ||
@@ -251,6 +241,23 @@ module.exports = async (trades, opts) => {
     trade.realizedPnLUsd = calcRealizedPnLUsd(trade)
 
     mapOfLastProcessedTradesByPairs.set(trade.symbol, trade)
+  }
+
+  for (const [, trade] of mapOfLastProcessedTradesByPairs.entries()) {
+    if (trade.realizedPnLUsd === 0) {
+      continue
+    }
+
+    res.push({
+      asset: trade.firstSymb,
+      amount: trade.totalSellAmount,
+      mtsAcquired: null,
+      mtsSold: null,
+      proceeds: trade.totalProceedsUsd,
+      cost: trade.totalCostUsd,
+      gainOrLoss: trade.realizedPnLUsd,
+      type: getTrxTaxType(trade)
+    })
   }
 
   return res
