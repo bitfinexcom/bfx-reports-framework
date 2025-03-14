@@ -53,8 +53,8 @@ const calcBuyWeightedPriceUsd = (trade) => {
   if (
     !(trade?.totalBuyAmount instanceof BigNumber) ||
     !(trade?.totalCostUsd instanceof BigNumber) ||
-    trade.totalBuyAmount.eq(0) ||
-    trade.totalCostUsd.eq(0)
+    trade.totalBuyAmount.isZero() ||
+    trade.totalCostUsd.isZero()
   ) {
     return new BigNumber(0)
   }
@@ -102,8 +102,8 @@ const calcSellWeightedPriceUsd = (trade) => {
   if (
     !(trade?.totalSellAmount instanceof BigNumber) ||
     !(trade?.totalProceedsUsd instanceof BigNumber) ||
-    trade.totalSellAmount.eq(0) ||
-    trade.totalProceedsUsd.eq(0)
+    trade.totalSellAmount.isZero() ||
+    trade.totalProceedsUsd.isZero()
   ) {
     return new BigNumber(0)
   }
@@ -116,9 +116,9 @@ const calcRealizedPnLUsd = (trade) => {
     !(trade?.totalSellAmount instanceof BigNumber) ||
     !(trade?.buyWeightedPriceUsd instanceof BigNumber) ||
     !(trade?.sellWeightedPriceUsd instanceof BigNumber) ||
-    trade.totalSellAmount.eq(0) ||
-    trade.buyWeightedPriceUsd.eq(0) ||
-    trade.sellWeightedPriceUsd.eq(0)
+    trade.totalSellAmount.isZero() ||
+    trade.buyWeightedPriceUsd.isZero() ||
+    trade.sellWeightedPriceUsd.isZero()
   ) {
     return new BigNumber(0)
   }
