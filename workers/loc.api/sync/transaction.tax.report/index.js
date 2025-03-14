@@ -127,8 +127,7 @@ class TransactionTaxReport {
     } = await this.#getTrxs({
       user,
       start,
-      end,
-      shouldAllTradesBeFetched: true
+      end
     })
 
     if (
@@ -146,16 +145,16 @@ class TransactionTaxReport {
 
     const {
       exchangeTrxs: trxsForPrevPeriod
-    } = (
-      start > 0 &&
-      trxsForCurrPeriod.length > 0
-    )
-      ? await this.#getTrxs({
-        user,
-        start: 0,
-        end: start - 1
-      })
-      : { trxs: [] }
+    } = await this.#getTrxs({
+      user,
+      start: 0,
+      end: start - 1,
+      shouldNotExchangeTradesBeFetched: (
+        start <= 0 ||
+        trxsForCurrPeriod.length === 0
+      ),
+      shouldNotMarginAndDerivTradesBeFetched: true
+    })
 
     const isBackIterativeSaleLookUp = isFIFO && !isLIFO
     const isBackIterativeBuyLookUp = isFIFO && !isLIFO
@@ -444,21 +443,51 @@ class TransactionTaxReport {
     start,
     end,
     symbol,
-    shouldAllTradesBeFetched
+    shouldNotExchangeTradesBeFetched,
+    shouldNotMarginAndDerivTradesBeFetched
   }) {
+    if (
+      shouldNotExchangeTradesBeFetched &&
+      shouldNotMarginAndDerivTradesBeFetched
+    ) {
+      return []
+    }
+
+    const shouldAllTradesBeFetched = (
+      !shouldNotExchangeTradesBeFetched &&
+      !shouldNotMarginAndDerivTradesBeFetched
+    )
+
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
     )
       ? { $in: { symbol } }
       : {}
-    const exchangeFilter = shouldAllTradesBeFetched
+    const exchangeFilter = (
+      shouldAllTradesBeFetched ||
+      shouldNotExchangeTradesBeFetched
+    )
       ? {}
       : { _isExchange: 1 }
+    const marginAndDerivFilter = (
+      shouldAllTradesBeFetched ||
+      shouldNotMarginAndDerivTradesBeFetched
+    )
+      ? {}
+      : {
+          $or: {
+            $isNull: '_isExchange',
+            $notEq: { _isExchange: 1 }
+          }
+        }
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.TRADES,
       {
+        subQuery: {
+          filter: marginAndDerivFilter
+        },
         filter: {
           user_id: user._id,
           $eq: {
