@@ -144,7 +144,9 @@ class TransactionTaxReport {
     }
 
     const {
-      exchangeTrxs: trxsForPrevPeriod
+      exchangeTrxs: trxsForPrevPeriod,
+      marginAndDerivTrxs: marginAndDerivTrxsForPrevPeriod,
+      marginAndDerivTrxsForConvToUsd: marginAndDerivTrxsForPrevPeriodForConvToUsd
     } = await this.#getTrxs({
       user,
       start: 0,
@@ -153,7 +155,10 @@ class TransactionTaxReport {
         start <= 0 ||
         trxsForCurrPeriod.length === 0
       ),
-      shouldNotMarginAndDerivTradesBeFetched: true
+      shouldNotMarginAndDerivTradesBeFetched: (
+        start <= 0 ||
+        marginAndDerivTrxs.length === 0
+      )
     })
 
     const isBackIterativeSaleLookUp = isFIFO && !isLIFO
@@ -172,12 +177,18 @@ class TransactionTaxReport {
 
     pushLargeArr(trxsForCurrPeriod, buyTradesWithUnrealizedProfit)
     pushLargeArr(
-      trxsForConvToUsd,
+      marginAndDerivTrxsForPrevPeriodForConvToUsd,
       buyTradesWithUnrealizedProfit
         .filter((trx) => (
           !Number.isFinite(trx?.firstSymbPriceUsd) ||
           !Number.isFinite(trx?.lastSymbPriceUsd)
         ))
+    )
+    const trxsForPrevPeriodForConvToUsd = marginAndDerivTrxsForPrevPeriodForConvToUsd
+      .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
+    pushLargeArr(
+      trxsForConvToUsd,
+      trxsForPrevPeriodForConvToUsd
     )
     await this.#convertCurrencies(
       trxsForConvToUsd,
@@ -192,6 +203,7 @@ class TransactionTaxReport {
         interrupter
       }
     )
+    // TODO: need to calc marginAndDerivTrxsForPrevPeriod to consider unrealized profit
     const marginAndDerivTrxsWithRealizedProfit = await calcMarginAndDerivTrxs(
       marginAndDerivTrxs,
       { interrupter }
@@ -224,26 +236,31 @@ class TransactionTaxReport {
     const {
       user,
       start,
-      end
+      end,
+      shouldNotExchangeTradesBeFetched
     } = params ?? {}
 
     const tradesPromise = this.#getTrades(params)
-    const withdrawalsPromise = this.movements.getMovements({
-      auth: user,
-      start,
-      end,
-      isWithdrawals: true,
-      isExcludePrivate: false,
-      areExtraPaymentsIncluded: true
-    })
-    const depositsPromise = this.movements.getMovements({
-      auth: user,
-      start,
-      end,
-      isDeposits: true,
-      isExcludePrivate: false,
-      areExtraPaymentsIncluded: true
-    })
+    const withdrawalsPromise = shouldNotExchangeTradesBeFetched
+      ? []
+      : this.movements.getMovements({
+        auth: user,
+        start,
+        end,
+        isWithdrawals: true,
+        isExcludePrivate: false,
+        areExtraPaymentsIncluded: true
+      })
+    const depositsPromise = shouldNotExchangeTradesBeFetched
+      ? []
+      : this.movements.getMovements({
+        auth: user,
+        start,
+        end,
+        isDeposits: true,
+        isExcludePrivate: false,
+        areExtraPaymentsIncluded: true
+      })
 
     const [
       trades,
@@ -259,13 +276,15 @@ class TransactionTaxReport {
     const remappedExchangeTrxs = []
     const remappedMarginAndDerivTrxs = []
     const remappedTrxsForConvToUsd = []
+    const remappedMarginAndDerivTrxsForConvToUsd = []
 
     remapTrades(
       trades,
       {
         remappedExchangeTrxs,
         remappedMarginAndDerivTrxs,
-        remappedTrxsForConvToUsd
+        remappedTrxsForConvToUsd,
+        remappedMarginAndDerivTrxsForConvToUsd
       }
     )
     remapMovements(
@@ -284,7 +303,8 @@ class TransactionTaxReport {
     return {
       exchangeTrxs,
       marginAndDerivTrxs: remappedMarginAndDerivTrxs,
-      trxsForConvToUsd
+      trxsForConvToUsd,
+      marginAndDerivTrxsForConvToUsd: remappedMarginAndDerivTrxsForConvToUsd
     }
   }
 
