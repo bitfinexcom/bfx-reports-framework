@@ -9,7 +9,8 @@ module.exports = (trades, params) => {
   const {
     remappedExchangeTrxs,
     remappedMarginAndDerivTrxs,
-    remappedTrxsForConvToUsd
+    remappedTrxsForConvToUsd,
+    remappedMarginAndDerivTrxsForConvToUsd
   } = params
 
   for (const trade of trades) {
@@ -74,6 +75,13 @@ module.exports = (trades, params) => {
     }
 
     remappedTrxsForConvToUsd.push(trade)
+
+    if (
+      trade.isMarginTrading ||
+      trade.isDerivative
+    ) {
+      remappedMarginAndDerivTrxsForConvToUsd.push(trade)
+    }
   }
 
   return params
