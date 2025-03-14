@@ -127,10 +127,23 @@ const calcRealizedPnLUsd = (trade) => {
     .times(trade.sellWeightedPriceUsd.minus(trade.buyWeightedPriceUsd))
 }
 
-// TODO:
+const calcCumulativeAmount = (trade) => {
+  if (
+    !(trade?.totalBuyAmount instanceof BigNumber) ||
+    !(trade?.totalSellAmount instanceof BigNumber)
+  ) {
+    return new BigNumber(0)
+  }
+
+  return trade.totalBuyAmount
+    .minus(trade.totalSellAmount)
+}
+
 module.exports = async (trades, opts) => {
   const {
-    interrupter
+    interrupter,
+    isUnrealizedProfitForPrevPeriod,
+    mapOfLastProcessedTradesByPairsWithUnrealizedProfit
   } = opts ?? {}
 
   const res = []
@@ -139,15 +152,25 @@ module.exports = async (trades, opts) => {
     !Array.isArray(trades) ||
     trades.length === 0
   ) {
-    return res
+    return {
+      mapOfLastProcessedTradesByPairsWithUnrealizedProfit: new Map(),
+      res
+    }
   }
 
-  const mapOfLastProcessedTradesByPairs = new Map()
+  const mapOfLastProcessedTradesByPairs = (
+    mapOfLastProcessedTradesByPairsWithUnrealizedProfit instanceof Map
+  )
+    ? mapOfLastProcessedTradesByPairsWithUnrealizedProfit
+    : new Map()
   let lastLoopUnlockMts = Date.now()
 
   for (const trade of trades) {
     if (interrupter?.hasInterrupted()) {
-      return res
+      return {
+        mapOfLastProcessedTradesByPairsWithUnrealizedProfit: new Map(),
+        res
+      }
     }
 
     const currentLoopUnlockMts = Date.now()
@@ -239,12 +262,30 @@ module.exports = async (trades, opts) => {
     )
     trade.sellWeightedPriceUsd = calcSellWeightedPriceUsd(trade)
     trade.realizedPnLUsd = calcRealizedPnLUsd(trade)
+    trade.cumulativeAmount = calcCumulativeAmount(trade)
 
     mapOfLastProcessedTradesByPairs.set(trade.symbol, trade)
   }
 
-  for (const [, trade] of mapOfLastProcessedTradesByPairs.entries()) {
-    if (trade.realizedPnLUsd === 0) {
+  const _mapOfLastProcessedTradesByPairsWithUnrealizedProfit = new Map()
+
+  for (const [symbol, trade] of mapOfLastProcessedTradesByPairs.entries()) {
+    if (isUnrealizedProfitForPrevPeriod) {
+      trade.isUnrealizedProfitForPrevPeriod = true
+
+      if (
+        trade.cumulativeAmount instanceof BigNumber &&
+        !trade.cumulativeAmount.isZero()
+      ) {
+        _mapOfLastProcessedTradesByPairsWithUnrealizedProfit.set(symbol, trade)
+      }
+
+      continue
+    }
+    if (
+      trade.realizedPnLUsd === 0 ||
+      trade.isUnrealizedProfitForPrevPeriod
+    ) {
       continue
     }
 
@@ -260,5 +301,8 @@ module.exports = async (trades, opts) => {
     })
   }
 
-  return res
+  return {
+    mapOfLastProcessedTradesByPairsWithUnrealizedProfit: _mapOfLastProcessedTradesByPairsWithUnrealizedProfit,
+    res
+  }
 }

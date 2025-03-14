@@ -203,10 +203,20 @@ class TransactionTaxReport {
         interrupter
       }
     )
-    // TODO: need to calc marginAndDerivTrxsForPrevPeriod to consider unrealized profit
-    const marginAndDerivTrxsWithRealizedProfit = await calcMarginAndDerivTrxs(
+    const {
+      mapOfLastProcessedTradesByPairsWithUnrealizedProfit
+    } = await calcMarginAndDerivTrxs(
+      marginAndDerivTrxsForPrevPeriod,
+      { interrupter, isUnrealizedProfitForPrevPeriod: true }
+    )
+    const {
+      res: marginAndDerivTrxsWithRealizedProfit
+    } = await calcMarginAndDerivTrxs(
       marginAndDerivTrxs,
-      { interrupter }
+      {
+        interrupter,
+        mapOfLastProcessedTradesByPairsWithUnrealizedProfit
+      }
     )
     pushLargeArr(
       saleTradesWithRealizedProfit,
