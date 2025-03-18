@@ -39,8 +39,14 @@ module.exports = (trades, params) => {
     trade.isMovements = false
     trade.isLedgers = false
     trade.isTrades = true
-    trade.isDerivative = firstSymb.endsWith('F0')
-    trade.isMarginTrading = !trade._isExchange
+    trade.isDerivative = (
+      !trade._isExchange &&
+      firstSymb.endsWith('F0')
+    )
+    trade.isMarginTrading = (
+      !trade.isDerivative &&
+      !trade._isExchange
+    )
 
     if (trade._isExchange) {
       remappedExchangeTrxs.push(trade)
