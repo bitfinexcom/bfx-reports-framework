@@ -508,7 +508,7 @@ class TransactionTaxReport {
       : {
           $or: {
             $isNull: '_isExchange',
-            $notEq: { _isExchange: 1 }
+            $not: { _isExchange: 1 }
           }
         }
 
@@ -519,7 +519,6 @@ class TransactionTaxReport {
           filter: marginAndDerivFilter
         },
         filter: {
-          user_id: user._id,
           $eq: {
             user_id: user._id,
             ...exchangeFilter
