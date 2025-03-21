@@ -7,7 +7,6 @@ const INTERRUPTER_NAMES = require(
 )
 
 const { pushLargeArr } = require('../../helpers/utils')
-const { getBackIterable } = require('../helpers')
 const { PubTradeFindForTrxTaxError } = require('../../errors')
 
 const {
@@ -21,8 +20,6 @@ const {
   getCcyPairForConversion,
   calcMarginAndDerivTrxs
 } = require('./helpers')
-
-const isTestEnv = process.env.NODE_ENV === 'test'
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -332,13 +329,11 @@ class TransactionTaxReport {
         return
       }
 
-      const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
-
       let pubTrades = []
-      let pubTradeStart = pubTrades[0]?.mts
-      let pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+      let pubTradeStart = pubTrades[pubTrades.length - 1]?.mts
+      let pubTradeEnd = pubTrades[0]?.mts
 
-      for (const trxPriceCalculator of trxPriceCalculatorIterator) {
+      for (const trxPriceCalculator of trxPriceCalculators) {
         count += 1
 
         if (interrupter.hasInterrupted()) {
@@ -352,12 +347,12 @@ class TransactionTaxReport {
           pubTradeStart > trx.mtsCreate ||
           pubTradeEnd < trx.mtsCreate
         ) {
-          const start = trx.mtsCreate - 1
+          const end = trx.mtsCreate
 
           pubTrades = await this.#getPublicTrades(
             {
               symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
-              start
+              end
             },
             opts
           )
@@ -394,7 +389,7 @@ class TransactionTaxReport {
               const res = await this.#getPublicTrades(
                 {
                   symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
-                  start
+                  end
                 },
                 opts
               )
@@ -418,8 +413,8 @@ class TransactionTaxReport {
             }
           }
 
-          pubTradeStart = start ?? pubTrades[0]?.mts
-          pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+          pubTradeStart = pubTrades[pubTrades.length - 1]?.mts
+          pubTradeEnd = end ?? pubTrades[0]?.mts
         }
 
         if (
@@ -540,7 +535,7 @@ class TransactionTaxReport {
       symbol,
       start = 0,
       end = Date.now(),
-      sort = 1,
+      sort = -1,
       limit = 10000
     } = params ?? {}
     const { interrupter } = opts ?? {}
@@ -590,13 +585,6 @@ class TransactionTaxReport {
         onceInterruptPromise
       ])
 
-      if (isTestEnv) {
-        /*
-         * Need to reverse pub-trades array for test env
-         * as mocked test server return data in desc order
-         */
-        return getResponse(res.reverse())
-      }
       if (Array.isArray(res)) {
         return getResponse(res)
       }
