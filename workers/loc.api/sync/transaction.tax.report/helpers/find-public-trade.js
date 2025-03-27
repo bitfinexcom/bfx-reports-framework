@@ -11,10 +11,10 @@ module.exports = (pubTrades, mts) => {
     if (pubTrades[middleIndex]?.mts === mts) {
       return pubTrades[middleIndex]
     }
-    if (mts < pubTrades[middleIndex]?.mts) {
+    if (mts > pubTrades[middleIndex]?.mts) {
       endIndex = middleIndex - 1
     }
-    if (mts > pubTrades[middleIndex]?.mts) {
+    if (mts < pubTrades[middleIndex]?.mts) {
       startIndex = middleIndex + 1
     }
   }

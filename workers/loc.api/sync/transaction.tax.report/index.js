@@ -7,7 +7,6 @@ const INTERRUPTER_NAMES = require(
 )
 
 const { pushLargeArr } = require('../../helpers/utils')
-const { getBackIterable } = require('../helpers')
 const { PubTradeFindForTrxTaxError } = require('../../errors')
 
 const {
@@ -18,10 +17,9 @@ const {
   lookUpTrades,
   getTrxMapByCcy,
   findPublicTrade,
-  getCcyPairForConversion
+  getCcyPairForConversion,
+  calcMarginAndDerivTrxs
 } = require('./helpers')
-
-const isTestEnv = process.env.NODE_ENV === 'test'
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -120,7 +118,8 @@ class TransactionTaxReport {
     const isLIFO = strategy === TRX_TAX_STRATEGIES.LIFO
 
     const {
-      trxs: trxsForCurrPeriod,
+      exchangeTrxs: trxsForCurrPeriod,
+      marginAndDerivTrxs,
       trxsForConvToUsd
     } = await this.#getTrxs({
       user,
@@ -129,8 +128,8 @@ class TransactionTaxReport {
     })
 
     if (
-      !Array.isArray(trxsForCurrPeriod) ||
-      trxsForCurrPeriod.length === 0
+      trxsForCurrPeriod.length === 0 &&
+      marginAndDerivTrxs.length === 0
     ) {
       interrupter.emitInterrupted()
       await this.#emitProgress(
@@ -142,14 +141,22 @@ class TransactionTaxReport {
     }
 
     const {
-      trxs: trxsForPrevPeriod
-    } = start > 0
-      ? await this.#getTrxs({
-        user,
-        start: 0,
-        end: start - 1
-      })
-      : { trxs: [] }
+      exchangeTrxs: trxsForPrevPeriod,
+      marginAndDerivTrxs: marginAndDerivTrxsForPrevPeriod,
+      marginAndDerivTrxsForConvToUsd: marginAndDerivTrxsForPrevPeriodForConvToUsd
+    } = await this.#getTrxs({
+      user,
+      start: 0,
+      end: start - 1,
+      shouldNotExchangeTradesBeFetched: (
+        start <= 0 ||
+        trxsForCurrPeriod.length === 0
+      ),
+      shouldNotMarginAndDerivTradesBeFetched: (
+        start <= 0 ||
+        marginAndDerivTrxs.length === 0
+      )
+    })
 
     const isBackIterativeSaleLookUp = isFIFO && !isLIFO
     const isBackIterativeBuyLookUp = isFIFO && !isLIFO
@@ -167,12 +174,18 @@ class TransactionTaxReport {
 
     pushLargeArr(trxsForCurrPeriod, buyTradesWithUnrealizedProfit)
     pushLargeArr(
-      trxsForConvToUsd,
+      marginAndDerivTrxsForPrevPeriodForConvToUsd,
       buyTradesWithUnrealizedProfit
         .filter((trx) => (
           !Number.isFinite(trx?.firstSymbPriceUsd) ||
           !Number.isFinite(trx?.lastSymbPriceUsd)
         ))
+    )
+    const trxsForPrevPeriodForConvToUsd = marginAndDerivTrxsForPrevPeriodForConvToUsd
+      .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
+    pushLargeArr(
+      trxsForConvToUsd,
+      trxsForPrevPeriodForConvToUsd
     )
     await this.#convertCurrencies(
       trxsForConvToUsd,
@@ -186,6 +199,25 @@ class TransactionTaxReport {
         isBackIterativeBuyLookUp,
         interrupter
       }
+    )
+    const {
+      mapOfLastProcessedTradesByPairsWithUnrealizedProfit
+    } = await calcMarginAndDerivTrxs(
+      marginAndDerivTrxsForPrevPeriod,
+      { interrupter, isUnrealizedProfitForPrevPeriod: true }
+    )
+    const {
+      res: marginAndDerivTrxsWithRealizedProfit
+    } = await calcMarginAndDerivTrxs(
+      marginAndDerivTrxs,
+      {
+        interrupter,
+        mapOfLastProcessedTradesByPairsWithUnrealizedProfit
+      }
+    )
+    pushLargeArr(
+      saleTradesWithRealizedProfit,
+      marginAndDerivTrxsWithRealizedProfit
     )
 
     if (interrupter.hasInterrupted()) {
@@ -211,26 +243,31 @@ class TransactionTaxReport {
     const {
       user,
       start,
-      end
+      end,
+      shouldNotExchangeTradesBeFetched
     } = params ?? {}
 
     const tradesPromise = this.#getTrades(params)
-    const withdrawalsPromise = this.movements.getMovements({
-      auth: user,
-      start,
-      end,
-      isWithdrawals: true,
-      isExcludePrivate: false,
-      areExtraPaymentsIncluded: true
-    })
-    const depositsPromise = this.movements.getMovements({
-      auth: user,
-      start,
-      end,
-      isDeposits: true,
-      isExcludePrivate: false,
-      areExtraPaymentsIncluded: true
-    })
+    const withdrawalsPromise = shouldNotExchangeTradesBeFetched
+      ? []
+      : this.movements.getMovements({
+        auth: user,
+        start,
+        end,
+        isWithdrawals: true,
+        isExcludePrivate: false,
+        areExtraPaymentsIncluded: true
+      })
+    const depositsPromise = shouldNotExchangeTradesBeFetched
+      ? []
+      : this.movements.getMovements({
+        auth: user,
+        start,
+        end,
+        isDeposits: true,
+        isExcludePrivate: false,
+        areExtraPaymentsIncluded: true
+      })
 
     const [
       trades,
@@ -243,26 +280,38 @@ class TransactionTaxReport {
     ])
 
     const movements = [...withdrawals, ...deposits]
-    const remappedTrxs = []
+    const remappedExchangeTrxs = []
+    const remappedMarginAndDerivTrxs = []
     const remappedTrxsForConvToUsd = []
+    const remappedMarginAndDerivTrxsForConvToUsd = []
 
     remapTrades(
       trades,
-      { remappedTrxs, remappedTrxsForConvToUsd }
+      {
+        remappedExchangeTrxs,
+        remappedMarginAndDerivTrxs,
+        remappedTrxsForConvToUsd,
+        remappedMarginAndDerivTrxsForConvToUsd
+      }
     )
     remapMovements(
       movements,
-      { remappedTrxs, remappedTrxsForConvToUsd }
+      {
+        remappedExchangeTrxs,
+        remappedTrxsForConvToUsd
+      }
     )
 
-    const trxs = remappedTrxs
+    const exchangeTrxs = remappedExchangeTrxs
       .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
     const trxsForConvToUsd = remappedTrxsForConvToUsd
       .sort((a, b) => b?.mtsCreate - a?.mtsCreate)
 
     return {
-      trxs,
-      trxsForConvToUsd
+      exchangeTrxs,
+      marginAndDerivTrxs: remappedMarginAndDerivTrxs,
+      trxsForConvToUsd,
+      marginAndDerivTrxsForConvToUsd: remappedMarginAndDerivTrxsForConvToUsd
     }
   }
 
@@ -280,13 +329,11 @@ class TransactionTaxReport {
         return
       }
 
-      const trxPriceCalculatorIterator = getBackIterable(trxPriceCalculators)
-
       let pubTrades = []
-      let pubTradeStart = pubTrades[0]?.mts
-      let pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+      let pubTradeStart = pubTrades[pubTrades.length - 1]?.mts
+      let pubTradeEnd = pubTrades[0]?.mts
 
-      for (const trxPriceCalculator of trxPriceCalculatorIterator) {
+      for (const trxPriceCalculator of trxPriceCalculators) {
         count += 1
 
         if (interrupter.hasInterrupted()) {
@@ -300,12 +347,12 @@ class TransactionTaxReport {
           pubTradeStart > trx.mtsCreate ||
           pubTradeEnd < trx.mtsCreate
         ) {
-          const start = trx.mtsCreate - 1
+          const end = trx.mtsCreate
 
           pubTrades = await this.#getPublicTrades(
             {
               symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
-              start
+              end
             },
             opts
           )
@@ -342,7 +389,7 @@ class TransactionTaxReport {
               const res = await this.#getPublicTrades(
                 {
                   symbol: getCcyPairForConversion(symbol, trxPriceCalculator),
-                  start
+                  end
                 },
                 opts
               )
@@ -366,8 +413,8 @@ class TransactionTaxReport {
             }
           }
 
-          pubTradeStart = start ?? pubTrades[0]?.mts
-          pubTradeEnd = pubTrades[pubTrades.length - 1]?.mts
+          pubTradeStart = pubTrades[pubTrades.length - 1]?.mts
+          pubTradeEnd = end ?? pubTrades[0]?.mts
         }
 
         if (
@@ -420,23 +467,56 @@ class TransactionTaxReport {
     user,
     start,
     end,
-    symbol
+    symbol,
+    shouldNotExchangeTradesBeFetched,
+    shouldNotMarginAndDerivTradesBeFetched
   }) {
+    if (
+      shouldNotExchangeTradesBeFetched &&
+      shouldNotMarginAndDerivTradesBeFetched
+    ) {
+      return []
+    }
+
+    const shouldAllTradesBeFetched = (
+      !shouldNotExchangeTradesBeFetched &&
+      !shouldNotMarginAndDerivTradesBeFetched
+    )
+
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
     )
       ? { $in: { symbol } }
       : {}
+    const exchangeFilter = (
+      shouldAllTradesBeFetched ||
+      shouldNotExchangeTradesBeFetched
+    )
+      ? {}
+      : { _isExchange: 1 }
+    const marginAndDerivFilter = (
+      shouldAllTradesBeFetched ||
+      shouldNotMarginAndDerivTradesBeFetched
+    )
+      ? {}
+      : {
+          $or: {
+            $isNull: '_isExchange',
+            $not: { _isExchange: 1 }
+          }
+        }
 
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.TRADES,
       {
+        subQuery: {
+          filter: marginAndDerivFilter
+        },
         filter: {
-          user_id: user._id,
           $eq: {
             user_id: user._id,
-            _isExchange: 1
+            ...exchangeFilter
           },
           $lte: { mtsCreate: end },
           $gte: { mtsCreate: start },
@@ -455,7 +535,7 @@ class TransactionTaxReport {
       symbol,
       start = 0,
       end = Date.now(),
-      sort = 1,
+      sort = -1,
       limit = 10000
     } = params ?? {}
     const { interrupter } = opts ?? {}
@@ -505,13 +585,6 @@ class TransactionTaxReport {
         onceInterruptPromise
       ])
 
-      if (isTestEnv) {
-        /*
-         * Need to reverse pub-trades array for test env
-         * as mocked test server return data in desc order
-         */
-        return getResponse(res.reverse())
-      }
       if (Array.isArray(res)) {
         return getResponse(res)
       }

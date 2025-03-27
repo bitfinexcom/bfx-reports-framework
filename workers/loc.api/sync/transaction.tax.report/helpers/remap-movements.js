@@ -8,7 +8,7 @@ const {
 
 module.exports = (movements, params) => {
   const {
-    remappedTrxs,
+    remappedExchangeTrxs,
     remappedTrxsForConvToUsd
   } = params
 
@@ -66,7 +66,7 @@ module.exports = (movements, params) => {
       isStakingPayments: !!movement?._isStakingPayments
     }
 
-    remappedTrxs.push(remappedMovement)
+    remappedExchangeTrxs.push(remappedMovement)
 
     if (
       isTaxablePayment &&
