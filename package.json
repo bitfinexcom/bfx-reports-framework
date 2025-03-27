@@ -1,6 +1,6 @@
 {
   "name": "bfx-reports-framework",
-  "version": "4.21.3",
+  "version": "4.21.4",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "license": "Apache-2.0",
@@ -26,10 +26,10 @@
     "bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
     "chai": "4.3.4",
     "grenache-grape": "git+https://github.com/bitfinexcom/grenache-grape.git",
-    "mocha": "10.1.0",
-    "nodemon": "2.0.20",
+    "mocha": "11.1.0",
+    "nodemon": "3.1.9",
     "standard": "17.0.0",
-    "supertest": "6.3.2"
+    "supertest": "7.1.0"
   },
   "contributors": [
     "Paolo Ardoino <paolo@bitfinex.com>",

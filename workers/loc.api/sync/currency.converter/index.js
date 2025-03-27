@@ -82,7 +82,7 @@ class CurrencyConverter {
     return res
   }
 
-  async getCurrenciesSynonymous () {
+  async getCurrenciesSynonymous (opts) {
     const mtsDiff = new Date() - this.currenciesUpdatedAt
 
     if (
@@ -94,7 +94,8 @@ class CurrencyConverter {
     }
 
     this.currencies = await this.dao.getElemsInCollBy(
-      this.ALLOWED_COLLS.CURRENCIES
+      this.ALLOWED_COLLS.CURRENCIES,
+      { withWorkerThreads: opts?.withWorkerThreads }
     )
 
     if (
@@ -159,13 +160,13 @@ class CurrencyConverter {
     return this.currenciesSynonymous
   }
 
-  getCurrenciesSynonymousIfEmpty (currenciesSynonymous) {
+  getCurrenciesSynonymousIfEmpty (currenciesSynonymous, opts) {
     return (
       currenciesSynonymous instanceof Map &&
       currenciesSynonymous.size > 0
     )
       ? currenciesSynonymous
-      : this.getCurrenciesSynonymous()
+      : this.getCurrenciesSynonymous(opts)
   }
 
   _getSynonymous (
@@ -238,7 +239,8 @@ class CurrencyConverter {
   async _priceFinder (
     finderFn,
     reqSymb,
-    currenciesSynonymous
+    currenciesSynonymous,
+    opts
   ) {
     const symbol = this._getPairFromPair(reqSymb)
     const price = await finderFn(symbol)
@@ -248,7 +250,7 @@ class CurrencyConverter {
     }
 
     const _currenciesSynonymous = await this
-      .getCurrenciesSynonymousIfEmpty(currenciesSynonymous)
+      .getCurrenciesSynonymousIfEmpty(currenciesSynonymous, opts)
     const synonymous = this._getSynonymous(
       symbol,
       _currenciesSynonymous
@@ -428,7 +430,8 @@ class CurrencyConverter {
     }
 
     const {
-      shouldTempTablesBeIncluded
+      shouldTempTablesBeIncluded,
+      withWorkerThreads
     } = opts ?? {}
 
     const symbol = this._getPairFromPair(reqSymb)
@@ -439,7 +442,8 @@ class CurrencyConverter {
         end,
         _dateFieldName: [this.candlesSchema.dateFieldName]
       },
-      this.candlesSchema.sort
+      this.candlesSchema.sort,
+      { withWorkerThreads }
     )
 
     if (!shouldTempTablesBeIncluded) {
@@ -462,7 +466,8 @@ class CurrencyConverter {
           end,
           _dateFieldName: [this.candlesSchema.dateFieldName]
         },
-        this.candlesSchema.sort
+        this.candlesSchema.sort,
+        { withWorkerThreads }
       )
 
       if (Number.isInteger(candleFromTempTable?.[this.candlesSchema.dateFieldName])) {
@@ -509,8 +514,12 @@ class CurrencyConverter {
       dateFieldName,
       mts,
       shouldTempTablesBeIncluded
-    }
+    },
+    opts
   ) {
+    const {
+      withWorkerThreads
+    } = opts ?? {}
     const end = Number.isInteger(mts)
       ? mts
       : item[dateFieldName]
@@ -528,12 +537,18 @@ class CurrencyConverter {
       const btcPriceIn = await _getPrice(
         `tBTC${item[symbolFieldName]}`,
         end,
-        { shouldTempTablesBeIncluded }
+        {
+          shouldTempTablesBeIncluded,
+          withWorkerThreads
+        }
       )
       const btcPriceOut = await _getPrice(
         `tBTC${convertTo}`,
         end,
-        { shouldTempTablesBeIncluded }
+        {
+          shouldTempTablesBeIncluded,
+          withWorkerThreads
+        }
       )
 
       if (
@@ -551,12 +566,18 @@ class CurrencyConverter {
       const usdPriceIn = await _getPrice(
         `t${item[symbolFieldName]}USD`,
         end,
-        { shouldTempTablesBeIncluded }
+        {
+          shouldTempTablesBeIncluded,
+          withWorkerThreads
+        }
       )
       const usdPriceOut = await _getPrice(
         `t${convertTo}USD`,
         end,
-        { shouldTempTablesBeIncluded }
+        {
+          shouldTempTablesBeIncluded,
+          withWorkerThreads
+        }
       )
 
       if (
@@ -580,7 +601,10 @@ class CurrencyConverter {
         }
       ),
       end,
-      { shouldTempTablesBeIncluded }
+      {
+        shouldTempTablesBeIncluded,
+        withWorkerThreads
+      }
     )
 
     return Number.isFinite(price)
@@ -599,7 +623,8 @@ class CurrencyConverter {
   async _convertBy (
     collName,
     data,
-    convSchema
+    convSchema,
+    opts
   ) {
     const _convSchema = {
       convertTo: 'USD',
@@ -611,7 +636,7 @@ class CurrencyConverter {
     }
 
     const currenciesSynonymous = await this
-      .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous)
+      .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous, opts)
 
     const {
       convertTo,
@@ -652,10 +677,12 @@ class CurrencyConverter {
               ...item,
               [symbolFieldName]: symb
             },
-            _convSchema
+            _convSchema,
+            opts
           ),
           symbol,
-          currenciesSynonymous
+          currenciesSynonymous,
+          opts
         )
 
       if (!Number.isFinite(price)) {
@@ -873,11 +900,12 @@ class CurrencyConverter {
     )
   }
 
-  convertByCandles (data, convSchema) {
+  convertByCandles (data, convSchema, opts) {
     return this._convertBy(
       this._COLL_NAMES.CANDLES,
       data,
-      convSchema
+      convSchema,
+      opts
     )
   }
 

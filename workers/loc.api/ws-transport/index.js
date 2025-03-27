@@ -171,7 +171,7 @@ class WSTransport {
           async () => {
             const user = await this.authenticator.signIn(
               { auth: payload.auth },
-              { isReturnedUser: true }
+              { isReturnedUser: true, doNotQueueQuery: true }
             )
             const {
               email,
@@ -213,7 +213,7 @@ class WSTransport {
 
         socket.ping(null, false)
       })
-    }, 10000)
+    }, 20_000)
 
     this.transport.socket.on('close', () => {
       this._active = false
@@ -222,12 +222,21 @@ class WSTransport {
     })
   }
 
-  _getFreshUsersDataFromDb () {
-    const usersIds = [...this._auth].map(([sid, user]) => user._id)
+  _getFreshUsersDataFromSessions () {
+    return [...this.authenticator.getUserSessions()]
+      .reduce((accum, curr) => {
+        const session = curr[1]
 
-    return this.authenticator.getUsers(
-      { $in: { _id: usersIds } }
-    )
+        for (const [, user] of this._auth.entries()) {
+          if (user._id !== session._id) {
+            continue
+          }
+
+          accum.push(session)
+        }
+
+        return accum
+      }, [])
   }
 
   _findUser (auth = {}, freshUsersDate = []) {
@@ -290,7 +299,7 @@ class WSTransport {
     } = { ...opts }
 
     const freshUsersDate = isReceivedFreshUserDataFromDb
-      ? await this._getFreshUsersDataFromDb()
+      ? await this._getFreshUsersDataFromSessions()
       : false
 
     for (const [sid, socket] of this._sockets) {

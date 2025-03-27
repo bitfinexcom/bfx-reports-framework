@@ -38,7 +38,7 @@ class Progress extends EventEmitter {
 
     this._syncStartedAt = null
     this._progressEmitterInterval = null
-    this._progressEmitterIntervalMs = 1000
+    this._progressEmitterIntervalMs = 10_000
     this._error = null
     this._progress = null
     this._state = null

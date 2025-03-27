@@ -1422,7 +1422,8 @@ class Authenticator {
         const res = await this.dao.updateCollBy(
           this.TABLES_NAMES.USERS,
           { _id: session?._id, email: session?.email },
-          { authToken: encryptedAuthToken }
+          { authToken: encryptedAuthToken },
+          { doNotQueueQuery: true }
         )
 
         if (res?.changes < 1) {
