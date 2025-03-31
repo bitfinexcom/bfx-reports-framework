@@ -85,8 +85,14 @@ class SyncQueue extends EventEmitter {
     } = params ?? {}
 
     if (
-      !Number.isInteger(ownerUserId) &&
-      !isOwnerScheduler
+      (
+        !Number.isInteger(ownerUserId) &&
+        !isOwnerScheduler
+      ) ||
+      (
+        Number.isInteger(ownerUserId) &&
+        isOwnerScheduler
+      )
     ) {
       throw new SyncQueueOwnerSettingError()
     }
