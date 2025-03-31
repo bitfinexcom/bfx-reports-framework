@@ -124,7 +124,7 @@ const _getIsNullOperator = (
     return false
   }
   const _alias = alias && typeof alias === 'string'
-    ? `${alias}_`
+    ? `${alias}.`
     : ''
   const operator = fieldName === FILTER_CONDITIONS.IS_NOT_NULL
     ? SQL_OPERATORS.IS_NOT_NULL
