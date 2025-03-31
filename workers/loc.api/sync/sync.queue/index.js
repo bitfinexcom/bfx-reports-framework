@@ -99,14 +99,11 @@ class SyncQueue extends EventEmitter {
     const ownerUserIdFilter = Number.isInteger(ownerUserId)
       ? { ownerUserId }
       : {}
-    const isOwnerSchedulerFilter = isOwnerScheduler
-      ? { isOwnerScheduler: 1 }
-      : {}
 
     const allSyncs = await this._getAll({
-      state: [NEW_JOB_STATE, ERROR_JOB_STATE],
+      state: [NEW_JOB_STATE, ERROR_JOB_STATE, LOCKED_JOB_STATE],
       ...ownerUserIdFilter,
-      ...isOwnerSchedulerFilter
+      isOwnerScheduler: 1
     })
     const hasALLInDB = allSyncs.some(item => {
       return item.collName === this.ALLOWED_COLLS.ALL
