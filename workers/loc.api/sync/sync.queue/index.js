@@ -29,7 +29,8 @@ const depsTypes = (TYPES) => [
   TYPES.DataInserterFactory,
   TYPES.Progress,
   TYPES.SyncSchema,
-  TYPES.SyncInterrupter
+  TYPES.SyncInterrupter,
+  TYPES.Authenticator
 ]
 class SyncQueue extends EventEmitter {
   constructor (
@@ -39,7 +40,8 @@ class SyncQueue extends EventEmitter {
     dataInserterFactory,
     progress,
     syncSchema,
-    syncInterrupter
+    syncInterrupter,
+    authenticator
   ) {
     super()
 
@@ -50,6 +52,7 @@ class SyncQueue extends EventEmitter {
     this.progress = progress
     this.syncSchema = syncSchema
     this.syncInterrupter = syncInterrupter
+    this.authenticator = authenticator
     this.name = this.TABLES_NAMES.SYNC_QUEUE
 
     this.methodCollMap = this._filterMethodCollMap(
@@ -102,14 +105,36 @@ class SyncQueue extends EventEmitter {
       : [syncColls]
     checkCollPermission(_syncColls, this.ALLOWED_COLLS)
 
-    const ownerUserIdFilter = Number.isInteger(ownerUserId)
-      ? { ownerUserId }
-      : {}
+    const signedInUserIds = this.#getSignedInUserIds()
+
+    if (
+      isOwnerScheduler &&
+      signedInUserIds.length === 0
+    ) {
+      return
+    }
+
+    const subQueryFilter = Number.isInteger(ownerUserId)
+      ? {
+          $or: {
+            $eq: {
+              isOwnerScheduler: 1,
+              ownerUserId
+            }
+          }
+        }
+      : {
+          $or: {
+            $eq: { isOwnerScheduler: 1 },
+            $in: { ownerUserId: signedInUserIds }
+          }
+        }
 
     const allSyncs = await this._getAll({
-      state: [NEW_JOB_STATE, ERROR_JOB_STATE, LOCKED_JOB_STATE],
-      ...ownerUserIdFilter,
-      isOwnerScheduler: 1
+      filter: {
+        $in: { state: [NEW_JOB_STATE, ERROR_JOB_STATE, LOCKED_JOB_STATE] }
+      },
+      subQuery: { filter: subQueryFilter }
     })
     const hasALLInDB = allSyncs.some(item => {
       return item.collName === this.ALLOWED_COLLS.ALL
@@ -275,13 +300,16 @@ class SyncQueue extends EventEmitter {
       : {}
 
     const futureSyncs = await this._getAll({
-      state: [
-        NEW_JOB_STATE,
-        LOCKED_JOB_STATE,
-        ERROR_JOB_STATE
-      ],
-      ...ownerUserIdFilter
-    }, { limit: 10 })
+      filter: {
+        state: [
+          NEW_JOB_STATE,
+          LOCKED_JOB_STATE,
+          ERROR_JOB_STATE
+        ],
+        ...ownerUserIdFilter
+      },
+      limit: 10
+    })
 
     const allSyncs = (
       !Array.isArray(futureSyncs) ||
@@ -338,17 +366,20 @@ class SyncQueue extends EventEmitter {
     return (1 / multipliersSum) * currMultipliers
   }
 
-  _getAll (filter, opts) {
+  _getAll (params) {
     const {
+      filter,
+      subQuery,
       sort = this._sort,
-      limit = null
-    } = opts ?? {}
+      limit
+    } = params ?? {}
 
     return this.dao.getElemsInCollBy(
       this.name,
       {
-        sort,
         filter,
+        subQuery,
+        sort,
         limit
       }
     )
@@ -443,6 +474,13 @@ class SyncQueue extends EventEmitter {
     await this.progress.setProgress(progress)
 
     this.emit('progress', progress)
+  }
+
+  #getSignedInUserIds () {
+    const sessions = this.authenticator.getUserSessions()
+
+    return [...sessions]
+      .map(([token, session]) => session._id)
   }
 }
 
