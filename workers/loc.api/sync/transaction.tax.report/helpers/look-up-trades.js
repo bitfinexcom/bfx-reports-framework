@@ -17,6 +17,7 @@ const {
 } = require('../../../errors')
 
 const getTrxTaxType = require('./get-trx-tax-type')
+const setDelistedCcyToMap = require('./set-delisted-ccy-to-map')
 
 module.exports = async (trades, opts) => {
   const {
@@ -24,7 +25,9 @@ module.exports = async (trades, opts) => {
     isBackIterativeBuyLookUp = false,
     isBuyTradesWithUnrealizedProfitRequired = false,
     isNotGainOrLossRequired = false,
-    interrupter
+    interrupter,
+    logger,
+    delistedCcyMap
   } = opts ?? {}
 
   const saleTradesWithRealizedProfit = []
@@ -165,10 +168,17 @@ module.exports = async (trades, opts) => {
       : lastSymb
 
     if (!Number.isFinite(salePriceUsd)) {
-      throw new CurrencyConversionError({
+      setDelistedCcyToMap({
+        logger,
+        delistedCcyMap,
         symbol: saleAsset,
-        priceUsd: salePriceUsd
+        err: new CurrencyConversionError({
+          symbol: saleAsset,
+          priceUsd: salePriceUsd
+        })
       })
+
+      continue
     }
 
     const startPoint = isBackIterativeBuyLookUp
@@ -283,10 +293,17 @@ module.exports = async (trades, opts) => {
         .minus(trade.saleFilledAmount)
 
       if (!Number.isFinite(buyPriceUsd)) {
-        throw new CurrencyConversionError({
+        setDelistedCcyToMap({
+          logger,
+          delistedCcyMap,
           symbol: buyAsset,
-          priceUsd: buyPriceUsd
+          err: new CurrencyConversionError({
+            symbol: buyAsset,
+            priceUsd: buyPriceUsd
+          })
         })
+
+        continue
       }
 
       if (buyRestAmount.lt(saleRestAmount)) {
