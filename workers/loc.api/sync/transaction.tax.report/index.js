@@ -209,7 +209,7 @@ class TransactionTaxReport {
 
     return {
       taxes: saleTradesWithRealizedProfit,
-      delistedCcyList: delistedCcyMap.keys()
+      delistedCcyList: [...delistedCcyMap.keys()]
     }
   }
 
