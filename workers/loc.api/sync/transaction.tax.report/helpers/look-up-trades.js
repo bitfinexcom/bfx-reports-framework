@@ -177,6 +177,7 @@ module.exports = async (trades, opts) => {
           priceUsd: salePriceUsd
         })
       })
+      trade.noPriceUsd = true
 
       continue
     }
@@ -302,6 +303,7 @@ module.exports = async (trades, opts) => {
             priceUsd: buyPriceUsd
           })
         })
+        trade.noPriceUsd = true
 
         continue
       }
@@ -368,6 +370,9 @@ module.exports = async (trades, opts) => {
   }
 
   for (const trade of trades) {
+    if (trade.noPriceUsd) {
+      continue
+    }
     if (
       isBuyTradesWithUnrealizedProfitRequired &&
       trade?.isBuyTrx &&
@@ -411,12 +416,20 @@ module.exports = async (trades, opts) => {
 
     saleTradesWithRealizedProfit.push({
       asset: trade.saleAsset,
-      amount: trade.saleAmount.toNumber(),
+      amount: trade.saleAmount instanceof BigNumber
+        ? trade.saleAmount.toNumber()
+        : 0,
       mtsAcquired: trade.mtsAcquiredForSaleTrx,
       mtsSold: trade.mtsSoldForSaleTrx,
-      proceeds: trade.proceedsForSaleTrxUsd.toNumber(),
-      cost: trade.costForSaleTrxUsd.toNumber(),
-      gainOrLoss: trade.gainOrLossUsd.toNumber(),
+      proceeds: trade.proceedsForSaleTrxUsd instanceof BigNumber
+        ? trade.proceedsForSaleTrxUsd.toNumber()
+        : 0,
+      cost: trade.costForSaleTrxUsd instanceof BigNumber
+        ? trade.costForSaleTrxUsd.toNumber()
+        : 0,
+      gainOrLoss: trade.gainOrLossUsd instanceof BigNumber
+        ? trade.gainOrLossUsd.toNumber()
+        : 0,
       type: getTrxTaxType(trade)
     })
   }
