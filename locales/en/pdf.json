@@ -9,6 +9,8 @@
     "positions": "Positions",
     "wallets": "Wallets",
     "positionsTickers": "Positions tickers",
-    "walletsTickers": "Wallets tickers"
+    "walletsTickers": "Wallets tickers",
+    "delistedCcyMessageStart": "The tax report contains the following delisted tokens:",
+    "delistedCcyMessageEnd": "whose public trading history has been deleted. The report will be inaccurate!"
   }
 }
