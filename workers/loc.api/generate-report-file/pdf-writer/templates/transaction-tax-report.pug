@@ -18,7 +18,7 @@ block content
   - const taxes = Array.isArray(data?.taxes) ? data.taxes : [data?.taxes ?? {}]
 
   if hasDelistedCcyList
-    ul.responsive-table.width-by-content.no-margin-bottom
+    ul.responsive-table.width-by-table.no-margin-bottom
       li.table-row.warning
         .col
           :translate(prop='template.delistedCcyMessageStart')
