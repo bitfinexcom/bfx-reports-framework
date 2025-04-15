@@ -11,6 +11,6 @@
     "positionsTickers": "Positions tickers",
     "walletsTickers": "Wallets tickers",
     "delistedCcyMessageStart": "The tax report contains the following delisted tokens:",
-    "delistedCcyMessageEnd": "whose public trading history has been deleted. The report will be inaccurate!"
+    "delistedCcyMessageEnd": "These tokens no longer have publicly available trading history, which causes the report to be inaccurate. Please verify all figures independently or with a certified tax advisor."
   }
 }
