@@ -9,6 +9,8 @@
     "positions": "Posições",
     "wallets": "Carteiras",
     "positionsTickers": "cotações das posições",
-    "walletsTickers": "cotações das Carteiras"
+    "walletsTickers": "cotações das Carteiras",
+    "delistedCcyMessageStart": "O relatório fiscal contém os seguintes tokens removidos da lista:",
+    "delistedCcyMessageEnd": "Esses tokens não possuem mais histórico de negociações disponível publicamente, o que torna o relatório impreciso. Por favor, verifique todos os valores de forma independente ou com um consultor fiscal certificado."
   }
 }
