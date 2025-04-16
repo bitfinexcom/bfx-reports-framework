@@ -17,6 +17,7 @@ const {
 } = require('../../../errors')
 
 const getTrxTaxType = require('./get-trx-tax-type')
+const setDelistedCcyToMap = require('./set-delisted-ccy-to-map')
 
 module.exports = async (trades, opts) => {
   const {
@@ -24,7 +25,9 @@ module.exports = async (trades, opts) => {
     isBackIterativeBuyLookUp = false,
     isBuyTradesWithUnrealizedProfitRequired = false,
     isNotGainOrLossRequired = false,
-    interrupter
+    interrupter,
+    logger,
+    delistedCcyMap
   } = opts ?? {}
 
   const saleTradesWithRealizedProfit = []
@@ -165,10 +168,18 @@ module.exports = async (trades, opts) => {
       : lastSymb
 
     if (!Number.isFinite(salePriceUsd)) {
-      throw new CurrencyConversionError({
+      setDelistedCcyToMap({
+        logger,
+        delistedCcyMap,
         symbol: saleAsset,
-        priceUsd: salePriceUsd
+        err: new CurrencyConversionError({
+          symbol: saleAsset,
+          priceUsd: salePriceUsd
+        })
       })
+      trade.noPriceUsd = true
+
+      continue
     }
 
     const startPoint = isBackIterativeBuyLookUp
@@ -283,10 +294,18 @@ module.exports = async (trades, opts) => {
         .minus(trade.saleFilledAmount)
 
       if (!Number.isFinite(buyPriceUsd)) {
-        throw new CurrencyConversionError({
+        setDelistedCcyToMap({
+          logger,
+          delistedCcyMap,
           symbol: buyAsset,
-          priceUsd: buyPriceUsd
+          err: new CurrencyConversionError({
+            symbol: buyAsset,
+            priceUsd: buyPriceUsd
+          })
         })
+        trade.noPriceUsd = true
+
+        continue
       }
 
       if (buyRestAmount.lt(saleRestAmount)) {
@@ -351,6 +370,9 @@ module.exports = async (trades, opts) => {
   }
 
   for (const trade of trades) {
+    if (trade.noPriceUsd) {
+      continue
+    }
     if (
       isBuyTradesWithUnrealizedProfitRequired &&
       trade?.isBuyTrx &&
@@ -394,12 +416,20 @@ module.exports = async (trades, opts) => {
 
     saleTradesWithRealizedProfit.push({
       asset: trade.saleAsset,
-      amount: trade.saleAmount.toNumber(),
+      amount: trade.saleAmount instanceof BigNumber
+        ? trade.saleAmount.toNumber()
+        : 0,
       mtsAcquired: trade.mtsAcquiredForSaleTrx,
       mtsSold: trade.mtsSoldForSaleTrx,
-      proceeds: trade.proceedsForSaleTrxUsd.toNumber(),
-      cost: trade.costForSaleTrxUsd.toNumber(),
-      gainOrLoss: trade.gainOrLossUsd.toNumber(),
+      proceeds: trade.proceedsForSaleTrxUsd instanceof BigNumber
+        ? trade.proceedsForSaleTrxUsd.toNumber()
+        : 0,
+      cost: trade.costForSaleTrxUsd instanceof BigNumber
+        ? trade.costForSaleTrxUsd.toNumber()
+        : 0,
+      gainOrLoss: trade.gainOrLossUsd instanceof BigNumber
+        ? trade.gainOrLossUsd.toNumber()
+        : 0,
       type: getTrxTaxType(trade)
     })
   }

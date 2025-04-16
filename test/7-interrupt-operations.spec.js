@@ -186,8 +186,11 @@ describe('Interrupt operations', () => {
 
     assert.isObject(trxTaxReport.body)
     assert.propertyVal(trxTaxReport.body, 'id', 5)
-    assert.isArray(trxTaxReport.body.result)
-    assert.lengthOf(trxTaxReport.body.result, 0)
+    assert.isObject(trxTaxReport.body.result)
+    assert.isArray(trxTaxReport.body.result.taxes)
+    assert.isArray(trxTaxReport.body.result.delistedCcyList)
+    assert.lengthOf(trxTaxReport.body.result.taxes, 0)
+    assert.lengthOf(trxTaxReport.body.result.delistedCcyList, 0)
   })
 
   it('it should not be successfully performed by the interruptOperations method', async function () {
@@ -261,7 +264,10 @@ describe('Interrupt operations', () => {
 
     assert.isObject(trxTaxReport.body)
     assert.propertyVal(trxTaxReport.body, 'id', 5)
-    assert.isArray(trxTaxReport.body.result)
-    assert.lengthOf(trxTaxReport.body.result, 0)
+    assert.isObject(trxTaxReport.body.result)
+    assert.isArray(trxTaxReport.body.result.taxes)
+    assert.isArray(trxTaxReport.body.result.delistedCcyList)
+    assert.lengthOf(trxTaxReport.body.result.taxes, 0)
+    assert.lengthOf(trxTaxReport.body.result.delistedCcyList, 0)
   })
 })

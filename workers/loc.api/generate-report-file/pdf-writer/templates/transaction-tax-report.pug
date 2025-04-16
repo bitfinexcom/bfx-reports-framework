@@ -1,0 +1,33 @@
+extends /node_modules/bfx-report/workers/loc.api/generate-report-file/pdf-writer/templates/base.pug
+
+block commonHeader
+  - const data = Array.isArray(apiData) ? apiData[0] : apiData ?? {}
+  - const columns = reportColumns?.taxes ?? Object.keys(data?.taxes?.[0] ?? {})
+
+  .content
+    ul.responsive-table
+      li.table-header
+        each columnVal, columnKey in columns
+          .col #{columnVal}
+
+block content
+  - const data = Array.isArray(apiData) ? apiData[0] : apiData ?? {}
+  - const hasDelistedCcyList = Array.isArray(data?.delistedCcyList) && data.delistedCcyList.length > 0
+  - const delistedCcy = Array.isArray(data?.delistedCcyList) ? data.delistedCcyList.join(', ') : ''
+  - const columns = reportColumns?.taxes ?? Object.keys(data?.taxes?.[0] ?? {})
+  - const taxes = Array.isArray(data?.taxes) ? data.taxes : [data?.taxes ?? {}]
+
+  if hasDelistedCcyList
+    ul.responsive-table.width-by-table.no-margin-bottom
+      li.table-row.warning
+        .col
+          :translate(prop='template.delistedCcyMessageStart')
+            The tax report contains the following delisted tokens:
+          |  #{delistedCcy} 
+          :translate(prop='template.delistedCcyMessageEnd')
+            These tokens no longer have publicly available trading history, which causes the report to be inaccurate. Please verify all figures independently or with a certified tax advisor.
+  ul.responsive-table
+    each dataItem, dataIndex in taxes
+      li.table-row
+        each columnVal, columnKey in columns
+          .col #{dataItem[columnKey]}
