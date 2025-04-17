@@ -103,6 +103,7 @@ class TransactionTaxReport {
     const start = params.start ?? 0
     const end = params.end ?? Date.now()
     const strategy = params.strategy ?? TRX_TAX_STRATEGIES.LIFO
+    const shouldFeesBeDeducted = params.shouldFeesBeDeducted ?? false
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const interrupter = this.interrupterFactory({
@@ -162,7 +163,8 @@ class TransactionTaxReport {
         isNotGainOrLossRequired: true,
         interrupter,
         logger: this.logger,
-        delistedCcyMap
+        delistedCcyMap,
+        shouldFeesBeDeducted
       }
     )
 
@@ -187,7 +189,8 @@ class TransactionTaxReport {
         isBackIterativeBuyLookUp,
         interrupter,
         logger: this.logger,
-        delistedCcyMap
+        delistedCcyMap,
+        shouldFeesBeDeducted
       }
     )
 
