@@ -18,6 +18,7 @@ const {
 
 const getTrxTaxType = require('./get-trx-tax-type')
 const setDelistedCcyToMap = require('./set-delisted-ccy-to-map')
+const getTrxFeeUsd = require('./get-trx-fee-usd')
 
 module.exports = async (trades, opts) => {
   const {
@@ -87,6 +88,8 @@ module.exports = async (trades, opts) => {
       .buyFilledAmount ?? new BigNumber(0)
     trade.proceedsForBuyTrxUsd = trade
       .proceedsForBuyTrxUsd ?? new BigNumber(0)
+    trade.cumulativeTrxFeesUsd = trade
+      .cumulativeTrxFeesUsd ?? new BigNumber(0)
     trade.saleTrxsForRealizedProfit = trade
       .saleTrxsForRealizedProfit ?? []
 
@@ -181,6 +184,8 @@ module.exports = async (trades, opts) => {
 
       continue
     }
+
+    trade.cumulativeTrxFeesUsd = getTrxFeeUsd(trade, opts)
 
     const startPoint = isBackIterativeBuyLookUp
       ? trades.length - 1
@@ -317,6 +322,8 @@ module.exports = async (trades, opts) => {
           .plus(buyRestAmount.times(salePriceUsd))
         trade.costForSaleTrxUsd = trade.costForSaleTrxUsd
           .plus(buyRestAmount.times(buyPriceUsd))
+        trade.cumulativeTrxFeesUsd = trade.cumulativeTrxFeesUsd
+          .plus(getTrxFeeUsd(tradeForLookup, opts))
         tradeForLookup.isBuyTrxHistFilled = true
       }
       if (buyRestAmount.gt(saleRestAmount)) {
@@ -329,6 +336,10 @@ module.exports = async (trades, opts) => {
           .plus(saleRestAmount.times(salePriceUsd))
         trade.costForSaleTrxUsd = trade.costForSaleTrxUsd
           .plus(saleRestAmount.times(buyPriceUsd))
+        trade.cumulativeTrxFeesUsd = trade.cumulativeTrxFeesUsd
+          .plus(getTrxFeeUsd(tradeForLookup, opts)
+            .times(saleRestAmount.div(buyRestAmount))
+          )
         trade.isSaleTrxHistFilled = true
       }
       if (buyRestAmount.eq(saleRestAmount)) {
@@ -339,6 +350,8 @@ module.exports = async (trades, opts) => {
           .plus(buyRestAmount.times(salePriceUsd))
         trade.costForSaleTrxUsd = trade.costForSaleTrxUsd
           .plus(buyRestAmount.times(buyPriceUsd))
+        trade.cumulativeTrxFeesUsd = trade.cumulativeTrxFeesUsd
+          .plus(getTrxFeeUsd(tradeForLookup, opts))
         tradeForLookup.isBuyTrxHistFilled = true
         trade.isSaleTrxHistFilled = true
       }
@@ -367,6 +380,7 @@ module.exports = async (trades, opts) => {
     trade.proceedsForSaleTrxUsd = saleAmount.times(salePriceUsd)
     trade.gainOrLossUsd = trade.proceedsForSaleTrxUsd
       .minus(trade.costForSaleTrxUsd)
+      .plus(trade.cumulativeTrxFeesUsd)
   }
 
   for (const trade of trades) {
@@ -398,6 +412,10 @@ module.exports = async (trades, opts) => {
     if (trade.isTaxablePayment) {
       const proceeds = new BigNumber(trade.execAmount)
         .times(trade.firstSymbPriceUsd)
+        .plus(getTrxFeeUsd(trade, {
+          shouldTaxablePaymentFlagBeSkipped: true,
+          ...opts
+        }))
         .toNumber()
 
       saleTradesWithRealizedProfit.push({

@@ -59,6 +59,8 @@ module.exports = (movements, params) => {
       execPrice: 0,
       // NOTE: exactUsdValue can be null on the first launch, for warm-up it's filling from pub-trades
       exactUsdValue: movement.exactUsdValue,
+      trxFee: movement.fees ?? 0,
+      trxFeeCcy: firstSymb,
 
       isAirdropOnWallet: !!movement?._isAirdropOnWallet,
       isMarginFundingPayment: !!movement?._isMarginFundingPayment,

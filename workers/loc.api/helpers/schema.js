@@ -193,6 +193,9 @@ const paramsSchemaForTransactionTaxReportApi = {
         'FIFO',
         'LIFO'
       ]
+    },
+    shouldFeesBeDeducted: {
+      type: 'boolean'
     }
   }
 }
