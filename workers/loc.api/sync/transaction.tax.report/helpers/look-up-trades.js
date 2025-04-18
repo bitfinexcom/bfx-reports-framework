@@ -412,7 +412,10 @@ module.exports = async (trades, opts) => {
     if (trade.isTaxablePayment) {
       const proceeds = new BigNumber(trade.execAmount)
         .times(trade.firstSymbPriceUsd)
-        .plus(getTrxFeeUsd(trade, opts))
+        .plus(getTrxFeeUsd(trade, {
+          shouldTaxablePaymentFlagBeSkipped: true,
+          ...opts
+        }))
         .toNumber()
 
       saleTradesWithRealizedProfit.push({

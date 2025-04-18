@@ -6,7 +6,10 @@ module.exports = (trx, opts) => {
   if (
     opts?.isNotGainOrLossRequired ||
     !opts?.shouldFeesBeDeducted ||
-    trx.isTaxablePayment ||
+    (
+      !opts?.shouldTaxablePaymentFlagBeSkipped &&
+      trx.isTaxablePayment
+    ) ||
     !Number.isFinite(trx.trxFee)
   ) {
     return new BigNumber(0)
