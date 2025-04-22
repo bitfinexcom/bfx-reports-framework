@@ -9,6 +9,8 @@
     "positions": "Poziyonlar",
     "wallets": "Cüzdanlar",
     "positionsTickers": "Pozisyon Tickerları",
-    "walletsTickers": "Cüzdan Tickerları"
+    "walletsTickers": "Cüzdan Tickerları",
+    "delistedCcyMessageStart": "Vergi raporu, listeden çıkarılan aşağıdaki tokenları içermektedir:",
+    "delistedCcyMessageEnd": "Bu tokenların artık herkese açık işlem geçmişi bulunmamaktadır, bu da raporun doğruluğunu etkilemektedir. Lütfen tüm rakamları bağımsız olarak veya sertifikalı bir vergi danışmanıyla birlikte doğrulayın."
   }
 }

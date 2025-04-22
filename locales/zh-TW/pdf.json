@@ -9,6 +9,8 @@
     "positions": "倉位",
     "wallets": "錢包",
     "positionsTickers": "倉位牌價",
-    "walletsTickers": "錢包牌價"
+    "walletsTickers": "錢包牌價",
+    "delistedCcyMessageStart": "稅務報告包含以下已下架的代幣：",
+    "delistedCcyMessageEnd": "這些代幣已不再有公開可用的交易紀錄，這可能導致報告不夠準確。請自行核實所有數據，或諮詢有認證的稅務顧問。"
   }
 }

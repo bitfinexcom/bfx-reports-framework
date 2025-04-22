@@ -37,6 +37,8 @@ module.exports = (trades, params) => {
     trade.isMovements = false
     trade.isLedgers = false
     trade.isTrades = true
+    trade.trxFee = trade.fee ?? 0
+    trade.trxFeeCcy = trade.feeCurrency
 
     remappedTrxs.push(trade)
 

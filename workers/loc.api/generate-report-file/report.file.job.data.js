@@ -22,20 +22,23 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.FullSnapshotReportCsvWriter,
   TYPES.FullTaxReportCsvWriter,
-  TYPES.WeightedAveragesReportCsvWriter
+  TYPES.WeightedAveragesReportCsvWriter,
+  TYPES.TransactionTaxReportCsvWriter
 ]
 class ReportFileJobData extends BaseReportFileJobData {
   constructor (
     rService,
     fullSnapshotReportCsvWriter,
     fullTaxReportCsvWriter,
-    weightedAveragesReportCsvWriter
+    weightedAveragesReportCsvWriter,
+    transactionTaxReportCsvWriter
   ) {
     super(rService)
 
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
     this.fullTaxReportCsvWriter = fullTaxReportCsvWriter
     this.weightedAveragesReportCsvWriter = weightedAveragesReportCsvWriter
+    this.transactionTaxReportCsvWriter = transactionTaxReportCsvWriter
   }
 
   _addColumnsBySchema (columnsCsv = {}, schema = {}) {
@@ -554,21 +557,27 @@ class ReportFileJobData extends BaseReportFileJobData {
       args: reportFileArgs,
       propNameForPagination: null,
       columnsCsv: {
-        asset: 'CURRENCY',
-        type: 'SOURCE',
-        amount: 'AMOUNT',
-        mtsAcquired: 'DATE ACQUIRED',
-        mtsSold: 'DATE SOLD',
-        proceeds: 'PROCEEDS',
-        cost: 'COST',
-        gainOrLoss: 'GAIN OR LOSS'
+        taxes: {
+          asset: 'CURRENCY',
+          type: 'SOURCE',
+          amount: 'AMOUNT',
+          mtsAcquired: 'DATE ACQUIRED',
+          mtsSold: 'DATE SOLD',
+          proceeds: 'PROCEEDS',
+          cost: 'COST',
+          gainOrLoss: 'GAIN OR LOSS'
+        }
       },
       formatSettings: {
-        asset: 'symbol',
-        type: 'lowerCaseWithUpperFirst',
-        mtsAcquired: 'date',
-        mtsSold: 'date'
-      }
+        taxes: {
+          asset: 'symbol',
+          type: 'lowerCaseWithUpperFirst',
+          mtsAcquired: 'date',
+          mtsSold: 'date'
+        }
+      },
+      csvCustomWriter: this.transactionTaxReportCsvWriter,
+      pdfCustomTemplateName: TEMPLATE_FILE_NAMES.TRANSACTION_TAX_REPORT
     }
 
     return jobData

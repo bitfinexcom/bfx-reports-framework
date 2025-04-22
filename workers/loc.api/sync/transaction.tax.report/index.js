@@ -17,7 +17,8 @@ const {
   lookUpTrades,
   getTrxMapByCcy,
   findPublicTrade,
-  getCcyPairForConversion
+  getCcyPairForConversion,
+  setDelistedCcyToMap
 } = require('./helpers')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -102,12 +103,14 @@ class TransactionTaxReport {
     const start = params.start ?? 0
     const end = params.end ?? Date.now()
     const strategy = params.strategy ?? TRX_TAX_STRATEGIES.LIFO
+    const shouldFeesBeDeducted = params.shouldFeesBeDeducted ?? false
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const interrupter = this.interrupterFactory({
       user,
       name: INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER
     })
+    const delistedCcyMap = new Map()
     await this.#emitProgress(
       user,
       { progress: 0, state: PROGRESS_STATES.GENERATION_STARTED }
@@ -135,7 +138,7 @@ class TransactionTaxReport {
         { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
       )
 
-      return []
+      return { taxes: [], delistedCcyList: [] }
     }
 
     const {
@@ -158,7 +161,10 @@ class TransactionTaxReport {
         isBackIterativeBuyLookUp,
         isBuyTradesWithUnrealizedProfitRequired: true,
         isNotGainOrLossRequired: true,
-        interrupter
+        interrupter,
+        logger: this.logger,
+        delistedCcyMap,
+        shouldFeesBeDeducted
       }
     )
 
@@ -173,7 +179,7 @@ class TransactionTaxReport {
     )
     await this.#convertCurrencies(
       trxsForConvToUsd,
-      { interrupter, user }
+      { interrupter, user, delistedCcyMap }
     )
 
     const { saleTradesWithRealizedProfit } = await lookUpTrades(
@@ -181,7 +187,10 @@ class TransactionTaxReport {
       {
         isBackIterativeSaleLookUp,
         isBackIterativeBuyLookUp,
-        interrupter
+        interrupter,
+        logger: this.logger,
+        delistedCcyMap,
+        shouldFeesBeDeducted
       }
     )
 
@@ -192,7 +201,7 @@ class TransactionTaxReport {
         { progress: null, state: PROGRESS_STATES.GENERATION_INTERRUPTED }
       )
 
-      return []
+      return { taxes: [], delistedCcyList: [] }
     }
 
     interrupter.emitInterrupted()
@@ -201,7 +210,10 @@ class TransactionTaxReport {
       { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
     )
 
-    return saleTradesWithRealizedProfit
+    return {
+      taxes: saleTradesWithRealizedProfit,
+      delistedCcyList: [...delistedCcyMap.keys()]
+    }
   }
 
   async #getTrxs (params) {
@@ -264,7 +276,11 @@ class TransactionTaxReport {
   }
 
   async #convertCurrencies (trxs, opts) {
-    const { interrupter, user } = opts
+    const {
+      interrupter,
+      user,
+      delistedCcyMap
+    } = opts
     const {
       trxMapByCcy,
       totalTrxAmount
@@ -274,7 +290,7 @@ class TransactionTaxReport {
 
     for (const [symbol, trxPriceCalculators] of trxMapByCcy.entries()) {
       if (interrupter.hasInterrupted()) {
-        return
+        return delistedCcyMap
       }
 
       let pubTrades = []
@@ -285,7 +301,7 @@ class TransactionTaxReport {
         count += 1
 
         if (interrupter.hasInterrupted()) {
-          return
+          return delistedCcyMap
         }
 
         const { trx } = trxPriceCalculator
@@ -318,20 +334,27 @@ class TransactionTaxReport {
               trxPriceCalculator.kindOfCcyForTriangulation
             ) {
               if (interrupter.hasInterrupted()) {
-                return
+                return delistedCcyMap
               }
 
-              throw new PubTradeFindForTrxTaxError({
+              setDelistedCcyToMap({
+                logger: this.logger,
+                delistedCcyMap,
                 symbol,
-                pubTradeStart,
-                pubTradeEnd,
-                requiredMts: trx.mtsCreate
+                err: new PubTradeFindForTrxTaxError({
+                  symbol,
+                  pubTradeStart,
+                  pubTradeEnd,
+                  requiredMts: trx.mtsCreate
+                })
               })
+
+              continue
             }
 
             for (const [symbol, conversion] of synonymous) {
               if (interrupter.hasInterrupted()) {
-                return
+                return delistedCcyMap
               }
 
               const res = await this.#getPublicTrades(
@@ -374,15 +397,22 @@ class TransactionTaxReport {
           pubTradeEnd < trx.mtsCreate
         ) {
           if (interrupter.hasInterrupted()) {
-            return
+            return delistedCcyMap
           }
 
-          throw new PubTradeFindForTrxTaxError({
+          setDelistedCcyToMap({
+            logger: this.logger,
+            delistedCcyMap,
             symbol,
-            pubTradeStart,
-            pubTradeEnd,
-            requiredMts: trx.mtsCreate
+            err: new PubTradeFindForTrxTaxError({
+              symbol,
+              pubTradeStart,
+              pubTradeEnd,
+              requiredMts: trx.mtsCreate
+            })
           })
+
+          continue
         }
 
         const pubTrade = findPublicTrade(pubTrades, trx.mtsCreate)
@@ -409,6 +439,8 @@ class TransactionTaxReport {
       user,
       { progress, state: PROGRESS_STATES.TRANSACTION_HISTORY_GENERATION }
     )
+
+    return delistedCcyMap
   }
 
   async #getTrades ({

@@ -9,6 +9,8 @@
     "positions": "仓位",
     "wallets": "钱包",
     "positionsTickers": "仓位牌价",
-    "walletsTickers": "钱包牌价"
+    "walletsTickers": "钱包牌价",
+    "delistedCcyMessageStart": "税务报告包含以下已退市的代币：",
+    "delistedCcyMessageEnd": "这些代币已不再具有公开可用的交易历史，这导致报告可能不准确。请自行核实所有数据，或咨询持证的税务顾问。"
   }
 }
