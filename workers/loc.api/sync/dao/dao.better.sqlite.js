@@ -1099,22 +1099,30 @@ class BetterSqliteDAO extends DAO {
     opts
   ) {
     const {
-      withWorkerThreads = true
+      withWorkerThreads = true,
+      subQuery = {
+        filter: {},
+        sort: []
+      }
     } = opts ?? {}
+    const {
+      subQuery: _subQuery,
+      subQueryValues
+    } = getSubQuery({ name, subQuery })
     const _sort = getOrderQuery(sort)
     const {
       where,
-      values: params
+      values
     } = getWhereQuery(filter)
 
-    const sql = `SELECT * FROM ${name}
+    const sql = `SELECT * FROM ${_subQuery}
       ${where}
       ${_sort}`
 
     return this.query({
       action: MAIN_DB_WORKER_ACTIONS.GET,
       sql,
-      params
+      params: { ...values, ...subQueryValues }
     }, { withWorkerThreads })
   }
 
