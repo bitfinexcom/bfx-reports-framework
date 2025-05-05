@@ -7,7 +7,7 @@ const {
 } = require('../../../../errors')
 const {
   freezeAndSealObjectDeeply
-} = require('./helpers')
+} = require('../../helpers')
 
 const BaseModel = require('./base.model')
 
