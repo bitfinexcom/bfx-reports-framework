@@ -3,6 +3,9 @@
 const { cloneDeep } = require('lib-js-util-base')
 
 const {
+  SyncSchemaModelCreationError
+} = require('../../../../errors')
+const {
   freezeAndSealObjectDeeply
 } = require('../../helpers')
 const { getModelOf } = require('../../models')
@@ -44,7 +47,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
         ) ||
         this.#isNotValidField(name, value)
       ) {
-        throw new Error({
+        throw new SyncSchemaModelCreationError({
           modelFieldName: name,
           modelFieldValue: value
         })
