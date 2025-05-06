@@ -278,6 +278,12 @@ class DbModelCreationError extends BaseError {
   }
 }
 
+class SyncSchemaModelCreationError extends BaseError {
+  constructor (data, message = 'ERR_WRONG_SYNC_SCHEMA_MODEL_FIELD') {
+    super({ data, message })
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -319,5 +325,6 @@ module.exports = {
   CurrencyPairSeparationError,
   PubTradeFindForTrxTaxError,
   PubTradePriceFindForTrxTaxError,
-  DbModelCreationError
+  DbModelCreationError,
+  SyncSchemaModelCreationError
 }
