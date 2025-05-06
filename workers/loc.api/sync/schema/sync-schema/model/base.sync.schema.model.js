@@ -6,11 +6,33 @@ const TABLES_NAMES = require('../../tables-names')
 const ALLOWED_COLLS = require('../../allowed.colls')
 const COLLS_TYPES = require('../../colls.types')
 
+const SUPPORTED_MODEL_FIELDS = {
+  NAME: 'name',
+  MAX_LIMIT: 'maxLimit',
+  ORDER: 'sort',
+  HAS_NEW_DATA: 'hasNewData',
+  START: 'start',
+  IS_SYNC_REQUIRED_AT_LEAST_ONCE: 'isSyncRequiredAtLeastOnce',
+  MODEL: 'model'
+}
+
 const {
   freezeAndSealObjectDeeply
 } = require('../../helpers')
 
 class BaseSyncSchemaModel {
+  static NAME = SUPPORTED_MODEL_FIELDS.NAME
+  static MAX_LIMIT = SUPPORTED_MODEL_FIELDS.MAX_LIMIT
+  static ORDER = SUPPORTED_MODEL_FIELDS.ORDER
+  static HAS_NEW_DATA = SUPPORTED_MODEL_FIELDS.HAS_NEW_DATA
+  static START = SUPPORTED_MODEL_FIELDS.START
+  static IS_SYNC_REQUIRED_AT_LEAST_ONCE = SUPPORTED_MODEL_FIELDS.IS_SYNC_REQUIRED_AT_LEAST_ONCE
+  static MODEL = SUPPORTED_MODEL_FIELDS.MODEL
+
+  static SUPPORTED_MODEL_FIELD_SET = new Set(
+    Object.values(SUPPORTED_MODEL_FIELDS)
+  )
+
   static ALLOWED_COLLS_TYPES = {
     INSERTABLE_ARRAY_OBJECTS: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
     UPDATABLE_ARRAY_OBJECTS: COLLS_TYPES.UPDATABLE_ARRAY_OBJECTS,
@@ -34,6 +56,7 @@ class BaseSyncSchemaModel {
 }
 
 freezeAndSealObjectDeeply(
+  BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET,
   BaseSyncSchemaModel.TABLES_NAMES,
   BaseSyncSchemaModel.ALLOWED_COLLS,
   BaseSyncSchemaModel.ALL_COLLS_TYPES,
