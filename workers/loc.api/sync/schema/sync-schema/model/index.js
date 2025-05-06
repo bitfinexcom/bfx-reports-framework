@@ -150,6 +150,15 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     freezeAndSealObjectDeeply(this.#modelFieldKeys)
   }
 
+  #isNotAllowedCollName (collName) {
+    return (
+      BaseSyncSchemaModel.ALLOWED_COLLS
+        .every((name) => name !== collName) ||
+      BaseSyncSchemaModel.TABLES_NAMES
+        .every((name) => name !== collName)
+    )
+  }
+
   #isNotAllowedCollType (collType) {
     return BaseSyncSchemaModel.ALLOWED_COLLS_TYPES
       .every((type) => type !== collType)
@@ -161,7 +170,16 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
   }
 
   // TODO:
-  #isNotValidField (name, value) {}
+  #isNotValidField (name, value) {
+    if (
+      name === BaseSyncSchemaModel.NAME &&
+      this.#isNotAllowedCollName(value)
+    ) {
+      return false
+    }
+
+    return true
+  }
 }
 
 module.exports = SyncSchemaModel
