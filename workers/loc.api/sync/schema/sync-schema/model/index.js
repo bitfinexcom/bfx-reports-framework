@@ -5,6 +5,7 @@ const { cloneDeep } = require('lib-js-util-base')
 const {
   freezeAndSealObjectDeeply
 } = require('../../helpers')
+const { getModelOf } = require('../../models')
 
 const BaseSyncSchemaModel = require('./base.sync.schema.model')
 
@@ -92,6 +93,51 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   #insertModelFields (opts) {
     const { isNotFrozen } = opts ?? {}
+
+    // TODO:
+    for (const name of BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET) {
+      if (
+        name === BaseSyncSchemaModel.MAX_LIMIT &&
+        !Number.isInteger(this[name])
+      ) {
+        this[name] = 10_000
+      }
+      if (
+        name === BaseSyncSchemaModel.ORDER &&
+        !Array.isArray(this[name])
+      ) {
+        this[name] = []
+      }
+      if (
+        name === BaseSyncSchemaModel.HAS_NEW_DATA &&
+        typeof this[name] !== 'boolean'
+      ) {
+        this[name] = false
+      }
+      if (
+        name === BaseSyncSchemaModel.START &&
+        !Array.isArray(this[name])
+      ) {
+        this[name] = []
+      }
+      if (
+        name === BaseSyncSchemaModel.IS_SYNC_REQUIRED_AT_LEAST_ONCE &&
+        typeof this[name] !== 'boolean'
+      ) {
+        this[name] = true
+      }
+
+      if (typeof this[name] === 'undefined') {
+        this[name] = null
+
+        continue
+      }
+
+      this.#modelFields[name] = this[name]
+      this.#modelFieldKeys.push(name)
+    }
+
+    this[BaseSyncSchemaModel.MODEL] = getModelOf(BaseSyncSchemaModel.NAME)
 
     if (isNotFrozen) {
       return
