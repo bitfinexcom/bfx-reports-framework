@@ -101,7 +101,8 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     for (const name of BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET) {
       if (
         name === BaseSyncSchemaModel.MAX_LIMIT &&
-        !Number.isInteger(this[name])
+        !Number.isInteger(this[name]) &&
+        this[name] !== null
       ) {
         this[name] = 10_000
       }
@@ -174,6 +175,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     if (
       name === BaseSyncSchemaModel.NAME &&
       this.#isNotAllowedCollName(value)
+    ) {
+      return false
+    }
+    if (
+      name === BaseSyncSchemaModel.MAX_LIMIT &&
+      !Number.isInteger(value) &&
+      value !== null
     ) {
       return false
     }
