@@ -221,6 +221,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.START &&
+      typeof this[name] !== 'undefined' &&
+      !Array.isArray(this[name])
+    ) {
+      return false
+    }
 
     return true
   }
