@@ -214,6 +214,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.HAS_NEW_DATA &&
+      typeof this[name] !== 'undefined' &&
+      typeof this[name] !== 'boolean'
+    ) {
+      return false
+    }
 
     return true
   }
