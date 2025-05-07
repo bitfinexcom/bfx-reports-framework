@@ -192,6 +192,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.SYMBOL_FIELD_NAME &&
+      typeof this[name] !== 'undefined' &&
+      typeof this[name] !== 'string'
+    ) {
+      return false
+    }
 
     return true
   }
