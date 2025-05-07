@@ -9,6 +9,7 @@ const COLLS_TYPES = require('../../colls.types')
 const SUPPORTED_MODEL_FIELDS = {
   NAME: 'name',
   MAX_LIMIT: 'maxLimit',
+  DATE_FIELD_NAME: 'dateFieldName',
   ORDER: 'sort',
   HAS_NEW_DATA: 'hasNewData',
   START: 'start',
@@ -23,6 +24,7 @@ const {
 class BaseSyncSchemaModel {
   static NAME = SUPPORTED_MODEL_FIELDS.NAME
   static MAX_LIMIT = SUPPORTED_MODEL_FIELDS.MAX_LIMIT
+  static DATE_FIELD_NAME = SUPPORTED_MODEL_FIELDS.DATE_FIELD_NAME
   static ORDER = SUPPORTED_MODEL_FIELDS.ORDER
   static HAS_NEW_DATA = SUPPORTED_MODEL_FIELDS.HAS_NEW_DATA
   static START = SUPPORTED_MODEL_FIELDS.START
