@@ -185,6 +185,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.DATE_FIELD_NAME &&
+      typeof this[name] !== 'undefined' &&
+      typeof this[name] !== 'string'
+    ) {
+      return false
+    }
 
     return true
   }
