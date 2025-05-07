@@ -199,6 +199,21 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.ORDER &&
+      (
+        !Array.isArray(this[name]) ||
+        this[name].length === 0 ||
+        this[name].some((item) => (
+          !Array.isArray(item) ||
+          item.length !== 2 ||
+          typeof item[0] !== 'string' ||
+          this.#isNotAllowedOrder(item[1])
+        ))
+      )
+    ) {
+      return false
+    }
 
     return true
   }
