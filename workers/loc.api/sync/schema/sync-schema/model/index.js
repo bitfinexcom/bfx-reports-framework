@@ -170,6 +170,11 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       .every((order) => order !== collOrder)
   }
 
+  #isNotAllowedConfName (confName) {
+    return BaseSyncSchemaModel.PUBLIC_COLLS_CONF_NAMES
+      .every((name) => name !== confName)
+  }
+
   // TODO:
   #isNotValidField (name, value) {
     if (
@@ -232,6 +237,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       name === BaseSyncSchemaModel.START &&
       typeof this[name] !== 'undefined' &&
       !Array.isArray(this[name])
+    ) {
+      return false
+    }
+    if (
+      name === BaseSyncSchemaModel.CONF_NAME &&
+      typeof value !== 'undefined' &&
+      this.#isNotAllowedConfName(value)
     ) {
       return false
     }
