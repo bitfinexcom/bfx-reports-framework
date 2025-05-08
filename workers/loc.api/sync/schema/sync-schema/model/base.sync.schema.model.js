@@ -5,6 +5,9 @@ const { cloneDeep } = require('lib-js-util-base')
 const TABLES_NAMES = require('../../tables-names')
 const ALLOWED_COLLS = require('../../allowed.colls')
 const COLLS_TYPES = require('../../colls.types')
+const PUBLIC_COLLS_CONF_NAMES = require(
+  '../../../colls.accessors/public.colls.conf.names'
+)
 
 const SUPPORTED_MODEL_FIELDS = {
   NAME: 'name',
@@ -65,6 +68,7 @@ class BaseSyncSchemaModel {
   static TABLES_NAMES = cloneDeep(TABLES_NAMES)
   static ALLOWED_COLLS = cloneDeep(ALLOWED_COLLS)
   static ALL_COLLS_TYPES = cloneDeep(COLLS_TYPES)
+  static PUBLIC_COLLS_CONF_NAMES = cloneDeep(PUBLIC_COLLS_CONF_NAMES)
 }
 
 freezeAndSealObjectDeeply(
@@ -73,6 +77,7 @@ freezeAndSealObjectDeeply(
   BaseSyncSchemaModel.ALLOWED_COLLS,
   BaseSyncSchemaModel.ALL_COLLS_TYPES,
   BaseSyncSchemaModel.ALLOWED_COLLS_TYPES,
+  BaseSyncSchemaModel.PUBLIC_COLLS_CONF_NAMES,
   BaseSyncSchemaModel.ORDERS
 )
 Object.freeze(BaseSyncSchemaModel)
