@@ -200,6 +200,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       return false
     }
     if (
+      name === BaseSyncSchemaModel.TIMEFRAME_FIELD_NAME &&
+      typeof this[name] !== 'undefined' &&
+      typeof this[name] !== 'string'
+    ) {
+      return false
+    }
+    if (
       name === BaseSyncSchemaModel.ORDER &&
       (
         !Array.isArray(this[name]) ||
