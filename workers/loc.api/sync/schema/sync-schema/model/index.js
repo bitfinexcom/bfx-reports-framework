@@ -243,6 +243,16 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       return false
     }
     if (
+      name === BaseSyncSchemaModel.ADDITIONAL_API_CALL_ARGS &&
+      typeof value !== 'undefined' &&
+      (
+        !value ||
+        typeof value !== 'object'
+      )
+    ) {
+      return false
+    }
+    if (
       name === BaseSyncSchemaModel.TYPE &&
       this.#isNotAllowedCollType(value)
     ) {
