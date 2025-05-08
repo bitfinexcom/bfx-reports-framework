@@ -192,31 +192,31 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     }
     if (
       name === BaseSyncSchemaModel.DATE_FIELD_NAME &&
-      typeof this[name] !== 'undefined' &&
-      typeof this[name] !== 'string'
+      typeof value !== 'undefined' &&
+      typeof value !== 'string'
     ) {
       return false
     }
     if (
       name === BaseSyncSchemaModel.SYMBOL_FIELD_NAME &&
-      typeof this[name] !== 'undefined' &&
-      typeof this[name] !== 'string'
+      typeof value !== 'undefined' &&
+      typeof value !== 'string'
     ) {
       return false
     }
     if (
       name === BaseSyncSchemaModel.TIMEFRAME_FIELD_NAME &&
-      typeof this[name] !== 'undefined' &&
-      typeof this[name] !== 'string'
+      typeof value !== 'undefined' &&
+      typeof value !== 'string'
     ) {
       return false
     }
     if (
       name === BaseSyncSchemaModel.ORDER &&
       (
-        !Array.isArray(this[name]) ||
-        this[name].length === 0 ||
-        this[name].some((item) => (
+        !Array.isArray(value) ||
+        value.length === 0 ||
+        value.some((item) => (
           !Array.isArray(item) ||
           item.length !== 2 ||
           typeof item[0] !== 'string' ||
@@ -228,15 +228,15 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     }
     if (
       name === BaseSyncSchemaModel.HAS_NEW_DATA &&
-      typeof this[name] !== 'undefined' &&
-      typeof this[name] !== 'boolean'
+      typeof value !== 'undefined' &&
+      typeof value !== 'boolean'
     ) {
       return false
     }
     if (
       name === BaseSyncSchemaModel.START &&
-      typeof this[name] !== 'undefined' &&
-      !Array.isArray(this[name])
+      typeof value !== 'undefined' &&
+      !Array.isArray(value)
     ) {
       return false
     }
@@ -249,8 +249,8 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     }
     if (
       name === BaseSyncSchemaModel.IS_SYNC_REQUIRED_AT_LEAST_ONCE &&
-      typeof this[name] !== 'undefined' &&
-      typeof this[name] !== 'boolean'
+      typeof value !== 'undefined' &&
+      typeof value !== 'boolean'
     ) {
       return false
     }
