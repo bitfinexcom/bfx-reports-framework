@@ -153,25 +153,25 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   #isNotAllowedCollName (collName) {
     return (
-      BaseSyncSchemaModel.ALLOWED_COLLS
+      Object.values(BaseSyncSchemaModel.ALLOWED_COLLS)
         .every((name) => name !== collName) ||
-      BaseSyncSchemaModel.TABLES_NAMES
+      Object.values(BaseSyncSchemaModel.TABLES_NAMES)
         .every((name) => name !== collName)
     )
   }
 
   #isNotAllowedCollType (collType) {
-    return BaseSyncSchemaModel.ALLOWED_COLLS_TYPES
+    return Object.values(BaseSyncSchemaModel.ALLOWED_COLLS_TYPES)
       .every((type) => type !== collType)
   }
 
   #isNotAllowedOrder (collOrder) {
-    return BaseSyncSchemaModel.ORDERS
+    return Object.values(BaseSyncSchemaModel.ORDERS)
       .every((order) => order !== collOrder)
   }
 
   #isNotAllowedConfName (confName) {
-    return BaseSyncSchemaModel.PUBLIC_COLLS_CONF_NAMES
+    return Object.values(BaseSyncSchemaModel.PUBLIC_COLLS_CONF_NAMES)
       .every((name) => name !== confName)
   }
 
