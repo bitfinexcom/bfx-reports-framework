@@ -228,6 +228,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.IS_SYNC_REQUIRED_AT_LEAST_ONCE &&
+      typeof this[name] !== 'undefined' &&
+      typeof this[name] !== 'boolean'
+    ) {
+      return false
+    }
 
     return true
   }
