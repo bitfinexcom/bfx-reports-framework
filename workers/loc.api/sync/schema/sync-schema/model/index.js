@@ -235,6 +235,12 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.TYPE &&
+      this.#isNotAllowedCollType(value)
+    ) {
+      return false
+    }
 
     return true
   }
