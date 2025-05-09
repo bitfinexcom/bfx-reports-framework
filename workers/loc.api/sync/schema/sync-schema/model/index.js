@@ -272,6 +272,12 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.DATA_STRUCTURE_CONVERTER &&
+      typeof value !== 'function'
+    ) {
+      return false
+    }
 
     return true
   }
