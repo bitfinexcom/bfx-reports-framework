@@ -314,6 +314,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED &&
+      typeof value !== 'undefined' &&
+      typeof value !== 'boolean'
+    ) {
+      return false
+    }
 
     return true
   }
