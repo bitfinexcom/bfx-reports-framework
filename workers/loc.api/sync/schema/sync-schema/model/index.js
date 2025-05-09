@@ -296,6 +296,24 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     ) {
       return false
     }
+    if (
+      name === BaseSyncSchemaModel.PROJECTION &&
+      typeof value !== 'undefined' &&
+      (
+        !value ||
+        typeof value !== 'string'
+      ) &&
+      (
+        !Array.isArray(value) ||
+        value.length === 0 ||
+        value.some((item) => (
+          !item ||
+          typeof item !== 'string'
+        ))
+      )
+    ) {
+      return false
+    }
 
     return true
   }
