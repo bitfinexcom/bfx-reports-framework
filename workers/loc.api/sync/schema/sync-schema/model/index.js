@@ -280,7 +280,10 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       return false
     }
     if (
-      name === BaseSyncSchemaModel.SQL_GROUP_FNS &&
+      (
+        name === BaseSyncSchemaModel.SQL_GROUP_FNS ||
+        name === BaseSyncSchemaModel.SQL_GROUP_RES_BY
+      ) &&
       typeof value !== 'undefined' &&
       (
         !Array.isArray(value) ||
