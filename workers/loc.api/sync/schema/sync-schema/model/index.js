@@ -29,7 +29,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       return this
     }
     if (typeof dataStructure !== 'object') {
-      throw new Error()
+      throw new SyncSchemaModelCreationError()
     }
 
     const entries = Array.isArray(dataStructure)
@@ -40,11 +40,6 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       if (
         !name ||
         typeof name !== 'string' ||
-        !value ||
-        (
-          typeof value !== 'string' &&
-          !Array.isArray(value)
-        ) ||
         this.#isNotValidField(name, value)
       ) {
         throw new SyncSchemaModelCreationError({
@@ -97,7 +92,6 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
   #insertModelFields (opts) {
     const { isNotFrozen } = opts ?? {}
 
-    // TODO:
     for (const name of BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET) {
       if (
         name === BaseSyncSchemaModel.MAX_LIMIT &&
@@ -175,8 +169,16 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       .every((name) => name !== confName)
   }
 
+  #isNotAllowedModelFieldName (fieldName) {
+    return !BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET
+      .has(fieldName)
+  }
+
   // TODO:
   #isNotValidField (name, value) {
+    if (this.#isNotAllowedModelFieldName(name)) {
+      return false
+    }
     if (
       name === BaseSyncSchemaModel.NAME &&
       this.#isNotAllowedCollName(value)
