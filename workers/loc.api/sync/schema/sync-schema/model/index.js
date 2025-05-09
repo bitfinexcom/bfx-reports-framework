@@ -274,7 +274,22 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     }
     if (
       name === BaseSyncSchemaModel.DATA_STRUCTURE_CONVERTER &&
+      typeof value !== 'undefined' &&
       typeof value !== 'function'
+    ) {
+      return false
+    }
+    if (
+      name === BaseSyncSchemaModel.SQL_GROUP_FNS &&
+      typeof value !== 'undefined' &&
+      (
+        !Array.isArray(value) ||
+        value.length === 0 ||
+        value.some((item) => (
+          !item ||
+          typeof item !== 'string'
+        ))
+      )
     ) {
       return false
     }
