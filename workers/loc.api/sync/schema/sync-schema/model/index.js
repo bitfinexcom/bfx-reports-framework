@@ -174,7 +174,6 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       .has(fieldName)
   }
 
-  // TODO:
   #isNotValidField (name, value) {
     if (this.#isNotAllowedModelFieldName(name)) {
       return false
