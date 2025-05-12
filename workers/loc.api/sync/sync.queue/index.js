@@ -402,9 +402,15 @@ class SyncQueue extends EventEmitter {
     const {
       ownerUserId
     } = params ?? {}
-
-    const ownerUserIdFilter = Number.isInteger(ownerUserId)
-      ? { ownerUserId }
+    const subQueryFilter = Number.isInteger(ownerUserId)
+      ? {
+          $or: {
+            $eq: {
+              isOwnerScheduler: 1,
+              ownerUserId
+            }
+          }
+        }
       : {}
 
     const state = [NEW_JOB_STATE, ERROR_JOB_STATE]
@@ -417,8 +423,9 @@ class SyncQueue extends EventEmitter {
 
     return this.dao.getElemInCollBy(
       this.name,
-      { state, ...ownerUserIdFilter },
-      this._sort
+      { state },
+      this._sort,
+      { subQuery: { filter: subQueryFilter } }
     )
   }
 
