@@ -1,18 +1,12 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
-const ALLOWED_COLLS = require('../allowed.colls')
-const COLLS_TYPES = require('../colls.types')
+const Model = require('./model')
 
-const { getModelOf } = require('../models')
-
-module.exports = {
-  name: ALLOWED_COLLS.MARGIN_CURRENCY_LIST,
-  maxLimit: 10000,
-  projection: 'symbol',
-  sort: [['symbol', 1]],
-  hasNewData: false,
-  isSyncRequiredAtLeastOnce: true,
-  type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY,
-  model: getModelOf(TABLES_NAMES.MARGIN_CURRENCY_LIST)
-}
+module.exports = new Model({
+  [Model.NAME]: Model.ALLOWED_COLLS.MARGIN_CURRENCY_LIST,
+  [Model.MAX_LIMIT]: 10_000,
+  [Model.PROJECTION]: 'symbol',
+  [Model.ORDER]: [['symbol', Model.ORDERS.ASC]],
+  [Model.IS_SYNC_REQUIRED_AT_LEAST_ONCE]: true,
+  [Model.TYPE]: Model.ALLOWED_COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY
+})
