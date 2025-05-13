@@ -1,18 +1,12 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
-const ALLOWED_COLLS = require('../allowed.colls')
-const COLLS_TYPES = require('../colls.types')
+const Model = require('./model')
 
-const { getModelOf } = require('../models')
-
-module.exports = {
-  name: ALLOWED_COLLS.MAP_SYMBOLS,
-  maxLimit: 10000,
-  projection: ['key', 'value'],
-  sort: [['key', 1]],
-  hasNewData: false,
-  isSyncRequiredAtLeastOnce: true,
-  type: COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS,
-  model: getModelOf(TABLES_NAMES.MAP_SYMBOLS)
-}
+module.exports = new Model({
+  [Model.NAME]: Model.ALLOWED_COLLS.MAP_SYMBOLS,
+  [Model.MAX_LIMIT]: 10_000,
+  [Model.PROJECTION]: ['key', 'value'],
+  [Model.ORDER]: [['key', Model.ORDERS.ASC]],
+  [Model.IS_SYNC_REQUIRED_AT_LEAST_ONCE]: true,
+  [Model.TYPE]: Model.ALLOWED_COLLS_TYPES.PUBLIC_UPDATABLE_ARRAY_OBJECTS
+})
