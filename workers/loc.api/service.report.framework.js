@@ -203,6 +203,7 @@ class FrameworkReportService extends ReportService {
           projection: [
             'username',
             'timezone',
+            'isUserMerchant',
             'email',
             'id',
             'isSubAccount',
