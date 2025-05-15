@@ -21,6 +21,7 @@ module.exports = new Model({
   isSyncOnStartupRequired: 'INT',
   authTokenTTLSec: 'INT',
   isStagingBfxApi: 'INT',
+  isUserMerchant: 'INT',
 
   [Model.UNIQUE_INDEX_FIELD_NAME]: ['email', 'username'],
   [Model.TRIGGER_FIELD_NAME]: Model.COMMON_TRIGGERS
