@@ -218,7 +218,7 @@ class Authenticator {
         timezone,
         username,
         id,
-        isUserMerchant,
+        isUserMerchant: serializeVal(isUserMerchant),
         authToken: encryptedAuthToken,
         apiKey: encryptedApiKey,
         apiSecret: encryptedApiSecret,
@@ -252,7 +252,8 @@ class Authenticator {
       : {
           email,
           isSubAccount: user.isSubAccount,
-          token
+          token,
+          isUserMerchant: user.isUserMerchant
         }
 
     if (!isNotSetSession) {
@@ -382,7 +383,7 @@ class Authenticator {
         ? user.isDataFromDb
         : isDataFromDb,
       isStagingBfxApi,
-      isUserMerchant,
+      isUserMerchant: !!isUserMerchant,
       ...newAuthToken
         ? { authToken: newAuthToken }
         : null
@@ -460,7 +461,7 @@ class Authenticator {
     return {
       ...returnedUser,
       email: emailFromApi,
-      isUserMerchant,
+      isUserMerchant: !!isUserMerchant,
       isSubAccount: isSubAccountFromDb,
       token: createdToken,
       shouldNotSyncOnStartupAfterUpdate,
@@ -627,7 +628,7 @@ class Authenticator {
       timezone,
       username,
       email,
-      isUserMerchant,
+      isUserMerchant: !!isUserMerchant,
       authToken,
       apiKey,
       apiSecret,
