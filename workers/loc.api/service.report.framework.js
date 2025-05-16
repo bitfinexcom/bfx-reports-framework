@@ -69,7 +69,8 @@ class FrameworkReportService extends ReportService {
       email,
       timezone,
       username,
-      id
+      id,
+      isUserMerchant
     } = await super.verifyUser(null, { ...args, auth })
 
     if (!email) {
@@ -80,7 +81,8 @@ class FrameworkReportService extends ReportService {
       email,
       timezone,
       username,
-      id
+      id,
+      isUserMerchant
     }
   }
 
