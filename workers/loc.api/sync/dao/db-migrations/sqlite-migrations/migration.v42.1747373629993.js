@@ -20,7 +20,10 @@ class MigrationV42 extends AbstractMigration {
    */
   up () {
     const sqlArr = [
-      'ALTER TABLE users ADD COLUMN isUserMerchant INT'
+      'ALTER TABLE users ADD COLUMN isUserMerchant INT',
+
+      // Show Merchant menu item by default til getting info from BFX API
+      'UPDATE users SET isUserMerchant = 1 WHERE isUserMerchant IS NULL'
     ]
 
     this.addSql(sqlArr)
