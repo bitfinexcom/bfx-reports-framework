@@ -387,6 +387,7 @@ describe('Sub-account', () => {
       assert.isString(res.body.result.timezone)
       assert.strictEqual(res.body.result.email, masterUserEmail)
       assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+      assert.isBoolean(res.body.result.isUserMerchant)
       assert.isArray(res.body.result.subUsers)
 
       res.body.result.subUsers.forEach((subUser) => {
@@ -397,6 +398,7 @@ describe('Sub-account', () => {
         assert.isString(subUser.email)
         assert.isBoolean(subUser.isSubAccount)
         assert.isNotOk(subUser.isSubAccount)
+        assert.isBoolean(subUser.isUserMerchant)
       })
     })
 

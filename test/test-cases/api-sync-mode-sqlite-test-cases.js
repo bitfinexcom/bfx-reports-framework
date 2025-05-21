@@ -204,6 +204,7 @@ module.exports = (
     assert.isNull(res.body.result.localUsername)
     assert.isNull(res.body.result.lastSyncMts)
     assert.isBoolean(res.body.result.isStagingBfxApi)
+    assert.isBoolean(res.body.result.isUserMerchant)
 
     auth.token = res.body.result.token
   })
@@ -304,6 +305,7 @@ module.exports = (
     assert.isNull(res.body.result.localUsername)
     assert.isNull(res.body.result.lastSyncMts)
     assert.isBoolean(res.body.result.isStagingBfxApi)
+    assert.isBoolean(res.body.result.isUserMerchant)
   })
 
   it('it should not be successfully performed by the signIn method', async function () {
@@ -466,6 +468,7 @@ module.exports = (
     assert.isString(res.body.result.timezone)
     assert.strictEqual(res.body.result.email, email)
     assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
+    assert.isBoolean(res.body.result.isUserMerchant)
     assert.isArray(res.body.result.subUsers)
 
     res.body.result.subUsers.forEach((subUser) => {
@@ -476,6 +479,7 @@ module.exports = (
       assert.isString(subUser.email)
       assert.isBoolean(subUser.isSubAccount)
       assert.isNotOk(subUser.isSubAccount)
+      assert.isBoolean(subUser.isUserMerchant)
     })
   })
 

@@ -42,6 +42,7 @@ module.exports = (
     assert.strictEqual(res.body.result.email, email)
     assert.strictEqual(res.body.result.isSubAccount, isSubAccount)
     assert.isString(res.body.result.token)
+    assert.isBoolean(res.body.result.isUserMerchant)
 
     if (typeof cb === 'function') {
       await cb(res.body.result.token)

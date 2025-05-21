@@ -69,7 +69,8 @@ class FrameworkReportService extends ReportService {
       email,
       timezone,
       username,
-      id
+      id,
+      isUserMerchant
     } = await super.verifyUser(null, { ...args, auth })
 
     if (!email) {
@@ -80,7 +81,8 @@ class FrameworkReportService extends ReportService {
       email,
       timezone,
       username,
-      id
+      id,
+      isUserMerchant
     }
   }
 
@@ -132,7 +134,8 @@ class FrameworkReportService extends ReportService {
         isSyncOnStartupRequired,
         authTokenTTLSec,
         localUsername,
-        isStagingBfxApi
+        isStagingBfxApi,
+        isUserMerchant
       } = await this._authenticator.signIn(
         args,
         { isReturnedUser: true, doNotQueueQuery: true }
@@ -167,7 +170,8 @@ class FrameworkReportService extends ReportService {
         authTokenTTLSec,
         localUsername,
         lastSyncMts: lastFinishedSyncQueueJob?.updatedAt ?? null,
-        isStagingBfxApi
+        isStagingBfxApi,
+        isUserMerchant
       }
     }, 'signIn', args, cb)
   }
@@ -201,6 +205,7 @@ class FrameworkReportService extends ReportService {
           projection: [
             'username',
             'timezone',
+            'isUserMerchant',
             'email',
             'id',
             'isSubAccount',
