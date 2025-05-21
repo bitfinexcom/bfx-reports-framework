@@ -124,6 +124,12 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       ) {
         this[name] = true
       }
+      if (
+        name === BaseSyncSchemaModel.SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED &&
+        typeof this[name] !== 'boolean'
+      ) {
+        this[name] = false
+      }
 
       if (typeof this[name] === 'undefined') {
         this[name] = null
