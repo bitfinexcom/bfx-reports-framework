@@ -723,12 +723,12 @@ class DataChecker {
 
   _getMethodCollMap () {
     return this.syncSchema
-      .getMethodCollMap(this._methodCollMap)
+      .getClonedMethodCollMap(this._methodCollMap)
   }
 
   _setMethodCollMap (methodCollMap) {
     this._methodCollMap = this.syncSchema
-      .getMethodCollMap(methodCollMap)
+      .getClonedMethodCollMap(methodCollMap)
   }
 }
 
