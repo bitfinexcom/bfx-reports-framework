@@ -9,5 +9,6 @@ module.exports = new Model({
   [Model.SYMBOL_FIELD_NAME]: 'symbol',
   [Model.ORDER]: [['mtsUpdate', Model.ORDERS.DESC]],
   [Model.IS_SYNC_REQUIRED_AT_LEAST_ONCE]: false,
+  [Model.SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED]: true,
   [Model.TYPE]: Model.ALLOWED_COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS
 })
