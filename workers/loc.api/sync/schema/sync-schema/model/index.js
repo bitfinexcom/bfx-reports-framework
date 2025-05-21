@@ -182,41 +182,41 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   #isNotValidField (name, value) {
     if (this.#isNotAllowedModelFieldName(name)) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.NAME &&
       this.#isNotAllowedCollName(value)
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.MAX_LIMIT &&
       !Number.isInteger(value) &&
       value !== null
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.DATE_FIELD_NAME &&
       typeof value !== 'undefined' &&
       typeof value !== 'string'
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.SYMBOL_FIELD_NAME &&
       typeof value !== 'undefined' &&
       typeof value !== 'string'
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.TIMEFRAME_FIELD_NAME &&
       typeof value !== 'undefined' &&
       typeof value !== 'string'
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.ORDER &&
@@ -231,35 +231,35 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
         ))
       )
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.HAS_NEW_DATA &&
       typeof value !== 'undefined' &&
       typeof value !== 'boolean'
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.START &&
       typeof value !== 'undefined' &&
       !Array.isArray(value)
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.CONF_NAME &&
       typeof value !== 'undefined' &&
       this.#isNotAllowedConfName(value)
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.IS_SYNC_REQUIRED_AT_LEAST_ONCE &&
       typeof value !== 'undefined' &&
       typeof value !== 'boolean'
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.ADDITIONAL_API_CALL_ARGS &&
@@ -269,20 +269,20 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
         typeof value !== 'object'
       )
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.TYPE &&
       this.#isNotAllowedCollType(value)
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.DATA_STRUCTURE_CONVERTER &&
       typeof value !== 'undefined' &&
       typeof value !== 'function'
     ) {
-      return false
+      return true
     }
     if (
       (
@@ -299,7 +299,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
         ))
       )
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.PROJECTION &&
@@ -317,17 +317,17 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
         ))
       )
     ) {
-      return false
+      return true
     }
     if (
       name === BaseSyncSchemaModel.SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED &&
       typeof value !== 'undefined' &&
       typeof value !== 'boolean'
     ) {
-      return false
+      return true
     }
 
-    return true
+    return false
   }
 }
 
