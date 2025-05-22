@@ -73,6 +73,14 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     )
   }
 
+  getModelField (fieldkey) {
+    if (this.#isNotAllowedModelFieldKey(fieldkey)) {
+      throw new Error('ERR_MODEL_FIELD_KEY_NAME_IS_NOT_ALLOWED')
+    }
+
+    return this[this.constructor[fieldkey]]
+  }
+
   getModelFields (opts) {
     return opts?.isCloned
       ? cloneDeep(this.#modelFields)
@@ -178,6 +186,11 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
   #isNotAllowedModelFieldName (fieldName) {
     return !BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET
       .has(fieldName)
+  }
+
+  #isNotAllowedModelFieldKey (fieldkey) {
+    return !BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_KEY_SET
+      .has(fieldkey)
   }
 
   #isNotValidField (name, value) {
