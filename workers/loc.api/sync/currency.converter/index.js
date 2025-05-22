@@ -436,13 +436,15 @@ class CurrencyConverter {
 
     const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
-      this.candlesSchema.name,
+      this.candlesSchema.getModelField('NAME'),
       {
-        [this.candlesSchema.symbolFieldName]: symbol,
+        [this.candlesSchema.getModelField('SYMBOL_FIELD_NAME')]:
+          symbol,
         end,
-        _dateFieldName: [this.candlesSchema.dateFieldName]
+        _dateFieldName: this.candlesSchema
+          .getModelField('DATE_FIELD_NAME')
       },
-      this.candlesSchema.sort,
+      this.candlesSchema.getModelField('ORDER'),
       { withWorkerThreads }
     )
 
@@ -451,10 +453,12 @@ class CurrencyConverter {
     }
 
     const tempTableNames = await SyncTempTablesManager.getTempTableNamesByPattern(
-      this.candlesSchema.name,
+      this.candlesSchema.getModelField('NAME'),
       { dao: this.dao }
     )
-    const candles = Number.isInteger(candle?.[this.candlesSchema.dateFieldName])
+    const candles = Number.isInteger(
+      candle?.[this.candlesSchema.getModelField('DATE_FIELD_NAME')]
+    )
       ? [candle]
       : []
 
@@ -462,15 +466,19 @@ class CurrencyConverter {
       const candleFromTempTable = await this.dao.getElemInCollBy(
         candlesTempTableName,
         {
-          [this.candlesSchema.symbolFieldName]: symbol,
+          [this.candlesSchema.getModelField('SYMBOL_FIELD_NAME')]:
+            symbol,
           end,
-          _dateFieldName: [this.candlesSchema.dateFieldName]
+          _dateFieldName: this.candlesSchema
+            .getModelField('DATE_FIELD_NAME')
         },
-        this.candlesSchema.sort,
+        this.candlesSchema.getModelField('ORDER'),
         { withWorkerThreads }
       )
 
-      if (Number.isInteger(candleFromTempTable?.[this.candlesSchema.dateFieldName])) {
+      if (Number.isInteger(
+        candleFromTempTable?.[this.candlesSchema.getModelField('DATE_FIELD_NAME')])
+      ) {
         candles.push(candleFromTempTable)
       }
     }
@@ -481,7 +489,7 @@ class CurrencyConverter {
 
     const orderedCandles = orderBy(
       candles,
-      [this.candlesSchema.dateFieldName],
+      [this.candlesSchema.getModelField('DATE_FIELD_NAME')],
       ['desc']
     )
 
@@ -860,11 +868,12 @@ class CurrencyConverter {
     const start = _start
       ? mtsMoment
       : _start
-    const {
-      symbolFieldName,
-      dateFieldName,
-      timeframeFieldName
-    } = this.candlesSchema
+    const symbolFieldName = this.candlesSchema
+      .getModelField('SYMBOL_FIELD_NAME')
+    const dateFieldName = this.candlesSchema
+      .getModelField('DATE_FIELD_NAME')
+    const timeframeFieldName = this.candlesSchema
+      .getModelField('TIMEFRAME_FIELD_NAME')
     const symbFilter = (
       Array.isArray(symbol) &&
       symbol.length !== 0
