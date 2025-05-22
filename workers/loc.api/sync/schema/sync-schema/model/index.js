@@ -141,7 +141,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       this.#modelFieldKeys.push(name)
     }
 
-    this[BaseSyncSchemaModel.MODEL] = getModelOf(BaseSyncSchemaModel.NAME)
+    this[BaseSyncSchemaModel.MODEL] = getModelOf(this[BaseSyncSchemaModel.NAME])
 
     if (isNotFrozen) {
       return
