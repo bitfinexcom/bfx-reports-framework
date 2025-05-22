@@ -68,7 +68,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   clone () {
     return new SyncSchemaModel().setDataStructure(
-      cloneDeep(this),
+      cloneDeep(this.#modelFields),
       { isNotFrozen: true }
     )
   }
