@@ -38,6 +38,10 @@ class BaseSyncSchemaModel {
     Object.values(SUPPORTED_MODEL_FIELDS)
   )
 
+  static SUPPORTED_MODEL_FIELD_KEY_SET = new Set(
+    Object.keys(SUPPORTED_MODEL_FIELDS)
+  )
+
   static ALLOWED_COLLS_TYPES = {
     INSERTABLE_ARRAY_OBJECTS: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
     UPDATABLE_ARRAY_OBJECTS: COLLS_TYPES.UPDATABLE_ARRAY_OBJECTS,
@@ -63,6 +67,7 @@ class BaseSyncSchemaModel {
 
 freezeAndSealObjectDeeply(
   BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET,
+  BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_KEY_SET,
   BaseSyncSchemaModel.TABLES_NAMES,
   BaseSyncSchemaModel.ALLOWED_COLLS,
   BaseSyncSchemaModel.ALL_COLLS_TYPES,
