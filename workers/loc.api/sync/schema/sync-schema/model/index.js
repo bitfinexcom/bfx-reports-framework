@@ -304,6 +304,16 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
       return true
     }
     if (
+      name === BaseSyncSchemaModel.ADDITIONAL_FILTERING_PROPS &&
+      typeof value !== 'undefined' &&
+      (
+        !value ||
+        typeof value !== 'object'
+      )
+    ) {
+      return true
+    }
+    if (
       name === BaseSyncSchemaModel.TYPE &&
       this.#isNotAllowedCollType(value)
     ) {
