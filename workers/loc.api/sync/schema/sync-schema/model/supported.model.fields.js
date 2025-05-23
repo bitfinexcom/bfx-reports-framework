@@ -12,6 +12,7 @@ module.exports = {
   CONF_NAME: 'confName',
   IS_SYNC_REQUIRED_AT_LEAST_ONCE: 'isSyncRequiredAtLeastOnce',
   ADDITIONAL_API_CALL_ARGS: 'additionalApiCallArgs',
+  ADDITIONAL_FILTERING_PROPS: 'additionalFilteringProps',
   TYPE: 'type',
   MODEL: 'model',
   DATA_STRUCTURE_CONVERTER: 'dataStructureConverter',
