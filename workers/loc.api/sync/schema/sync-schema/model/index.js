@@ -8,6 +8,9 @@ const {
 const {
   freezeAndSealObjectDeeply
 } = require('../../helpers')
+const {
+  cloneModel
+} = require('./helpers')
 const { getModelOf } = require('../../models')
 
 const BaseSyncSchemaModel = require('./base.sync.schema.model')
@@ -68,7 +71,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   clone () {
     return new SyncSchemaModel().setDataStructure(
-      cloneDeep(this.#modelFields),
+      cloneModel(this.#modelFields),
       { isNotFrozen: true }
     )
   }
