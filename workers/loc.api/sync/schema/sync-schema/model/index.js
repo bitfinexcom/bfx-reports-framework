@@ -101,6 +101,25 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     const { isNotFrozen } = opts ?? {}
 
     for (const name of BaseSyncSchemaModel.SUPPORTED_MODEL_FIELD_SET) {
+      /*
+       * Check required fields
+       */
+      if (
+        (
+          name === BaseSyncSchemaModel.NAME ||
+          name === BaseSyncSchemaModel.TYPE
+        ) &&
+        (
+          !this[name] ||
+          typeof this[name] !== 'string'
+        )
+      ) {
+        throw new SyncSchemaModelCreationError({
+          modelFieldName: name,
+          modelFieldValue: this[name]
+        })
+      }
+
       if (
         name === BaseSyncSchemaModel.MAX_LIMIT &&
         !Number.isInteger(this[name]) &&
