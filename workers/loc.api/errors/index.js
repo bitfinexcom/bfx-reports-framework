@@ -284,6 +284,12 @@ class SyncSchemaModelCreationError extends BaseError {
   }
 }
 
+class SyncSchemaModelFieldKeyNameAccessError extends BaseError {
+  constructor (data, message = 'ERR_MODEL_FIELD_KEY_NAME_IS_NOT_ALLOWED') {
+    super({ data, message })
+  }
+}
+
 module.exports = {
   BaseError,
   CollSyncPermissionError,
@@ -326,5 +332,6 @@ module.exports = {
   PubTradeFindForTrxTaxError,
   PubTradePriceFindForTrxTaxError,
   DbModelCreationError,
-  SyncSchemaModelCreationError
+  SyncSchemaModelCreationError,
+  SyncSchemaModelFieldKeyNameAccessError
 }
