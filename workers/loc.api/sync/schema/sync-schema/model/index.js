@@ -3,7 +3,8 @@
 const { cloneDeep } = require('lib-js-util-base')
 
 const {
-  SyncSchemaModelCreationError
+  SyncSchemaModelCreationError,
+  SyncSchemaModelFieldKeyNameAccessError
 } = require('../../../../errors')
 const {
   freezeAndSealObjectDeeply
@@ -78,7 +79,7 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   getModelField (fieldkey) {
     if (this.#isNotAllowedModelFieldKey(fieldkey)) {
-      throw new Error('ERR_MODEL_FIELD_KEY_NAME_IS_NOT_ALLOWED')
+      throw new SyncSchemaModelFieldKeyNameAccessError()
     }
 
     return this[this.constructor[fieldkey]]
