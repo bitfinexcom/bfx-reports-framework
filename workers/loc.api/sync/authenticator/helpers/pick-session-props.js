@@ -27,6 +27,7 @@ module.exports = (session, isReturnedPassword) => {
     'isSyncOnStartupRequired',
     'authTokenTTLSec',
     'isStagingBfxApi',
+    'isUserMerchant',
     ...passwordProp
   ]
   const { subUsers: reqSubUsers } = { ...session }

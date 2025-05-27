@@ -74,7 +74,8 @@ class SubAccount {
             'timezone',
             'username',
             'password',
-            'isNotProtected'
+            'isNotProtected',
+            'isUserMerchant'
           ],
           isDecryptedApiKeys: true,
           isReturnedPassword: true
@@ -179,7 +180,8 @@ class SubAccount {
                 'apiKey',
                 'apiSecret',
                 'timezone',
-                'username'
+                'username',
+                'isUserMerchant'
               ],
               isDecryptedApiKeys: true,
               isNotInTrans: true,
@@ -464,7 +466,8 @@ class SubAccount {
                 'apiKey',
                 'apiSecret',
                 'timezone',
-                'username'
+                'username',
+                'isUserMerchant'
               ],
               isDecryptedApiKeys: true,
               isNotInTrans: true,

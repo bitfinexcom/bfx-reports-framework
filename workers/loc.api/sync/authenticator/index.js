@@ -159,7 +159,8 @@ class Authenticator {
       email,
       timezone,
       username: uName,
-      id
+      id,
+      isUserMerchant
     } = isDisabledApiKeysVerification
       ? { ...auth }
       : await this.getDataFromApi({
@@ -217,6 +218,7 @@ class Authenticator {
         timezone,
         username,
         id,
+        isUserMerchant: serializeVal(isUserMerchant),
         authToken: encryptedAuthToken,
         apiKey: encryptedApiKey,
         apiSecret: encryptedApiSecret,
@@ -250,7 +252,8 @@ class Authenticator {
       : {
           email,
           isSubAccount: user.isSubAccount,
-          token
+          token,
+          isUserMerchant: user.isUserMerchant
         }
 
     if (!isNotSetSession) {
@@ -360,7 +363,8 @@ class Authenticator {
       timezone,
       username: uName,
       email: emailFromApi,
-      isStagingBfxApi
+      isStagingBfxApi,
+      isUserMerchant
     } = userData ?? {}
     const username = generateSubUserName(
       { username: uName },
@@ -379,6 +383,7 @@ class Authenticator {
         ? user.isDataFromDb
         : isDataFromDb,
       isStagingBfxApi,
+      isUserMerchant: !!isUserMerchant,
       ...newAuthToken
         ? { authToken: newAuthToken }
         : null
@@ -456,6 +461,7 @@ class Authenticator {
     return {
       ...returnedUser,
       email: emailFromApi,
+      isUserMerchant: !!isUserMerchant,
       isSubAccount: isSubAccountFromDb,
       token: createdToken,
       shouldNotSyncOnStartupAfterUpdate,
@@ -560,7 +566,8 @@ class Authenticator {
       id,
       email,
       timezone,
-      username: uName
+      username: uName,
+      isUserMerchant
     } = await this.getDataFromApi({
       getData: (s, args) => this.rService._checkAuthInApi(args),
       args,
@@ -621,6 +628,7 @@ class Authenticator {
       timezone,
       username,
       email,
+      isUserMerchant: !!isUserMerchant,
       authToken,
       apiKey,
       apiSecret,
