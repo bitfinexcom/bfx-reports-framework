@@ -184,13 +184,17 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObj(schema?.type, { isPublic: true })) {
+
+      const type = schema.getModelField('TYPE')
+      const name = schema.getModelField('NAME')
+
+      if (!isInsertableArrObj(type, { isPublic: true })) {
         continue
       }
 
       this._resetSyncSchemaProps(schema)
 
-      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+      if (name === this.ALLOWED_COLLS.CANDLES) {
         // If `authMap` is empty sync candles for all users
         const _authMap = (
           !(authMap instanceof Map) ||
@@ -208,9 +212,9 @@ class DataChecker {
         }
       }
       if (
-        schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-        schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
-        schema.name === this.ALLOWED_COLLS.CANDLES
+        name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
+        name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
+        name === this.ALLOWED_COLLS.CANDLES
       ) {
         await this._checkNewConfigurablePublicData(method, schema)
 
