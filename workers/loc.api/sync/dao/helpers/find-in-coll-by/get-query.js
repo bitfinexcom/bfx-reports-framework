@@ -13,7 +13,8 @@ const getFilterParams = require('./get-filter-params')
 
 module.exports = (args, methodColl, opts) => {
   const { params } = { ...args }
-  const { sort: _sort, model } = { ...methodColl }
+  const _sort = methodColl.getModelField('ORDER')
+  const model = methodColl.getModelField('MODEL')
   const {
     isPublic,
     additionalModel,

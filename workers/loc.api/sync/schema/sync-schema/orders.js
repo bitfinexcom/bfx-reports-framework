@@ -1,20 +1,13 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
-const ALLOWED_COLLS = require('../allowed.colls')
-const COLLS_TYPES = require('../colls.types')
+const Model = require('./model')
 
-const { getModelOf } = require('../models')
-
-module.exports = {
-  name: ALLOWED_COLLS.ORDERS,
-  maxLimit: 2500,
-  dateFieldName: 'mtsUpdate',
-  symbolFieldName: 'symbol',
-  sort: [['mtsUpdate', -1]],
-  hasNewData: false,
-  start: [],
-  isSyncRequiredAtLeastOnce: false,
-  type: COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS,
-  model: getModelOf(TABLES_NAMES.ORDERS)
-}
+module.exports = new Model({
+  [Model.NAME]: Model.ALLOWED_COLLS.ORDERS,
+  [Model.MAX_LIMIT]: 2_500,
+  [Model.DATE_FIELD_NAME]: 'mtsUpdate',
+  [Model.SYMBOL_FIELD_NAME]: 'symbol',
+  [Model.ORDER]: [['mtsUpdate', Model.ORDERS.DESC]],
+  [Model.IS_SYNC_REQUIRED_AT_LEAST_ONCE]: false,
+  [Model.TYPE]: Model.ALLOWED_COLLS_TYPES.INSERTABLE_ARRAY_OBJECTS
+})

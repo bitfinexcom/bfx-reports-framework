@@ -38,7 +38,7 @@ module.exports = (args, methodColl, opts) => {
       throw new AuthError()
     }
     if (
-      methodColl.name === TABLES_NAMES.LEDGERS &&
+      methodColl.getModelField('NAME') === TABLES_NAMES.LEDGERS &&
       isSubAccount
     ) {
       filter._isBalanceRecalced = 1

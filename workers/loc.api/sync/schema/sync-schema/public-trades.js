@@ -1,25 +1,15 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
-const ALLOWED_COLLS = require('../allowed.colls')
-const COLLS_TYPES = require('../colls.types')
-const PUBLIC_COLLS_CONF_NAMES = require(
-  '../../colls.accessors/public.colls.conf.names'
-)
+const Model = require('./model')
 
-const { getModelOf } = require('../models')
-
-module.exports = {
-  name: ALLOWED_COLLS.PUBLIC_TRADES,
-  maxLimit: 5000,
-  dateFieldName: 'mts',
-  symbolFieldName: '_symbol',
-  sort: [['mts', -1]],
-  hasNewData: false,
-  start: [],
-  confName: PUBLIC_COLLS_CONF_NAMES.PUBLIC_TRADES_CONF,
-  isSyncRequiredAtLeastOnce: false,
-  additionalApiCallArgs: { isNotMoreThanInnerMax: true },
-  type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-  model: getModelOf(TABLES_NAMES.PUBLIC_TRADES)
-}
+module.exports = new Model({
+  [Model.NAME]: Model.ALLOWED_COLLS.PUBLIC_TRADES,
+  [Model.MAX_LIMIT]: 5_000,
+  [Model.DATE_FIELD_NAME]: 'mts',
+  [Model.SYMBOL_FIELD_NAME]: '_symbol',
+  [Model.ORDER]: [['mts', Model.ORDERS.DESC]],
+  [Model.CONF_NAME]: Model.PUBLIC_COLLS_CONF_NAMES.PUBLIC_TRADES_CONF,
+  [Model.IS_SYNC_REQUIRED_AT_LEAST_ONCE]: false,
+  [Model.ADDITIONAL_API_CALL_ARGS]: { isNotMoreThanInnerMax: true },
+  [Model.TYPE]: Model.ALLOWED_COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS
+})

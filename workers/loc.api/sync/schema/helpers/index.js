@@ -1,32 +1,23 @@
 'use strict'
 
-const { omit, cloneDeep } = require('lib-js-util-base')
-const Model = require('../models/model')
-
-const cloneSchema = (map, omittedFields = []) => {
-  const arr = [...map].map(([key, schema]) => {
-    const normalizedSchema = omit(schema, omittedFields)
-    const clonedSchema = {}
-
-    for (const [propName, value] of Object.entries(normalizedSchema)) {
-      if (
-        typeof value === 'function' ||
-        value instanceof Model
-      ) {
-        clonedSchema[propName] = value
-
-        continue
-      }
-
-      clonedSchema[propName] = cloneDeep(value)
+const freezeAndSealObjectDeeply = (...args) => {
+  for (const object of args) {
+    if (
+      !object ||
+      typeof object !== 'object'
+    ) {
+      return
     }
 
-    return [key, clonedSchema]
-  })
+    Object.freeze(object)
+    Object.seal(object)
 
-  return new Map(arr)
+    for (const value of Object.values(object)) {
+      freezeAndSealObjectDeeply(value)
+    }
+  }
 }
 
 module.exports = {
-  cloneSchema
+  freezeAndSealObjectDeeply
 }

@@ -904,10 +904,15 @@ class BetterSqliteDAO extends DAO {
       isNotDataConverted = false
     } = { ...opts }
     const filterModelName = filterModelNameMap.get(method)
-    const methodColl = {
-      ...this._getMethodCollMap().get(method),
-      ...schema
-    }
+    const methodColl = (
+      schema &&
+      typeof schema === 'object'
+    )
+      ? this._getMethodCollMap()
+        .get(method)
+        .clone()
+        .setDataStructure(schema)
+      : this._getMethodCollMap().get(method)
 
     const args = normalizeFilterParams(method, reqArgs)
     checkFilterParams(filterModelName, args)
