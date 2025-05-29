@@ -85,6 +85,16 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
     return this[this.constructor[fieldkey]]
   }
 
+  setModelField (fieldkey, value) {
+    if (this.#isNotAllowedModelFieldKey(fieldkey)) {
+      throw new SyncSchemaModelFieldKeyNameAccessError()
+    }
+
+    this[this.constructor[fieldkey]] = value
+
+    return this
+  }
+
   getModelFields (opts) {
     return opts?.isCloned
       ? cloneDeep(this.#modelFields)
