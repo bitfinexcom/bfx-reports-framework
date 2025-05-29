@@ -225,11 +225,9 @@ class DataChecker {
     }
 
     const currMts = Date.now()
-    const {
-      type,
-      confName,
-      timeframeFieldName
-    } = schema ?? {}
+    const type = schema.getModelField('TYPE')
+    const confName = schema.getModelField('CONF_NAME')
+    const timeframeFieldName = schema.getModelField('TIMEFRAME_FIELD_NAME')
     const groupResBy = (
       timeframeFieldName &&
       typeof timeframeFieldName === 'string'
@@ -282,8 +280,8 @@ class DataChecker {
         !syncUserStepData.isBaseStepReady ||
         !syncUserStepData.isCurrStepReady
       ) {
-        schema.hasNewData = true
-        schema.start.push(syncUserStepData)
+        schema.setModelField('HAS_NEW_DATA', true)
+        schema.getModelField('START').push(syncUserStepData)
 
         if (isUpdatable(type)) {
           continue
@@ -297,8 +295,8 @@ class DataChecker {
           isCurrStepReady: false
         })
 
-        schema.hasNewData = true
-        schema.start.push(freshSyncUserStepData)
+        schema.setModelField('HAS_NEW_DATA', true)
+        schema.getModelField('START').push(freshSyncUserStepData)
 
         continue
       }
@@ -340,8 +338,8 @@ class DataChecker {
         })
       }
 
-      schema.hasNewData = true
-      schema.start.push(freshSyncUserStepData)
+      schema.setModelField('HAS_NEW_DATA', true)
+      schema.getModelField('START').push(freshSyncUserStepData)
     }
   }
 
