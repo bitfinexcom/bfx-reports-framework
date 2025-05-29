@@ -113,7 +113,10 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObj(schema?.type, { isPrivate: true })) {
+
+      const type = schema.getModelField('TYPE')
+
+      if (!isInsertableArrObj(type, { isPrivate: true })) {
         continue
       }
 
