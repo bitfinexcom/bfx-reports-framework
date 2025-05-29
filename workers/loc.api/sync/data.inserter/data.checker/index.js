@@ -717,8 +717,9 @@ class DataChecker {
   }
 
   _resetSyncSchemaProps (schema) {
-    schema.hasNewData = false
-    schema.start = []
+    schema
+      .setModelField('HAS_NEW_DATA', false)
+      .setModelField('START', [])
   }
 
   _getMethodCollMap () {
