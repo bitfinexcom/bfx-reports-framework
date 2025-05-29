@@ -156,8 +156,8 @@ class DataChecker {
       !syncUserStepData.isBaseStepReady ||
       !syncUserStepData.isCurrStepReady
     ) {
-      schema.hasNewData = true
-      schema.start.push(syncUserStepData)
+      schema.setModelField('HAS_NEW_DATA', true)
+      schema.getModelField('START').push(syncUserStepData)
     }
 
     const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
@@ -175,8 +175,8 @@ class DataChecker {
       currEnd: currMts,
       isCurrStepReady: false
     })
-    schema.hasNewData = true
-    schema.start.push(freshSyncUserStepData)
+    schema.setModelField('HAS_NEW_DATA', true)
+    schema.getModelField('START').push(freshSyncUserStepData)
   }
 
   async _checkNewDataPublicArrObjType (authMap, methodCollMap) {
