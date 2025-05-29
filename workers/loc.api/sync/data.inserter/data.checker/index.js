@@ -475,16 +475,20 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
+
+      const type = schema.getModelField('TYPE')
+      const name = schema.getModelField('TYPE')
+
       if (
-        !isUpdatable(schema?.type) ||
-        !isPublic(schema?.type)
+        !isUpdatable(type) ||
+        !isPublic(type)
       ) {
         continue
       }
 
       this._resetSyncSchemaProps(schema)
 
-      const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+      const hasStatusMessagesSection = name === this.ALLOWED_COLLS.STATUS_MESSAGES
 
       if (hasStatusMessagesSection) {
         await this._checkNewConfigurablePublicData(method, schema)
@@ -507,8 +511,8 @@ class DataChecker {
         !syncUserStepData.isBaseStepReady ||
         !syncUserStepData.isCurrStepReady
       ) {
-        schema.hasNewData = true
-        schema.start.push(syncUserStepData)
+        schema.setModelField('HAS_NEW_DATA', true)
+        schema.getModelField('START').push(syncUserStepData)
 
         continue
       }
@@ -517,8 +521,8 @@ class DataChecker {
         ...syncUserStepData.getParams(),
         isCurrStepReady: false
       })
-      schema.hasNewData = true
-      schema.start.push(freshSyncUserStepData)
+      schema.setModelField('HAS_NEW_DATA', true)
+      schema.getModelField('START').push(freshSyncUserStepData)
     }
   }
 
