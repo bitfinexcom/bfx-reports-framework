@@ -422,7 +422,7 @@ class DataChecker {
         !syncUserStepData.isBaseStepReady ||
         !syncUserStepData.isCurrStepReady
       ) {
-        schema.hasNewData = true
+        schema.setModelField('HAS_NEW_DATA', true)
       }
 
       const wasStartPointChanged = this._wasStartPointChanged(
@@ -441,7 +441,7 @@ class DataChecker {
           isBaseStepReady: false
         })
 
-        schema.hasNewData = true
+        schema.setModelField('HAS_NEW_DATA', true)
       }
       if (shouldFreshSyncBeAdded) {
         syncUserStepData.setParams({
@@ -450,10 +450,10 @@ class DataChecker {
           isCurrStepReady: false
         })
 
-        schema.hasNewData = true
+        schema.setModelField('HAS_NEW_DATA', true)
       }
 
-      if (!schema.hasNewData) {
+      if (!schema.getModelField('HAS_NEW_DATA')) {
         continue
       }
 
@@ -466,7 +466,7 @@ class DataChecker {
       }
 
       syncUserStepData.auth = auth
-      schema.start.push(syncUserStepData)
+      schema.getModelField('START').push(syncUserStepData)
     }
   }
 
