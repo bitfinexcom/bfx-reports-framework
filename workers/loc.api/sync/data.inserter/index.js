@@ -705,7 +705,9 @@ class DataInserter extends EventEmitter {
       hasTimeframe,
       areAllSymbolsRequired
     } = syncUserStepData
-    const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+    const name = schema.getModelField('NAME')
+    const dateFieldName = schema.getModelField('DATE_FIELD_NAME')
+    const hasStatusMessagesSection = name === this.ALLOWED_COLLS.STATUS_MESSAGES
 
     const checkOpts = {
       shouldNotMtsBeChecked: true,
@@ -731,7 +733,7 @@ class DataInserter extends EventEmitter {
       const statusMessagesParams = {
         ...params,
         filter: {
-          $gte: { [schema?.dateFieldName]: baseStart }
+          $gte: { [dateFieldName]: baseStart }
         }
       }
 
@@ -756,7 +758,7 @@ class DataInserter extends EventEmitter {
       const statusMessagesParams = {
         ...params,
         filter: {
-          $gte: { [schema?.dateFieldName]: currStart }
+          $gte: { [dateFieldName]: currStart }
         }
       }
 
