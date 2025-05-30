@@ -482,7 +482,7 @@ class DataChecker {
       }
 
       const type = schema.getModelField('TYPE')
-      const name = schema.getModelField('TYPE')
+      const name = schema.getModelField('NAME')
 
       if (
         !isUpdatable(type) ||
