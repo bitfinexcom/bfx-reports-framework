@@ -430,7 +430,8 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
+    const name = schema.getModelField('NAME')
+    const hasCandlesSection = name === this.ALLOWED_COLLS.CANDLES
     const _auth = (
       hasCandlesSection &&
       syncUserStepData?.auth
