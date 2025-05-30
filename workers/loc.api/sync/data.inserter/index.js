@@ -528,17 +528,17 @@ class DataInserter extends EventEmitter {
       !authToken
     )
     const isPrivate = !isPublic
+    const type = schema.getModelField('TYPE')
 
-    if (!isInsertableArrObj(schema?.type, { isPublic, isPrivate })) {
+    if (!isInsertableArrObj(type, { isPublic, isPrivate })) {
       return
     }
 
-    const {
-      name: collName,
-      dateFieldName,
-      model,
-      shouldNotApiMiddlewareBeLaunched
-    } = schema
+    const collName = schema.getModelField('NAME')
+    const dateFieldName = schema.getModelField('DATE_FIELD_NAME')
+    const model = schema.getModelField('MODEL')
+    const shouldNotApiMiddlewareBeLaunched = schema
+      .getModelField('SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED')
 
     const _args = cloneDeep(args)
     _args.params.notThrowError = true
