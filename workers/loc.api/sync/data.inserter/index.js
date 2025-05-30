@@ -301,16 +301,18 @@ class DataInserter extends EventEmitter {
       await this.wsEventEmitter
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
-      const { type, start } = schema ?? {}
+      const name = schema.getModelField('NAME')
+      const type = schema.getModelField('TYPE')
+      const start = schema.getModelField('START')
 
-      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+      if (name === this.ALLOWED_COLLS.CANDLES) {
         // Considers 10 reqs/min for candles
         const leftTime = Math.floor((60 / 10) * start.length * 1000)
         this.progress.setCandlesLeftTime(leftTime)
       }
 
       for (const syncUserStepData of start) {
-        if (isInsertableArrObj(schema?.type, { isPublic: true })) {
+        if (isInsertableArrObj(type, { isPublic: true })) {
           await this._insertApiData(
             method,
             schema,
