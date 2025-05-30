@@ -394,7 +394,7 @@ class DataInserter extends EventEmitter {
         auth
       )
 
-      const { start } = schema ?? {}
+      const start = schema.getModelField('START')
 
       for (const syncUserStepData of start) {
         await this._insertApiData(
