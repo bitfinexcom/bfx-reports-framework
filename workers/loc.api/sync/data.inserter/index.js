@@ -784,18 +784,19 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
+    const type = schema.getModelField('TYPE')
+    const collName = schema.getModelField('NAME')
+    const projection = schema.getModelField('PROJECTION')
+    const shouldNotApiMiddlewareBeLaunched = schema
+      .getModelField('SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED')
+
     if (
       this._isInterrupted ||
-      !isUpdatableArr(schema?.type, { isPublic: true })
+      !isUpdatableArr(type, { isPublic: true })
     ) {
       return
     }
 
-    const {
-      name: collName,
-      projection,
-      shouldNotApiMiddlewareBeLaunched
-    } = schema
     const _projection = Array.isArray(projection)
       ? projection
       : [projection]
