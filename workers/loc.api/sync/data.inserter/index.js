@@ -923,9 +923,12 @@ class DataInserter extends EventEmitter {
         const updatesForOneUserPromises = []
 
         for (const [collName, schema] of methodCollMap) {
+          const type = schema.getModelField('TYPE')
+          const start = schema.getModelField('START')
+
           if (
-            !Array.isArray(schema?.start) ||
-            schema.start.length === 0
+            !Array.isArray(start) ||
+            start.length === 0
           ) {
             continue
           }
@@ -938,8 +941,8 @@ class DataInserter extends EventEmitter {
             subUserId,
             syncedAt,
             ...this.syncUserStepManager.wereStepsSynced(
-              schema.start,
-              { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
+              start,
+              { shouldNotMtsBeChecked: isUpdatable(type) }
             )
           }, { doNotQueueQuery: true })
           updatesForOneUserPromises.push(promise)
@@ -948,16 +951,20 @@ class DataInserter extends EventEmitter {
         await Promise.all(updatesForOneUserPromises)
       }
       for (const [collName, schema] of pubMethodCollMap) {
+        const name = schema.getModelField('NAME')
+        const type = schema.getModelField('TYPE')
+        const start = schema.getModelField('START')
+
         if (
-          !Array.isArray(schema?.start) ||
-          schema.start.length === 0
+          !Array.isArray(start) ||
+          start.length === 0
         ) {
           continue
         }
 
-        const startWithAuth = schema.start
+        const startWithAuth = start
           .filter((syncUserStepData) => syncUserStepData?.auth)
-        const startWithoutAuth = schema.start
+        const startWithoutAuth = start
           .filter((syncUserStepData) => !syncUserStepData?.auth)
 
         if (startWithAuth.length > 0) {
@@ -972,8 +979,8 @@ class DataInserter extends EventEmitter {
               ...this.syncUserStepManager.wereStepsSynced(
                 [syncUserStepData],
                 {
-                  shouldNotMtsBeChecked: isUpdatable(schema?.type),
-                  shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+                  shouldNotMtsBeChecked: isUpdatable(type),
+                  shouldStartMtsBeChecked: name === this.ALLOWED_COLLS.STATUS_MESSAGES
                 }
               )
             }, { doNotQueueQuery: true })
@@ -986,10 +993,10 @@ class DataInserter extends EventEmitter {
             collName,
             syncedAt,
             ...this.syncUserStepManager.wereStepsSynced(
-              schema.start,
+              start,
               {
-                shouldNotMtsBeChecked: isUpdatable(schema?.type),
-                shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+                shouldNotMtsBeChecked: isUpdatable(type),
+                shouldStartMtsBeChecked: name === this.ALLOWED_COLLS.STATUS_MESSAGES
               }
             )
           }, { doNotQueueQuery: true })
