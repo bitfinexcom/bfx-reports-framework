@@ -71,10 +71,10 @@ class TotalFeesReport {
 
     const ledgers = await this._getLedgers(_args)
 
-    const {
-      dateFieldName: ledgersDateFieldName,
-      symbolFieldName: ledgersSymbolFieldName
-    } = this.ledgersMethodColl
+    const ledgersDateFieldName = this.ledgersMethodColl
+      .getModelField('DATE_FIELD_NAME')
+    const ledgersSymbolFieldName = this.ledgersMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
 
     const ledgersGroupedByTimeframe = await groupByTimeframe(
       ledgers,
