@@ -37,7 +37,8 @@ class SummaryByAsset {
     this.ledgersModelFields = this.syncSchema
       .getModelOf(this.ALLOWED_COLLS.LEDGERS)
       .getModelFields()
-    this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
+    this.ledgersSymbolFieldName = this.ledgersMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
   }
 
   async getSummaryByAsset (args) {
