@@ -259,7 +259,9 @@ class SyncQueue extends EventEmitter {
 
   _filterMethodCollMap (methodCollMap, regExp) {
     return new Map([...methodCollMap]
-      .filter(([key, { type }]) => (regExp.test(type))))
+      .filter(([key, schema]) => (
+        regExp.test(schema.getModelField('TYPE'))
+      )))
   }
 
   _getAllMultipliers () {
