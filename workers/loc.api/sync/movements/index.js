@@ -40,7 +40,7 @@ class Movements {
       end = Date.now(),
       filter: _filter,
       sort = [['mtsUpdated', -1]],
-      projection = this.movementsModel,
+      projection = this.movementsModelFields,
       exclude = ['user_id'],
       isExcludePrivate = true,
       isWithdrawals = false,
