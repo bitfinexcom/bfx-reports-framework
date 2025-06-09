@@ -113,7 +113,10 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObj(schema?.type, { isPrivate: true })) {
+
+      const type = schema.getModelField('TYPE')
+
+      if (!isInsertableArrObj(type, { isPrivate: true })) {
         continue
       }
 
@@ -156,8 +159,8 @@ class DataChecker {
       !syncUserStepData.isBaseStepReady ||
       !syncUserStepData.isCurrStepReady
     ) {
-      schema.hasNewData = true
-      schema.start.push(syncUserStepData)
+      schema.setModelField('HAS_NEW_DATA', true)
+      schema.getModelField('START').push(syncUserStepData)
     }
 
     const shouldFreshSyncBeAdded = this._shouldFreshSyncBeAdded(
@@ -175,8 +178,8 @@ class DataChecker {
       currEnd: currMts,
       isCurrStepReady: false
     })
-    schema.hasNewData = true
-    schema.start.push(freshSyncUserStepData)
+    schema.setModelField('HAS_NEW_DATA', true)
+    schema.getModelField('START').push(freshSyncUserStepData)
   }
 
   async _checkNewDataPublicArrObjType (authMap, methodCollMap) {
@@ -184,13 +187,17 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
-      if (!isInsertableArrObj(schema?.type, { isPublic: true })) {
+
+      const type = schema.getModelField('TYPE')
+      const name = schema.getModelField('NAME')
+
+      if (!isInsertableArrObj(type, { isPublic: true })) {
         continue
       }
 
       this._resetSyncSchemaProps(schema)
 
-      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+      if (name === this.ALLOWED_COLLS.CANDLES) {
         // If `authMap` is empty sync candles for all users
         const _authMap = (
           !(authMap instanceof Map) ||
@@ -208,9 +215,9 @@ class DataChecker {
         }
       }
       if (
-        schema.name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
-        schema.name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
-        schema.name === this.ALLOWED_COLLS.CANDLES
+        name === this.ALLOWED_COLLS.PUBLIC_TRADES ||
+        name === this.ALLOWED_COLLS.TICKERS_HISTORY ||
+        name === this.ALLOWED_COLLS.CANDLES
       ) {
         await this._checkNewConfigurablePublicData(method, schema)
 
@@ -225,11 +232,9 @@ class DataChecker {
     }
 
     const currMts = Date.now()
-    const {
-      type,
-      confName,
-      timeframeFieldName
-    } = schema ?? {}
+    const type = schema.getModelField('TYPE')
+    const confName = schema.getModelField('CONF_NAME')
+    const timeframeFieldName = schema.getModelField('TIMEFRAME_FIELD_NAME')
     const groupResBy = (
       timeframeFieldName &&
       typeof timeframeFieldName === 'string'
@@ -282,8 +287,8 @@ class DataChecker {
         !syncUserStepData.isBaseStepReady ||
         !syncUserStepData.isCurrStepReady
       ) {
-        schema.hasNewData = true
-        schema.start.push(syncUserStepData)
+        schema.setModelField('HAS_NEW_DATA', true)
+        schema.getModelField('START').push(syncUserStepData)
 
         if (isUpdatable(type)) {
           continue
@@ -297,8 +302,8 @@ class DataChecker {
           isCurrStepReady: false
         })
 
-        schema.hasNewData = true
-        schema.start.push(freshSyncUserStepData)
+        schema.setModelField('HAS_NEW_DATA', true)
+        schema.getModelField('START').push(freshSyncUserStepData)
 
         continue
       }
@@ -340,8 +345,8 @@ class DataChecker {
         })
       }
 
-      schema.hasNewData = true
-      schema.start.push(freshSyncUserStepData)
+      schema.setModelField('HAS_NEW_DATA', true)
+      schema.getModelField('START').push(freshSyncUserStepData)
     }
   }
 
@@ -422,7 +427,7 @@ class DataChecker {
         !syncUserStepData.isBaseStepReady ||
         !syncUserStepData.isCurrStepReady
       ) {
-        schema.hasNewData = true
+        schema.setModelField('HAS_NEW_DATA', true)
       }
 
       const wasStartPointChanged = this._wasStartPointChanged(
@@ -441,7 +446,7 @@ class DataChecker {
           isBaseStepReady: false
         })
 
-        schema.hasNewData = true
+        schema.setModelField('HAS_NEW_DATA', true)
       }
       if (shouldFreshSyncBeAdded) {
         syncUserStepData.setParams({
@@ -450,10 +455,10 @@ class DataChecker {
           isCurrStepReady: false
         })
 
-        schema.hasNewData = true
+        schema.setModelField('HAS_NEW_DATA', true)
       }
 
-      if (!schema.hasNewData) {
+      if (!schema.getModelField('HAS_NEW_DATA')) {
         continue
       }
 
@@ -466,7 +471,7 @@ class DataChecker {
       }
 
       syncUserStepData.auth = auth
-      schema.start.push(syncUserStepData)
+      schema.getModelField('START').push(syncUserStepData)
     }
   }
 
@@ -475,16 +480,20 @@ class DataChecker {
       if (this._isInterrupted) {
         return
       }
+
+      const type = schema.getModelField('TYPE')
+      const name = schema.getModelField('NAME')
+
       if (
-        !isUpdatable(schema?.type) ||
-        !isPublic(schema?.type)
+        !isUpdatable(type) ||
+        !isPublic(type)
       ) {
         continue
       }
 
       this._resetSyncSchemaProps(schema)
 
-      const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+      const hasStatusMessagesSection = name === this.ALLOWED_COLLS.STATUS_MESSAGES
 
       if (hasStatusMessagesSection) {
         await this._checkNewConfigurablePublicData(method, schema)
@@ -507,8 +516,8 @@ class DataChecker {
         !syncUserStepData.isBaseStepReady ||
         !syncUserStepData.isCurrStepReady
       ) {
-        schema.hasNewData = true
-        schema.start.push(syncUserStepData)
+        schema.setModelField('HAS_NEW_DATA', true)
+        schema.getModelField('START').push(syncUserStepData)
 
         continue
       }
@@ -517,8 +526,8 @@ class DataChecker {
         ...syncUserStepData.getParams(),
         isCurrStepReady: false
       })
-      schema.hasNewData = true
-      schema.start.push(freshSyncUserStepData)
+      schema.setModelField('HAS_NEW_DATA', true)
+      schema.getModelField('START').push(freshSyncUserStepData)
     }
   }
 
@@ -717,8 +726,9 @@ class DataChecker {
   }
 
   _resetSyncSchemaProps (schema) {
-    schema.hasNewData = false
-    schema.start = []
+    schema
+      .setModelField('HAS_NEW_DATA', false)
+      .setModelField('START', [])
   }
 
   _getMethodCollMap () {

@@ -206,10 +206,10 @@ class Trades {
       symbol
     }
 
-    const {
-      symbolFieldName: tradesSymbolFieldName,
-      dateFieldName: tradesDateFieldName
-    } = this.tradesMethodColl
+    const tradesSymbolFieldName = this.tradesMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
+    const tradesDateFieldName = this.tradesMethodColl
+      .getModelField('DATE_FIELD_NAME')
 
     const trades = await this._getTrades(args)
     const calcedTradesAmount = this._calcAmounts(
@@ -267,9 +267,8 @@ class Trades {
       end = Date.now(),
       timeframe = 'day'
     } = params ?? {}
-    const {
-      symbolFieldName: tradesSymbolFieldName
-    } = this.tradesMethodColl
+    const tradesSymbolFieldName = this.tradesMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
     const args = {
       auth,
       params: {

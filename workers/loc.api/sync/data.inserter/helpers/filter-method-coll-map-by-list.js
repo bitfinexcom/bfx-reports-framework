@@ -8,9 +8,11 @@ const _reduceMethodCollMap = (
   isAllowed = () => true
 ) => {
   return [..._methodCollMap].reduce((accum, curr) => {
+    const name = curr[1].getModelField('NAME')
+
     if (
-      accum.every(item => item.name !== curr[1].name) &&
-      res.every(item => item.name !== curr[1].name) &&
+      accum.every(item => item.name !== name) &&
+      res.every(item => item.name !== name) &&
       isAllowed(curr)
     ) {
       accum.push(curr)
@@ -21,11 +23,15 @@ const _reduceMethodCollMap = (
 }
 
 const _isPubColl = (coll) => {
-  return isPublic(coll[1].type)
+  const type = coll[1].getModelField('TYPE')
+
+  return isPublic(type)
 }
 
 const _isAllowedColl = (coll, allowedCollsNames) => {
-  return allowedCollsNames.some(item => item === coll[1].name)
+  const name = coll[1].getModelField('NAME')
+
+  return allowedCollsNames.some(item => item === name)
 }
 
 module.exports = (
@@ -81,7 +87,11 @@ module.exports = (
     const subRes = _reduceMethodCollMap(
       _methodCollMap,
       res,
-      curr => curr[1].name === collName
+      (curr) => {
+        const name = curr[1].getModelField('NAME')
+
+        return name === collName
+      }
     )
 
     res.push(...subRes)

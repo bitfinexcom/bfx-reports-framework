@@ -54,7 +54,8 @@ class PositionsSnapshot {
       .getModelFields()
     this.positionsSnapshotMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.POSITIONS_SNAPSHOT)
-    this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl.symbolFieldName
+    this.positionsSnapshotSymbolFieldName = this.positionsSnapshotMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
   }
 
   _getPositionsHistory (

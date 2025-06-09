@@ -200,14 +200,13 @@ class SyncUserStepManager {
       defaultStart: _defaultStart = MIN_START_MTS,
       currMts = Date.now()
     } = params ?? {}
-    const {
-      name: tableName,
-      dateFieldName,
-      symbolFieldName,
-      timeframeFieldName,
-      sort: tableOrder,
-      model
-    } = syncSchema ?? {}
+    const tableName = syncSchema.getModelField('NAME')
+    const dateFieldName = syncSchema.getModelField('DATE_FIELD_NAME')
+    const symbolFieldName = syncSchema.getModelField('SYMBOL_FIELD_NAME')
+    const timeframeFieldName = syncSchema.getModelField('TIMEFRAME_FIELD_NAME')
+    const tableOrder = syncSchema.getModelField('ORDER')
+    const type = syncSchema.getModelField('TYPE')
+    const model = syncSchema.getModelField('MODEL')
 
     const defaultStart = this._getMinStart(_defaultStart)
     const hasUserIdField = (
@@ -243,7 +242,7 @@ class SyncUserStepManager {
 
     if (
       tableName !== this.TABLES_NAMES.CANDLES &&
-      isPublic(syncSchema?.type) !== shouldCollBePublic
+      isPublic(type) !== shouldCollBePublic
     ) {
       throw new LastSyncedInfoGettingError()
     }
@@ -390,7 +389,7 @@ class SyncUserStepManager {
         currEnd: min([currEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? currMts
       })
 
-      if (isUpdatable(syncSchema?.type)) {
+      if (isUpdatable(type)) {
         syncUserStepData.setParams({
           currStart: defaultStart,
           currEnd: currMts
@@ -403,7 +402,7 @@ class SyncUserStepManager {
         baseEnd: min([baseEnd, firstElemMtsFromTempTable]) ?? lastElemMtsFromMainTable ?? currMts
       })
 
-      if (isUpdatable(syncSchema?.type)) {
+      if (isUpdatable(type)) {
         syncUserStepData.setParams({
           baseStart: defaultStart,
           baseEnd: currMts
