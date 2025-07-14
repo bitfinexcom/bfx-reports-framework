@@ -562,10 +562,10 @@ class FrameworkReportService extends ReportService {
           { isPublic: true }
         )
 
-        const {
-          projection,
-          type
-        } = this._syncSchema.getMethodCollMap().get(method)
+        const collSchema = this._syncSchema.getMethodCollMap()
+          .get(method)
+        const projection = collSchema.getModelField('PROJECTION')
+        const type = collSchema.getModelField('TYPE')
 
         return collObjToArr(res, { projection, type })
       })

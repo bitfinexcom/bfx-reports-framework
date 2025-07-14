@@ -34,6 +34,10 @@ const {
 } = require('./helpers')
 
 const {
+  isUpdatable
+} = require('../schema/utils')
+
+const {
   DbVersionTypeError,
   SqlCorrectnessError,
   UpdateRecordError,
@@ -511,6 +515,7 @@ class BetterSqliteDAO extends DAO {
     }
 
     await this._beginTrans(async () => {
+      const methodCollMap = [...this._getMethodCollMap()]
       const tableNames = await this.getTablesNames({ doNotQueueQuery })
       const filteredTempTableNames = tableNames.filter((name) => (
         name.includes(namePrefix)
@@ -524,11 +529,19 @@ class BetterSqliteDAO extends DAO {
           continue
         }
 
+        const syncSchema = methodCollMap.find(([key, schema]) => (
+          schema.getModelField('NAME') === name
+        ))?.[1]
+        const type = syncSchema?.getModelField('TYPE') ?? ''
+
         const projection = model.getModelFieldKeys()
           .filter((fieldName) => fieldName !== Model.UID_FIELD_NAME)
           .join(', ')
 
-        if (isStrictEqual) {
+        if (
+          isStrictEqual ||
+          isUpdatable(type)
+        ) {
           await this.query({
             action: MAIN_DB_WORKER_ACTIONS.RUN,
             sql: `DELETE FROM ${name}`
@@ -904,10 +917,15 @@ class BetterSqliteDAO extends DAO {
       isNotDataConverted = false
     } = { ...opts }
     const filterModelName = filterModelNameMap.get(method)
-    const methodColl = {
-      ...this._getMethodCollMap().get(method),
-      ...schema
-    }
+    const methodColl = (
+      schema &&
+      typeof schema === 'object'
+    )
+      ? this._getMethodCollMap()
+        .get(method)
+        .clone()
+        .setDataStructure(schema)
+      : this._getMethodCollMap().get(method)
 
     const args = normalizeFilterParams(method, reqArgs)
     checkFilterParams(filterModelName, args)

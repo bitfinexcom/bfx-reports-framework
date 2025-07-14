@@ -90,11 +90,10 @@ class SyncCollsManager {
     const checkingRes = []
 
     for (const [method, schema] of this._methodCollMap) {
-      const {
-        name,
-        type,
-        isSyncRequiredAtLeastOnce
-      } = schema
+      const name = schema.getModelField('NAME')
+      const type = schema.getModelField('TYPE')
+      const isSyncRequiredAtLeastOnce = schema
+        .getModelField('IS_SYNC_REQUIRED_AT_LEAST_ONCE')
 
       if (
         isHidden(type) ||

@@ -56,12 +56,17 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.CANDLES, candles]
 ])
 
-const { cloneSchema } = require('../helpers')
-
 const getMethodCollMap = (methodCollMap = _methodCollMap) => {
-  return cloneSchema(methodCollMap)
+  return new Map(methodCollMap)
+}
+
+const getClonedMethodCollMap = (methodCollMap = _methodCollMap) => {
+  return new Map([...methodCollMap].map(([key, schema]) => {
+    return [key, schema.clone()]
+  }))
 }
 
 module.exports = {
-  getMethodCollMap
+  getMethodCollMap,
+  getClonedMethodCollMap
 }

@@ -42,7 +42,12 @@ class SyncTempTablesManager {
 
   async createTempDBStructureForCurrSync (methodCollMap) {
     const models = [...methodCollMap]
-      .map(([method, schema]) => [schema.name, schema.model])
+      .map(([method, schema]) => {
+        const name = schema.getModelField('NAME')
+        const model = schema.getModelField('MODEL')
+
+        return [name, model]
+      })
     const namePrefix = this.getCurrNamePrefix()
 
     await this.dao.createDBStructure({ models, namePrefix })

@@ -391,10 +391,10 @@ class PerformingLoan {
     const ledgers = await this._getLedgers(args)
     const balances = await this._getFundingBalances(args)
 
-    const {
-      dateFieldName: ledgersDateFieldName,
-      symbolFieldName: ledgersSymbolFieldName
-    } = this.ledgersMethodColl
+    const ledgersDateFieldName = this.ledgersMethodColl
+      .getModelField('DATE_FIELD_NAME')
+    const ledgersSymbolFieldName = this.ledgersMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
 
     const ledgersGroupedByTimeframe = await groupByTimeframe(
       ledgers,

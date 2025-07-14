@@ -301,16 +301,18 @@ class DataInserter extends EventEmitter {
       await this.wsEventEmitter
         .emitSyncingStep(`SYNCING_${getSyncCollName(method)}`)
 
-      const { type, start } = schema ?? {}
+      const name = schema.getModelField('NAME')
+      const type = schema.getModelField('TYPE')
+      const start = schema.getModelField('START')
 
-      if (schema.name === this.ALLOWED_COLLS.CANDLES) {
+      if (name === this.ALLOWED_COLLS.CANDLES) {
         // Considers 10 reqs/min for candles
         const leftTime = Math.floor((60 / 10) * start.length * 1000)
         this.progress.setCandlesLeftTime(leftTime)
       }
 
       for (const syncUserStepData of start) {
-        if (isInsertableArrObj(schema?.type, { isPublic: true })) {
+        if (isInsertableArrObj(type, { isPublic: true })) {
           await this._insertApiData(
             method,
             schema,
@@ -392,7 +394,7 @@ class DataInserter extends EventEmitter {
         auth
       )
 
-      const { start } = schema ?? {}
+      const start = schema.getModelField('START')
 
       for (const syncUserStepData of start) {
         await this._insertApiData(
@@ -428,7 +430,8 @@ class DataInserter extends EventEmitter {
       return
     }
 
-    const hasCandlesSection = schema.name === this.ALLOWED_COLLS.CANDLES
+    const name = schema.getModelField('NAME')
+    const hasCandlesSection = name === this.ALLOWED_COLLS.CANDLES
     const _auth = (
       hasCandlesSection &&
       syncUserStepData?.auth
@@ -525,17 +528,17 @@ class DataInserter extends EventEmitter {
       !authToken
     )
     const isPrivate = !isPublic
+    const type = schema.getModelField('TYPE')
 
-    if (!isInsertableArrObj(schema?.type, { isPublic, isPrivate })) {
+    if (!isInsertableArrObj(type, { isPublic, isPrivate })) {
       return
     }
 
-    const {
-      name: collName,
-      dateFieldName,
-      model,
-      shouldNotApiMiddlewareBeLaunched
-    } = schema
+    const collName = schema.getModelField('NAME')
+    const dateFieldName = schema.getModelField('DATE_FIELD_NAME')
+    const model = schema.getModelField('MODEL')
+    const shouldNotApiMiddlewareBeLaunched = schema
+      .getModelField('SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED')
 
     const _args = cloneDeep(args)
     _args.params.notThrowError = true
@@ -702,7 +705,9 @@ class DataInserter extends EventEmitter {
       hasTimeframe,
       areAllSymbolsRequired
     } = syncUserStepData
-    const hasStatusMessagesSection = schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+    const name = schema.getModelField('NAME')
+    const dateFieldName = schema.getModelField('DATE_FIELD_NAME')
+    const hasStatusMessagesSection = name === this.ALLOWED_COLLS.STATUS_MESSAGES
 
     const checkOpts = {
       shouldNotMtsBeChecked: true,
@@ -728,7 +733,7 @@ class DataInserter extends EventEmitter {
       const statusMessagesParams = {
         ...params,
         filter: {
-          $gte: { [schema?.dateFieldName]: baseStart }
+          $gte: { [dateFieldName]: baseStart }
         }
       }
 
@@ -753,7 +758,7 @@ class DataInserter extends EventEmitter {
       const statusMessagesParams = {
         ...params,
         filter: {
-          $gte: { [schema?.dateFieldName]: currStart }
+          $gte: { [dateFieldName]: currStart }
         }
       }
 
@@ -779,18 +784,19 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
+    const type = schema.getModelField('TYPE')
+    const collName = schema.getModelField('NAME')
+    const projection = schema.getModelField('PROJECTION')
+    const shouldNotApiMiddlewareBeLaunched = schema
+      .getModelField('SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED')
+
     if (
       this._isInterrupted ||
-      !isUpdatableArr(schema?.type, { isPublic: true })
+      !isUpdatableArr(type, { isPublic: true })
     ) {
       return
     }
 
-    const {
-      name: collName,
-      projection,
-      shouldNotApiMiddlewareBeLaunched
-    } = schema
     const _projection = Array.isArray(projection)
       ? projection
       : [projection]
@@ -837,18 +843,18 @@ class DataInserter extends EventEmitter {
     methodApi,
     schema
   ) {
+    const type = schema.getModelField('TYPE')
+    const collName = schema.getModelField('NAME')
+    const model = schema.getModelField('MODEL')
+    const shouldNotApiMiddlewareBeLaunched = schema
+      .getModelField('SHOULD_NOT_API_MIDDLEWARE_BE_LAUNCHED')
+
     if (
       this._isInterrupted ||
-      !isUpdatableArrObj(schema?.type, { isPublic: true })
+      !isUpdatableArrObj(type, { isPublic: true })
     ) {
       return
     }
-
-    const {
-      name: collName,
-      model,
-      shouldNotApiMiddlewareBeLaunched
-    } = schema ?? {}
 
     const apiRes = await this._getDataFromApi(
       methodApi,
@@ -917,9 +923,12 @@ class DataInserter extends EventEmitter {
         const updatesForOneUserPromises = []
 
         for (const [collName, schema] of methodCollMap) {
+          const type = schema.getModelField('TYPE')
+          const start = schema.getModelField('START')
+
           if (
-            !Array.isArray(schema?.start) ||
-            schema.start.length === 0
+            !Array.isArray(start) ||
+            start.length === 0
           ) {
             continue
           }
@@ -932,8 +941,8 @@ class DataInserter extends EventEmitter {
             subUserId,
             syncedAt,
             ...this.syncUserStepManager.wereStepsSynced(
-              schema.start,
-              { shouldNotMtsBeChecked: isUpdatable(schema?.type) }
+              start,
+              { shouldNotMtsBeChecked: isUpdatable(type) }
             )
           }, { doNotQueueQuery: true })
           updatesForOneUserPromises.push(promise)
@@ -942,16 +951,20 @@ class DataInserter extends EventEmitter {
         await Promise.all(updatesForOneUserPromises)
       }
       for (const [collName, schema] of pubMethodCollMap) {
+        const name = schema.getModelField('NAME')
+        const type = schema.getModelField('TYPE')
+        const start = schema.getModelField('START')
+
         if (
-          !Array.isArray(schema?.start) ||
-          schema.start.length === 0
+          !Array.isArray(start) ||
+          start.length === 0
         ) {
           continue
         }
 
-        const startWithAuth = schema.start
+        const startWithAuth = start
           .filter((syncUserStepData) => syncUserStepData?.auth)
-        const startWithoutAuth = schema.start
+        const startWithoutAuth = start
           .filter((syncUserStepData) => !syncUserStepData?.auth)
 
         if (startWithAuth.length > 0) {
@@ -966,8 +979,8 @@ class DataInserter extends EventEmitter {
               ...this.syncUserStepManager.wereStepsSynced(
                 [syncUserStepData],
                 {
-                  shouldNotMtsBeChecked: isUpdatable(schema?.type),
-                  shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+                  shouldNotMtsBeChecked: isUpdatable(type),
+                  shouldStartMtsBeChecked: name === this.ALLOWED_COLLS.STATUS_MESSAGES
                 }
               )
             }, { doNotQueueQuery: true })
@@ -980,10 +993,10 @@ class DataInserter extends EventEmitter {
             collName,
             syncedAt,
             ...this.syncUserStepManager.wereStepsSynced(
-              schema.start,
+              start,
               {
-                shouldNotMtsBeChecked: isUpdatable(schema?.type),
-                shouldStartMtsBeChecked: schema?.name === this.ALLOWED_COLLS.STATUS_MESSAGES
+                shouldNotMtsBeChecked: isUpdatable(type),
+                shouldStartMtsBeChecked: name === this.ALLOWED_COLLS.STATUS_MESSAGES
               }
             )
           }, { doNotQueueQuery: true })

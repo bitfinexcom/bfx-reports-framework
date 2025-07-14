@@ -9,7 +9,7 @@ module.exports = (args, methodColl) => {
   const { params } = _args
   const _params = { ...params }
   const { limit } = _params
-  const { maxLimit } = { ...methodColl }
+  const maxLimit = methodColl.getModelField('MAX_LIMIT')
 
   _params.limit = maxLimit
     ? getLimitNotMoreThan(limit, maxLimit)

@@ -48,8 +48,10 @@ class WinLoss {
       .get(this.SYNC_API_METHODS.MOVEMENTS)
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
-    this.movementsSymbolFieldName = this.movementsMethodColl.symbolFieldName
-    this.ledgersSymbolFieldName = this.ledgersMethodColl.symbolFieldName
+    this.movementsSymbolFieldName = this.movementsMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
+    this.ledgersSymbolFieldName = this.ledgersMethodColl
+      .getModelField('SYMBOL_FIELD_NAME')
   }
 
   sumMovementsWithPrevRes (

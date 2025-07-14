@@ -9,7 +9,7 @@ const COMMON_CONSTRAINTS = require('./common.constraints')
 
 const {
   freezeAndSealObjectDeeply
-} = require('./helpers')
+} = require('../../helpers')
 
 class BaseModel {
   static CONSTR_FIELD_NAME = DB_SERVICE_FIELD_NAMES.CONSTR_FIELD_NAME

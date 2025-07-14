@@ -13,8 +13,9 @@ module.exports = async (data, methodColl) => {
     return data
   }
 
-  const isConvAvailable = typeof methodColl
-    .dataStructureConverter === 'function'
+  const dataStructureConverter = methodColl
+    .getModelField('DATA_STRUCTURE_CONVERTER')
+  const isConvAvailable = typeof dataStructureConverter === 'function'
 
   let accum = []
 
@@ -31,7 +32,7 @@ module.exports = async (data, methodColl) => {
       continue
     }
     if (isConvAvailable) {
-      accum = methodColl.dataStructureConverter(accum, obj)
+      accum = dataStructureConverter(accum, obj)
     }
 
     const converted = isConvAvailable

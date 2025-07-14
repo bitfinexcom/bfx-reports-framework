@@ -1,25 +1,15 @@
 'use strict'
 
-const TABLES_NAMES = require('../tables-names')
-const ALLOWED_COLLS = require('../allowed.colls')
-const COLLS_TYPES = require('../colls.types')
-const PUBLIC_COLLS_CONF_NAMES = require(
-  '../../colls.accessors/public.colls.conf.names'
-)
+const Model = require('./model')
 
-const { getModelOf } = require('../models')
-
-module.exports = {
-  name: ALLOWED_COLLS.TICKERS_HISTORY,
-  maxLimit: 10000,
-  dateFieldName: 'mtsUpdate',
-  symbolFieldName: 'symbol',
-  sort: [['mtsUpdate', -1]],
-  hasNewData: false,
-  start: [],
-  confName: PUBLIC_COLLS_CONF_NAMES.TICKERS_HISTORY_CONF,
-  isSyncRequiredAtLeastOnce: false,
-  additionalApiCallArgs: { isNotMoreThanInnerMax: true },
-  type: COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS,
-  model: getModelOf(TABLES_NAMES.TICKERS_HISTORY)
-}
+module.exports = new Model({
+  [Model.NAME]: Model.ALLOWED_COLLS.TICKERS_HISTORY,
+  [Model.MAX_LIMIT]: 10_000,
+  [Model.DATE_FIELD_NAME]: 'mtsUpdate',
+  [Model.SYMBOL_FIELD_NAME]: 'symbol',
+  [Model.ORDER]: [['mtsUpdate', Model.ORDERS.DESC]],
+  [Model.CONF_NAME]: Model.PUBLIC_COLLS_CONF_NAMES.TICKERS_HISTORY_CONF,
+  [Model.IS_SYNC_REQUIRED_AT_LEAST_ONCE]: false,
+  [Model.ADDITIONAL_API_CALL_ARGS]: { isNotMoreThanInnerMax: true },
+  [Model.TYPE]: Model.ALLOWED_COLLS_TYPES.PUBLIC_INSERTABLE_ARRAY_OBJECTS
+})

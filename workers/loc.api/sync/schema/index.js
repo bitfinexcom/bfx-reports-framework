@@ -6,12 +6,14 @@ const {
   getModelOf
 } = require('./models')
 const {
-  getMethodCollMap
+  getMethodCollMap,
+  getClonedMethodCollMap
 } = require('./sync-schema')
 
 module.exports = {
   SUPPORTED_DB_VERSION,
   getMethodCollMap,
+  getClonedMethodCollMap,
   getModelsMap,
   getModelOf
 }
