@@ -47,15 +47,25 @@ module.exports = (
       }
     : { authToken, authTokenFn, apiKey, apiSecret, session: reqAuth }
 
+  const limitParam = limit === null
+    ? {}
+    : { limit }
+  const endParam = end === null
+    ? {}
+    : { end }
+  const startParam = start === null
+    ? {}
+    : { start }
+
   return {
     ...additionalApiCallArgs,
     auth,
     params: {
       ...additionalApiCallArgs?.params,
       ...params,
-      limit,
-      end,
-      start,
+      ...limitParam,
+      ...endParam,
+      ...startParam,
       isSyncRequest: true
     }
   }
