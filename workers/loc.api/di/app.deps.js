@@ -445,7 +445,10 @@ module.exports = ({
     rebind(TYPES.PrepareApiResponse).toConstantValue(
       bindDepsToFn(
         prepareApiResponse,
-        [TYPES.GetREST]
+        [
+          TYPES.GetREST,
+          TYPES.DataValidator
+        ]
       )
     )
   })
