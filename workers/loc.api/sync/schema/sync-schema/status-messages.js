@@ -4,7 +4,7 @@ const Model = require('./model')
 
 module.exports = new Model({
   [Model.NAME]: Model.ALLOWED_COLLS.STATUS_MESSAGES,
-  [Model.MAX_LIMIT]: 5_000,
+  [Model.MAX_LIMIT]: null,
   [Model.DATE_FIELD_NAME]: 'timestamp',
   [Model.SYMBOL_FIELD_NAME]: 'key',
   [Model.ORDER]: [['timestamp', Model.ORDERS.DESC]],
