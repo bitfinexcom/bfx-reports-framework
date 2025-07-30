@@ -83,6 +83,7 @@ module.exports = (
         ...args,
         pingMethod: '_getPublicTrades',
         params: {
+          symbol: 'tBTCUSD',
           limit: 1,
           notThrowError: true,
           notCheckNextPage: true

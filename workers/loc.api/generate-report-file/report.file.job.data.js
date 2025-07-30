@@ -20,6 +20,7 @@ const { decorateInjectable } = require('../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.RService,
+  TYPES.DataValidator,
   TYPES.FullSnapshotReportCsvWriter,
   TYPES.FullTaxReportCsvWriter,
   TYPES.WeightedAveragesReportCsvWriter,
@@ -28,12 +29,13 @@ const depsTypes = (TYPES) => [
 class ReportFileJobData extends BaseReportFileJobData {
   constructor (
     rService,
+    dataValidator,
     fullSnapshotReportCsvWriter,
     fullTaxReportCsvWriter,
     weightedAveragesReportCsvWriter,
     transactionTaxReportCsvWriter
   ) {
-    super(rService)
+    super(rService, dataValidator)
 
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
     this.fullTaxReportCsvWriter = fullTaxReportCsvWriter

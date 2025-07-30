@@ -41,12 +41,17 @@ class SubAccountApiData {
     )
   }
 
-  pushArgs (
-    accum,
-    args,
-    auth,
-    itemId
-  ) {
+  pushArgs (data, opts) {
+    const {
+      accum,
+      args,
+      auth,
+      itemId
+    } = data ?? {}
+    const {
+      isNotPreparedResponse
+    } = opts ?? {}
+
     const { params } = { ...args }
     const { apiKey, apiSecret } = { ...auth }
 
@@ -65,14 +70,19 @@ class SubAccountApiData {
     const idParam = this._hasId(id)
       ? { id }
       : {}
+    const extraParams = isNotPreparedResponse
+      ? {}
+      : {
+          notThrowError: true,
+          notCheckNextPage: true
+        }
 
     accum.push({
       ...args,
       auth: { apiKey, apiSecret },
       params: {
         ...params,
-        notThrowError: true,
-        notCheckNextPage: true,
+        ...extraParams,
         ...idParam
       }
     })
@@ -84,8 +94,11 @@ class SubAccountApiData {
     args = {},
     subUsers = [],
     dataToFindSubUserId = [],
-    idFieldName
+    opts
   ) {
+    const {
+      idFieldNameForFinding
+    } = opts ?? {}
     const { params } = { ...args }
     const { id } = { ...params }
 
@@ -93,14 +106,17 @@ class SubAccountApiData {
       !Array.isArray(dataToFindSubUserId) ||
       dataToFindSubUserId.length === 0 ||
       !this._hasId(id) ||
-      !idFieldName ||
+      !idFieldNameForFinding ||
       typeof idFieldName !== 'string'
     ) {
       return subUsers.reduce((accum, subUser) => {
         return this.pushArgs(
-          accum,
-          args,
-          subUser
+          {
+            accum,
+            args,
+            auth: subUser
+          },
+          opts
         )
       }, [])
     }
@@ -111,7 +127,7 @@ class SubAccountApiData {
 
     return ids.reduce((accum, currId) => {
       const item = dataToFindSubUserId.find((item) => {
-        const id = ({ ...item })[idFieldName]
+        const id = ({ ...item })[idFieldNameForFinding]
 
         return currId === id
       })
@@ -130,10 +146,13 @@ class SubAccountApiData {
 
       if (!Array.isArray(id)) {
         return this.pushArgs(
-          accum,
-          args,
-          subUser,
-          currId
+          {
+            accum,
+            args,
+            auth: subUser,
+            itemId: currId
+          },
+          opts
         )
       }
 
@@ -156,10 +175,13 @@ class SubAccountApiData {
       }
 
       return this.pushArgs(
-        accum,
-        args,
-        subUser,
-        [currId]
+        {
+          accum,
+          args,
+          auth: subUser,
+          itemId: [currId]
+        },
+        opts
       )
     }, [])
   }
@@ -276,7 +298,6 @@ class SubAccountApiData {
       checkParamsFn,
       dataToFindSubUserId = [],
       getDataFnToFindSubUserId,
-      idFieldNameForFinding,
       datePropName
     } = { ...opts }
     const {
@@ -326,7 +347,7 @@ class SubAccountApiData {
       args,
       subUsers,
       orderedData,
-      idFieldNameForFinding
+      opts
     )
 
     return this.fetchDataFormApi(
