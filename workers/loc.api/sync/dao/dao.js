@@ -16,13 +16,15 @@ class DAO {
     TABLES_NAMES,
     syncSchema,
     dbMigratorFactory,
-    processMessageManagerFactory
+    processMessageManagerFactory,
+    dataValidator
   ) {
     this.db = db
     this.TABLES_NAMES = TABLES_NAMES
     this.syncSchema = syncSchema
     this.dbMigratorFactory = dbMigratorFactory
     this.processMessageManagerFactory = processMessageManagerFactory
+    this.dataValidator = dataValidator
   }
 
   _getModelsMap () {
