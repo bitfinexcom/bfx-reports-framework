@@ -619,7 +619,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.POSITIONS_HISTORY,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getPositionsHistory', args, cb)
   }
@@ -707,7 +707,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.LEDGERS,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getLedgers', args, cb)
   }
@@ -731,7 +731,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.PAY_INVOICE_LIST,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getPayInvoiceList', args, cb)
   }
@@ -755,7 +755,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.TRADES,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getTrades', args, cb)
   }
@@ -779,7 +779,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_TRADES,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getFundingTrades', args, cb)
   }
@@ -952,7 +952,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.ORDERS,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getOrders', args, cb)
   }
@@ -993,7 +993,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.MOVEMENTS,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getMovements', args, cb)
   }
@@ -1038,7 +1038,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getFundingOfferHistory', args, cb)
   }
@@ -1062,7 +1062,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getFundingLoanHistory', args, cb)
   }
@@ -1086,7 +1086,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_CREDIT_HISTORY,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getFundingCreditHistory', args, cb)
   }
@@ -1110,7 +1110,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.LOGINS,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getLogins', args, cb)
   }
@@ -1134,7 +1134,7 @@ class FrameworkReportService extends ReportService {
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.CHANGE_LOGS,
         args,
-        { isPrepareResponse: true }
+        { isPrepareResponse: true, shouldParamsBeVerified: true }
       )
     }, 'getChangeLogs', args, cb)
   }
