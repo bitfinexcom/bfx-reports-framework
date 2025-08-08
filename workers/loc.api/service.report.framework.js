@@ -1275,7 +1275,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.BALANCE_HISTORY, args)
 
-      checkParams(args, 'paramsSchemaForBalanceHistoryApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_BALANCE_HISTORY_REQ
+      )
 
       return this._balanceHistory.getBalanceHistory(args)
     }, 'getBalanceHistory', args, cb)
