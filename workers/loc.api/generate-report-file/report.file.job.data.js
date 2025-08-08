@@ -138,7 +138,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForBalanceHistoryFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_BALANCE_HISTORY_FILE_REQ
+    )
 
     const {
       userId,
