@@ -152,7 +152,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -311,8 +314,7 @@ class ReportFileJobData extends BaseReportFileJobData {
 
     const reportFileArgs = getReportFileArgs(
       args,
-      null,
-      { isBaseNameInName: true }
+      { extraParams: { isBaseNameInName: true } }
     )
 
     const jobData = {
@@ -448,8 +450,7 @@ class ReportFileJobData extends BaseReportFileJobData {
 
     const reportFileArgs = getReportFileArgs(
       args,
-      null,
-      { isBaseNameInName: true }
+      { extraParams: { isBaseNameInName: true } }
     )
 
     const jobData = {
