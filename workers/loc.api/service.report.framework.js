@@ -870,11 +870,10 @@ class FrameworkReportService extends ReportService {
         return super.getCandles(space, args)
       }
 
-      // TODO:
-      // this._dataValidator.validate(
-      //   args,
-      //   this._dataValidator.SCHEMA_IDS.FW_GET_CANDLES_REQ
-      // )
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.FW_GET_CANDLES_REQ
+      )
 
       const { params } = args ?? {}
       const {
@@ -1482,7 +1481,10 @@ class FrameworkReportService extends ReportService {
         return super.getCandlesFile(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForCandlesFile')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.FW_GET_CANDLES_FILE_REQ
+      )
 
       return super.getCandlesFile(space, args)
     }, 'getCandlesFile', args, cb)
