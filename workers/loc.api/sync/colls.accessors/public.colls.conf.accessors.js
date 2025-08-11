@@ -51,6 +51,10 @@ class PublicCollsConfAccessors {
     return confName === this.PUBLIC_COLLS_CONF_NAMES.CANDLES_CONF
   }
 
+  isStatusMessagesConfs (confName) {
+    return confName === this.PUBLIC_COLLS_CONF_NAMES.STATUS_MESSAGES_CONF
+  }
+
   isUniqueConf (confName, confs, currConf) {
     return confs.every((conf) => (
       conf.symbol !== currConf.symbol ||
@@ -295,26 +299,52 @@ class PublicCollsConfAccessors {
     return confsTimeframe
   }
 
-  getArgs (confs, args) {
-    const { params } = { ...args }
+  getArgs (confName, confs, args) {
+    const { params } = args ?? {}
 
     const symbol = this.getSymbol(
       confs
     )
+
+    if (this.isStatusMessagesConfs(confName)) {
+      return {
+        ...args,
+        auth: null,
+        params: {
+          ...params,
+          symbol
+        }
+      }
+    }
+
     const start = this.getStart(
       confs,
       params.start
     )
-    const timeframe = this.getTimeframe(
-      confs
-    )
 
-    const timeframeParam = (
-      Array.isArray(timeframe) &&
-      timeframe.length > 0
-    )
-      ? { timeframe }
-      : {}
+    if (this.isCandlesConfs(confName)) {
+      const timeframe = this.getTimeframe(
+        confs
+      )
+
+      const timeframeParam = (
+        Array.isArray(timeframe) &&
+        timeframe.length > 0
+      )
+        ? { timeframe: timeframe[0] }
+        : {}
+
+      return {
+        ...args,
+        auth: null,
+        params: {
+          ...params,
+          symbol,
+          start,
+          ...timeframeParam
+        }
+      }
+    }
 
     return {
       ...args,
@@ -322,8 +352,7 @@ class PublicCollsConfAccessors {
       params: {
         ...params,
         symbol,
-        start,
-        timeframeParam
+        start
       }
     }
   }
@@ -434,14 +463,15 @@ class PublicCollsConfAccessors {
       return method(args)
     }
 
-    const _args = this.getArgs(confs, args)
+    const _args = this.getArgs(confName, confs, args)
 
     const dbRes = await this.dao.findInCollBy(
       collName,
       _args,
       {
         isPrepareResponse: false,
-        isPublic: true
+        isPublic: true,
+        shouldParamsBeVerified: true
       }
     )
     const _dbRes = Array.isArray(dbRes)
