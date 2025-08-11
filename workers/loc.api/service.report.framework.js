@@ -544,8 +544,6 @@ class FrameworkReportService extends ReportService {
         return super.getSymbols(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       const methods = [
         this._SYNC_API_METHODS.SYMBOLS,
         this._SYNC_API_METHODS.FUTURES,
@@ -614,8 +612,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.POSITIONS_HISTORY,
         args,
@@ -680,8 +676,9 @@ class FrameworkReportService extends ReportService {
           }),
           args,
           {
-            checkParamsFn: (args) => checkParams(
-              args, 'paramsSchemaForPositionsAudit'
+            checkParamsFn: (args) => this._dataValidator.validate(
+              args,
+              this._dataValidator.SCHEMA_IDS.GET_POSITIONS_AUDIT_REQ
             )
           }
         )
@@ -701,8 +698,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mts' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.LEDGERS,
@@ -726,8 +721,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForPayInvoiceList')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.PAY_INVOICE_LIST,
         args,
@@ -749,8 +742,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsCreate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.TRADES,
@@ -774,8 +765,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_TRADES,
         args,
@@ -792,8 +781,6 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getTickersHistory(space, args)
       }
-
-      checkParams(args, 'paramsSchemaForApi', ['symbol'])
 
       return this._publicCollsConfAccessors
         .getPublicData(
@@ -817,8 +804,6 @@ class FrameworkReportService extends ReportService {
         return super.getPublicTrades(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
-
       return this._publicCollsConfAccessors
         .getPublicData(
           (args) => super.getPublicTrades(space, args),
@@ -840,8 +825,6 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getStatusMessages(space, args)
       }
-
-      checkParams(args, 'paramsSchemaForStatusMessagesApi')
 
       const { params } = { ...args }
       const {
@@ -887,13 +870,17 @@ class FrameworkReportService extends ReportService {
         return super.getCandles(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForCandlesApi')
+      // TODO:
+      // this._dataValidator.validate(
+      //   args,
+      //   this._dataValidator.SCHEMA_IDS.FW_GET_CANDLES_REQ
+      // )
 
-      const { params } = { ...args }
+      const { params } = args ?? {}
       const {
         section = 'hist',
         timeframe = '1D'
-      } = { ...params }
+      } = params ?? {}
       const argsWithParamsByDefault = {
         ...args,
         params: {
@@ -925,8 +912,9 @@ class FrameworkReportService extends ReportService {
         (args) => super.getOrderTrades(space, args),
         args,
         {
-          checkParamsFn: (args) => checkParams(
-            args, 'paramsSchemaForOrderTradesApi'
+          checkParamsFn: (args) => this._dataValidator.validate(
+            args,
+            this._dataValidator.SCHEMA_IDS.GET_ORDER_TRADES_REQ
           )
         }
       )
@@ -946,8 +934,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsUpdate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.ORDERS,
@@ -987,8 +973,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsUpdated' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.MOVEMENTS,
@@ -1033,8 +1017,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
         args,
@@ -1056,8 +1038,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsUpdate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
@@ -1081,8 +1061,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_CREDIT_HISTORY,
         args,
@@ -1105,8 +1083,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.LOGINS,
         args,
@@ -1128,8 +1104,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsCreate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.CHANGE_LOGS,
@@ -1264,7 +1238,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.WALLETS, args)
 
-      checkParams(args, 'paramsSchemaForWallets')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_WALLETS_REQ
+      )
 
       return this._wallets.getWallets(args)
     }, 'getWallets', args, cb)
