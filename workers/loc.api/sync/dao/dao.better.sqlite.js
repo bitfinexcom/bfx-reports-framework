@@ -9,7 +9,7 @@ const {
   normalizeFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
 const {
-  // getValidationSchemaId,
+  getValidationSchemaId,
   getFilterValidationSchemaId
 } = require('bfx-report/workers/loc.api/helpers/prepare-response/helpers')
 const {
@@ -934,15 +934,11 @@ class BetterSqliteDAO extends DAO {
     const apiMethodName = filterModelNameMap.get(method) ?? {}
     const args = normalizeFilterParams(apiMethodName, reqArgs)
 
-    /*
-     * TODO: Turn off params validation til implementation
-     * Use filter params validation since implemented in bfx-report
-     */
     if (shouldParamsBeVerified) {
-      // const schemaId = getValidationSchemaId(apiMethodName)
+      const schemaId = getValidationSchemaId(apiMethodName)
       const filterSchemaId = getFilterValidationSchemaId(apiMethodName)
 
-      // await this.dataValidator.validate(reqArgs, schemaId)
+      await this.dataValidator.validate(reqArgs, schemaId)
       await this.dataValidator.validate(
         { params: args?.params?.filter },
         filterSchemaId
