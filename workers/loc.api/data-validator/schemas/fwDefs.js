@@ -16,6 +16,58 @@ module.exports = {
     },
     isUnrealizedProfitExcluded: {
       type: 'boolean'
+    },
+    apiKey: {
+      type: 'string'
+    },
+    apiSecret: {
+      type: 'string'
+    },
+    token: {
+      type: 'string'
+    },
+    password: {
+      type: 'string'
+    },
+    subAccountApiKeys: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 20,
+      items: {
+        type: 'object',
+        oneOf: [
+          {
+            additionalProperties: false,
+            properties: {
+              apiKey: {
+                $ref: '#/definitions/apiKey'
+              },
+              apiSecret: {
+                $ref: '#/definitions/apiSecret'
+              }
+            }
+          },
+          {
+            additionalProperties: false,
+            properties: {
+              token: {
+                $ref: '#/definitions/token'
+              }
+            }
+          },
+          {
+            additionalProperties: false,
+            properties: {
+              email: {
+                $ref: 'defs#/definitions/email'
+              },
+              password: {
+                $ref: '#/definitions/password'
+              }
+            }
+          }
+        ]
+      }
     }
   }
 }
