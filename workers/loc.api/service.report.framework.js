@@ -254,7 +254,10 @@ class FrameworkReportService extends ReportService {
 
   createSubAccount (space, args, cb) {
     return this._responder(() => {
-      checkParams(args, 'paramsSchemaForCreateSubAccount')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.CREATE_SUB_ACCOUNT_REQ
+      )
 
       return this._subAccount
         .createSubAccount(args)
