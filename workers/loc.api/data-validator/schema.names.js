@@ -4,6 +4,7 @@ module.exports = {
   FW_DEFS: 'fwDefs',
 
   CREATE_SUB_ACCOUNT_REQ: 'createSubAccountReq',
+  UPDATE_SUB_ACCOUNT_REQ: 'updateSubAccountReq',
   FW_GET_CANDLES_REQ: 'fwGetCandlesReq',
   GET_BALANCE_HISTORY_REQ: 'getBalanceHistoryReq',
 
