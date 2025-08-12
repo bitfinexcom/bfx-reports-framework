@@ -266,7 +266,10 @@ class FrameworkReportService extends ReportService {
 
   updateSubAccount (space, args, cb) {
     return this._responder(() => {
-      checkParams(args, 'paramsSchemaForUpdateSubAccount')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.UPDATE_SUB_ACCOUNT_REQ
+      )
 
       return this._subAccount
         .updateSubAccount(args)
