@@ -18,7 +18,7 @@ module.exports = {
             $ref: 'defs#/definitions/start'
           },
           symbol: {
-            $ref: '#/definitions/strSymbol'
+            $ref: 'defs#/definitions/strSymbol'
           },
           timeframe: {
             $ref: 'defs#/definitions/candleTimeframe'
@@ -37,7 +37,7 @@ module.exports = {
             $ref: 'defs#/definitions/start'
           },
           symbol: {
-            $ref: '#/definitions/strSymbol'
+            $ref: 'defs#/definitions/strSymbol'
           }
         }
       }
@@ -53,7 +53,7 @@ module.exports = {
             $ref: 'defs#/definitions/start'
           },
           symbol: {
-            $ref: '#/definitions/strSymbol'
+            $ref: 'defs#/definitions/strSymbol'
           }
         }
       }
@@ -69,7 +69,7 @@ module.exports = {
             $ref: 'defs#/definitions/start'
           },
           symbol: {
-            $ref: '#/definitions/strSymbol'
+            $ref: 'defs#/definitions/strSymbol'
           }
         }
       }
