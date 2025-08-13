@@ -500,7 +500,10 @@ class FrameworkReportService extends ReportService {
 
   editAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditAllPublicCollsConfs')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.EDIT_ALL_PUBLIC_COLLS_CONFS_REQ
+      )
 
       const syncedColls = await this._publicCollsConfAccessors
         .editAllPublicCollsConfs(args)
