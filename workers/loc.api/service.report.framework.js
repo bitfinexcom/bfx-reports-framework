@@ -489,7 +489,10 @@ class FrameworkReportService extends ReportService {
 
   interruptOperations (space, args = {}, cb) {
     return this._privResponder(() => {
-      checkParams(args, 'paramsSchemaForInterruptOperations', ['names'])
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.INTERRUPT_OPERATIONS_REQ
+      )
 
       return this._authenticator.interruptOperations(args)
     }, 'interruptOperations', args, cb)
