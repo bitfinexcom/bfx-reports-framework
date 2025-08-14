@@ -1277,7 +1277,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.WIN_LOSS, args)
 
-      checkParams(args, 'paramsSchemaForWinLossApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_WIN_LOSS_REQ
+      )
 
       return this._winLoss.getWinLoss(args)
     }, 'getWinLoss', args, cb)
