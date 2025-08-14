@@ -18,16 +18,6 @@ module.exports = {
     },
     isUnrealizedProfitExcluded: {
       $ref: 'fwDefs#/definitions/isUnrealizedProfitExcluded'
-    },
-
-    notCheckNextPage: {
-      $ref: 'defs#/definitions/notCheckNextPage'
-    },
-    notThrowError: {
-      $ref: 'defs#/definitions/notThrowError'
-    },
-    isSyncRequest: {
-      $ref: 'defs#/definitions/isSyncRequest'
     }
   }
 }
