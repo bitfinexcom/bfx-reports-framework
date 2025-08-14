@@ -13,5 +13,6 @@ module.exports = {
   GET_WIN_LOSS_REQ: 'getWinLossReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
-  GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq'
+  GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
+  GET_WIN_LOSS_FILE_REQ: 'getWinLossFileReq'
 }
