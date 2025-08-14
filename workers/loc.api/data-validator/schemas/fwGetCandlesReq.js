@@ -24,8 +24,7 @@ module.exports = {
       $ref: 'defs#/definitions/sort'
     },
     timeframe: {
-      type: 'string',
-      minLength: 2
+      $ref: 'defs#/definitions/candleTimeframe'
     },
     section: {
       type: 'string',
