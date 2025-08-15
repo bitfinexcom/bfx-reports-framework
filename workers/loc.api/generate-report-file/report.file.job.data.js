@@ -281,7 +281,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uInfo,
     opts
   ) {
-    checkParams(args, 'paramsSchemaForFullSnapshotReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_FULL_SNAPSHOT_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -325,8 +328,14 @@ class ReportFileJobData extends BaseReportFileJobData {
       : `${uName}full-snapshot-report_TO_${endDate}`
 
     const reportFileArgs = getReportFileArgs(
-      args,
-      { extraParams: { isBaseNameInName: true } }
+      {
+        ...args,
+        params: omit(params, ['isStartSnapshot', 'isEndSnapshot'])
+      },
+      {
+        isLimitUnused: true,
+        extraParams: { isBaseNameInName: true }
+      }
     )
 
     const jobData = {
