@@ -1291,7 +1291,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.POSITIONS_SNAPSHOT, args)
 
-      checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_POSITIONS_SNAPSHOT_REQ
+      )
 
       return this._positionsSnapshot.getPositionsSnapshot(args)
     }, 'getPositionsSnapshot', args, cb)
