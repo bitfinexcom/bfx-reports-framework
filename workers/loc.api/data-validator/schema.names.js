@@ -17,5 +17,6 @@ module.exports = {
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
   GET_WIN_LOSS_FILE_REQ: 'getWinLossFileReq',
-  GET_POSITIONS_SNAPSHOT_FILE_REQ: 'getPositionsSnapshotFileReq'
+  GET_POSITIONS_SNAPSHOT_FILE_REQ: 'getPositionsSnapshotFileReq',
+  GET_FULL_SNAPSHOT_REPORT_FILE_REQ: 'getFullSnapshotReportFileReq'
 }
