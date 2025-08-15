@@ -1305,7 +1305,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_FULL_SNAPSHOT_REPORT_REQ
+      )
 
       return this._fullSnapshotReport.getFullSnapshotReport(args)
     }, 'getFullSnapshotReport', args, cb)
