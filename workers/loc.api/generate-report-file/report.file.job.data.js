@@ -224,7 +224,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPositionsSnapshotFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_POSITIONS_SNAPSHOT_FILE_REQ
+    )
 
     const {
       userId,
@@ -235,7 +238,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
