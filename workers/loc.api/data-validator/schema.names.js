@@ -12,6 +12,7 @@ module.exports = {
   GET_BALANCE_HISTORY_REQ: 'getBalanceHistoryReq',
   GET_WIN_LOSS_REQ: 'getWinLossReq',
   GET_POSITIONS_SNAPSHOT_REQ: 'getPositionsSnapshotReq',
+  GET_FULL_SNAPSHOT_REPORT_REQ: 'getFullSnapshotReportReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
