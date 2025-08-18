@@ -68,6 +68,16 @@ module.exports = {
           }
         ]
       }
+    },
+    strategy: {
+      type: 'string',
+      enum: [
+        'FIFO',
+        'LIFO'
+      ]
+    },
+    shouldFeesBeDeducted: {
+      type: 'boolean'
     }
   }
 }
