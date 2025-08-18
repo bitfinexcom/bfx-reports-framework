@@ -14,6 +14,7 @@ module.exports = {
   GET_POSITIONS_SNAPSHOT_REQ: 'getPositionsSnapshotReq',
   GET_FULL_SNAPSHOT_REPORT_REQ: 'getFullSnapshotReportReq',
   GET_FULL_TAX_REPORT_REQ: 'getFullTaxReportReq',
+  GET_TRANSACTION_TAX_REPORT_REQ: 'getTransactionTaxReportReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
