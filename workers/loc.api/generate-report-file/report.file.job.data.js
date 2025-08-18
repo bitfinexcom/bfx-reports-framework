@@ -572,7 +572,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTransactionTaxReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -583,7 +586,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
