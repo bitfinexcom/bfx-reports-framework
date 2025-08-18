@@ -1333,7 +1333,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
+      )
 
       return this._transactionTaxReport.getTransactionTaxReport(args)
     }, 'getTransactionTaxReport', args, cb)
@@ -1344,7 +1347,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
+      )
 
       return this._transactionTaxReport.makeTrxTaxReportInBackground(args)
     }, 'makeTrxTaxReportInBackground', args, cb)
