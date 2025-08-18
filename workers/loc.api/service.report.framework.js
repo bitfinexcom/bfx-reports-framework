@@ -1319,7 +1319,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.FULL_TAX_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForFullTaxReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_FULL_TAX_REPORT_REQ
+      )
 
       return this._fullTaxReport.getFullTaxReport(args)
     }, 'getFullTaxReport', args, cb)
