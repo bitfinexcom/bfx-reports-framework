@@ -24,10 +24,10 @@ module.exports = (
     formatSettings,
     name
   } = jobData ?? {}
-  const params = omitExtraParamFieldsForReportExport({
+  const params = {
     end: Date.now(),
     ...args?.params
-  })
+  }
 
   queue.emit('progress', 0)
 
@@ -49,7 +49,7 @@ module.exports = (
     getData: rService[name].bind(rService),
     args: {
       ...args,
-      params
+      params: omitExtraParamFieldsForReportExport(params)
     },
     callerName: 'REPORT_FILE_WRITER',
     shouldNotInterrupt: true
