@@ -458,7 +458,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       )
     }
 
-    checkParams(args, 'paramsSchemaForFullTaxReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_FULL_TAX_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -470,8 +473,14 @@ class ReportFileJobData extends BaseReportFileJobData {
     )
 
     const reportFileArgs = getReportFileArgs(
-      args,
-      { extraParams: { isBaseNameInName: true } }
+      {
+        ...args,
+        params: omit(params, ['isStartSnapshot', 'isEndSnapshot'])
+      },
+      {
+        isLimitUnused: true,
+        extraParams: { isBaseNameInName: true }
+      }
     )
 
     const jobData = {
