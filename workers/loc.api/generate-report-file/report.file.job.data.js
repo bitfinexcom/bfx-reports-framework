@@ -673,7 +673,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTotalFeesReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_TOTAL_FEES_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -684,7 +687,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
