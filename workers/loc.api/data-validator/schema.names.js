@@ -16,6 +16,7 @@ module.exports = {
   GET_FULL_TAX_REPORT_REQ: 'getFullTaxReportReq',
   GET_TRANSACTION_TAX_REPORT_REQ: 'getTransactionTaxReportReq',
   GET_TRADED_VOLUME_REQ: 'getTradedVolumeReq',
+  GET_TOTAL_FEES_REPORT_REQ: 'getTotalFeesReportReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
