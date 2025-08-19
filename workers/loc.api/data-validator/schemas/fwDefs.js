@@ -78,6 +78,12 @@ module.exports = {
     },
     shouldFeesBeDeducted: {
       type: 'boolean'
+    },
+    isTradingFees: {
+      type: 'boolean'
+    },
+    isFundingFees: {
+      type: 'boolean'
     }
   }
 }
