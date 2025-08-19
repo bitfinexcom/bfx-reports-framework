@@ -23,5 +23,6 @@ module.exports = {
   GET_POSITIONS_SNAPSHOT_FILE_REQ: 'getPositionsSnapshotFileReq',
   GET_FULL_SNAPSHOT_REPORT_FILE_REQ: 'getFullSnapshotReportFileReq',
   GET_FULL_TAX_REPORT_FILE_REQ: 'getFullTaxReportFileReq',
-  GET_TRANSACTION_TAX_REPORT_FILE_REQ: 'getTransactionTaxReportFileReq'
+  GET_TRANSACTION_TAX_REPORT_FILE_REQ: 'getTransactionTaxReportFileReq',
+  GET_TRADED_VOLUME_FILE_REQ: 'getTradedVolumeFileReq'
 }
