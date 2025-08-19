@@ -1375,7 +1375,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TOTAL_FEES_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForTotalFeesReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TOTAL_FEES_REPORT_REQ
+      )
 
       return this._totalFeesReport.getTotalFeesReport(args)
     }, 'getTotalFeesReport', args, cb)
