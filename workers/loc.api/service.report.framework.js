@@ -1361,7 +1361,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TRADED_VOLUME, args)
 
-      checkParams(args, 'paramsSchemaForTradedVolumeApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TRADED_VOLUME_REQ
+      )
 
       return this._tradedVolume.getTradedVolume(args)
     }, 'getTradedVolume', args, cb)
