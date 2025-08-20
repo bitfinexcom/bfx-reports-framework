@@ -11,7 +11,6 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const {
-  checkParams,
   getDateString
 } = require('../helpers')
 const TEMPLATE_FILE_NAMES = require('./pdf-writer/template-file-names')
@@ -762,7 +761,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_WIN_LOSS_VS_ACCOUNT_BALANCE_FILE_REQ
+    )
 
     const {
       userId,
@@ -773,7 +775,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
     const suffix = args?.params?.isVSPrevDayBalance
       ? 'balance'
       : 'deposits'
