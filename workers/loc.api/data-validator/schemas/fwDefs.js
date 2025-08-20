@@ -17,6 +17,9 @@ module.exports = {
     isUnrealizedProfitExcluded: {
       type: 'boolean'
     },
+    isVSPrevDayBalance: {
+      type: 'boolean'
+    },
     apiKey: {
       type: 'string'
     },
