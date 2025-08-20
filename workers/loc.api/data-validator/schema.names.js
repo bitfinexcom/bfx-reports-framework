@@ -18,6 +18,7 @@ module.exports = {
   GET_TRADED_VOLUME_REQ: 'getTradedVolumeReq',
   GET_TOTAL_FEES_REPORT_REQ: 'getTotalFeesReportReq',
   GET_PERFORMING_LOAN_REQ: 'getPerformingLoanReq',
+  GET_WIN_LOSS_VS_ACCOUNT_BALANCE_REQ: 'getWinLossVSAccountBalanceReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
