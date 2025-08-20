@@ -1389,7 +1389,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.PERFORMING_LOAN, args)
 
-      checkParams(args, 'paramsSchemaForPerformingLoanApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_PERFORMING_LOAN_REQ
+      )
 
       return this._performingLoan.getPerformingLoan(args)
     }, 'getPerformingLoan', args, cb)
