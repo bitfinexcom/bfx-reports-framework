@@ -1403,7 +1403,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.WIN_LOSS, args)
 
-      checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_WIN_LOSS_VS_ACCOUNT_BALANCE_REQ
+      )
 
       return this._winLossVSAccountBalance
         .getWinLossVSAccountBalance(args)
