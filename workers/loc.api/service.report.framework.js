@@ -19,7 +19,6 @@ const {
   ServerAvailabilityError
 } = require('./errors')
 const {
-  checkParams,
   checkParamsAuth,
   isNotSyncRequired,
   collObjToArr,
@@ -1418,7 +1417,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.SUMMARY_BY_ASSET, args)
 
-      checkParams(args, 'paramsSchemaForSummaryByAssetApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_SUMMARY_BY_ASSET_REQ
+      )
 
       return this._summaryByAsset.getSummaryByAsset(args)
     }, 'getSummaryByAsset', args, cb)
