@@ -19,6 +19,7 @@ module.exports = {
   GET_TOTAL_FEES_REPORT_REQ: 'getTotalFeesReportReq',
   GET_PERFORMING_LOAN_REQ: 'getPerformingLoanReq',
   GET_WIN_LOSS_VS_ACCOUNT_BALANCE_REQ: 'getWinLossVSAccountBalanceReq',
+  GET_SUMMARY_BY_ASSET_REQ: 'getSummaryByAssetReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
