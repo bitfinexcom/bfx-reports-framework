@@ -1,6 +1,5 @@
 'use strict'
 
-const checkParams = require('./check-params')
 const {
   checkParamsAuth,
   tryParseJSON,
@@ -21,7 +20,6 @@ const {
 } = require('./sub-account-auth')
 
 module.exports = {
-  checkParams,
   checkParamsAuth,
   tryParseJSON,
   collObjToArr,

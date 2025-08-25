@@ -19,7 +19,6 @@ const {
   ServerAvailabilityError
 } = require('./errors')
 const {
-  checkParams,
   checkParamsAuth,
   isNotSyncRequired,
   collObjToArr,
@@ -254,7 +253,10 @@ class FrameworkReportService extends ReportService {
 
   createSubAccount (space, args, cb) {
     return this._responder(() => {
-      checkParams(args, 'paramsSchemaForCreateSubAccount')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.CREATE_SUB_ACCOUNT_REQ
+      )
 
       return this._subAccount
         .createSubAccount(args)
@@ -263,7 +265,10 @@ class FrameworkReportService extends ReportService {
 
   updateSubAccount (space, args, cb) {
     return this._responder(() => {
-      checkParams(args, 'paramsSchemaForUpdateSubAccount')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.UPDATE_SUB_ACCOUNT_REQ
+      )
 
       return this._subAccount
         .updateSubAccount(args)
@@ -483,7 +488,10 @@ class FrameworkReportService extends ReportService {
 
   interruptOperations (space, args = {}, cb) {
     return this._privResponder(() => {
-      checkParams(args, 'paramsSchemaForInterruptOperations', ['names'])
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.INTERRUPT_OPERATIONS_REQ
+      )
 
       return this._authenticator.interruptOperations(args)
     }, 'interruptOperations', args, cb)
@@ -491,7 +499,10 @@ class FrameworkReportService extends ReportService {
 
   editAllPublicCollsConfs (space, args = {}, cb) {
     return this._privResponder(async () => {
-      checkParams(args, 'paramsSchemaForEditAllPublicCollsConfs')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.EDIT_ALL_PUBLIC_COLLS_CONFS_REQ
+      )
 
       const syncedColls = await this._publicCollsConfAccessors
         .editAllPublicCollsConfs(args)
@@ -543,8 +554,6 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getSymbols(space, args)
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       const methods = [
         this._SYNC_API_METHODS.SYMBOLS,
@@ -614,8 +623,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.POSITIONS_HISTORY,
         args,
@@ -680,8 +687,9 @@ class FrameworkReportService extends ReportService {
           }),
           args,
           {
-            checkParamsFn: (args) => checkParams(
-              args, 'paramsSchemaForPositionsAudit'
+            checkParamsFn: (args) => this._dataValidator.validate(
+              args,
+              this._dataValidator.SCHEMA_IDS.GET_POSITIONS_AUDIT_REQ
             )
           }
         )
@@ -701,8 +709,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mts' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.LEDGERS,
@@ -726,8 +732,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForPayInvoiceList')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.PAY_INVOICE_LIST,
         args,
@@ -749,8 +753,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsCreate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.TRADES,
@@ -774,8 +776,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_TRADES,
         args,
@@ -792,8 +792,6 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getTickersHistory(space, args)
       }
-
-      checkParams(args, 'paramsSchemaForApi', ['symbol'])
 
       return this._publicCollsConfAccessors
         .getPublicData(
@@ -817,8 +815,6 @@ class FrameworkReportService extends ReportService {
         return super.getPublicTrades(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForPublicTrades', ['symbol'])
-
       return this._publicCollsConfAccessors
         .getPublicData(
           (args) => super.getPublicTrades(space, args),
@@ -840,8 +836,6 @@ class FrameworkReportService extends ReportService {
       if (!await this.isSyncModeWithDbData(space, args)) {
         return super.getStatusMessages(space, args)
       }
-
-      checkParams(args, 'paramsSchemaForStatusMessagesApi')
 
       const { params } = { ...args }
       const {
@@ -887,13 +881,16 @@ class FrameworkReportService extends ReportService {
         return super.getCandles(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForCandlesApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.FW_GET_CANDLES_REQ
+      )
 
-      const { params } = { ...args }
+      const { params } = args ?? {}
       const {
         section = 'hist',
         timeframe = '1D'
-      } = { ...params }
+      } = params ?? {}
       const argsWithParamsByDefault = {
         ...args,
         params: {
@@ -925,8 +922,9 @@ class FrameworkReportService extends ReportService {
         (args) => super.getOrderTrades(space, args),
         args,
         {
-          checkParamsFn: (args) => checkParams(
-            args, 'paramsSchemaForOrderTradesApi'
+          checkParamsFn: (args) => this._dataValidator.validate(
+            args,
+            this._dataValidator.SCHEMA_IDS.GET_ORDER_TRADES_REQ
           )
         }
       )
@@ -946,8 +944,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsUpdate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.ORDERS,
@@ -987,8 +983,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsUpdated' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.MOVEMENTS,
@@ -1033,8 +1027,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_OFFER_HISTORY,
         args,
@@ -1056,8 +1048,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsUpdate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_LOAN_HISTORY,
@@ -1081,8 +1071,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.FUNDING_CREDIT_HISTORY,
         args,
@@ -1105,8 +1093,6 @@ class FrameworkReportService extends ReportService {
           )
       }
 
-      checkParams(args, 'paramsSchemaForApi')
-
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.LOGINS,
         args,
@@ -1128,8 +1114,6 @@ class FrameworkReportService extends ReportService {
             { datePropName: 'mtsCreate' }
           )
       }
-
-      checkParams(args, 'paramsSchemaForApi')
 
       return this._dao.findInCollBy(
         this._SYNC_API_METHODS.CHANGE_LOGS,
@@ -1264,7 +1248,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.WALLETS, args)
 
-      checkParams(args, 'paramsSchemaForWallets')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_WALLETS_REQ
+      )
 
       return this._wallets.getWallets(args)
     }, 'getWallets', args, cb)
@@ -1275,7 +1262,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.BALANCE_HISTORY, args)
 
-      checkParams(args, 'paramsSchemaForBalanceHistoryApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_BALANCE_HISTORY_REQ
+      )
 
       return this._balanceHistory.getBalanceHistory(args)
     }, 'getBalanceHistory', args, cb)
@@ -1286,7 +1276,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.WIN_LOSS, args)
 
-      checkParams(args, 'paramsSchemaForWinLossApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_WIN_LOSS_REQ
+      )
 
       return this._winLoss.getWinLoss(args)
     }, 'getWinLoss', args, cb)
@@ -1297,7 +1290,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.POSITIONS_SNAPSHOT, args)
 
-      checkParams(args, 'paramsSchemaForPositionsSnapshotApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_POSITIONS_SNAPSHOT_REQ
+      )
 
       return this._positionsSnapshot.getPositionsSnapshot(args)
     }, 'getPositionsSnapshot', args, cb)
@@ -1308,7 +1304,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForFullSnapshotReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_FULL_SNAPSHOT_REPORT_REQ
+      )
 
       return this._fullSnapshotReport.getFullSnapshotReport(args)
     }, 'getFullSnapshotReport', args, cb)
@@ -1319,7 +1318,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.FULL_TAX_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForFullTaxReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_FULL_TAX_REPORT_REQ
+      )
 
       return this._fullTaxReport.getFullTaxReport(args)
     }, 'getFullTaxReport', args, cb)
@@ -1330,7 +1332,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
+      )
 
       return this._transactionTaxReport.getTransactionTaxReport(args)
     }, 'getTransactionTaxReport', args, cb)
@@ -1341,7 +1346,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForTransactionTaxReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
+      )
 
       return this._transactionTaxReport.makeTrxTaxReportInBackground(args)
     }, 'makeTrxTaxReportInBackground', args, cb)
@@ -1352,7 +1360,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TRADED_VOLUME, args)
 
-      checkParams(args, 'paramsSchemaForTradedVolumeApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TRADED_VOLUME_REQ
+      )
 
       return this._tradedVolume.getTradedVolume(args)
     }, 'getTradedVolume', args, cb)
@@ -1363,7 +1374,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.TOTAL_FEES_REPORT, args)
 
-      checkParams(args, 'paramsSchemaForTotalFeesReportApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_TOTAL_FEES_REPORT_REQ
+      )
 
       return this._totalFeesReport.getTotalFeesReport(args)
     }, 'getTotalFeesReport', args, cb)
@@ -1374,7 +1388,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.PERFORMING_LOAN, args)
 
-      checkParams(args, 'paramsSchemaForPerformingLoanApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_PERFORMING_LOAN_REQ
+      )
 
       return this._performingLoan.getPerformingLoan(args)
     }, 'getPerformingLoan', args, cb)
@@ -1385,7 +1402,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.WIN_LOSS, args)
 
-      checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_WIN_LOSS_VS_ACCOUNT_BALANCE_REQ
+      )
 
       return this._winLossVSAccountBalance
         .getWinLossVSAccountBalance(args)
@@ -1397,7 +1417,10 @@ class FrameworkReportService extends ReportService {
       await this._dataConsistencyChecker
         .check(this._CHECKER_NAMES.SUMMARY_BY_ASSET, args)
 
-      checkParams(args, 'paramsSchemaForSummaryByAssetApi')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.GET_SUMMARY_BY_ASSET_REQ
+      )
 
       return this._summaryByAsset.getSummaryByAsset(args)
     }, 'getSummaryByAsset', args, cb)
@@ -1502,7 +1525,10 @@ class FrameworkReportService extends ReportService {
         return super.getCandlesFile(space, args)
       }
 
-      checkParams(args, 'paramsSchemaForCandlesFile')
+      this._dataValidator.validate(
+        args,
+        this._dataValidator.SCHEMA_IDS.FW_GET_CANDLES_FILE_REQ
+      )
 
       return super.getCandlesFile(space, args)
     }, 'getCandlesFile', args, cb)

@@ -11,7 +11,6 @@ const {
 } = require('bfx-report/workers/loc.api/helpers')
 
 const {
-  checkParams,
   getDateString
 } = require('../helpers')
 const TEMPLATE_FILE_NAMES = require('./pdf-writer/template-file-names')
@@ -138,7 +137,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForBalanceHistoryFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_BALANCE_HISTORY_FILE_REQ
+    )
 
     const {
       userId,
@@ -149,7 +151,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -175,7 +180,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_WIN_LOSS_FILE_REQ
+    )
 
     const {
       userId,
@@ -186,7 +194,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -212,7 +223,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPositionsSnapshotFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_POSITIONS_SNAPSHOT_FILE_REQ
+    )
 
     const {
       userId,
@@ -223,7 +237,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -263,7 +280,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uInfo,
     opts
   ) {
-    checkParams(args, 'paramsSchemaForFullSnapshotReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_FULL_SNAPSHOT_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -307,9 +327,14 @@ class ReportFileJobData extends BaseReportFileJobData {
       : `${uName}full-snapshot-report_TO_${endDate}`
 
     const reportFileArgs = getReportFileArgs(
-      args,
-      null,
-      { isBaseNameInName: true }
+      {
+        ...args,
+        params: omit(params, ['isStartSnapshot', 'isEndSnapshot'])
+      },
+      {
+        isLimitUnused: true,
+        extraParams: { isBaseNameInName: true }
+      }
     )
 
     const jobData = {
@@ -432,7 +457,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       )
     }
 
-    checkParams(args, 'paramsSchemaForFullTaxReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_FULL_TAX_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -444,9 +472,14 @@ class ReportFileJobData extends BaseReportFileJobData {
     )
 
     const reportFileArgs = getReportFileArgs(
-      args,
-      null,
-      { isBaseNameInName: true }
+      {
+        ...args,
+        params: omit(params, ['isStartSnapshot', 'isEndSnapshot'])
+      },
+      {
+        isLimitUnused: true,
+        extraParams: { isBaseNameInName: true }
+      }
     )
 
     const jobData = {
@@ -538,7 +571,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTransactionTaxReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -549,7 +585,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -590,7 +629,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTradedVolumeFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_TRADED_VOLUME_FILE_REQ
+    )
 
     const {
       userId,
@@ -601,7 +643,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -627,7 +672,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForTotalFeesReportFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_TOTAL_FEES_REPORT_FILE_REQ
+    )
 
     const {
       userId,
@@ -638,7 +686,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -665,7 +716,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForPerformingLoanFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_PERFORMING_LOAN_FILE_REQ
+    )
 
     const {
       userId,
@@ -676,7 +730,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
 
     const jobData = {
       userInfo,
@@ -704,7 +761,10 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    checkParams(args, 'paramsSchemaForWinLossVSAccountBalanceFile')
+    this.dataValidator.validate(
+      args,
+      this.dataValidator.SCHEMA_IDS.GET_WIN_LOSS_VS_ACCOUNT_BALANCE_FILE_REQ
+    )
 
     const {
       userId,
@@ -715,7 +775,10 @@ class ReportFileJobData extends BaseReportFileJobData {
       uInfo
     )
 
-    const reportFileArgs = getReportFileArgs(args)
+    const reportFileArgs = getReportFileArgs(
+      args,
+      { isLimitUnused: true }
+    )
     const suffix = args?.params?.isVSPrevDayBalance
       ? 'balance'
       : 'deposits'
