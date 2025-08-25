@@ -6,9 +6,6 @@ const MAIN_DB_WORKER_ACTIONS = require(
   'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
 const {
-  normalizeFilterParams
-} = require('bfx-report/workers/loc.api/helpers')
-const {
   getValidationSchemaId,
   getFilterValidationSchemaId
 } = require('bfx-report/workers/loc.api/helpers/prepare-response/helpers')
@@ -913,7 +910,7 @@ class BetterSqliteDAO extends DAO {
    */
   async findInCollBy (
     method,
-    reqArgs,
+    args,
     opts
   ) {
     const {
@@ -932,13 +929,12 @@ class BetterSqliteDAO extends DAO {
       : this._getMethodCollMap().get(method)
 
     const apiMethodName = filterModelNameMap.get(method) ?? {}
-    const args = normalizeFilterParams(apiMethodName, reqArgs)
 
     if (shouldParamsBeVerified) {
       const schemaId = getValidationSchemaId(apiMethodName)
       const filterSchemaId = getFilterValidationSchemaId(apiMethodName)
 
-      await this.dataValidator.validate(reqArgs, schemaId)
+      await this.dataValidator.validate(args, schemaId)
       await this.dataValidator.validate(
         { params: args?.params?.filter },
         filterSchemaId
