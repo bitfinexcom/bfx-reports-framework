@@ -6,9 +6,12 @@ const MAIN_DB_WORKER_ACTIONS = require(
   'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
 const {
-  checkFilterParams,
   normalizeFilterParams
 } = require('bfx-report/workers/loc.api/helpers')
+const {
+  getValidationSchemaId,
+  getFilterValidationSchemaId
+} = require('bfx-report/workers/loc.api/helpers/prepare-response/helpers')
 const {
   AuthError
 } = require('bfx-report/workers/loc.api/errors')
@@ -67,7 +70,8 @@ const depsTypes = (TYPES) => [
   TYPES.TABLES_NAMES,
   TYPES.SyncSchema,
   TYPES.DbMigratorFactory,
-  TYPES.ProcessMessageManagerFactory
+  TYPES.ProcessMessageManagerFactory,
+  TYPES.DataValidator
 ]
 class BetterSqliteDAO extends DAO {
   constructor (...args) {
@@ -914,9 +918,9 @@ class BetterSqliteDAO extends DAO {
   ) {
     const {
       schema = {},
-      isNotDataConverted = false
+      isNotDataConverted = false,
+      shouldParamsBeVerified = false
     } = { ...opts }
-    const filterModelName = filterModelNameMap.get(method)
     const methodColl = (
       schema &&
       typeof schema === 'object'
@@ -927,8 +931,20 @@ class BetterSqliteDAO extends DAO {
         .setDataStructure(schema)
       : this._getMethodCollMap().get(method)
 
-    const args = normalizeFilterParams(method, reqArgs)
-    checkFilterParams(filterModelName, args)
+    const apiMethodName = filterModelNameMap.get(method) ?? {}
+    const args = normalizeFilterParams(apiMethodName, reqArgs)
+
+    if (shouldParamsBeVerified) {
+      const schemaId = getValidationSchemaId(apiMethodName)
+      const filterSchemaId = getFilterValidationSchemaId(apiMethodName)
+
+      await this.dataValidator.validate(reqArgs, schemaId)
+      await this.dataValidator.validate(
+        { params: args?.params?.filter },
+        filterSchemaId
+      )
+    }
+
     const _args = getArgs(args, methodColl)
 
     const { sql, sqlParams } = getQuery(

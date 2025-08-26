@@ -41,8 +41,21 @@ const {
 
 const appDeps = require('./loc.api/di/app.deps')
 const TYPES = require('./loc.api/di/types')
+const fwDataValidator = require('./loc.api/data-validator')
 
 class WrkReportFrameWorkApi extends WrkReportServiceApi {
+  loadCoreDeps (...args) {
+    super.loadCoreDeps(...args)
+
+    this.container
+      .get(TYPES.DataValidator)
+      .reinit({
+        schemaNames: fwDataValidator.SCHEMA_NAMES,
+        schemaIds: fwDataValidator.SCHEMA_IDS,
+        schemas: fwDataValidator.schemas
+      })
+  }
+
   loadAppDeps (...args) {
     super.loadAppDeps(...args)
 

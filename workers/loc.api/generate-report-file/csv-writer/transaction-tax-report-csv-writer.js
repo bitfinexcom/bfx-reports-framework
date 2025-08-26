@@ -9,6 +9,9 @@ const {
 const TRANSLATION_NAMESPACES = require(
   'bfx-report/workers/loc.api/i18next/translation.namespaces'
 )
+const {
+  omitExtraParamFieldsForReportExport
+} = require('bfx-report/workers/loc.api/generate-report-file/helpers')
 
 module.exports = (
   rService,
@@ -20,18 +23,16 @@ module.exports = (
 ) => {
   const queue = rService.ctx.lokue_aggregator.q
   const {
-    args: _args,
+    args,
     columnsCsv,
     formatSettings,
     name
   } = { ...jobData }
-  const { params: _params } = { ..._args }
   const params = {
     start: 0,
     end: Date.now(),
-    ..._params
+    ...args?.params
   }
-  const args = { ..._args, params }
   const { language } = params ??
 
   queue.emit('progress', 0)
@@ -52,7 +53,10 @@ module.exports = (
 
   const res = await getDataFromApi({
     getData: rService[name].bind(rService),
-    args,
+    args: {
+      ...args,
+      params: omitExtraParamFieldsForReportExport(params)
+    },
     callerName: 'REPORT_FILE_WRITER',
     shouldNotInterrupt: true
   })
