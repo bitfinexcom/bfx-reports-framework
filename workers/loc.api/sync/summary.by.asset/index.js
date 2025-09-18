@@ -161,6 +161,7 @@ class SummaryByAsset {
         ? 1
         : calcedActualRate
 
+      // TODO:
       const ledgersForCurrency = ledgers.filter((ledger) => (
         ledger[this.ledgersSymbolFieldName] === currency
       ))
@@ -317,6 +318,39 @@ class SummaryByAsset {
         ? accum[propName] + curr[propName]
         : accum[propName]
     }
+  }
+
+  #makeLedgerMapFilteredByCcyGroupedByCategory (
+    ledgers, ccy, categories
+  ) {
+    const ledgerMap = new Map()
+
+    if (
+      !Array.isArray(categories) ||
+      categories.length === 0
+    ) {
+      return ledgerMap
+    }
+
+    for (const category of categories) {
+      ledgerMap.set(category, [])
+    }
+
+    for (const ledger of ledgers) {
+      if (ledger?.[this.ledgersSymbolFieldName] !== ccy) {
+        continue
+      }
+
+      for (const [category, arr] of ledgerMap) {
+        if (ledger?._category !== category) {
+          continue
+        }
+
+        arr.push(ledger)
+      }
+    }
+
+    return ledgerMap
   }
 }
 
