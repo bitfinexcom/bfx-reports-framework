@@ -297,6 +297,7 @@ class SummaryByAsset {
       balanceChangePerc: 0,
       volumeUsd: 0,
       tradingFeesUsd: 0,
+      allFeesUsd: 0,
 
       calcedStartWalletBalanceUsd: 0
     }
@@ -310,6 +311,7 @@ class SummaryByAsset {
           'balanceChangeUsd',
           'volumeUsd',
           'tradingFeesUsd',
+          'allFeesUsd',
 
           'calcedStartWalletBalanceUsd'
         ]
