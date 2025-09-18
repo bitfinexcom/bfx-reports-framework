@@ -3,6 +3,8 @@
 const { omit } = require('lib-js-util-base')
 const moment = require('moment')
 
+const { pushLargeArr } = require('../../helpers/utils')
+
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -15,6 +17,9 @@ const depsTypes = (TYPES) => [
   TYPES.Trades
 ]
 class SummaryByAsset {
+  #ledgerFeeCats = [201, 204, 207, 222, 224, 228, 241,
+    243, 251, 254, 255, 258, 905]
+
   constructor (
     dao,
     syncSchema,
@@ -161,19 +166,21 @@ class SummaryByAsset {
         ? 1
         : calcedActualRate
 
-      // TODO:
-      const ledgersForCurrency = ledgers.filter((ledger) => (
-        ledger[this.ledgersSymbolFieldName] === currency
-      ))
+      const ledgerMap = this.#makeLedgerMapFilteredByCcyGroupedByCategory(
+        ledgers,
+        currency,
+        [28, ...this.#ledgerFeeCats]
+      )
       const tradesForCurrency = trades.filter((trade) => (
         trade?.baseCurrency === currency
       ))
-      const marginFundingPaymentLedgers = ledgersForCurrency.filter((ledger) => (
-        ledger._category === 28
-      ))
-      const tradingFeeLedgers = ledgersForCurrency.filter((ledger) => (
-        ledger._category === 201
-      ))
+      const marginFundingPaymentLedgers = ledgerMap.get(28) ?? []
+      const tradingFeeLedgers = ledgerMap.get(201) ?? []
+      const allFeeLedgers = this.#ledgerFeeCats.reduce((accum, cat) => {
+        pushLargeArr(accum, ledgerMap.get(cat) ?? [])
+
+        return accum
+      }, [])
 
       const volume = this.#calcFieldByName(
         tradesForCurrency,
@@ -196,6 +203,10 @@ class SummaryByAsset {
         tradingFeeLedgers,
         'amountUsd'
       )
+      const calcedAllFeeUsdLedgers = this.#calcFieldByName(
+        allFeeLedgers,
+        'amountUsd'
+      )
 
       const balanceChange = calcedEndWalletBalance - calcedStartWalletBalance
       const balanceChangePerc = calcedStartWalletBalance === 0
@@ -206,6 +217,7 @@ class SummaryByAsset {
       // In the Ledgers amount of fee is negative value, skip sign for UI
       const tradingFees = Math.abs(calcedTradingFeeLedgers)
       const tradingFeesUsd = Math.abs(calcedTradingFeeUsdLedgers)
+      const allFeesUsd = Math.abs(calcedAllFeeUsdLedgers)
 
       if (
         calcedEndWalletBalanceUsd < 0.01 &&
@@ -228,6 +240,7 @@ class SummaryByAsset {
         volumeUsd,
         tradingFees,
         tradingFeesUsd,
+        allFeesUsd,
         marginFundingPayment,
 
         // It's used to total perc calc
