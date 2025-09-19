@@ -31,6 +31,5 @@ module.exports = {
   SYNC_USER_STEPS: 'syncUserSteps',
   LOGINS: 'logins',
   CHANGE_LOGS: 'changeLogs',
-  PAY_INVOICE_LIST: 'payInvoiceList',
   SUB_ACCOUNTS: 'subAccounts'
 }

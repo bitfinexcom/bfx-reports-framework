@@ -41,7 +41,6 @@ class BfxApiRouter extends BaseBfxApiRouter {
       ['positionsAudit', 90],
       ['wallets', 90],
       ['ledgers', 90],
-      ['payInvoiceList', 90],
       ['accountTrades', 90],
       ['fundingTrades', 90],
       ['trades', 10],

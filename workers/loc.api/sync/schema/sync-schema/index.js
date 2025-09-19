@@ -16,7 +16,6 @@ const positionsHistory = require('./positions-history')
 const positionsSnapshot = require('./positions-snapshot')
 const logins = require('./logins')
 const changeLogs = require('./change-logs')
-const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
 const wallets = require('./wallets')
 const symbols = require('./symbols')
@@ -43,7 +42,6 @@ const _methodCollMap = new Map([
   [SYNC_API_METHODS.POSITIONS_SNAPSHOT, positionsSnapshot],
   [SYNC_API_METHODS.LOGINS, logins],
   [SYNC_API_METHODS.CHANGE_LOGS, changeLogs],
-  [SYNC_API_METHODS.PAY_INVOICE_LIST, payInvoiceList],
   [SYNC_API_METHODS.TICKERS_HISTORY, tickersHistory],
   [SYNC_API_METHODS.WALLETS, wallets],
   [SYNC_API_METHODS.SYMBOLS, symbols],
