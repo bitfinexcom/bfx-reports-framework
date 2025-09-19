@@ -75,17 +75,35 @@ class SummaryByAsset {
       auth,
       params: { end }
     })
+    const withdrawalsPromise = this.movements.getMovements({
+      auth,
+      start,
+      end,
+      isWithdrawals: true,
+      isExcludePrivate: false
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth,
+      start,
+      end,
+      isDeposits: true,
+      isExcludePrivate: false
+    })
 
     const [
       trades,
       ledgers,
       startWallets,
-      endWallets
+      endWallets,
+      withdrawals,
+      deposits
     ] = await Promise.all([
       tradesPromise,
       ledgersPromise,
       startWalletsPromise,
-      endWalletsPromise
+      endWalletsPromise,
+      withdrawalsPromise,
+      depositsPromise
     ])
 
     const _summaryByAsset = await this.#calcSummaryByAsset({
@@ -94,7 +112,11 @@ class SummaryByAsset {
       startWallets,
       endWallets
     })
-    const total = this.#calcTotal(_summaryByAsset)
+    const total = this.#calcTotal(
+      _summaryByAsset,
+      withdrawals,
+      deposits
+    )
     const summaryByAsset = _summaryByAsset.map((item) => (
       omit(item, [
         'balanceChangeUsd',
@@ -290,7 +312,11 @@ class SummaryByAsset {
     )
   }
 
-  #calcTotal (summaryByAsset) {
+  #calcTotal (
+    summaryByAsset,
+    withdrawals,
+    deposits
+  ) {
     const initTotal = {
       balanceUsd: 0,
       balanceChangeUsd: 0,
@@ -299,7 +325,8 @@ class SummaryByAsset {
       tradingFeesUsd: 0,
       allFeesUsd: 0,
 
-      calcedStartWalletBalanceUsd: 0
+      calcedStartWalletBalanceUsd: 0,
+      depositsWithdrawalsUsd: 0
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -323,6 +350,20 @@ class SummaryByAsset {
 
       return accum
     }, initTotal)
+
+    const calcedWithdrawalsUsd = this.#calcFieldByName(
+      withdrawals,
+      'amountUsd'
+    )
+    const calcedDepositsUsd = this.#calcFieldByName(
+      deposits,
+      'amountUsd'
+    )
+    res.depositsWithdrawalsUsd = (
+      res.depositsWithdrawalsUsd +
+      calcedWithdrawalsUsd +
+      calcedDepositsUsd
+    )
 
     return omit(res, ['calcedStartWalletBalanceUsd'])
   }
