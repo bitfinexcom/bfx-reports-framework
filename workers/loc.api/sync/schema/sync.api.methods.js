@@ -15,7 +15,6 @@ const LOGINS = '_getLogins'
 const CHANGE_LOGS = '_getChangeLogs'
 const TICKERS_HISTORY = '_getTickersHistory'
 const CANDLES = '_getCandles'
-const PAY_INVOICE_LIST = '_getPayInvoiceList'
 
 const WALLETS = '_getWallets'
 const SYMBOLS = '_getSymbols'
@@ -43,7 +42,6 @@ module.exports = {
   CHANGE_LOGS,
   TICKERS_HISTORY,
   CANDLES,
-  PAY_INVOICE_LIST,
 
   WALLETS,
   SYMBOLS,

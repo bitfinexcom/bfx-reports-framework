@@ -7,7 +7,7 @@
  * in the `workers/loc.api/sync/dao/db-migrations/sqlite-migrations` folder,
  * e.g. `migration.v1.js`, where `v1` is `SUPPORTED_DB_VERSION`
  */
-const SUPPORTED_DB_VERSION = 42
+const SUPPORTED_DB_VERSION = 43
 
 const TABLES_NAMES = require('../tables-names')
 
@@ -26,7 +26,6 @@ const positionsHistory = require('./positions-history')
 const positionsSnapshot = require('./positions-snapshot')
 const logins = require('./logins')
 const changeLogs = require('./change-logs')
-const payInvoiceList = require('./pay-invoice-list')
 const tickersHistory = require('./tickers-history')
 const statusMessages = require('./status-messages')
 const publicCollsConf = require('./public-colls-conf')
@@ -60,7 +59,6 @@ const models = new Map([
   [TABLES_NAMES.POSITIONS_SNAPSHOT, positionsSnapshot],
   [TABLES_NAMES.LOGINS, logins],
   [TABLES_NAMES.CHANGE_LOGS, changeLogs],
-  [TABLES_NAMES.PAY_INVOICE_LIST, payInvoiceList],
   [TABLES_NAMES.TICKERS_HISTORY, tickersHistory],
   [TABLES_NAMES.STATUS_MESSAGES, statusMessages],
   [TABLES_NAMES.PUBLIC_COLLS_CONF, publicCollsConf],
