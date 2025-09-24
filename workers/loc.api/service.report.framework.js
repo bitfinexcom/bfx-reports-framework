@@ -721,28 +721,6 @@ class FrameworkReportService extends ReportService {
   /**
    * @override
    */
-  getPayInvoiceList (space, args, cb) {
-    return this._privResponder(async () => {
-      if (!await this.isSyncModeWithDbData(space, args)) {
-        return this._subAccountApiData
-          .getDataForSubAccount(
-            (args) => super.getPayInvoiceList(space, args),
-            args,
-            { datePropName: 't' }
-          )
-      }
-
-      return this._dao.findInCollBy(
-        this._SYNC_API_METHODS.PAY_INVOICE_LIST,
-        args,
-        { isPrepareResponse: true, shouldParamsBeVerified: true }
-      )
-    }, 'getPayInvoiceList', args, cb)
-  }
-
-  /**
-   * @override
-   */
   getTrades (space, args, cb) {
     return this._privResponder(async () => {
       if (!await this.isSyncModeWithDbData(space, args)) {
