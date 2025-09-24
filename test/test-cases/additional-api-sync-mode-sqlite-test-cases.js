@@ -819,7 +819,9 @@ module.exports = (
       'balanceChangeUsd',
       'balanceChangePerc',
       'volumeUsd',
-      'tradingFeesUsd'
+      'tradingFeesUsd',
+      'allFeesUsd',
+      'depositsWithdrawalsUsd'
     ])
   })
 
@@ -866,7 +868,9 @@ module.exports = (
       'balanceChangeUsd',
       'balanceChangePerc',
       'volumeUsd',
-      'tradingFeesUsd'
+      'tradingFeesUsd',
+      'allFeesUsd',
+      'depositsWithdrawalsUsd'
     ])
   })
 
