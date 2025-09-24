@@ -124,7 +124,8 @@ class SummaryByAsset {
       omit(item, [
         'balanceChangeUsd',
         'tradingFeesUsd',
-        'calcedStartWalletBalanceUsd'
+        'calcedStartWalletBalanceUsd',
+        'allFeesUsd'
       ])
     ))
 
