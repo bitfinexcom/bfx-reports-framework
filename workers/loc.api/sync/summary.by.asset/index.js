@@ -14,7 +14,8 @@ const depsTypes = (TYPES) => [
   TYPES.SYNC_API_METHODS,
   TYPES.ALLOWED_COLLS,
   TYPES.Wallets,
-  TYPES.Trades
+  TYPES.Trades,
+  TYPES.Movements
 ]
 class SummaryByAsset {
   #ledgerFeeCats = [201, 204, 207, 222, 224, 228, 241,
@@ -27,7 +28,8 @@ class SummaryByAsset {
     SYNC_API_METHODS,
     ALLOWED_COLLS,
     wallets,
-    trades
+    trades,
+    movements
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
@@ -36,6 +38,7 @@ class SummaryByAsset {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.wallets = wallets
     this.trades = trades
+    this.movements = movements
 
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
