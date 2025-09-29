@@ -15,7 +15,8 @@ const depsTypes = (TYPES) => [
   TYPES.ALLOWED_COLLS,
   TYPES.Wallets,
   TYPES.Trades,
-  TYPES.Movements
+  TYPES.Movements,
+  TYPES.WinLossVSAccountBalance
 ]
 class SummaryByAsset {
   #ledgerFeeCats = [201, 204, 207, 222, 224, 228, 241,
@@ -29,7 +30,8 @@ class SummaryByAsset {
     ALLOWED_COLLS,
     wallets,
     trades,
-    movements
+    movements,
+    winLossVSAccountBalance
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
@@ -39,6 +41,7 @@ class SummaryByAsset {
     this.wallets = wallets
     this.trades = trades
     this.movements = movements
+    this.winLossVSAccountBalance = winLossVSAccountBalance
 
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
@@ -92,6 +95,19 @@ class SummaryByAsset {
       isDeposits: true,
       isExcludePrivate: false
     })
+    const dailyBalancesAndPLPromise = this.winLossVSAccountBalance
+      .getWinLossVSAccountBalance({
+        auth,
+        params: {
+          start,
+          end,
+          timeframe: 'day',
+          isUnrealizedProfitExcluded: args?.params
+            ?.isUnrealizedProfitExcluded,
+          isVSPrevDayBalance: true,
+          shouldTimeframePLBeReturned: true
+        }
+      })
 
     const [
       trades,
@@ -99,15 +115,18 @@ class SummaryByAsset {
       startWallets,
       endWallets,
       withdrawals,
-      deposits
+      deposits,
+      dailyBalancesAndPL
     ] = await Promise.all([
       tradesPromise,
       ledgersPromise,
       startWalletsPromise,
       endWalletsPromise,
       withdrawalsPromise,
-      depositsPromise
+      depositsPromise,
+      dailyBalancesAndPLPromise
     ])
+    console.log('[dailyBalancesAndPL]:', dailyBalancesAndPL)
 
     const _summaryByAsset = await this.#calcSummaryByAsset({
       trades,
