@@ -32,6 +32,7 @@ class WinLossVSAccountBalance {
       timeframe = 'day',
       start = 0,
       end = Date.now(),
+      shouldTimeframePLBeReturned,
       isUnrealizedProfitExcluded,
       isVSPrevDayBalance
     } = params ?? {}
@@ -60,6 +61,7 @@ class WinLossVSAccountBalance {
     const getWinLossPercByTimeframe = isVSPrevDayBalance
       ? this._getWinLossPrevDayBalanceByTimeframe(
         {
+          shouldTimeframePLBeReturned,
           isUnrealizedProfitExcluded,
           firstWalletsVals
         }
@@ -193,6 +195,7 @@ class WinLossVSAccountBalance {
   }
 
   _getWinLossPrevDayBalanceByTimeframe ({
+    shouldTimeframePLBeReturned,
     isUnrealizedProfitExcluded,
     firstWalletsVals
   }) {
@@ -200,6 +203,7 @@ class WinLossVSAccountBalance {
     let prevWallets = 0
     let prevPL = 0
     let prevMultiplying = 1
+    let totalMovements = 0
 
     return ({
       walletsGroupedByTimeframe = {},
@@ -228,6 +232,7 @@ class WinLossVSAccountBalance {
       const movements = Number.isFinite(movementsRes[symb])
         ? movementsRes[symb]
         : 0
+      totalMovements += movements
       const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
         ? walletsGroupedByTimeframe[symb]
         : 0
@@ -241,6 +246,7 @@ class WinLossVSAccountBalance {
         : pl - prevPL
 
       const winLoss = realized + unrealized
+      const balanceWithoutMovements = wallets - totalMovements
 
       prevWallets = wallets
       prevPL = pl
@@ -249,12 +255,32 @@ class WinLossVSAccountBalance {
         !Number.isFinite(winLoss) ||
         prevWallets === 0
       ) {
+        if (shouldTimeframePLBeReturned) {
+          return {
+            balanceWithoutMovements,
+            pl: Number.isFinite(winLoss)
+              ? winLoss
+              : 0,
+            perc: prevPerc
+          }
+        }
+
         return { perc: prevPerc }
       }
 
       prevMultiplying = ((prevWallets + winLoss) / prevWallets) * prevMultiplying
       const perc = (prevMultiplying - 1) * 100
       prevPerc = perc
+
+      if (shouldTimeframePLBeReturned) {
+        return {
+          balanceWithoutMovements,
+          pl: Number.isFinite(winLoss)
+            ? winLoss
+            : 0,
+          perc: prevPerc
+        }
+      }
 
       return { perc }
     }
