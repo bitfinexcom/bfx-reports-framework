@@ -253,9 +253,12 @@ class WinLossVSAccountBalance {
         : pl - prevPL
 
       const winLoss = realized + unrealized
-      const balanceWithoutMovements = wallets - totalMovements
 
-      prevWallets = wallets
+      const balanceWithoutMovements = wallets - totalMovements
+      const fullBalanceWithoutMovements = isUnrealizedProfitExcluded
+        ? balanceWithoutMovements
+        : balanceWithoutMovements + pl
+
       prevPL = pl
 
       if (
@@ -264,10 +267,8 @@ class WinLossVSAccountBalance {
       ) {
         if (shouldTimeframePLBeReturned) {
           return {
-            balanceWithoutMovements,
-            pl: Number.isFinite(winLoss)
-              ? winLoss
-              : 0,
+            balanceWithoutMovementsUsd: fullBalanceWithoutMovements,
+            returns: 0,
             perc: prevPerc
           }
         }
@@ -277,15 +278,16 @@ class WinLossVSAccountBalance {
 
       prevMultiplying = ((prevWallets + winLoss) / prevWallets) * prevMultiplying
       const perc = (prevMultiplying - 1) * 100
+      const returns = winLoss / prevWallets
+
       prevPerc = perc
+      prevWallets = wallets
 
       if (shouldTimeframePLBeReturned) {
         return {
-          balanceWithoutMovements,
-          pl: Number.isFinite(winLoss)
-            ? winLoss
-            : 0,
-          perc: prevPerc
+          balanceWithoutMovementsUsd: fullBalanceWithoutMovements,
+          returns,
+          perc
         }
       }
 
