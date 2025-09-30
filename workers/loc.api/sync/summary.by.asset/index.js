@@ -126,7 +126,7 @@ class SummaryByAsset {
       dailyBalancesAndPLPromise
     ])
 
-    const _summaryByAsset = await this.#calcSummaryByAsset({
+    const _summaryByAsset = this.#calcSummaryByAsset({
       trades,
       ledgers,
       startWallets,
@@ -135,7 +135,8 @@ class SummaryByAsset {
     const total = this.#calcTotal(
       _summaryByAsset,
       withdrawals,
-      deposits
+      deposits,
+      dailyBalancesAndPL
     )
     const summaryByAsset = _summaryByAsset.map((item) => (
       omit(item, [
@@ -152,7 +153,7 @@ class SummaryByAsset {
     }
   }
 
-  async #calcSummaryByAsset ({
+  #calcSummaryByAsset ({
     trades,
     ledgers,
     startWallets,
@@ -336,8 +337,19 @@ class SummaryByAsset {
   #calcTotal (
     summaryByAsset,
     withdrawals,
-    deposits
+    deposits,
+    dailyBalancesAndPL
   ) {
+    const calcedWithdrawalsUsd = this.#calcFieldByName(
+      withdrawals,
+      'amountUsd'
+    )
+    const calcedDepositsUsd = this.#calcFieldByName(
+      deposits,
+      'amountUsd'
+    )
+    const plUsd = this.#calcPLUsd(dailyBalancesAndPL)
+
     const initTotal = {
       balanceUsd: 0,
       balanceChangeUsd: 0,
@@ -347,7 +359,12 @@ class SummaryByAsset {
       allFeesUsd: 0,
 
       calcedStartWalletBalanceUsd: 0,
-      depositsWithdrawalsUsd: 0
+
+      depositsWithdrawalsUsd: (
+        calcedWithdrawalsUsd +
+        calcedDepositsUsd
+      ),
+      plUsd
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -371,20 +388,6 @@ class SummaryByAsset {
 
       return accum
     }, initTotal)
-
-    const calcedWithdrawalsUsd = this.#calcFieldByName(
-      withdrawals,
-      'amountUsd'
-    )
-    const calcedDepositsUsd = this.#calcFieldByName(
-      deposits,
-      'amountUsd'
-    )
-    res.depositsWithdrawalsUsd = (
-      res.depositsWithdrawalsUsd +
-      calcedWithdrawalsUsd +
-      calcedDepositsUsd
-    )
 
     return omit(res, ['calcedStartWalletBalanceUsd'])
   }
@@ -428,6 +431,22 @@ class SummaryByAsset {
     }
 
     return ledgerMap
+  }
+
+  #calcPLUsd (dailyBalancesAndPL) {
+    if (
+      !Array.isArray(dailyBalancesAndPL) ||
+      dailyBalancesAndPL.length === 0
+    ) {
+      return 0
+    }
+
+    const lastBalance = dailyBalancesAndPL?.[0]
+      ?.balanceWithoutMovementsUsd ?? 0
+    const firstBalance = dailyBalancesAndPL?.[dailyBalancesAndPL.length - 1]
+      ?.balanceWithoutMovementsUsd ?? 0
+
+    return lastBalance - firstBalance
   }
 }
 
