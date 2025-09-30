@@ -104,7 +104,6 @@ class SummaryByAsset {
           timeframe: 'day',
           isUnrealizedProfitExcluded: args?.params
             ?.isUnrealizedProfitExcluded,
-          isVSPrevDayBalance: true,
           shouldTimeframePLBeReturned: true
         }
       })
@@ -126,7 +125,6 @@ class SummaryByAsset {
       depositsPromise,
       dailyBalancesAndPLPromise
     ])
-    console.log('[dailyBalancesAndPL]:', dailyBalancesAndPL)
 
     const _summaryByAsset = await this.#calcSummaryByAsset({
       trades,

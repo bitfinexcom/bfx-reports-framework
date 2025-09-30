@@ -58,7 +58,10 @@ class WinLossVSAccountBalance {
       plGroupedByTimeframe
     } = await this.winLoss.getDataToCalcWinLoss(args)
 
-    const getWinLossPercByTimeframe = isVSPrevDayBalance
+    const getWinLossPercByTimeframe = (
+      isVSPrevDayBalance ||
+      shouldTimeframePLBeReturned
+    )
       ? this._getWinLossPrevDayBalanceByTimeframe(
         {
           shouldTimeframePLBeReturned,
@@ -99,10 +102,14 @@ class WinLossVSAccountBalance {
 
           return res
         })
-    pickedRes.push({
-      mts: start,
-      perc: 0
-    })
+
+    if (!shouldTimeframePLBeReturned) {
+      pickedRes.push({
+        mts: start,
+        perc: 0
+      })
+    }
+
     const res = this.winLoss.shiftMtsToNextTimeframe(
       pickedRes,
       { timeframe, end }
