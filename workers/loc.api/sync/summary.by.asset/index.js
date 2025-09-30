@@ -349,6 +349,7 @@ class SummaryByAsset {
       'amountUsd'
     )
     const plUsd = this.#calcPLUsd(dailyBalancesAndPL)
+    const returns = this.#getDailyReturns(dailyBalancesAndPL)
 
     const initTotal = {
       balanceUsd: 0,
@@ -447,6 +448,14 @@ class SummaryByAsset {
       ?.balanceWithoutMovementsUsd ?? 0
 
     return lastBalance - firstBalance
+  }
+
+  #getDailyReturns (dailyBalancesAndPL) {
+    if (!Array.isArray(dailyBalancesAndPL)) {
+      return []
+    }
+
+    return dailyBalancesAndPL.map((item) => item?.returns)
   }
 }
 
