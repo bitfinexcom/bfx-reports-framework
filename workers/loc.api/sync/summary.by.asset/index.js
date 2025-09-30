@@ -2,6 +2,7 @@
 
 const { omit } = require('lib-js-util-base')
 const moment = require('moment')
+const math = require('mathjs')
 
 const { pushLargeArr } = require('../../helpers/utils')
 
@@ -350,6 +351,7 @@ class SummaryByAsset {
     )
     const plUsd = this.#calcPLUsd(dailyBalancesAndPL)
     const returns = this.#getDailyReturns(dailyBalancesAndPL)
+    const volatilityPerc = this.#calcVolatilityPerc(returns)
 
     const initTotal = {
       balanceUsd: 0,
@@ -365,7 +367,8 @@ class SummaryByAsset {
         calcedWithdrawalsUsd +
         calcedDepositsUsd
       ),
-      plUsd
+      plUsd,
+      volatilityPerc
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -456,6 +459,10 @@ class SummaryByAsset {
     }
 
     return dailyBalancesAndPL.map((item) => item?.returns)
+  }
+
+  #calcVolatilityPerc (dailyReturns) {
+    return math.std(dailyReturns) * Math.sqrt(365) * 100
   }
 }
 
