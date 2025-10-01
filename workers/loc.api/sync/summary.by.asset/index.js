@@ -4,6 +4,7 @@ const { omit } = require('lib-js-util-base')
 const moment = require('moment')
 const math = require('mathjs')
 
+const { getBackIterable } = require('../helpers')
 const { pushLargeArr } = require('../../helpers/utils')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -356,6 +357,7 @@ class SummaryByAsset {
       sharpeRatio,
       sortinoRatio
     } = this.#calcDailyReturnStatistics(returns)
+    const maxDrawdownPerc = this.#calcMaxDrawdownPerc(dailyBalancesAndPL)
 
     const initTotal = {
       balanceUsd: 0,
@@ -374,7 +376,8 @@ class SummaryByAsset {
       plUsd,
       volatilityPerc,
       sharpeRatio,
-      sortinoRatio
+      sortinoRatio,
+      maxDrawdownPerc
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -486,6 +489,38 @@ class SummaryByAsset {
       sharpeRatio,
       sortinoRatio
     }
+  }
+
+  #calcMaxDrawdownPerc (dailyBalancesAndPL) {
+    if (
+      !Array.isArray(dailyBalancesAndPL) ||
+      dailyBalancesAndPL.length === 0
+    ) {
+      return 0
+    }
+
+    const iterator = getBackIterable(dailyBalancesAndPL)
+    let peak = dailyBalancesAndPL?.[dailyBalancesAndPL.length - 1]
+      ?.balanceWithoutMovementsUsd ?? 0
+    let maxDrawdown = 0
+
+    for (const item of iterator) {
+      const balance = item?.balanceWithoutMovementsUsd ?? 0
+
+      if (balance > peak) {
+        peak = balance
+      }
+
+      const drawdown = peak !== 0
+        ? (peak - balance) / peak
+        : 0
+
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown
+      }
+    }
+
+    return maxDrawdown * 100
   }
 }
 
