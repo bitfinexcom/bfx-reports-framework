@@ -353,7 +353,8 @@ class SummaryByAsset {
     const returns = this.#getDailyReturns(dailyBalancesAndPL)
     const {
       volatilityPerc,
-      sharpeRatio
+      sharpeRatio,
+      sortinoRatio
     } = this.#calcDailyReturnStatistics(returns)
 
     const initTotal = {
@@ -372,7 +373,8 @@ class SummaryByAsset {
       ),
       plUsd,
       volatilityPerc,
-      sharpeRatio
+      sharpeRatio,
+      sortinoRatio
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -473,9 +475,16 @@ class SummaryByAsset {
     const volatilityPerc = returnStd * sqrt365 * 100
     const sharpeRatio = (avgReturn / returnStd) * sqrt365
 
+    const negativeReturns = dailyReturns.filter((r) => r < 0)
+    const downsideStd = negativeReturns.length > 0
+      ? math.std(negativeReturns)
+      : 0.00001
+    const sortinoRatio = (avgReturn / downsideStd) * sqrt365
+
     return {
       volatilityPerc,
-      sharpeRatio
+      sharpeRatio,
+      sortinoRatio
     }
   }
 }
