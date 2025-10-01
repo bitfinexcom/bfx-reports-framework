@@ -352,7 +352,8 @@ class SummaryByAsset {
     const plUsd = this.#calcPLUsd(dailyBalancesAndPL)
     const returns = this.#getDailyReturns(dailyBalancesAndPL)
     const {
-      volatilityPerc
+      volatilityPerc,
+      sharpeRatio
     } = this.#calcDailyReturnStatistics(returns)
 
     const initTotal = {
@@ -370,7 +371,8 @@ class SummaryByAsset {
         calcedDepositsUsd
       ),
       plUsd,
-      volatilityPerc
+      volatilityPerc,
+      sharpeRatio
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -464,12 +466,16 @@ class SummaryByAsset {
   }
 
   #calcDailyReturnStatistics (dailyReturns) {
-    const returnsStd = math.std(dailyReturns)
+    const returnStd = math.std(dailyReturns)
+    const avgReturn = math.mean(dailyReturns)
+    const sqrt365 = Math.sqrt(365)
 
-    const volatilityPerc = returnsStd * Math.sqrt(365) * 100
+    const volatilityPerc = returnStd * sqrt365 * 100
+    const sharpeRatio = (avgReturn / returnStd) * sqrt365
 
     return {
-      volatilityPerc
+      volatilityPerc,
+      sharpeRatio
     }
   }
 }
