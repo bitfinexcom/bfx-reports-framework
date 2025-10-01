@@ -351,7 +351,9 @@ class SummaryByAsset {
     )
     const plUsd = this.#calcPLUsd(dailyBalancesAndPL)
     const returns = this.#getDailyReturns(dailyBalancesAndPL)
-    const volatilityPerc = this.#calcVolatilityPerc(returns)
+    const {
+      volatilityPerc
+    } = this.#calcDailyReturnStatistics(returns)
 
     const initTotal = {
       balanceUsd: 0,
@@ -461,8 +463,14 @@ class SummaryByAsset {
     return dailyBalancesAndPL.map((item) => item?.returns)
   }
 
-  #calcVolatilityPerc (dailyReturns) {
-    return math.std(dailyReturns) * Math.sqrt(365) * 100
+  #calcDailyReturnStatistics (dailyReturns) {
+    const returnsStd = math.std(dailyReturns)
+
+    const volatilityPerc = returnsStd * Math.sqrt(365) * 100
+
+    return {
+      volatilityPerc
+    }
   }
 }
 
