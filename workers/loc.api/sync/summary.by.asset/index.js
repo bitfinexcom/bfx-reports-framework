@@ -438,17 +438,14 @@ class SummaryByAsset {
     }
 
     for (const ledger of ledgers) {
-      if (ledger?.[this.ledgersSymbolFieldName] !== ccy) {
+      if (
+        ledger?.[this.ledgersSymbolFieldName] !== ccy ||
+        !ledgerMap.has(ledger?._category)
+      ) {
         continue
       }
 
-      for (const [category, arr] of ledgerMap) {
-        if (ledger?._category !== category) {
-          continue
-        }
-
-        arr.push(ledger)
-      }
+      ledgerMap.get(ledger?._category).push(ledger)
     }
 
     return ledgerMap
