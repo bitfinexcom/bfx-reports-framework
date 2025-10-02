@@ -821,7 +821,12 @@ module.exports = (
       'volumeUsd',
       'tradingFeesUsd',
       'allFeesUsd',
-      'depositsWithdrawalsUsd'
+      'depositsWithdrawalsUsd',
+      'plUsd',
+      'volatilityPerc',
+      'sharpeRatio',
+      'sortinoRatio',
+      'maxDrawdownPerc'
     ])
   })
 
@@ -870,7 +875,12 @@ module.exports = (
       'volumeUsd',
       'tradingFeesUsd',
       'allFeesUsd',
-      'depositsWithdrawalsUsd'
+      'depositsWithdrawalsUsd',
+      'plUsd',
+      'volatilityPerc',
+      'sharpeRatio',
+      'sortinoRatio',
+      'maxDrawdownPerc'
     ])
   })
 
