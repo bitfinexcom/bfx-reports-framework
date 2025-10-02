@@ -21,8 +21,14 @@ const depsTypes = (TYPES) => [
   TYPES.WinLossVSAccountBalance
 ]
 class SummaryByAsset {
-  #ledgerFeeCats = [201, 204, 207, 222, 224, 228, 241,
-    243, 251, 254, 255, 258, 905]
+  #ledgerMarginFundingPaymentCat = 28
+  #ledgerTradingFeeCat = 201
+
+  #ledgerFeeCats = [this.#ledgerTradingFeeCat, 204, 207, 222, 224,
+    228, 241, 243, 251, 254, 255, 258, 905]
+
+  #allUsedLedgerCats = [this.#ledgerMarginFundingPaymentCat,
+    ...this.#ledgerFeeCats]
 
   constructor (
     dao,
@@ -215,13 +221,15 @@ class SummaryByAsset {
       const ledgerMap = this.#makeLedgerMapFilteredByCcyGroupedByCategory(
         ledgers,
         currency,
-        [28, ...this.#ledgerFeeCats]
+        this.#allUsedLedgerCats
       )
       const tradesForCurrency = trades.filter((trade) => (
         trade?.baseCurrency === currency
       ))
-      const marginFundingPaymentLedgers = ledgerMap.get(28) ?? []
-      const tradingFeeLedgers = ledgerMap.get(201) ?? []
+      const marginFundingPaymentLedgers = ledgerMap
+        .get(this.#ledgerMarginFundingPaymentCat) ?? []
+      const tradingFeeLedgers = ledgerMap
+        .get(this.#ledgerTradingFeeCat) ?? []
       const allFeeLedgers = this.#ledgerFeeCats.reduce((accum, cat) => {
         pushLargeArr(accum, ledgerMap.get(cat) ?? [])
 
