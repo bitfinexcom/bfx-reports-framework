@@ -12,7 +12,6 @@ const {
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
-  TYPES.DAO,
   TYPES.SyncSchema,
   TYPES.BalanceHistory,
   TYPES.PositionsSnapshot,
@@ -24,7 +23,6 @@ const depsTypes = (TYPES) => [
 ]
 class WinLoss {
   constructor (
-    dao,
     syncSchema,
     balanceHistory,
     positionsSnapshot,
@@ -34,7 +32,6 @@ class WinLoss {
     movements,
     wallets
   ) {
-    this.dao = dao
     this.syncSchema = syncSchema
     this.balanceHistory = balanceHistory
     this.positionsSnapshot = positionsSnapshot
