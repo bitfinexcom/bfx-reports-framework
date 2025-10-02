@@ -476,13 +476,17 @@ class SummaryByAsset {
     const sqrt365 = Math.sqrt(365)
 
     const volatilityPerc = returnStd * sqrt365 * 100
-    const sharpeRatio = (avgReturn / returnStd) * sqrt365
+    const sharpeRatio = returnStd !== 0
+      ? (avgReturn / returnStd) * sqrt365
+      : 0
 
     const negativeReturns = dailyReturns.filter((r) => r < 0)
     const downsideStd = negativeReturns.length > 0
       ? math.std(negativeReturns)
       : 0.00001
-    const sortinoRatio = (avgReturn / downsideStd) * sqrt365
+    const sortinoRatio = downsideStd !== 0
+      ? (avgReturn / downsideStd) * sqrt365
+      : 0
 
     return {
       volatilityPerc,
