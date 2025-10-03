@@ -819,7 +819,14 @@ module.exports = (
       'balanceChangeUsd',
       'balanceChangePerc',
       'volumeUsd',
-      'tradingFeesUsd'
+      'tradingFeesUsd',
+      'allFeesUsd',
+      'depositsWithdrawalsUsd',
+      'plUsd',
+      'volatilityPerc',
+      'sharpeRatio',
+      'sortinoRatio',
+      'maxDrawdownPerc'
     ])
   })
 
@@ -866,7 +873,14 @@ module.exports = (
       'balanceChangeUsd',
       'balanceChangePerc',
       'volumeUsd',
-      'tradingFeesUsd'
+      'tradingFeesUsd',
+      'allFeesUsd',
+      'depositsWithdrawalsUsd',
+      'plUsd',
+      'volatilityPerc',
+      'sharpeRatio',
+      'sortinoRatio',
+      'maxDrawdownPerc'
     ])
   })
 

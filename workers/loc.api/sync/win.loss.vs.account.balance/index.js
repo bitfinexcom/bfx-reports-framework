@@ -32,6 +32,7 @@ class WinLossVSAccountBalance {
       timeframe = 'day',
       start = 0,
       end = Date.now(),
+      shouldTimeframePLBeReturned,
       isUnrealizedProfitExcluded,
       isVSPrevDayBalance
     } = params ?? {}
@@ -57,9 +58,13 @@ class WinLossVSAccountBalance {
       plGroupedByTimeframe
     } = await this.winLoss.getDataToCalcWinLoss(args)
 
-    const getWinLossPercByTimeframe = isVSPrevDayBalance
+    const getWinLossPercByTimeframe = (
+      isVSPrevDayBalance ||
+      shouldTimeframePLBeReturned
+    )
       ? this._getWinLossPrevDayBalanceByTimeframe(
         {
+          shouldTimeframePLBeReturned,
           isUnrealizedProfitExcluded,
           firstWalletsVals
         }
@@ -97,10 +102,14 @@ class WinLossVSAccountBalance {
 
           return res
         })
-    pickedRes.push({
-      mts: start,
-      perc: 0
-    })
+
+    if (!shouldTimeframePLBeReturned) {
+      pickedRes.push({
+        mts: start,
+        perc: 0
+      })
+    }
+
     const res = this.winLoss.shiftMtsToNextTimeframe(
       pickedRes,
       { timeframe, end }
@@ -193,6 +202,7 @@ class WinLossVSAccountBalance {
   }
 
   _getWinLossPrevDayBalanceByTimeframe ({
+    shouldTimeframePLBeReturned,
     isUnrealizedProfitExcluded,
     firstWalletsVals
   }) {
@@ -200,6 +210,7 @@ class WinLossVSAccountBalance {
     let prevWallets = 0
     let prevPL = 0
     let prevMultiplying = 1
+    let totalMovements = 0
 
     return ({
       walletsGroupedByTimeframe = {},
@@ -228,6 +239,7 @@ class WinLossVSAccountBalance {
       const movements = Number.isFinite(movementsRes[symb])
         ? movementsRes[symb]
         : 0
+      totalMovements += movements
       const wallets = Number.isFinite(walletsGroupedByTimeframe[symb])
         ? walletsGroupedByTimeframe[symb]
         : 0
@@ -242,19 +254,42 @@ class WinLossVSAccountBalance {
 
       const winLoss = realized + unrealized
 
-      prevWallets = wallets
+      const balanceWithoutMovements = wallets - totalMovements
+      const fullBalanceWithoutMovements = isUnrealizedProfitExcluded
+        ? balanceWithoutMovements
+        : balanceWithoutMovements + pl
+
       prevPL = pl
 
       if (
         !Number.isFinite(winLoss) ||
         prevWallets === 0
       ) {
+        if (shouldTimeframePLBeReturned) {
+          return {
+            balanceWithoutMovementsUsd: fullBalanceWithoutMovements,
+            returns: 0,
+            perc: prevPerc
+          }
+        }
+
         return { perc: prevPerc }
       }
 
       prevMultiplying = ((prevWallets + winLoss) / prevWallets) * prevMultiplying
       const perc = (prevMultiplying - 1) * 100
+      const returns = winLoss / prevWallets
+
       prevPerc = perc
+      prevWallets = wallets
+
+      if (shouldTimeframePLBeReturned) {
+        return {
+          balanceWithoutMovementsUsd: fullBalanceWithoutMovements,
+          returns,
+          perc
+        }
+      }
 
       return { perc }
     }

@@ -181,9 +181,12 @@ class Checkers {
         auth,
         params: {
           schema: [
+            this.SYNC_API_METHODS.TRADES,
             this.SYNC_API_METHODS.LEDGERS,
             this.SYNC_API_METHODS.CANDLES,
-            this.SYNC_API_METHODS.MOVEMENTS
+            this.SYNC_API_METHODS.MOVEMENTS,
+            this.SYNC_API_METHODS.POSITIONS_SNAPSHOT,
+            this.SYNC_API_METHODS.POSITIONS_HISTORY
           ]
         }
       })
