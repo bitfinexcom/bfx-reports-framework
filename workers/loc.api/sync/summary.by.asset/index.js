@@ -2,6 +2,10 @@
 
 const { omit } = require('lib-js-util-base')
 const moment = require('moment')
+const math = require('mathjs')
+
+const { getBackIterable } = require('../helpers')
+const { pushLargeArr } = require('../../helpers/utils')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -12,9 +16,20 @@ const depsTypes = (TYPES) => [
   TYPES.SYNC_API_METHODS,
   TYPES.ALLOWED_COLLS,
   TYPES.Wallets,
-  TYPES.Trades
+  TYPES.Trades,
+  TYPES.Movements,
+  TYPES.WinLossVSAccountBalance
 ]
 class SummaryByAsset {
+  #ledgerMarginFundingPaymentCat = 28
+  #ledgerTradingFeeCat = 201
+
+  #ledgerFeeCats = [this.#ledgerTradingFeeCat, 204, 207, 222, 224,
+    228, 241, 243, 251, 254, 255, 258, 905]
+
+  #allUsedLedgerCats = [this.#ledgerMarginFundingPaymentCat,
+    ...this.#ledgerFeeCats]
+
   constructor (
     dao,
     syncSchema,
@@ -22,7 +37,9 @@ class SummaryByAsset {
     SYNC_API_METHODS,
     ALLOWED_COLLS,
     wallets,
-    trades
+    trades,
+    movements,
+    winLossVSAccountBalance
   ) {
     this.dao = dao
     this.syncSchema = syncSchema
@@ -31,6 +48,8 @@ class SummaryByAsset {
     this.ALLOWED_COLLS = ALLOWED_COLLS
     this.wallets = wallets
     this.trades = trades
+    this.movements = movements
+    this.winLossVSAccountBalance = winLossVSAccountBalance
 
     this.ledgersMethodColl = this.syncSchema.getMethodCollMap()
       .get(this.SYNC_API_METHODS.LEDGERS)
@@ -70,31 +89,69 @@ class SummaryByAsset {
       auth,
       params: { end }
     })
+    const withdrawalsPromise = this.movements.getMovements({
+      auth,
+      start,
+      end,
+      isWithdrawals: true,
+      isExcludePrivate: false
+    })
+    const depositsPromise = this.movements.getMovements({
+      auth,
+      start,
+      end,
+      isDeposits: true,
+      isExcludePrivate: false
+    })
+    const dailyBalancesAndPLPromise = this.winLossVSAccountBalance
+      .getWinLossVSAccountBalance({
+        auth,
+        params: {
+          start,
+          end,
+          timeframe: 'day',
+          isUnrealizedProfitExcluded: args?.params
+            ?.isUnrealizedProfitExcluded,
+          shouldTimeframePLBeReturned: true
+        }
+      })
 
     const [
       trades,
       ledgers,
       startWallets,
-      endWallets
+      endWallets,
+      withdrawals,
+      deposits,
+      dailyBalancesAndPL
     ] = await Promise.all([
       tradesPromise,
       ledgersPromise,
       startWalletsPromise,
-      endWalletsPromise
+      endWalletsPromise,
+      withdrawalsPromise,
+      depositsPromise,
+      dailyBalancesAndPLPromise
     ])
 
-    const _summaryByAsset = await this.#calcSummaryByAsset({
+    const _summaryByAsset = this.#calcSummaryByAsset({
       trades,
       ledgers,
       startWallets,
       endWallets
     })
-    const total = this.#calcTotal(_summaryByAsset)
+    const total = this.#calcTotal(
+      _summaryByAsset,
+      withdrawals,
+      deposits,
+      dailyBalancesAndPL
+    )
     const summaryByAsset = _summaryByAsset.map((item) => (
       omit(item, [
         'balanceChangeUsd',
         'tradingFeesUsd',
-        'calcedStartWalletBalanceUsd'
+        'calcedStartWalletBalanceUsd',
+        'allFeesUsd'
       ])
     ))
 
@@ -104,7 +161,7 @@ class SummaryByAsset {
     }
   }
 
-  async #calcSummaryByAsset ({
+  #calcSummaryByAsset ({
     trades,
     ledgers,
     startWallets,
@@ -161,18 +218,23 @@ class SummaryByAsset {
         ? 1
         : calcedActualRate
 
-      const ledgersForCurrency = ledgers.filter((ledger) => (
-        ledger[this.ledgersSymbolFieldName] === currency
-      ))
+      const ledgerMap = this.#makeLedgerMapFilteredByCcyGroupedByCategory(
+        ledgers,
+        currency,
+        this.#allUsedLedgerCats
+      )
       const tradesForCurrency = trades.filter((trade) => (
         trade?.baseCurrency === currency
       ))
-      const marginFundingPaymentLedgers = ledgersForCurrency.filter((ledger) => (
-        ledger._category === 28
-      ))
-      const tradingFeeLedgers = ledgersForCurrency.filter((ledger) => (
-        ledger._category === 201
-      ))
+      const marginFundingPaymentLedgers = ledgerMap
+        .get(this.#ledgerMarginFundingPaymentCat) ?? []
+      const tradingFeeLedgers = ledgerMap
+        .get(this.#ledgerTradingFeeCat) ?? []
+      const allFeeLedgers = this.#ledgerFeeCats.reduce((accum, cat) => {
+        pushLargeArr(accum, ledgerMap.get(cat) ?? [])
+
+        return accum
+      }, [])
 
       const volume = this.#calcFieldByName(
         tradesForCurrency,
@@ -195,6 +257,10 @@ class SummaryByAsset {
         tradingFeeLedgers,
         'amountUsd'
       )
+      const calcedAllFeeUsdLedgers = this.#calcFieldByName(
+        allFeeLedgers,
+        'amountUsd'
+      )
 
       const balanceChange = calcedEndWalletBalance - calcedStartWalletBalance
       const balanceChangePerc = calcedStartWalletBalance === 0
@@ -205,6 +271,7 @@ class SummaryByAsset {
       // In the Ledgers amount of fee is negative value, skip sign for UI
       const tradingFees = Math.abs(calcedTradingFeeLedgers)
       const tradingFeesUsd = Math.abs(calcedTradingFeeUsdLedgers)
+      const allFeesUsd = Math.abs(calcedAllFeeUsdLedgers)
 
       if (
         calcedEndWalletBalanceUsd < 0.01 &&
@@ -227,6 +294,7 @@ class SummaryByAsset {
         volumeUsd,
         tradingFees,
         tradingFeesUsd,
+        allFeesUsd,
         marginFundingPayment,
 
         // It's used to total perc calc
@@ -276,15 +344,48 @@ class SummaryByAsset {
     )
   }
 
-  #calcTotal (summaryByAsset) {
+  #calcTotal (
+    summaryByAsset,
+    withdrawals,
+    deposits,
+    dailyBalancesAndPL
+  ) {
+    const calcedWithdrawalsUsd = this.#calcFieldByName(
+      withdrawals,
+      'amountUsd'
+    )
+    const calcedDepositsUsd = this.#calcFieldByName(
+      deposits,
+      'amountUsd'
+    )
+    const plUsd = this.#calcPLUsd(dailyBalancesAndPL)
+    const returns = this.#getDailyReturns(dailyBalancesAndPL)
+    const {
+      volatilityPerc,
+      sharpeRatio,
+      sortinoRatio
+    } = this.#calcDailyReturnStatistics(returns)
+    const maxDrawdownPerc = this.#calcMaxDrawdownPerc(dailyBalancesAndPL)
+
     const initTotal = {
       balanceUsd: 0,
       balanceChangeUsd: 0,
       balanceChangePerc: 0,
       volumeUsd: 0,
       tradingFeesUsd: 0,
+      allFeesUsd: 0,
 
-      calcedStartWalletBalanceUsd: 0
+      calcedStartWalletBalanceUsd: 0,
+
+      depositsWithdrawalsUsd: (
+        calcedWithdrawalsUsd +
+        calcedDepositsUsd
+      ),
+      plUsd,
+      volatilityPerc,
+      sharpeRatio,
+      sortinoRatio,
+      maxDrawdownPerc
     }
 
     const res = summaryByAsset.reduce((accum, curr) => {
@@ -296,6 +397,7 @@ class SummaryByAsset {
           'balanceChangeUsd',
           'volumeUsd',
           'tradingFeesUsd',
+          'allFeesUsd',
 
           'calcedStartWalletBalanceUsd'
         ]
@@ -317,6 +419,117 @@ class SummaryByAsset {
         ? accum[propName] + curr[propName]
         : accum[propName]
     }
+  }
+
+  #makeLedgerMapFilteredByCcyGroupedByCategory (
+    ledgers, ccy, categories
+  ) {
+    const ledgerMap = new Map()
+
+    if (
+      !Array.isArray(categories) ||
+      categories.length === 0
+    ) {
+      return ledgerMap
+    }
+
+    for (const category of categories) {
+      ledgerMap.set(category, [])
+    }
+
+    for (const ledger of ledgers) {
+      if (
+        ledger?.[this.ledgersSymbolFieldName] !== ccy ||
+        !ledgerMap.has(ledger?._category)
+      ) {
+        continue
+      }
+
+      ledgerMap.get(ledger?._category).push(ledger)
+    }
+
+    return ledgerMap
+  }
+
+  #calcPLUsd (dailyBalancesAndPL) {
+    if (
+      !Array.isArray(dailyBalancesAndPL) ||
+      dailyBalancesAndPL.length === 0
+    ) {
+      return 0
+    }
+
+    const lastBalance = dailyBalancesAndPL?.[0]
+      ?.balanceWithoutMovementsUsd ?? 0
+    const firstBalance = dailyBalancesAndPL?.[dailyBalancesAndPL.length - 1]
+      ?.balanceWithoutMovementsUsd ?? 0
+
+    return lastBalance - firstBalance
+  }
+
+  #getDailyReturns (dailyBalancesAndPL) {
+    if (!Array.isArray(dailyBalancesAndPL)) {
+      return []
+    }
+
+    return dailyBalancesAndPL.map((item) => item?.returns)
+  }
+
+  #calcDailyReturnStatistics (dailyReturns) {
+    const returnStd = math.std(dailyReturns)
+    const avgReturn = math.mean(dailyReturns)
+    const sqrt365 = Math.sqrt(365)
+
+    const volatilityPerc = returnStd * sqrt365 * 100
+    const sharpeRatio = returnStd !== 0
+      ? (avgReturn / returnStd) * sqrt365
+      : 0
+
+    const negativeReturns = dailyReturns.filter((r) => r < 0)
+    const downsideStd = negativeReturns.length > 0
+      ? math.std(negativeReturns)
+      : 0.00001
+    const sortinoRatio = downsideStd !== 0
+      ? (avgReturn / downsideStd) * sqrt365
+      : 0
+
+    return {
+      volatilityPerc,
+      sharpeRatio,
+      sortinoRatio
+    }
+  }
+
+  #calcMaxDrawdownPerc (dailyBalancesAndPL) {
+    if (
+      !Array.isArray(dailyBalancesAndPL) ||
+      dailyBalancesAndPL.length === 0
+    ) {
+      return 0
+    }
+
+    const iterator = getBackIterable(dailyBalancesAndPL)
+    let peak = dailyBalancesAndPL?.[dailyBalancesAndPL.length - 1]
+      ?.balanceWithoutMovementsUsd ?? 0
+    let maxDrawdown = 0
+
+    for (const item of iterator) {
+      const balance = item?.balanceWithoutMovementsUsd ?? 0
+
+      if (balance > peak) {
+        peak = balance
+      }
+
+      const drawdown = peak !== 0
+        ? (peak - balance) / peak
+        : 0
+
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown
+      }
+    }
+
+    return maxDrawdown * 100
   }
 }
 

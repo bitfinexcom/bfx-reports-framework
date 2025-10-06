@@ -12,6 +12,9 @@ module.exports = {
     },
     end: {
       $ref: 'defs#/definitions/end'
+    },
+    isUnrealizedProfitExcluded: {
+      $ref: 'fwDefs#/definitions/isUnrealizedProfitExcluded'
     }
   }
 }
