@@ -6,6 +6,8 @@ const path = require('path')
 const moment = require('moment')
 const { orderBy } = require('lodash')
 
+const { isBfxApiStaging } = require('../../../helpers')
+
 const { decorateInjectable } = require('../../../di/utils')
 
 const depsTypes = (TYPES) => [
@@ -39,7 +41,10 @@ class DBBackupManager {
       this.conf.dbPathAbsolute,
       'backups'
     )
-    this._dbFileName = 'db-sqlite_sync_m0.db'
+    const stagingDbLable = isBfxApiStaging(this.conf.restUrl)
+      ? '-staging'
+      : ''
+    this._dbFileName = `db-sqlite_sync${stagingDbLable}_m0.db`
     this._dbDestination = path.join(
       this.conf.dbPathAbsolute,
       this._dbFileName
