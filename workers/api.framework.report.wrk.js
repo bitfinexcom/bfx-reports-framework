@@ -132,7 +132,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       dbPathAbsolute,
       restUrl
     } = this.conf[this.group]
-    const stagingDbLable = isBfxApiStaging(restUrl)
+    const stagingDbLabel = isBfxApiStaging(restUrl)
       ? '-staging'
       : ''
     const facs = []
@@ -152,7 +152,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
           'm0',
           'm0',
           {
-            name: `sync${stagingDbLable}`,
+            name: `sync${stagingDbLabel}`,
             dbPathAbsolute,
             workerPathAbsolute,
             verbose: verboseSql,

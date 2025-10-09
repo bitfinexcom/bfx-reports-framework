@@ -41,10 +41,10 @@ class DBBackupManager {
       this.conf.dbPathAbsolute,
       'backups'
     )
-    const stagingDbLable = isBfxApiStaging(this.conf.restUrl)
+    const stagingDbLabel = isBfxApiStaging(this.conf.restUrl)
       ? '-staging'
       : ''
-    this._dbFileName = `db-sqlite_sync${stagingDbLable}_m0.db`
+    this._dbFileName = `db-sqlite_sync${stagingDbLabel}_m0.db`
     this._dbDestination = path.join(
       this.conf.dbPathAbsolute,
       this._dbFileName
