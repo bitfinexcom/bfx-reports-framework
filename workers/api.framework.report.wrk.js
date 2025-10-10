@@ -42,6 +42,7 @@ const {
 const appDeps = require('./loc.api/di/app.deps')
 const TYPES = require('./loc.api/di/types')
 const fwDataValidator = require('./loc.api/data-validator')
+const { isBfxApiStaging } = require('./loc.api/helpers')
 
 class WrkReportFrameWorkApi extends WrkReportServiceApi {
   loadCoreDeps (...args) {
@@ -128,8 +129,12 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       syncMode,
       dbDriver,
       verboseSql,
-      dbPathAbsolute
+      dbPathAbsolute,
+      restUrl
     } = this.conf[this.group]
+    const stagingDbLabel = isBfxApiStaging(restUrl)
+      ? '-staging'
+      : ''
     const facs = []
 
     if (syncMode) {
@@ -147,7 +152,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
           'm0',
           'm0',
           {
-            name: 'sync',
+            name: `sync${stagingDbLabel}`,
             dbPathAbsolute,
             workerPathAbsolute,
             verbose: verboseSql,
