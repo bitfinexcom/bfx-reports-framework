@@ -1252,9 +1252,55 @@ class BetterSqliteDAO extends DAO {
     } = opts ?? {}
     const data = serializeObj(record)
 
-    const res = await this.query({
-      action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
-      params: { data, name }
+    const res = await this._beginTrans(async () => {
+      const elems = await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.ALL,
+        sql: `SELECT * FROM ${name}`
+      }, { doNotQueueQuery: true })
+
+      if (
+        !Array.isArray(elems) ||
+        elems.length === 0
+      ) {
+        const keys = Object.keys(data)
+        const projection = getProjectionQuery(keys)
+        const {
+          placeholders,
+          placeholderVal
+        } = getPlaceholdersQuery(data, keys)
+
+        return await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql: `INSERT INTO ${name}(${projection})
+            VALUES (${placeholders})`,
+          params: placeholderVal
+        }, { doNotQueueQuery: true })
+      }
+      if (elems.length > 1) {
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql: `DELETE FROM ${name} WHERE _id != $_id`,
+          params: { _id: elems[0]._id }
+        }, { doNotQueueQuery: true })
+      }
+
+      const { _id } = elems[0] ?? {}
+      const values = { _id }
+      const fields = Object.keys(data)
+        .map((item) => {
+          const key = `new_${item}`
+          values[key] = data[item]
+
+          return `${item} = $${key}`
+        })
+        .join(', ')
+
+      return await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.RUN,
+        sql: `UPDATE ${name} SET ${fields}
+          WHERE _id = $_id`,
+        params: values
+      }, { doNotQueueQuery: true })
     })
 
     if (shouldNotThrowError) {
