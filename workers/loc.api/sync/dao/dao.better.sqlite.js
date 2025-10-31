@@ -1,8 +1,11 @@
 'use strict'
 
-const { setTimeout } = require('node:timers/promises')
-const { promisify } = require('util')
-const setImmediatePromise = promisify(setImmediate)
+const {
+  setTimeout,
+  setImmediate
+} = require('node:timers/promises')
+const { promisify } = require('node:util')
+
 const MAIN_DB_WORKER_ACTIONS = require(
   'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
@@ -594,7 +597,7 @@ class BetterSqliteDAO extends DAO {
         let endId = firstId + chunkLength - 1
 
         while (true) {
-          await setImmediatePromise()
+          await setImmediate()
 
           if (
             !Number.isFinite(startId) ||
@@ -894,7 +897,7 @@ class BetterSqliteDAO extends DAO {
     }
 
     for (const obj of data) {
-      await setImmediatePromise()
+      await setImmediate()
 
       const _obj = mixUserIdToArrData(
         auth,
@@ -929,7 +932,7 @@ class BetterSqliteDAO extends DAO {
 
     await this._beginTrans(async () => {
       for (const { sql, params } of queries) {
-        await setImmediatePromise()
+        await setImmediate()
 
         await this.query({
           action: MAIN_DB_WORKER_ACTIONS.RUN,
@@ -1242,7 +1245,7 @@ class BetterSqliteDAO extends DAO {
     const params = []
 
     for (const obj of data) {
-      await setImmediatePromise()
+      await setImmediate()
 
       const filter = mapObjBySchema(obj, filterPropNames)
       const newItem = mapObjBySchema(obj, upPropNames)
@@ -1267,7 +1270,7 @@ class BetterSqliteDAO extends DAO {
 
     await this._beginTrans(async () => {
       for (const [i, paramsItem] of params.entries()) {
-        await setImmediatePromise()
+        await setImmediate()
 
         await this.query({
           action: MAIN_DB_WORKER_ACTIONS.RUN,
