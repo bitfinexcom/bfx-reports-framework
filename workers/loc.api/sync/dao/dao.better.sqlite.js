@@ -1,5 +1,6 @@
 'use strict'
 
+const { setTimeout } = require('node:timers/promises')
 const { promisify } = require('util')
 const setImmediatePromise = promisify(setImmediate)
 const MAIN_DB_WORKER_ACTIONS = require(
@@ -30,7 +31,8 @@ const {
   getGroupQuery,
   getSubQuery,
   getLimitQuery,
-  manageTransaction
+  manageTransaction,
+  isLockedDbError
 } = require('./helpers')
 
 const {
@@ -87,6 +89,10 @@ class BetterSqliteDAO extends DAO {
 
     this._querySet = new Set()
     this._transQuerySet = new Set()
+
+    this._lockedDbRetryTimeout = 300
+    this._lockedDbRetryAmount = 0
+    this._lockedDbRetryInTrxAmount = 0
   }
 
   async restartDb (opts = {}) {
@@ -136,6 +142,19 @@ class BetterSqliteDAO extends DAO {
     } catch (err) {
       this._querySet.delete(newQueryPromise)
 
+      if (
+        isLockedDbError(err) &&
+        this._lockedDbRetryAmount < 3
+      ) {
+        await setTimeout(this._lockedDbRetryTimeout)
+
+        this._lockedDbRetryAmount += 1
+        const res = await this.query(args, opts)
+        this._lockedDbRetryAmount = 0
+
+        return res
+      }
+
       throw err
     }
   }
@@ -170,16 +189,32 @@ class BetterSqliteDAO extends DAO {
 
       return res
     } catch (err) {
-      // Transaction was forcefully rolled back
-      if (!this.db.inTransaction) {
-        throw err
-      }
-      if (isTransBegun) {
+      // if this.db.inTransaction, trx was forcefully rolled back
+      if (
+        this.db.inTransaction &&
+        isTransBegun
+      ) {
         this.db.prepare('ROLLBACK').run()
         isTransBegun = false
       }
-      if (typeof afterTransFn === 'function') {
+      if (
+        this.db.inTransaction &&
+        typeof afterTransFn === 'function'
+      ) {
         await afterTransFn()
+      }
+
+      if (
+        isLockedDbError(err) &&
+        this._lockedDbRetryInTrxAmount < 3
+      ) {
+        await setTimeout(this._lockedDbRetryTimeout)
+
+        this._lockedDbRetryInTrxAmount += 1
+        const res = await this._proccesTrans(asyncExecQuery, opts)
+        this._lockedDbRetryInTrxAmount = 0
+
+        return res
       }
 
       throw err
