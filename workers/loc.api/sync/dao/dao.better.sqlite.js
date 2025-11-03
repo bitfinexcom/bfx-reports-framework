@@ -1,7 +1,11 @@
 'use strict'
 
-const { promisify } = require('util')
-const setImmediatePromise = promisify(setImmediate)
+const {
+  setTimeout,
+  setImmediate
+} = require('node:timers/promises')
+const { promisify } = require('node:util')
+
 const MAIN_DB_WORKER_ACTIONS = require(
   'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
@@ -30,7 +34,8 @@ const {
   getGroupQuery,
   getSubQuery,
   getLimitQuery,
-  manageTransaction
+  manageTransaction,
+  isLockedDbError
 } = require('./helpers')
 
 const {
@@ -87,6 +92,10 @@ class BetterSqliteDAO extends DAO {
 
     this._querySet = new Set()
     this._transQuerySet = new Set()
+
+    this._lockedDbRetryTimeout = 300
+    this._lockedDbRetryAmount = 0
+    this._lockedDbRetryInTrxAmount = 0
   }
 
   async restartDb (opts = {}) {
@@ -136,6 +145,19 @@ class BetterSqliteDAO extends DAO {
     } catch (err) {
       this._querySet.delete(newQueryPromise)
 
+      if (
+        isLockedDbError(err) &&
+        this._lockedDbRetryAmount < 3
+      ) {
+        await setTimeout(this._lockedDbRetryTimeout)
+
+        this._lockedDbRetryAmount += 1
+        const res = await this.query(args, opts)
+        this._lockedDbRetryAmount = 0
+
+        return res
+      }
+
       throw err
     }
   }
@@ -170,16 +192,32 @@ class BetterSqliteDAO extends DAO {
 
       return res
     } catch (err) {
-      // Transaction was forcefully rolled back
-      if (!this.db.inTransaction) {
-        throw err
-      }
-      if (isTransBegun) {
+      // if this.db.inTransaction, trx was forcefully rolled back
+      if (
+        this.db.inTransaction &&
+        isTransBegun
+      ) {
         this.db.prepare('ROLLBACK').run()
         isTransBegun = false
       }
-      if (typeof afterTransFn === 'function') {
+      if (
+        this.db.inTransaction &&
+        typeof afterTransFn === 'function'
+      ) {
         await afterTransFn()
+      }
+
+      if (
+        isLockedDbError(err) &&
+        this._lockedDbRetryInTrxAmount < 3
+      ) {
+        await setTimeout(this._lockedDbRetryTimeout)
+
+        this._lockedDbRetryInTrxAmount += 1
+        const res = await this._proccesTrans(asyncExecQuery, opts)
+        this._lockedDbRetryInTrxAmount = 0
+
+        return res
       }
 
       throw err
@@ -559,7 +597,7 @@ class BetterSqliteDAO extends DAO {
         let endId = firstId + chunkLength - 1
 
         while (true) {
-          await setImmediatePromise()
+          await setImmediate()
 
           if (
             !Number.isFinite(startId) ||
@@ -859,7 +897,7 @@ class BetterSqliteDAO extends DAO {
     }
 
     for (const obj of data) {
-      await setImmediatePromise()
+      await setImmediate()
 
       const _obj = mixUserIdToArrData(
         auth,
@@ -894,7 +932,7 @@ class BetterSqliteDAO extends DAO {
 
     await this._beginTrans(async () => {
       for (const { sql, params } of queries) {
-        await setImmediatePromise()
+        await setImmediate()
 
         await this.query({
           action: MAIN_DB_WORKER_ACTIONS.RUN,
@@ -1207,7 +1245,7 @@ class BetterSqliteDAO extends DAO {
     const params = []
 
     for (const obj of data) {
-      await setImmediatePromise()
+      await setImmediate()
 
       const filter = mapObjBySchema(obj, filterPropNames)
       const newItem = mapObjBySchema(obj, upPropNames)
@@ -1232,7 +1270,7 @@ class BetterSqliteDAO extends DAO {
 
     await this._beginTrans(async () => {
       for (const [i, paramsItem] of params.entries()) {
-        await setImmediatePromise()
+        await setImmediate()
 
         await this.query({
           action: MAIN_DB_WORKER_ACTIONS.RUN,
@@ -1252,9 +1290,55 @@ class BetterSqliteDAO extends DAO {
     } = opts ?? {}
     const data = serializeObj(record)
 
-    const res = await this.query({
-      action: DB_WORKER_ACTIONS.UPDATE_RECORD_OF,
-      params: { data, name }
+    const res = await this._beginTrans(async () => {
+      const elems = await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.ALL,
+        sql: `SELECT * FROM ${name}`
+      }, { doNotQueueQuery: true })
+
+      if (
+        !Array.isArray(elems) ||
+        elems.length === 0
+      ) {
+        const keys = Object.keys(data)
+        const projection = getProjectionQuery(keys)
+        const {
+          placeholders,
+          placeholderVal
+        } = getPlaceholdersQuery(data, keys)
+
+        return await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql: `INSERT INTO ${name}(${projection})
+            VALUES (${placeholders})`,
+          params: placeholderVal
+        }, { doNotQueueQuery: true })
+      }
+      if (elems.length > 1) {
+        await this.query({
+          action: MAIN_DB_WORKER_ACTIONS.RUN,
+          sql: `DELETE FROM ${name} WHERE _id != $_id`,
+          params: { _id: elems[0]._id }
+        }, { doNotQueueQuery: true })
+      }
+
+      const { _id } = elems[0] ?? {}
+      const values = { _id }
+      const fields = Object.keys(data)
+        .map((item) => {
+          const key = `new_${item}`
+          values[key] = data[item]
+
+          return `${item} = $${key}`
+        })
+        .join(', ')
+
+      return await this.query({
+        action: MAIN_DB_WORKER_ACTIONS.RUN,
+        sql: `UPDATE ${name} SET ${fields}
+          WHERE _id = $_id`,
+        params: values
+      }, { doNotQueueQuery: true })
     })
 
     if (shouldNotThrowError) {

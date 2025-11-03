@@ -36,6 +36,7 @@ const {
   getUsersQuery
 } = require('./users')
 const manageTransaction = require('./manage-transaction')
+const isLockedDbError = require('./is-locked-db-error')
 
 module.exports = {
   mixUserIdToArrData,
@@ -67,5 +68,6 @@ module.exports = {
   fillSubUsers,
   getSubUsersQuery,
   getUsersQuery,
-  manageTransaction
+  manageTransaction,
+  isLockedDbError
 }
