@@ -18,6 +18,7 @@ const {
   getAuthFromSubAccountAuth,
   getSubAccountAuthFromAuth
 } = require('./sub-account-auth')
+const isBfxApiStaging = require('./is-bfx-api-staging')
 
 module.exports = {
   checkParamsAuth,
@@ -33,5 +34,6 @@ module.exports = {
   sumAllObjectsNumbers,
   pickAllLowerObjectsNumbers,
   sumArrayVolumes,
-  pushLargeArr
+  pushLargeArr,
+  isBfxApiStaging
 }
