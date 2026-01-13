@@ -1028,6 +1028,10 @@ class CurrencyConverter {
         { shouldTryPublicTradesFirst }
       )
 
+      if (!Number.isFinite(price)) {
+        throw new CurrencyConversionDataFindingError()
+      }
+
       return price
     } catch (err) {
       const price = await this._selectGettingPriceWay(
