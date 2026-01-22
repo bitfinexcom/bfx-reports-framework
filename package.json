@@ -15,7 +15,7 @@
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "inversify": "6.0.1",
     "lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "mathjs": "14.8.1",
     "moment": "2.29.4",
     "puppeteer": "24.1.0",
