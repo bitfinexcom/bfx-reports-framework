@@ -2,7 +2,7 @@
 
 const fsPromises = require('fs/promises')
 
-const container = require('bfx-report/workers/loc.api/di')
+const container = require('@bitfinex/bfx-report/workers/loc.api/di')
 
 const {
   delay: _delay

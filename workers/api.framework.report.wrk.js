@@ -3,7 +3,7 @@
 const fs = require('node:fs')
 
 const WrkReportServiceApi = require(
-  'bfx-report/workers/api.service.report.wrk'
+  '@bitfinex/bfx-report/workers/api.service.report.wrk'
 )
 const path = require('path')
 const argv = require('yargs')
@@ -37,7 +37,7 @@ const argv = require('yargs')
 
 const {
   PDFBufferUnderElectronCreationError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const appDeps = require('./loc.api/di/app.deps')
 const TYPES = require('./loc.api/di/types')

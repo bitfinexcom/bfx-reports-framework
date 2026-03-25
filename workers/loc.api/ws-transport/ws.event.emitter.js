@@ -1,7 +1,7 @@
 'use strict'
 
 const AbstractWSEventEmitter = require(
-  'bfx-report/workers/loc.api/abstract.ws.event.emitter'
+  '@bitfinex/bfx-report/workers/loc.api/abstract.ws.event.emitter'
 )
 
 const { decorateInjectable } = require('../di/utils')

@@ -2,7 +2,7 @@
 
 const BigNumber = require('bignumber.js')
 const splitSymbolPairs = require(
-  'bfx-report/workers/loc.api/helpers/split-symbol-pairs'
+  '@bitfinex/bfx-report/workers/loc.api/helpers/split-symbol-pairs'
 )
 
 module.exports = (trades, params) => {

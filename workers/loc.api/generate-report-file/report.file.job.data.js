@@ -3,12 +3,12 @@
 const { omit } = require('lib-js-util-base')
 
 const BaseReportFileJobData = require(
-  'bfx-report/workers/loc.api/generate-report-file/report.file.job.data'
+  '@bitfinex/bfx-report/workers/loc.api/generate-report-file/report.file.job.data'
 )
 const {
   getReportFileArgs,
   checkJobAndGetUserData
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 
 const {
   getDateString

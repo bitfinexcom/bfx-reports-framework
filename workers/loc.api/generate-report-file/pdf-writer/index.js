@@ -8,16 +8,16 @@ const { v4: uuidv4 } = require('uuid')
 const puppeteer = require('puppeteer')
 
 const MainPdfWriter = require(
-  'bfx-report/workers/loc.api/generate-report-file/pdf-writer'
+  '@bitfinex/bfx-report/workers/loc.api/generate-report-file/pdf-writer'
 )
 const {
   createUniqueFileName
-} = require('bfx-report/workers/loc.api/queue/helpers/utils')
+} = require('@bitfinex/bfx-report/workers/loc.api/queue/helpers/utils')
 
 const TEMPLATE_FILE_NAMES = require('./template-file-names')
 const {
   PDFBufferUnderElectronCreationError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../../di/utils')
 

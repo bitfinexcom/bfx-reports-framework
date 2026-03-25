@@ -10,7 +10,7 @@ const {
 
 const {
   MIN_START_MTS
-} = require('bfx-report/workers/loc.api/helpers/date-param.helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers/date-param.helpers')
 
 const {
   isPublic,

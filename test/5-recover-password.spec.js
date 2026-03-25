@@ -6,11 +6,11 @@ const request = require('supertest')
 
 const {
   stopEnvironment
-} = require('bfx-report/test/helpers/helpers.boot')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.boot')
 const {
   rmDB,
   rmAllFiles
-} = require('bfx-report/test/helpers/helpers.core')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.core')
 
 const {
   startEnvironment

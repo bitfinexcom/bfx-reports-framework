@@ -12,10 +12,10 @@ const MAIN_DB_WORKER_ACTIONS = require(
 const {
   getValidationSchemaId,
   getFilterValidationSchemaId
-} = require('bfx-report/workers/loc.api/helpers/prepare-response/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers/prepare-response/helpers')
 const {
   AuthError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const DAO = require('./dao')
 const {

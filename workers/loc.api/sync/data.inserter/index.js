@@ -9,7 +9,7 @@ const {
 } = require('lib-js-util-base')
 const {
   FindMethodError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const {
   CANDLES_SECTION

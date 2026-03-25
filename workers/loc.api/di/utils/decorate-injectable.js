@@ -2,7 +2,7 @@
 
 const {
   decorateInjectable
-} = require('bfx-report/workers/loc.api/di/utils')
+} = require('@bitfinex/bfx-report/workers/loc.api/di/utils')
 
 const _TYPES = require('../types')
 

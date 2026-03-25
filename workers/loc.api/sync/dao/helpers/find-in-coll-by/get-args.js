@@ -2,7 +2,7 @@
 
 const {
   getLimitNotMoreThan
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 
 module.exports = (args, methodColl) => {
   const _args = { ...args }

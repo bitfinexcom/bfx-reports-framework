@@ -2,7 +2,7 @@
 
 const { omit } = require('lib-js-util-base')
 const FILTER_CONDITIONS = require(
-  'bfx-report/workers/loc.api/helpers/filter.conditions'
+  '@bitfinex/bfx-report/workers/loc.api/helpers/filter.conditions'
 )
 
 const { serializeVal } = require('./serialization')

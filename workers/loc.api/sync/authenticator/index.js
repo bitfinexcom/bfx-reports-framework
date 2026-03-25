@@ -5,13 +5,13 @@ const { pick, isNil } = require('lib-js-util-base')
 const {
   AuthError,
   ArgsParamsError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 const {
   isENetError,
   isAuthError
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 const Interrupter = require(
-  'bfx-report/workers/loc.api/interrupter'
+  '@bitfinex/bfx-report/workers/loc.api/interrupter'
 )
 
 const { serializeVal } = require('../dao/helpers')
