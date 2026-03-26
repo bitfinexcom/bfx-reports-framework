@@ -3,6 +3,9 @@
   "version": "5.0.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "@bitfinex/bfx-facs-db-better-sqlite": "git+https://github.com/bitfinexcom/bfx-facs-db-better-sqlite.git",
