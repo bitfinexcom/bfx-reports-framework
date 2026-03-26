@@ -7,7 +7,7 @@ const {
 const { promisify } = require('node:util')
 
 const MAIN_DB_WORKER_ACTIONS = require(
-  'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
+  '@bitfinex/bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
 const {
   getValidationSchemaId,

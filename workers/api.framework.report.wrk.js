@@ -148,7 +148,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
         ],
         [
           'fac',
-          `bfx-facs-db-${dbDriver}`,
+          `@bitfinex/bfx-facs-db-${dbDriver}`,
           'm0',
           'm0',
           {
