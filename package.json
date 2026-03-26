@@ -6,6 +6,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@bitfinex/bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
+    "@bitfinex/lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
     "better-npm-run": "0.1.1",
     "bfx-facs-db-better-sqlite": "git+https://github.com/bitfinexcom/bfx-facs-db-better-sqlite.git",
     "bfx-facs-scheduler": "git+https://github.com:bitfinexcom/bfx-facs-scheduler.git",
@@ -14,7 +15,6 @@
     "csv": "5.5.3",
     "grenache-nodejs-ws": "git+https://github.com:bitfinexcom/grenache-nodejs-ws.git",
     "inversify": "6.0.1",
-    "lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
     "lodash": "4.17.21",
     "mathjs": "14.8.1",
     "moment": "2.29.4",
