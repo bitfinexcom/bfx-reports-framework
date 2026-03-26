@@ -1,6 +1,6 @@
 'use strict'
 
-const { cloneDeep } = require('lib-js-util-base')
+const { cloneDeep } = require('@bitfinex/lib-js-util-base')
 const BaseSyncSchemaModel = require(
   '../base.sync.schema.model'
 )

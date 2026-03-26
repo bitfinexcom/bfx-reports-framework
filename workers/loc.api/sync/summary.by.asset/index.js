@@ -1,6 +1,6 @@
 'use strict'
 
-const { omit } = require('lib-js-util-base')
+const { omit } = require('@bitfinex/lib-js-util-base')
 const moment = require('moment')
 const math = require('mathjs')
 

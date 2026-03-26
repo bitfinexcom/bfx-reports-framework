@@ -3,7 +3,7 @@
 const {
   omit,
   isEmpty
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 const {
   AuthError,
   BadRequestError

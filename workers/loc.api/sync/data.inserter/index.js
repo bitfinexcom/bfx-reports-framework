@@ -6,7 +6,7 @@ const setImmediatePromise = promisify(setImmediate)
 const EventEmitter = require('events')
 const {
   cloneDeep
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 const {
   FindMethodError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')

@@ -2,7 +2,7 @@
 
 const { promisify } = require('util')
 const setImmediatePromise = promisify(setImmediate)
-const { omit, pick } = require('lib-js-util-base')
+const { omit, pick } = require('@bitfinex/lib-js-util-base')
 
 const getBackIterable = require('../helpers/get-back-iterable')
 

@@ -1,7 +1,7 @@
 'use strict'
 
 const { v4: uuidv4 } = require('uuid')
-const { pick, isNil } = require('lib-js-util-base')
+const { pick, isNil } = require('@bitfinex/lib-js-util-base')
 const {
   AuthError,
   ArgsParamsError

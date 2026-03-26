@@ -1,6 +1,6 @@
 'use strict'
 
-const { omit } = require('lib-js-util-base')
+const { omit } = require('@bitfinex/lib-js-util-base')
 
 const BaseReportFileJobData = require(
   '@bitfinex/bfx-report/workers/loc.api/generate-report-file/report.file.job.data'

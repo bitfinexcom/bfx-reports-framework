@@ -6,7 +6,7 @@ const {
   merge,
   min,
   max
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 
 const {
   MIN_START_MTS

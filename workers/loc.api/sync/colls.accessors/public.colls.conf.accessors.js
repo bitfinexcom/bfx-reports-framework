@@ -7,7 +7,7 @@ const {
   omit,
   pick,
   isEmpty
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 const {
   prepareResponse
 } = require('@bitfinex/bfx-report/workers/loc.api/helpers')
