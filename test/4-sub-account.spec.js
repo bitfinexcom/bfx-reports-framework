@@ -26,7 +26,7 @@ const {
 const _mockData = require('./helpers/mock-data')
 
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
-const { app } = require('bfx-report-express')
+const { app } = require('@bitfinex/bfx-report-express')
 const agent = request.agent(app)
 
 const {
