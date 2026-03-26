@@ -70,7 +70,7 @@
   },
   "betterScripts": {
     "start:serv": {
-      "command": "nodemon ./node_modules/bfx-report-express",
+      "command": "nodemon ./node_modules/@bitfinex/bfx-report-express",
       "env": {
         "NODE_ENV": "development",
         "NODE_CONFIG_DIR": "./test/config"
@@ -119,7 +119,7 @@
     "startOld": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startDev": "nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startServDev": "better-npm-run start:serv",
-    "startSimulEnv": "node node_modules/bfx-report/test/simulate/simulate-enviroment.js",
+    "startSimulEnv": "node node_modules/@bitfinex/bfx-report/test/simulate/simulate-enviroment.js",
     "test": "better-npm-run test",
     "testDev": "better-npm-run testDev",
     "startBackEnd": "better-npm-run start:back",
