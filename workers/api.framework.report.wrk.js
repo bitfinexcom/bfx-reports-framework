@@ -141,7 +141,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       facs.push(
         [
           'fac',
-          'bfx-facs-scheduler',
+          '@bitfinex/bfx-facs-scheduler',
           'sync',
           'sync',
           { label: 'sync' }
