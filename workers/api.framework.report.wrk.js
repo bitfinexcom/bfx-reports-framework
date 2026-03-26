@@ -172,7 +172,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       // eslint-disable-next-line no-unused-vars
       const [type, facName, ns, label, opts] = fac
 
-      if (facName !== 'bfx-facs-lokue') {
+      if (facName !== '@bitfinex/bfx-facs-lokue') {
         continue
       }
 
