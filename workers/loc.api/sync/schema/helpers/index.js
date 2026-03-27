@@ -18,6 +18,21 @@ const freezeAndSealObjectDeeply = (...args) => {
   }
 }
 
+const cloneDeepWithoutPropInheritance = (obj) => {
+  if (obj instanceof Function) {
+    return {}
+  }
+  if (
+    !obj ||
+    typeof obj !== 'object'
+  ) {
+    return obj
+  }
+
+  return JSON.parse(JSON.stringify(obj))
+}
+
 module.exports = {
-  freezeAndSealObjectDeeply
+  freezeAndSealObjectDeeply,
+  cloneDeepWithoutPropInheritance
 }
