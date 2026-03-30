@@ -5,11 +5,11 @@ const { assert } = require('chai')
 const {
   queueToPromise,
   queueToPromiseMulti
-} = require('bfx-report/test/helpers/helpers.core')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.core')
 const {
   testMethodOfGettingReportFile,
   testProcQueue
-} = require('bfx-report/test/helpers/helpers.tests')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.tests')
 
 const getSyncProgressTestCase = require('./get-sync-progress-test-case')
 const { getMockData } = require('../helpers/helpers.mock-rest-v2')

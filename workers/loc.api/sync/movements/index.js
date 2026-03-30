@@ -1,7 +1,7 @@
 'use strict'
 
 const { orderBy } = require('lodash')
-const { merge } = require('lib-js-util-base')
+const { merge } = require('@bitfinex/lib-js-util-base')
 
 const { pushLargeArr } = require('../../helpers/utils')
 

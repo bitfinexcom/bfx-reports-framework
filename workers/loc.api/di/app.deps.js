@@ -7,14 +7,14 @@ const {
 } = require('inversify')
 const EventEmitter = require('events')
 const { bindDepsToFn } = require(
-  'bfx-report/workers/loc.api/di/helpers'
+  '@bitfinex/bfx-report/workers/loc.api/di/helpers'
 )
 const {
   getREST,
   getDataFromApi,
   prepareApiResponse
-} = require('bfx-report/workers/loc.api/helpers')
-const responder = require('bfx-report/workers/loc.api/responder')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
+const responder = require('@bitfinex/bfx-report/workers/loc.api/responder')
 
 const TYPES = require('./types')
 

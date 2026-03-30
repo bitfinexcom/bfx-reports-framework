@@ -1,12 +1,12 @@
 'use strict'
 
 const uuid = require('uuid')
-const { omit } = require('lib-js-util-base')
+const { omit } = require('@bitfinex/lib-js-util-base')
 const { PeerRPCServer } = require('grenache-nodejs-ws')
 
 const {
   BadRequestError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../di/utils')
 

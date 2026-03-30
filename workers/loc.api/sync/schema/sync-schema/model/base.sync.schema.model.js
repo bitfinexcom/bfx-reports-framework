@@ -1,6 +1,6 @@
 'use strict'
 
-const { cloneDeep } = require('lib-js-util-base')
+const { cloneDeep } = require('@bitfinex/lib-js-util-base')
 
 const TABLES_NAMES = require('../../tables-names')
 const ALLOWED_COLLS = require('../../allowed.colls')

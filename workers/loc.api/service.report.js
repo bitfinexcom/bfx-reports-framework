@@ -1,7 +1,7 @@
 'use strict'
 
 const BaseReportService = require(
-  'bfx-report/workers/loc.api/service.report'
+  '@bitfinex/bfx-report/workers/loc.api/service.report'
 )
 
 const SYNC_API_METHODS = require('./sync/schema/sync.api.methods')

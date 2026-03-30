@@ -1,7 +1,7 @@
 'use strict'
 
 const FOREX_SYMBS = require(
-  'bfx-report/workers/loc.api/helpers/forex.symbs'
+  '@bitfinex/bfx-report/workers/loc.api/helpers/forex.symbs'
 )
 
 module.exports = (

@@ -6,7 +6,7 @@ const {
   getMockDataOpts: getBaseMockDataOpts,
   getMockData: _getMockData,
   setDataTo: _setDataTo
-} = require('bfx-report/test/helpers/helpers.mock-rest-v2')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.mock-rest-v2')
 
 const _mockData = require('./mock-data')
 

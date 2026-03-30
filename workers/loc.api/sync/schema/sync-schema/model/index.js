@@ -1,13 +1,12 @@
 'use strict'
 
-const { cloneDeep } = require('lib-js-util-base')
-
 const {
   SyncSchemaModelCreationError,
   SyncSchemaModelFieldKeyNameAccessError
 } = require('../../../../errors')
 const {
-  freezeAndSealObjectDeeply
+  freezeAndSealObjectDeeply,
+  cloneDeepWithoutPropInheritance
 } = require('../../helpers')
 const {
   cloneModel
@@ -97,13 +96,13 @@ class SyncSchemaModel extends BaseSyncSchemaModel {
 
   getModelFields (opts) {
     return opts?.isCloned
-      ? cloneDeep(this.#modelFields)
+      ? cloneDeepWithoutPropInheritance(this.#modelFields)
       : this.#modelFields
   }
 
   getModelFieldKeys (opts) {
     return opts?.isCloned
-      ? cloneDeep(this.#modelFieldKeys)
+      ? cloneDeepWithoutPropInheritance(this.#modelFieldKeys)
       : this.#modelFieldKeys
   }
 

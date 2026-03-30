@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmpty } = require('lib-js-util-base')
+const { isEmpty } = require('@bitfinex/lib-js-util-base')
 const moment = require('moment')
 
 const {

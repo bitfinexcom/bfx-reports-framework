@@ -1,6 +1,8 @@
 'use strict'
 
-const { cloneDeep } = require('lib-js-util-base')
+const {
+  cloneDeepWithoutPropInheritance
+} = require('../../../helpers')
 const BaseSyncSchemaModel = require(
   '../base.sync.schema.model'
 )
@@ -20,7 +22,7 @@ const cloneModel = (model = []) => {
       continue
     }
 
-    clonedSchema[propName] = cloneDeep(value)
+    clonedSchema[propName] = cloneDeepWithoutPropInheritance(value)
   }
 
   return clonedSchema

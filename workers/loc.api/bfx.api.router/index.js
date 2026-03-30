@@ -1,10 +1,10 @@
 'use strict'
 
 const BaseBfxApiRouter = require(
-  'bfx-report/workers/loc.api/bfx.api.router'
+  '@bitfinex/bfx-report/workers/loc.api/bfx.api.router'
 )
 const Interrupter = require(
-  'bfx-report/workers/loc.api/interrupter'
+  '@bitfinex/bfx-report/workers/loc.api/interrupter'
 )
 
 const RateLimitChecker = require('./rate.limit.checker')

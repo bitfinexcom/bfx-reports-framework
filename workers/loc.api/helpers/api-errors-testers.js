@@ -5,7 +5,7 @@
  */
 const {
   isENetError
-} = require('bfx-report/workers/loc.api/helpers/api-errors-testers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers/api-errors-testers')
 
 module.exports = {
   isENetError

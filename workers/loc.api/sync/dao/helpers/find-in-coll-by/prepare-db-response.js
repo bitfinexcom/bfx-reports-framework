@@ -4,7 +4,7 @@ const { promisify } = require('util')
 const setImmediatePromise = promisify(setImmediate)
 const {
   prepareResponse
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 
 const { isContainedSameMts } = require('../utils')
 

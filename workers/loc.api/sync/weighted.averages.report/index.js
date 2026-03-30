@@ -1,7 +1,7 @@
 'use strict'
 
 const BaseWeightedAveragesReport = require(
-  'bfx-report/workers/loc.api/weighted.averages.report'
+  '@bitfinex/bfx-report/workers/loc.api/weighted.averages.report'
 )
 
 const { decorateInjectable } = require('../../di/utils')

@@ -1,12 +1,11 @@
 'use strict'
 
-const { cloneDeep } = require('lib-js-util-base')
-
 const {
   DbModelCreationError
 } = require('../../../../errors')
 const {
-  freezeAndSealObjectDeeply
+  freezeAndSealObjectDeeply,
+  cloneDeepWithoutPropInheritance
 } = require('../../helpers')
 
 const BaseModel = require('./base.model')
@@ -92,20 +91,20 @@ class Model extends BaseModel {
 
   clone () {
     return new Model().setDataStructure(
-      cloneDeep(this),
+      cloneDeepWithoutPropInheritance(this),
       { isNotFrozen: true }
     )
   }
 
   getModelFields (opts) {
     return opts?.isCloned
-      ? cloneDeep(this.#modelFields)
+      ? cloneDeepWithoutPropInheritance(this.#modelFields)
       : this.#modelFields
   }
 
   getModelFieldKeys (opts) {
     return opts?.isCloned
-      ? cloneDeep(this.#modelFieldKeys)
+      ? cloneDeepWithoutPropInheritance(this.#modelFieldKeys)
       : this.#modelFieldKeys
   }
 
@@ -151,7 +150,7 @@ class Model extends BaseModel {
     }
     if (Array.isArray(this[modelFieldName])) {
       return isCloned
-        ? cloneDeep(this[modelFieldName])
+        ? cloneDeepWithoutPropInheritance(this[modelFieldName])
         : this[modelFieldName]
     }
     if (
@@ -166,7 +165,7 @@ class Model extends BaseModel {
       : [this[modelFieldName]]
 
     return isCloned
-      ? cloneDeep(modelField)
+      ? cloneDeepWithoutPropInheritance(modelField)
       : modelField
   }
 

@@ -1,10 +1,10 @@
 'use strict'
 
-const { pick } = require('lib-js-util-base')
+const { pick } = require('@bitfinex/lib-js-util-base')
 
 const {
   AuthError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const {
   isUpdatableArr,

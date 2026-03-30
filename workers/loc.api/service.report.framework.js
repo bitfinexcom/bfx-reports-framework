@@ -3,16 +3,16 @@
 const {
   omit,
   isEmpty
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 const {
   AuthError,
   BadRequestError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 const {
   getTimezoneConf,
   isENetError,
   prepareSymbolResponse
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 
 const ReportService = require('./service.report')
 const {
