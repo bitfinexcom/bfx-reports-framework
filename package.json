@@ -28,6 +28,8 @@
     "@bitfinex/bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
     "bfx-api-mock-srv": "git+https://github.com/bitfinexcom/bfx-api-mock-srv.git",
     "chai": "4.3.4",
+    "concurrently": "9.2.1",
+    "cross-env": "10.1.0",
     "grenache-grape": "git+https://github.com/bitfinexcom/grenache-grape.git",
     "mocha": "11.1.0",
     "nodemon": "3.1.14",
@@ -67,65 +69,16 @@
       "workers/loc.api/queue/views/"
     ]
   },
-  "betterScripts": {
-    "start:serv": {
-      "command": "nodemon ./node_modules/@bitfinex/bfx-report-express",
-      "env": {
-        "NODE_ENV": "development",
-        "NODE_CONFIG_DIR": "./test/config"
-      }
-    },
-    "test": {
-      "command": "standard && mocha './workers/**/__test__/*.spec.js' './test/**/*.spec.js' --config .mocharc.json",
-      "env": {
-        "NODE_ENV": "test"
-      }
-    },
-    "unit": {
-      "command": "mocha './workers/**/__test__/*.spec.js' --config .mocharc.json",
-      "env": {
-        "NODE_ENV": "test"
-      }
-    },
-    "testDev": {
-      "command": "standard && mocha --recursive test/**/*-dev.spec.js --exit --timeout 10000",
-      "env": {
-        "NODE_ENV": "test"
-      }
-    },
-    "start:back": {
-      "command": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
-      "env": {
-        "NODE_ENV": "production"
-      }
-    },
-    "start:express": {
-      "command": "cd bfx-report-ui/bfx-report-express && npm run start",
-      "env": {
-        "NODE_ENV": "production"
-      }
-    },
-    "start:ui": {
-      "command": "cd bfx-report-ui && npm run start"
-    },
-    "start:all": {
-      "command": "npm run startBackEnd | npm run startExpress | npm run startUI"
-    }
-  },
   "scripts": {
+    "start": "concurrently -ki -c cyan,green,blue -n ENV,WORKER,SERVER \"npm run startSimulEnv\" \"node -e 'setTimeout(()=>{},3000)' && npm run startDev\" \"npm run startServDev\"",
+    "startDev": "cross-env NODE_ENV=development nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
+    "startServDev": "cross-env NODE_ENV=development NODE_CONFIG_DIR=./test/config node ./node_modules/@bitfinex/bfx-report-express",
+    "startSimulEnv": "cross-env NODE_ENV=development node ./node_modules/@bitfinex/bfx-report/test/simulate/simulate-enviroment.js",
+    "test": "standard && npm run unit && cross-env NODE_ENV=test mocha './test/**/*.spec.js' --config .mocharc.json",
+    "testDev": "cross-env NODE_ENV=test mocha './workers/**/__test__/*-dev.spec.js' './test/**/*-dev.spec.js' --config .mocharc.json",
+    "unit": "cross-env NODE_ENV=test mocha './workers/**/__test__/*.spec.js' --config .mocharc.json",
+    "migration": "node scripts/node/migration",
     "init": "bash init.sh",
-    "initDev": "bash init.sh -d",
-    "startOld": "node worker.js --env=production --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
-    "startDev": "nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
-    "startServDev": "better-npm-run start:serv",
-    "startSimulEnv": "node node_modules/@bitfinex/bfx-report/test/simulate/simulate-enviroment.js",
-    "test": "better-npm-run test",
-    "testDev": "better-npm-run testDev",
-    "startBackEnd": "better-npm-run start:back",
-    "startExpress": "better-npm-run start:express",
-    "startUI": "better-npm-run start:ui",
-    "start": "better-npm-run start:all",
-    "unit": "better-npm-run unit",
-    "migration": "node scripts/node/migration"
+    "initDev": "bash init.sh -d"
   }
 }
