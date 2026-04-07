@@ -1,6 +1,6 @@
 'use strict'
 
-const TYPES = require('bfx-report/workers/loc.api/di/types')
+const TYPES = require('@bitfinex/bfx-report/workers/loc.api/di/types')
 
 module.exports = {
   ...TYPES,

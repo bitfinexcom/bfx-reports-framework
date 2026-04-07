@@ -2,7 +2,7 @@
 
 const {
   AuthError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const isAuthApiError = (err) => {
   return /ERR_AUTH_API/.test(err.toString())

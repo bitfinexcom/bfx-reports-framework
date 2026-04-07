@@ -2,7 +2,7 @@
 
 const {
   pick
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 
 const normalizeApiData = (
   data = [],

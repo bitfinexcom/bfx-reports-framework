@@ -1,6 +1,6 @@
 'use strict'
 
-const mockData = require('bfx-report/test/helpers/mock-data')
+const mockData = require('@bitfinex/bfx-report/test/helpers/mock-data')
 
 const _ms = Date.now()
 

@@ -3,7 +3,7 @@
 const { setTimeout } = require('node:timers/promises')
 
 const INTERRUPTER_NAMES = require(
-  'bfx-report/workers/loc.api/interrupter/interrupter.names'
+  '@bitfinex/bfx-report/workers/loc.api/interrupter/interrupter.names'
 )
 
 const { pushLargeArr } = require('../../helpers/utils')

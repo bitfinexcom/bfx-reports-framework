@@ -3,7 +3,7 @@
 const BigNumber = require('bignumber.js')
 const { setImmediate } = require('node:timers/promises')
 const splitSymbolPairs = require(
-  'bfx-report/workers/loc.api/helpers/split-symbol-pairs'
+  '@bitfinex/bfx-report/workers/loc.api/helpers/split-symbol-pairs'
 )
 
 const {

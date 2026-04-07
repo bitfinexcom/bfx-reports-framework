@@ -3,7 +3,7 @@
 const path = require('path')
 const {
   startWorkers: _startWorkers
-} = require('bfx-report/test/helpers/helpers.worker')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.worker')
 
 const _serviceRoot = path.join(__dirname, '../..')
 

@@ -1,6 +1,6 @@
 'use strict'
 
-const { merge } = require('lib-js-util-base')
+const { merge } = require('@bitfinex/lib-js-util-base')
 
 const {
   TotalFeesParamsFlagError

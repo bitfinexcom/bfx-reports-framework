@@ -1,6 +1,6 @@
 'use strict'
 
-const responder = require('bfx-report/workers/loc.api/responder')
+const responder = require('@bitfinex/bfx-report/workers/loc.api/responder')
 
 const _getHandler = (
   authenticator,

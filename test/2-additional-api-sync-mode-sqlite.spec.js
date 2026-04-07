@@ -1,16 +1,16 @@
 'use strict'
 
 const path = require('path')
-const { omit } = require('lib-js-util-base')
+const { omit } = require('@bitfinex/lib-js-util-base')
 const request = require('supertest')
 
 const {
   stopEnvironment
-} = require('bfx-report/test/helpers/helpers.boot')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.boot')
 const {
   rmDB,
   rmAllFiles
-} = require('bfx-report/test/helpers/helpers.core')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.core')
 
 const {
   startEnvironment
@@ -24,7 +24,7 @@ const {
 } = require('./helpers/helpers.mock-rest-v2')
 
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config')
-const { app } = require('bfx-report-express')
+const { app } = require('@bitfinex/bfx-report-express')
 const agent = request.agent(app)
 
 const {

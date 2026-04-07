@@ -2,7 +2,7 @@
 
 const {
   startEnvironment: _startEnvironment
-} = require('bfx-report/test/helpers/helpers.boot')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.boot')
 
 const {
   startWorkers: _startWorkers

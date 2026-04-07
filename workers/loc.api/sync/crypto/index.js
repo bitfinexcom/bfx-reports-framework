@@ -4,7 +4,7 @@ const crypto = require('crypto')
 const { promisify } = require('util')
 const {
   AuthError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const scrypt = promisify(crypto.scrypt)
 const randomBytes = promisify(crypto.randomBytes)

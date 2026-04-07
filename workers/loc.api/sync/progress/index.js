@@ -4,7 +4,7 @@ const EventEmitter = require('events')
 
 const {
   isAuthError
-} = require('bfx-report/workers/loc.api/helpers/api-errors-testers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers/api-errors-testers')
 
 const SYNC_PROGRESS_STATES = require('./sync.progress.states')
 const errorRegExp = /(error)|(ERR_)/gi

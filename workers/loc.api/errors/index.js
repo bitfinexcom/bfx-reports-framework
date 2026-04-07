@@ -5,10 +5,10 @@ const {
   AuthError,
   ConflictError,
   ArgsParamsError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 const {
   getErrorArgs
-} = require('bfx-report/workers/loc.api/errors/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors/helpers')
 
 class CollSyncPermissionError extends BaseError {
   constructor (message = 'ERR_PERMISSION_DENIED_TO_SYNC_SELECTED_COLL') {

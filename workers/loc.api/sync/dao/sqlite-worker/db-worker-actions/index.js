@@ -1,7 +1,7 @@
 'use strict'
 
 const dbWorkerActions = require(
-  'bfx-facs-db-better-sqlite/worker/db-worker-actions'
+  '@bitfinex/bfx-facs-db-better-sqlite/worker/db-worker-actions'
 )
 
 const DB_WORKER_ACTIONS = require('./db-worker-actions.const')

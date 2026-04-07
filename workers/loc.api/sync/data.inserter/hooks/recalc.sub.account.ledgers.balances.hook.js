@@ -6,7 +6,7 @@ const setImmediatePromise = promisify(setImmediate)
 const {
   orderBy
 } = require('lodash')
-const { merge } = require('lib-js-util-base')
+const { merge } = require('@bitfinex/lib-js-util-base')
 
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const DataInserterHook = require('./data.inserter.hook')

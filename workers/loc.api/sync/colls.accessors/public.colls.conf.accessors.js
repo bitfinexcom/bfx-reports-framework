@@ -7,13 +7,13 @@ const {
   omit,
   pick,
   isEmpty
-} = require('lib-js-util-base')
+} = require('@bitfinex/lib-js-util-base')
 const {
   prepareResponse
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 const {
   FindMethodError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const {
   GetPublicDataError

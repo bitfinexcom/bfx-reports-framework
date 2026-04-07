@@ -7,15 +7,15 @@ const {
 const { promisify } = require('node:util')
 
 const MAIN_DB_WORKER_ACTIONS = require(
-  'bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
+  '@bitfinex/bfx-facs-db-better-sqlite/worker/db-worker-actions/db-worker-actions.const'
 )
 const {
   getValidationSchemaId,
   getFilterValidationSchemaId
-} = require('bfx-report/workers/loc.api/helpers/prepare-response/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers/prepare-response/helpers')
 const {
   AuthError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const DAO = require('./dao')
 const {

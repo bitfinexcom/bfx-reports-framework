@@ -2,16 +2,16 @@
 
 const {
   write
-} = require('bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/queue/write-data-to-stream/helpers')
 const {
   streamWriter
-} = require('bfx-report/workers/loc.api/generate-report-file/csv-writer/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/generate-report-file/csv-writer/helpers')
 const TRANSLATION_NAMESPACES = require(
-  'bfx-report/workers/loc.api/i18next/translation.namespaces'
+  '@bitfinex/bfx-report/workers/loc.api/i18next/translation.namespaces'
 )
 const {
   omitExtraParamFieldsForReportExport
-} = require('bfx-report/workers/loc.api/generate-report-file/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/generate-report-file/helpers')
 
 module.exports = (
   rService,

@@ -3,7 +3,7 @@
 const fs = require('node:fs')
 
 const WrkReportServiceApi = require(
-  'bfx-report/workers/api.service.report.wrk'
+  '@bitfinex/bfx-report/workers/api.service.report.wrk'
 )
 const path = require('path')
 const argv = require('yargs')
@@ -37,7 +37,7 @@ const argv = require('yargs')
 
 const {
   PDFBufferUnderElectronCreationError
-} = require('bfx-report/workers/loc.api/errors')
+} = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const appDeps = require('./loc.api/di/app.deps')
 const TYPES = require('./loc.api/di/types')
@@ -141,14 +141,14 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       facs.push(
         [
           'fac',
-          'bfx-facs-scheduler',
+          '@bitfinex/bfx-facs-scheduler',
           'sync',
           'sync',
           { label: 'sync' }
         ],
         [
           'fac',
-          `bfx-facs-db-${dbDriver}`,
+          `@bitfinex/bfx-facs-db-${dbDriver}`,
           'm0',
           'm0',
           {
@@ -172,7 +172,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       // eslint-disable-next-line no-unused-vars
       const [type, facName, ns, label, opts] = fac
 
-      if (facName !== 'bfx-facs-lokue') {
+      if (facName !== '@bitfinex/bfx-facs-lokue') {
         continue
       }
 

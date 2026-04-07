@@ -1,10 +1,10 @@
 'use strict'
 
 const Interrupter = require(
-  'bfx-report/workers/loc.api/interrupter'
+  '@bitfinex/bfx-report/workers/loc.api/interrupter'
 )
 const INTERRUPTER_NAMES = require(
-  'bfx-report/workers/loc.api/interrupter/interrupter.names'
+  '@bitfinex/bfx-report/workers/loc.api/interrupter/interrupter.names'
 )
 
 const SYNC_PROGRESS_STATES = require('../progress/sync.progress.states')

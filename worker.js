@@ -1,3 +1,3 @@
 'use strict'
 
-module.exports = require('bfx-svc-boot-js')
+module.exports = require('@bitfinex/bfx-svc-boot-js')

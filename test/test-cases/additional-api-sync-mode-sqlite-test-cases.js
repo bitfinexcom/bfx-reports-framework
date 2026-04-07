@@ -4,10 +4,10 @@ const { assert } = require('chai')
 
 const {
   queueToPromise
-} = require('bfx-report/test/helpers/helpers.core')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.core')
 const {
   testMethodOfGettingReportFile
-} = require('bfx-report/test/helpers/helpers.tests')
+} = require('@bitfinex/bfx-report/test/helpers/helpers.tests')
 
 const {
   getParamsArrToTestTimeframeGrouping

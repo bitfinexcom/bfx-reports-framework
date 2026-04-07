@@ -2,7 +2,7 @@
 
 const {
   FILTER_API_METHOD_NAMES
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 
 module.exports = Object.values(FILTER_API_METHOD_NAMES)
   .reduce((map, name) => {

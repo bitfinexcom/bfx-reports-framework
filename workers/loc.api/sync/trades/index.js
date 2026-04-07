@@ -2,7 +2,7 @@
 
 const {
   splitSymbolPairs
-} = require('bfx-report/workers/loc.api/helpers')
+} = require('@bitfinex/bfx-report/workers/loc.api/helpers')
 
 const {
   calcGroupedData,
