@@ -266,12 +266,6 @@ const sumArrayVolumes = (propName, objects = []) => {
   }, [])
 }
 
-const pushLargeArr = (dest, src) => {
-  for (const item of src) {
-    dest.push(item)
-  }
-}
-
 module.exports = {
   checkParamsAuth,
   tryParseJSON,
@@ -282,6 +276,5 @@ module.exports = {
   pickLowerObjectsNumbers,
   sumAllObjectsNumbers,
   pickAllLowerObjectsNumbers,
-  sumArrayVolumes,
-  pushLargeArr
+  sumArrayVolumes
 }
