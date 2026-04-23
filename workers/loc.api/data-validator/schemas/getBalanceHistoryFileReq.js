@@ -37,9 +37,6 @@ module.exports = {
     },
     isPDFRequired: {
       $ref: 'defs#/definitions/isPDFRequired'
-    },
-    isSignatureRequired: {
-      $ref: 'defs#/definitions/isSignatureRequired'
     }
   }
 }
