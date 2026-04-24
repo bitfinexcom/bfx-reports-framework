@@ -140,27 +140,11 @@ const sumObjectsNumbers = (propName, objects = []) => {
   }, 0)
 }
 
-const pickLowerObjectsNumbers = (propName, objects = []) => {
-  return objects.reduce((accum, curr) => {
-    if (!Number.isFinite(curr?.[propName])) {
-      return accum
-    }
-    if (!Number.isFinite(accum)) {
-      return curr[propName]
-    }
-
-    return curr[propName] < accum
-      ? curr[propName]
-      : accum
-  }, null)
-}
-
 module.exports = {
   checkParamsAuth,
   tryParseJSON,
   collObjToArr,
   getDateString,
   isNotSyncRequired,
-  sumObjectsNumbers,
-  pickLowerObjectsNumbers
+  sumObjectsNumbers
 }
