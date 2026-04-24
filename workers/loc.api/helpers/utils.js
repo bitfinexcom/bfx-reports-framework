@@ -118,13 +118,8 @@ const collObjToArr = (coll = [], opts) => {
   return res
 }
 
-const getDateString = (mc) => {
-  return new Date(mc).toDateString().split(' ').join('-')
-}
-
 module.exports = {
   checkParamsAuth,
   tryParseJSON,
-  collObjToArr,
-  getDateString
+  collObjToArr
 }

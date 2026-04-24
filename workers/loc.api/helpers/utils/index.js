@@ -1,5 +1,6 @@
 'use strict'
 
+const getDateString = require('./get-date-string')
 const isNotSyncRequired = require('./is-not-sync-required')
 const pickLowerObjectsNumbers = require('./pick-lower-objects-numbers')
 const pickAllLowerObjectsNumbers = require('./pick-all-lower-objects-numbers')
@@ -10,6 +11,7 @@ const pushLargeArr = require('./push-large-arr')
 const orderBy = require('./order-by')
 
 module.exports = {
+  getDateString,
   isNotSyncRequired,
   pickLowerObjectsNumbers,
   pickAllLowerObjectsNumbers,
