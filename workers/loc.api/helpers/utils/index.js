@@ -1,5 +1,6 @@
 'use strict'
 
+const checkParamsAuth = require('./check-params-auth')
 const tryParseJSON = require('./try-parse-json')
 const collObjToArr = require('./coll-obj-to-arr')
 const getDateString = require('./get-date-string')
@@ -13,6 +14,7 @@ const pushLargeArr = require('./push-large-arr')
 const orderBy = require('./order-by')
 
 module.exports = {
+  checkParamsAuth,
   tryParseJSON,
   collObjToArr,
   getDateString,
