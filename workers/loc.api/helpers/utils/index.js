@@ -1,5 +1,6 @@
 'use strict'
 
+const isNotSyncRequired = require('./is-not-sync-required')
 const pickLowerObjectsNumbers = require('./pick-lower-objects-numbers')
 const pickAllLowerObjectsNumbers = require('./pick-all-lower-objects-numbers')
 const sumObjectsNumbers = require('./sum-objects-numbers')
@@ -9,6 +10,7 @@ const pushLargeArr = require('./push-large-arr')
 const orderBy = require('./order-by')
 
 module.exports = {
+  isNotSyncRequired,
   pickLowerObjectsNumbers,
   pickAllLowerObjectsNumbers,
   sumObjectsNumbers,
