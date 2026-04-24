@@ -1,9 +1,11 @@
 'use strict'
 
-const { orderBy } = require('lodash')
 const { merge } = require('@bitfinex/lib-js-util-base')
 
-const { pushLargeArr } = require('../../helpers/utils')
+const {
+  pushLargeArr,
+  orderBy
+} = require('../../helpers/utils')
 
 const { decorateInjectable } = require('../../di/utils')
 
@@ -119,7 +121,7 @@ class Movements {
       const {
         propNames,
         orders
-      } = this._getLodashOrder(sort)
+      } = this._getOrder(sort)
       const orderedRes = orderBy(
         movements,
         propNames,
@@ -158,7 +160,7 @@ class Movements {
     const {
       propNames,
       orders
-    } = this._getLodashOrder(sort)
+    } = this._getOrder(sort)
     const orderedRes = orderBy(
       movements,
       propNames,
@@ -338,7 +340,7 @@ class Movements {
     return [['mts', orderSign], ['id', orderSign]]
   }
 
-  _getLodashOrder (sort) {
+  _getOrder (sort) {
     const propNames = []
     const orders = []
 
