@@ -4,7 +4,7 @@ const {
   AuthError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
-const checkParamsAuth = (args) => {
+module.exports = (args) => {
   const {
     apiKey,
     apiSecret,
@@ -26,8 +26,4 @@ const checkParamsAuth = (args) => {
   ) {
     throw new AuthError()
   }
-}
-
-module.exports = {
-  checkParamsAuth
 }
