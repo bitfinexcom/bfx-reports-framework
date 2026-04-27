@@ -41,7 +41,7 @@ describe('orderBy util', () => {
     ])
   })
 
-  it('Order array of objects by name and value prop in desc and asc', () => {
+  it('Order array of objects by name and value props in desc and asc', () => {
     const mockedArr = [
       { name: 'aaa', value: 't' },
       { name: 'www', value: 'b' },
@@ -65,7 +65,7 @@ describe('orderBy util', () => {
     ])
   })
 
-  it('Order array of objects by name and value prop in asc by default', () => {
+  it('Order array of objects by name and value props in asc by default', () => {
     const mockedArr = [
       { name: 'aaa', value: 't' },
       { name: 'www', value: 'b' },
@@ -85,6 +85,28 @@ describe('orderBy util', () => {
       { name: 'www', value: 'a' },
       { name: 'www', value: 'b' },
       { name: 'yyy' }
+    ])
+  })
+
+  it('Order array of objects by name prop in desc using dot syntax', () => {
+    const mockedArr = [
+      { nestedObj: { name: 'aaa' } },
+      { nestedObj: { name: 'www' } },
+      { nestedObj: { name: 'bbb' } },
+      { nestedObj: { name: 'yyy' } }
+    ]
+
+    const orderedArr = orderBy(
+      mockedArr,
+      ['nestedObj.name'],
+      ['desc']
+    )
+
+    assert.deepStrictEqual(orderedArr, [
+      { nestedObj: { name: 'yyy' } },
+      { nestedObj: { name: 'www' } },
+      { nestedObj: { name: 'bbb' } },
+      { nestedObj: { name: 'aaa' } }
     ])
   })
 })
