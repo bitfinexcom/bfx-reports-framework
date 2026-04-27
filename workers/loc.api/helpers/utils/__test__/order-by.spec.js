@@ -131,4 +131,22 @@ describe('orderBy util', () => {
       { nestedObj: { arr: [0, 'aaa'] } }
     ])
   })
+
+  it('Order array of array by index in desc', () => {
+    const mockedArr = [
+      ['name', 'aaa'],
+      ['name', 'www'],
+      ['name', 'bbb'],
+      ['name', 'yyy']
+    ]
+
+    const orderedArr = orderBy(mockedArr, [1], ['desc'])
+
+    assert.deepStrictEqual(orderedArr, [
+      ['name', 'yyy'],
+      ['name', 'www'],
+      ['name', 'bbb'],
+      ['name', 'aaa']
+    ])
+  })
 })
