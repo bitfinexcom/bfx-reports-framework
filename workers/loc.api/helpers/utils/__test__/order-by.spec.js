@@ -168,4 +168,38 @@ describe('orderBy util', () => {
       { name: 'aaa' }
     ])
   })
+
+  it('Order iterable object (Map) of objects by name prop and key in desc', () => {
+    const mockedMap = new Map([
+      ['key1', { name: 'aaa' }],
+      ['key2', { name: 'www' }],
+      ['key3', { name: 'bbb' }],
+      ['key4', { name: 'yyy' }]
+    ])
+
+    const orderedArrByVal = orderBy(
+      mockedMap,
+      [([key, val]) => val?.name],
+      ['desc']
+    )
+    const orderedArrByKey = orderBy(
+      mockedMap,
+      [([key, val]) => key],
+      ['desc']
+    )
+
+    // If iterable object is required, just create it after ordering
+    assert.deepStrictEqual(orderedArrByVal, [
+      ['key4', { name: 'yyy' }],
+      ['key2', { name: 'www' }],
+      ['key3', { name: 'bbb' }],
+      ['key1', { name: 'aaa' }]
+    ])
+    assert.deepStrictEqual(orderedArrByKey, [
+      ['key4', { name: 'yyy' }],
+      ['key3', { name: 'bbb' }],
+      ['key2', { name: 'www' }],
+      ['key1', { name: 'aaa' }]
+    ])
+  })
 })
