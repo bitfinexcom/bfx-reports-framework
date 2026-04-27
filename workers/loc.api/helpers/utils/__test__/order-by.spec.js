@@ -202,4 +202,26 @@ describe('orderBy util', () => {
       ['key1', { name: 'aaa' }]
     ])
   })
+
+  it('Order array of objects by name prop in desc with equal values', () => {
+    const mockedArr = [
+      { name: 'aaa' },
+      { name: 'www' },
+      { name: 'www' },
+      { name: 'bbb' },
+      { name: 'yyy' },
+      { name: 'aaa' }
+    ]
+
+    const orderedArr = orderBy(mockedArr, ['name'], ['desc'])
+
+    assert.deepStrictEqual(orderedArr, [
+      { name: 'yyy' },
+      { name: 'www' },
+      { name: 'www' },
+      { name: 'bbb' },
+      { name: 'aaa' },
+      { name: 'aaa' }
+    ])
+  })
 })
