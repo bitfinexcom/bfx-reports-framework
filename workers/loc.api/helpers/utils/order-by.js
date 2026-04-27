@@ -16,11 +16,12 @@ module.exports = (collection, iteratees = [], orders = []) => {
   return copiedColl.sort((a, b) => {
     for (const [i, iteratee] of iteratees.entries()) {
       const direction = orders[i] === 'desc' ? -1 : 1
+      const isIterateeFn = typeof iteratee === 'function'
 
-      const valA = typeof iteratee === 'function'
+      const valA = isIterateeFn
         ? iteratee(a)
         : _getValue(a, iteratee)
-      const valB = typeof iteratee === 'function'
+      const valB = isIterateeFn
         ? iteratee(b)
         : _getValue(b, iteratee)
 
