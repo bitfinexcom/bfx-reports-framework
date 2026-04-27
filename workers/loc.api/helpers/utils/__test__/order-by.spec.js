@@ -149,4 +149,23 @@ describe('orderBy util', () => {
       ['name', 'aaa']
     ])
   })
+
+  it('Order iterable object (Set) of objects by name prop in desc', () => {
+    const mockedSet = new Set([
+      { name: 'aaa' },
+      { name: 'www' },
+      { name: 'bbb' },
+      { name: 'yyy' }
+    ])
+
+    const orderedArr = orderBy(mockedSet, ['name'], ['desc'])
+
+    // If iterable object is required, just create it after ordering
+    assert.deepStrictEqual(orderedArr, [
+      { name: 'yyy' },
+      { name: 'www' },
+      { name: 'bbb' },
+      { name: 'aaa' }
+    ])
+  })
 })

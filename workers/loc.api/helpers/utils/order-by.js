@@ -10,6 +10,7 @@ const _getValue = (obj, path) => {
 
 module.exports = (collection, iteratees = [], orders = []) => {
   // It's able to consider iterable objects as well
+  // If iterable object is required, just create it after ordering, not here
   const copiedColl = [...collection]
 
   return copiedColl.sort((a, b) => {
