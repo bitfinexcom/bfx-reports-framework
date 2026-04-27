@@ -109,4 +109,26 @@ describe('orderBy util', () => {
       { nestedObj: { name: 'aaa' } }
     ])
   })
+
+  it('Order array of objects by second item of array in desc using fn', () => {
+    const mockedArr = [
+      { nestedObj: { arr: [0, 'aaa'] } },
+      { nestedObj: { arr: [0, 'www'] } },
+      { nestedObj: { arr: [0, 'bbb'] } },
+      { nestedObj: { arr: [0, 'yyy'] } }
+    ]
+
+    const orderedArr = orderBy(
+      mockedArr,
+      [(item) => item?.nestedObj?.arr?.[1]],
+      ['desc']
+    )
+
+    assert.deepStrictEqual(orderedArr, [
+      { nestedObj: { arr: [0, 'yyy'] } },
+      { nestedObj: { arr: [0, 'www'] } },
+      { nestedObj: { arr: [0, 'bbb'] } },
+      { nestedObj: { arr: [0, 'aaa'] } }
+    ])
+  })
 })
