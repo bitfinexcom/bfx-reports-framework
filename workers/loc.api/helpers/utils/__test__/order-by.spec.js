@@ -150,6 +150,14 @@ describe('orderBy util', () => {
     ])
   })
 
+  it('Order array by index in desc', () => {
+    const mockedArr = ['aaa', 'www', 'bbb', 'yyy']
+
+    const orderedArr = orderBy(mockedArr, [(item) => item], ['desc'])
+
+    assert.deepStrictEqual(orderedArr, ['yyy', 'www', 'bbb', 'aaa'])
+  })
+
   it('Order iterable object (Set) of objects by name prop in desc', () => {
     const mockedSet = new Set([
       { name: 'aaa' },
