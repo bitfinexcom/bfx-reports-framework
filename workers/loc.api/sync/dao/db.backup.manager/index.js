@@ -4,9 +4,11 @@ const { mkdirSync } = require('fs')
 const { readdir, rm, copyFile } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
-const { orderBy } = require('lodash')
 
-const { isBfxApiStaging } = require('../../../helpers')
+const {
+  isBfxApiStaging,
+  orderBy
+} = require('../../../helpers')
 
 const { decorateInjectable } = require('../../../di/utils')
 

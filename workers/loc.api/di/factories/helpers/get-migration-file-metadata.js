@@ -1,6 +1,6 @@
 'use strict'
 
-const { orderBy } = require('lodash')
+const { orderBy } = require('../../../helpers')
 
 module.exports = (migrationFileDirents) => {
   const metadata = migrationFileDirents.reduce((accum, dirent) => {
