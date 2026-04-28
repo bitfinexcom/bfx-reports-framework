@@ -289,6 +289,44 @@ describe('orderBy util', () => {
     ])
   })
 
+  it('Order array of objects by name prop in desc with null and undefined items', () => {
+    const mockedArr = [
+      { name: undefined },
+      { name: 'aaa' },
+      { name: null },
+      { name: 'www' },
+      null,
+      undefined,
+      { name: null },
+      { name: undefined },
+      { name: null },
+      { name: 'bbb' },
+      null,
+      { name: 'yyy' }
+    ]
+
+    const orderedArr = orderBy(mockedArr, ['name'], ['desc'])
+
+    assert.deepStrictEqual(orderedArr, [
+      { name: 'yyy' },
+      { name: 'www' },
+      { name: 'bbb' },
+      { name: 'aaa' },
+      { name: undefined },
+      { name: null },
+      null,
+      { name: null },
+      { name: undefined },
+      { name: null },
+      null,
+      /**
+       * Array.prototype.sort() behaviour: all undefined elements
+       * are sorted to the end of the array, with no call to compareFn
+       */
+      undefined
+    ])
+  })
+
   it('Throw TypeError if non-iterable object is ordered', () => {
     assert.throws(
       () => orderBy(null, ['name'], ['desc']),
