@@ -295,4 +295,18 @@ describe('orderBy util', () => {
       TypeError
     )
   })
+
+  it('Throw TypeError if non-iterable object is prop name list', () => {
+    const mockedArr = [
+      { name: 'aaa' },
+      { name: 'www' },
+      { name: 'bbb' },
+      { name: 'yyy' }
+    ]
+
+    assert.throws(
+      () => orderBy(mockedArr, null, ['desc']),
+      TypeError
+    )
+  })
 })
