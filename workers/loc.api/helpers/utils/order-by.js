@@ -1,6 +1,12 @@
 'use strict'
 
 const _getValue = (obj, path) => {
+  if (
+    obj === undefined ||
+    obj === null
+  ) {
+    return obj
+  }
   if (typeof path !== 'string') {
     return obj?.[path]
   }
