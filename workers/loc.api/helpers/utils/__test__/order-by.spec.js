@@ -288,4 +288,11 @@ describe('orderBy util', () => {
       { name: null }
     ])
   })
+
+  it('Throw TypeError if non-iterable object is ordered', () => {
+    assert.throws(
+      () => orderBy(null, ['name'], ['desc']),
+      TypeError
+    )
+  })
 })
