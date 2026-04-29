@@ -39,4 +39,8 @@ jobs:
         path: test-report.json
   web-page-report:
     needs: linux-test-runner
+    permissions:
+      contents: read
+      actions: read
+      checks: write
     uses: ./.github/workflows/test-report.yml
