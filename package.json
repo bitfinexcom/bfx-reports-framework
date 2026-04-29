@@ -1,6 +1,6 @@
 {
   "name": "@bitfinex/bfx-reports-framework",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "engines": {
