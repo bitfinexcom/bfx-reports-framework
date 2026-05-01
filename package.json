@@ -29,7 +29,7 @@
     "chai": "4.3.4",
     "concurrently": "9.2.1",
     "cross-env": "10.1.0",
-    "grenache-grape": "git+https://github.com/bitfinexcom/grenache-grape.git",
+    "grenache-grape": "1.0.0",
     "mocha": "11.1.0",
     "nodemon": "3.1.14",
     "standard": "17.0.0",
