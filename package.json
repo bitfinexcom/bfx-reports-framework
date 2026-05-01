@@ -15,7 +15,7 @@
     "@bitfinex/lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
     "bignumber.js": "9.1.2",
     "csv": "5.5.3",
-    "grenache-nodejs-ws": "git+https://github.com/bitfinexcom/grenache-nodejs-ws.git",
+    "grenache-nodejs-ws": "1.0.0",
     "inversify": "6.0.1",
     "mathjs": "14.8.1",
     "moment": "2.29.4",
