@@ -3,14 +3,12 @@
 const { promisify } = require('util')
 const setImmediatePromise = promisify(setImmediate)
 
-const {
-  orderBy
-} = require('lodash')
 const { merge } = require('@bitfinex/lib-js-util-base')
 
 const SyncTempTablesManager = require('../sync.temp.tables.manager')
 const DataInserterHook = require('./data.inserter.hook')
 const { getAuthFromDb } = require('../helpers/utils')
+const { orderBy } = require('../../../helpers')
 const {
   SubAccountLedgersBalancesRecalcError
 } = require('../../../errors')

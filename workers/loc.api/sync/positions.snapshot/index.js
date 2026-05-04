@@ -1,10 +1,10 @@
 'use strict'
 
-const { orderBy } = require('lodash')
-
 const {
   splitSymbolPairs
 } = require('@bitfinex/bfx-report/workers/loc.api/helpers')
+
+const { orderBy } = require('../../helpers')
 const {
   groupByTimeframe,
   getMtsGroupedByTimeframe,
