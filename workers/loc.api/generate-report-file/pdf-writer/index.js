@@ -64,6 +64,7 @@ class PdfWriter extends MainPdfWriter {
       template: 'No data',
       format: 'portrait',
       orientation: 'Letter',
+      timeout: 10 * 60 * 1000,
       ...args
     }
 
@@ -78,7 +79,7 @@ class PdfWriter extends MainPdfWriter {
     try {
       const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-gpu'],
-        protocolTimeout: 10 * 60 * 1000,
+        protocolTimeout: args?.timeout,
         timeout: 60_000
       })
       const page = await browser.newPage()
@@ -125,7 +126,8 @@ class PdfWriter extends MainPdfWriter {
         templateFilePath: uniqueFileName,
         format: args?.format,
         orientation: args?.orientation,
-        uid
+        uid,
+        timeout: args?.timeout
       }
     )
 
