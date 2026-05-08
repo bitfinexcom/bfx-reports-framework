@@ -36,7 +36,8 @@ const argv = require('yargs')
   .argv
 
 const {
-  PDFBufferUnderElectronCreationError
+  PDFBufferUnderElectronCreationError,
+  PDFBufferUnderFrameworkCreationError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const appDeps = require('./loc.api/di/app.deps')
@@ -208,7 +209,10 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     await wsTransport.start()
 
     processorQueue.on('error:base', (err, job) => {
-      if (!(err instanceof PDFBufferUnderElectronCreationError)) {
+      if (
+        !(err instanceof PDFBufferUnderElectronCreationError) &&
+        !(err instanceof PDFBufferUnderFrameworkCreationError)
+      ) {
         return
       }
 
