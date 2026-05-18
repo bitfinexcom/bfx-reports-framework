@@ -1,14 +1,13 @@
 'use strict'
 
-const { orderBy } = require('lodash')
-
 const {
   AuthError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const {
   isSubAccountApiKeys,
-  getSubAccountAuthFromAuth
+  getSubAccountAuthFromAuth,
+  orderBy
 } = require('../../helpers')
 const {
   SubAccountCreatingError,

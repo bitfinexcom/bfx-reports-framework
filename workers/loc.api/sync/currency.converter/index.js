@@ -1,7 +1,6 @@
 'use strict'
 
 const moment = require('moment')
-const { orderBy } = require('lodash')
 
 const {
   FindMethodError
@@ -16,7 +15,10 @@ const {
 const {
   isForexSymb
 } = require('../helpers')
-const { tryParseJSON } = require('../../helpers')
+const {
+  tryParseJSON,
+  orderBy
+} = require('../../helpers')
 const SyncTempTablesManager = require(
   '../data.inserter/sync.temp.tables.manager'
 )

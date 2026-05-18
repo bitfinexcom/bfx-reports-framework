@@ -1,9 +1,6 @@
 'use strict'
 
 const {
-  orderBy
-} = require('lodash')
-const {
   omit,
   pick,
   isEmpty
@@ -15,6 +12,9 @@ const {
   FindMethodError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
+const {
+  orderBy
+} = require('../../helpers')
 const {
   GetPublicDataError
 } = require('../../errors')

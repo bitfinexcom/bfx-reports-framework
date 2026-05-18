@@ -16,7 +16,8 @@ const {
 
 const TEMPLATE_FILE_NAMES = require('./template-file-names')
 const {
-  PDFBufferUnderElectronCreationError
+  PDFBufferUnderElectronCreationError,
+  PDFBufferUnderFrameworkCreationError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const { decorateInjectable } = require('../../di/utils')
@@ -59,43 +60,51 @@ class PdfWriter extends MainPdfWriter {
    * @override
    */
   async createPDFBuffer (args) {
-    const {
-      template = 'No data',
-      format = 'portrait',
-      orientation = 'Letter'
-    } = args ?? {}
-
-    if (this.isElectronjsEnv) {
-      return await this.createPDFBufferUnderElectron({
-        template,
-        format,
-        orientation
-      })
+    const _args = {
+      template: 'No data',
+      format: 'portrait',
+      orientation: 'Letter',
+      timeout: 10 * 60 * 1000,
+      ...args
     }
 
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-gpu']
-    })
-    const page = await browser.newPage()
-    await page.setContent(template, {
-      waitUntil: 'domcontentloaded'
-    })
-    await page.emulateMediaType('print')
-    const u8ArrayPdf = await page.pdf({
-      landscape: format !== 'portrait',
-      format: orientation,
-      margins: {
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0
-      },
-      displayHeaderFooter: true,
-      footerTemplate: this.#getFooterTemplate(args)
-    })
-    await browser.close()
+    if (this.isElectronjsEnv) {
+      return await this.createPDFBufferUnderElectron(_args)
+    }
 
-    return Buffer.from(u8ArrayPdf)
+    return await this.createPDFBufferUnderFramework(_args)
+  }
+
+  async createPDFBufferUnderFramework (args) {
+    try {
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-gpu'],
+        protocolTimeout: args?.timeout,
+        timeout: 60_000
+      })
+      const page = await browser.newPage()
+      await page.setContent(args?.template, {
+        waitUntil: 'domcontentloaded'
+      })
+      await page.emulateMediaType('print')
+      const u8ArrayPdf = await page.pdf({
+        landscape: args?.format !== 'portrait',
+        format: args?.orientation,
+        margins: {
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0
+        },
+        displayHeaderFooter: true,
+        footerTemplate: this.#getFooterTemplate(args)
+      })
+      await browser.close()
+
+      return Buffer.from(u8ArrayPdf)
+    } catch (err) {
+      throw new PDFBufferUnderFrameworkCreationError(err)
+    }
   }
 
   async createPDFBufferUnderElectron (args) {
@@ -117,7 +126,8 @@ class PdfWriter extends MainPdfWriter {
         templateFilePath: uniqueFileName,
         format: args?.format,
         orientation: args?.orientation,
-        uid
+        uid,
+        timeout: args?.timeout
       }
     )
 

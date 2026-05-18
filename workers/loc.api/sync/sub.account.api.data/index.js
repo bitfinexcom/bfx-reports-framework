@@ -1,9 +1,6 @@
 'use strict'
 
 const {
-  orderBy
-} = require('lodash')
-const {
   isEmpty
 } = require('@bitfinex/lib-js-util-base')
 const {
@@ -14,6 +11,9 @@ const {
   FindMethodError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
+const {
+  orderBy
+} = require('../../helpers')
 const {
   DatePropNameError
 } = require('../../errors')
