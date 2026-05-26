@@ -1031,7 +1031,9 @@ class CurrencyConverter {
       )
 
       if (!Number.isFinite(price)) {
-        throw new CurrencyConversionDataFindingError()
+        throw new CurrencyConversionDataFindingError(
+          { symbol: reqSymb, mts }
+        )
       }
 
       return price
@@ -1082,7 +1084,9 @@ class CurrencyConverter {
       )
     }
 
-    throw new CurrencyConversionDataFindingError()
+    throw new CurrencyConversionDataFindingError(
+      { symbol: reqSymb, mts: end }
+    )
   }
 
   async convertManyByCandles (data, convSchema) {
