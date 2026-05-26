@@ -348,17 +348,25 @@ class CurrencyConverter {
     if (typeof symbol !== 'string') {
       return ''
     }
-    if (symbol.length < 8) {
+    if (symbol.length < 6) {
       return symbol
     }
+
+    const hasFlag = (
+      symbol.startsWith('t') ||
+      symbol.startsWith('f')
+    )
+    const flag = hasFlag
+      ? symbol[0]
+      : 't'
+
     if (
-      symbol[0] !== 't' &&
-      symbol[0] !== 'f'
+      symbol.length === 7 &&
+      hasFlag
     ) {
       return symbol
     }
 
-    const flag = symbol[0]
     const [firstSymb, lastSymb] = splitSymbolPairs(symbol)
     const _firstSymb = this._getConvertingSymb(firstSymb)
     const _lastSymb = this._getConvertingSymb(lastSymb)
