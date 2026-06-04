@@ -71,8 +71,8 @@ class ObjectMappingError extends BaseError {
 }
 
 class CurrencyConversionDataFindingError extends BaseError {
-  constructor (message = 'ERR_DATA_IS_NOT_FOUND_TO_CONVERT_CURRENCY') {
-    super(message)
+  constructor (data, message = 'ERR_DATA_IS_NOT_FOUND_TO_CONVERT_CURRENCY') {
+    super({ data, message })
   }
 }
 
