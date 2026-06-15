@@ -56,6 +56,11 @@ class ExpandedRESTv2 extends RESTv2 {
     return makeRequestToBFX(() => this
       ._makePublicPostRequest('/login/verify', body))
   }
+
+  async getCaptchaProviders (body) {
+    return makeRequestToBFX(() => this
+      ._makePublicPostRequest('/int/captcha/providers', body))
+  }
 }
 
 decorateInjectable(HTTPRequest, depsTypes)
