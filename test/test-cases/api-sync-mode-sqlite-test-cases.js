@@ -195,6 +195,28 @@ module.exports = (
     assert.strictEqual(res.body.result[0], 'hcaptcha')
   })
 
+  it('it should be successfully performed by the isCaptchaRequired method', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        method: 'isCaptchaRequired',
+        params: {
+          method: 'login'
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isBoolean(res.body.result)
+    assert.isOk(res.body.result)
+  })
+
   it('it should be successfully performed by the signIn method', async function () {
     this.timeout(5000)
 
