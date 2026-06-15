@@ -106,6 +106,13 @@ class FrameworkReportService extends ReportService {
     }, 'getCaptchaProviders', args, cb)
   }
 
+  isCaptchaRequired (space, args, cb) {
+    return this._responder(() => {
+      return this._httpRequest.getRequest()
+        .isCaptchaRequired(args?.params)
+    }, 'isCaptchaRequired', args, cb)
+  }
+
   isStagingBfxApi (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.isStagingBfxApi()
