@@ -99,6 +99,13 @@ class FrameworkReportService extends ReportService {
     }, 'verifyOnBFX', args, cb)
   }
 
+  getCaptchaProviders (space, args, cb) {
+    return this._responder(() => {
+      return this._httpRequest.getRequest()
+        .getCaptchaProviders(args?.params)
+    }, 'getCaptchaProviders', args, cb)
+  }
+
   isStagingBfxApi (space, args, cb) {
     return this._responder(() => {
       return this._authenticator.isStagingBfxApi()
