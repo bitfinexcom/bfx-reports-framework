@@ -51,6 +51,7 @@ const getMockDataOpts = () => ({
   login: null,
   login_verify: null,
   captcha_providers: null,
+  captcha_required: null,
   platform_status: null
 })
 
@@ -58,7 +59,8 @@ const getExtraMockMethods = () => (new Map([
   ['post', {
     '/v2/login': 'login',
     '/v2/login/verify': 'login_verify',
-    '/v2/int/captcha/providers': 'captcha_providers'
+    '/v2/int/captcha/providers': 'captcha_providers',
+    '/v2/int/captcha/required': 'captcha_required'
   }]
 ]))
 
