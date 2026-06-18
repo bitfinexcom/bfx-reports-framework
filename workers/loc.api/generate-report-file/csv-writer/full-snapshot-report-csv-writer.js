@@ -9,6 +9,9 @@ const {
 const {
   omitExtraParamFieldsForReportExport
 } = require('@bitfinex/bfx-report/workers/loc.api/generate-report-file/helpers')
+const QUEUE_EVENT_NAMES = require(
+  '@bitfinex/bfx-report/workers/loc.api/queue/queue.event.names'
+)
 
 module.exports = (
   rService,
@@ -29,7 +32,7 @@ module.exports = (
     ...args?.params
   }
 
-  queue.emit('progress', 0)
+  queue.emit(QUEUE_EVENT_NAMES.PROGRESS, 0)
 
   if (typeof jobData === 'string') {
     await streamWriter(
@@ -40,7 +43,7 @@ module.exports = (
       }]
     )
 
-    queue.emit('progress', 100)
+    queue.emit(QUEUE_EVENT_NAMES.PROGRESS, 100)
 
     return
   }
@@ -173,5 +176,5 @@ module.exports = (
     ]
   )
 
-  queue.emit('progress', 100)
+  queue.emit(QUEUE_EVENT_NAMES.PROGRESS, 100)
 }

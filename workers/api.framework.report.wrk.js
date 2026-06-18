@@ -39,6 +39,9 @@ const {
   PDFBufferUnderElectronCreationError,
   PDFBufferUnderFrameworkCreationError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
+const QUEUE_EVENT_NAMES = require(
+  '@bitfinex/bfx-report/workers/loc.api/queue/queue.event.names'
+)
 
 const appDeps = require('./loc.api/di/app.deps')
 const TYPES = require('./loc.api/di/types')
@@ -208,7 +211,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
 
     await wsTransport.start()
 
-    processorQueue.on('error:base', (err, job) => {
+    processorQueue.on(QUEUE_EVENT_NAMES.ERROR_BASE, (err, job) => {
       if (
         !(err instanceof PDFBufferUnderElectronCreationError) &&
         !(err instanceof PDFBufferUnderFrameworkCreationError)
@@ -223,7 +226,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
         this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_FAILED: ${err.stack || err}`)
       })
     })
-    aggregatorQueue.on('completed', (res) => {
+    aggregatorQueue.on(QUEUE_EVENT_NAMES.COMPLETED, (res) => {
       const {
         reportFilesMetadata,
         csvFilesMetadata, // For compatibility with old implementation
