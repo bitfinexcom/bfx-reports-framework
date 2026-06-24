@@ -1271,11 +1271,6 @@ module.exports = (
   it('it should be successfully performed by the getWeightedAveragesReportFile method', async function () {
     this.timeout(60000)
 
-    // TODO: Wait for implementation of pdf template in the next release
-    if (isPDFRequired) {
-      this.skip()
-    }
-
     const procPromise = queueToPromise(params.processorQueue)
     const aggrPromise = queueToPromise(params.aggregatorQueue)
 
