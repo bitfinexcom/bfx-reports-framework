@@ -41,8 +41,7 @@ module.exports = (
     dateFieldName,
     model,
     symbolFieldName,
-    timeframeFieldName,
-    additionalFilteringProps
+    timeframeFieldName
   } = {},
   params = {}
 ) => {
@@ -74,7 +73,6 @@ module.exports = (
     _dateFieldName: dateFieldName,
     start,
     end,
-    ...additionalFilteringProps,
     ...symbFilter,
     ...timeframeFilter,
     ...fieldsFilters

@@ -6,8 +6,7 @@ const getSymbolFilter = require('./get-symbol-filter')
 module.exports = (
   {
     name,
-    symbolFieldName,
-    additionalFilteringProps
+    symbolFieldName
   } = {},
   params = {}
 ) => {
@@ -24,7 +23,6 @@ module.exports = (
   const filter = {
     ...reqFilter,
     _type: type,
-    ...additionalFilteringProps,
     ...symbFilter
   }
 

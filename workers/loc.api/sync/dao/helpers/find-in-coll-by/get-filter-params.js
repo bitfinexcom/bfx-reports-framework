@@ -11,6 +11,9 @@ const getStatusMessagesFilter = require(
   '../get-status-messages-filter'
 )
 const TABLES_NAMES = require('../../../schema/tables-names')
+const SUPPORTED_MODEL_FIELDS = require(
+  '../../../schema/sync-schema/model/supported.model.fields'
+)
 
 module.exports = (args, methodColl, opts) => {
   const { auth, params } = { ...args }
@@ -28,24 +31,30 @@ module.exports = (args, methodColl, opts) => {
 
   const filter = {
     ...insertableArrayObjectsFilter,
-    ...statusMessagesfilter
+    ...statusMessagesfilter,
+    ...methodColl[SUPPORTED_MODEL_FIELDS.ADDITIONAL_FILTERING_PROPS]
   }
 
-  if (!isPublic) {
-    const { _id, isSubAccount } = { ...auth }
-
-    if (!Number.isInteger(_id)) {
-      throw new AuthError()
+  if (isPublic) {
+    return {
+      requestedFilter,
+      filter
     }
-    if (
-      methodColl.getModelField('NAME') === TABLES_NAMES.LEDGERS &&
-      isSubAccount
-    ) {
-      filter._isBalanceRecalced = 1
-    }
-
-    filter.user_id = _id
   }
+
+  const { _id, isSubAccount } = auth ?? {}
+
+  if (!Number.isInteger(_id)) {
+    throw new AuthError()
+  }
+  if (
+    methodColl.getModelField('NAME') === TABLES_NAMES.LEDGERS &&
+    isSubAccount
+  ) {
+    filter._isBalanceRecalced = 1
+  }
+
+  filter.user_id = _id
 
   return {
     requestedFilter,
