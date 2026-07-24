@@ -6,10 +6,9 @@ const getSymbolFilter = require('./get-symbol-filter')
 module.exports = (
   {
     name,
-    symbolFieldName,
-    additionalFilteringProps
+    symbolFieldName
   } = {},
-  params = {}
+  args
 ) => {
   if (name !== TABLES_NAMES.STATUS_MESSAGES) {
     return {}
@@ -19,12 +18,11 @@ module.exports = (
     type,
     symbol,
     filter: reqFilter = {}
-  } = { ...params }
+  } = args?.params ?? {}
   const symbFilter = getSymbolFilter(symbol, symbolFieldName)
   const filter = {
     ...reqFilter,
     _type: type,
-    ...additionalFilteringProps,
     ...symbFilter
   }
 

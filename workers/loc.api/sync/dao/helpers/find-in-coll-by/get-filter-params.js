@@ -10,42 +10,50 @@ const getInsertableArrayObjectsFilter = require(
 const getStatusMessagesFilter = require(
   '../get-status-messages-filter'
 )
-const TABLES_NAMES = require('../../../schema/tables-names')
+const getLedgersFilter = require(
+  '../get-ledgers-filter'
+)
+const SUPPORTED_MODEL_FIELDS = require(
+  '../../../schema/sync-schema/model/supported.model.fields'
+)
 
 module.exports = (args, methodColl, opts) => {
-  const { auth, params } = { ...args }
-  const { filter: requestedFilter } = { ...params }
-  const { isPublic } = { ...opts }
+  const { auth, params } = args ?? {}
+  const { filter: requestedFilter } = params ?? {}
+  const { isPublic } = opts ?? {}
 
   const statusMessagesfilter = getStatusMessagesFilter(
     methodColl,
-    params
+    args
   )
   const insertableArrayObjectsFilter = getInsertableArrayObjectsFilter(
     methodColl,
-    params
+    args
+  )
+  const ledgersFilter = getLedgersFilter(
+    methodColl,
+    args
   )
 
   const filter = {
     ...insertableArrayObjectsFilter,
-    ...statusMessagesfilter
+    ...statusMessagesfilter,
+    ...ledgersFilter,
+    ...methodColl[SUPPORTED_MODEL_FIELDS.ADDITIONAL_FILTERING_PROPS]
   }
 
-  if (!isPublic) {
-    const { _id, isSubAccount } = { ...auth }
-
-    if (!Number.isInteger(_id)) {
-      throw new AuthError()
+  if (isPublic) {
+    return {
+      requestedFilter,
+      filter
     }
-    if (
-      methodColl.getModelField('NAME') === TABLES_NAMES.LEDGERS &&
-      isSubAccount
-    ) {
-      filter._isBalanceRecalced = 1
-    }
-
-    filter.user_id = _id
   }
+
+  if (!Number.isInteger(auth?._id)) {
+    throw new AuthError()
+  }
+
+  filter.user_id = auth._id
 
   return {
     requestedFilter,
