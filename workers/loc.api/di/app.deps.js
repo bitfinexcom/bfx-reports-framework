@@ -130,7 +130,7 @@ decorate(injectable(), EventEmitter)
 module.exports = ({
   grcBfxOpts
 }) => {
-  return new ContainerModule((bind, unbind, isBound, rebind) => {
+  return new ContainerModule(({ bind, rebindSync }) => {
     bind(TYPES.FrameworkRServiceDepsSchema)
       .toDynamicValue((ctx) => {
         return [
@@ -173,14 +173,14 @@ module.exports = ({
           ['_wsEventEmitterFactory', TYPES.WSEventEmitterFactory]
         ]
       })
-    rebind(TYPES.RServiceDepsSchemaAliase)
+    rebindSync(TYPES.RServiceDepsSchemaAliase)
       .toDynamicValue((ctx) => [
         ...ctx.get(TYPES.RServiceDepsSchema),
         ...ctx.get(TYPES.FrameworkRServiceDepsSchema)
       ])
     bind(TYPES.WSEventEmitterFactory)
       .toFactory(wsEventEmitterFactory)
-    rebind(TYPES.Responder).toConstantValue(
+    rebindSync(TYPES.Responder).toConstantValue(
       bindDepsToFn(
         responder,
         [
@@ -190,7 +190,7 @@ module.exports = ({
         ]
       )
     )
-    rebind(TYPES.PdfWriter)
+    rebindSync(TYPES.PdfWriter)
       .to(PdfWriter)
       .inSingletonScope()
     bind(TYPES.PrivResponder)
@@ -416,12 +416,12 @@ module.exports = ({
     bind(TYPES.TransactionTaxReport)
       .to(TransactionTaxReport)
       .inSingletonScope()
-    rebind(TYPES.WeightedAveragesReport)
+    rebindSync(TYPES.WeightedAveragesReport)
       .to(WeightedAveragesReport)
-    rebind(TYPES.ReportFileJobData)
+    rebindSync(TYPES.ReportFileJobData)
       .to(ReportFileJobData)
       .inSingletonScope()
-    rebind(TYPES.GetDataFromApi).toConstantValue(
+    rebindSync(TYPES.GetDataFromApi).toConstantValue(
       bindDepsToFn(
         getDataFromApi,
         [
@@ -430,10 +430,10 @@ module.exports = ({
         ]
       )
     )
-    rebind(TYPES.BfxApiRouter)
+    rebindSync(TYPES.BfxApiRouter)
       .to(BfxApiRouter)
       .inSingletonScope()
-    rebind(TYPES.GetREST).toConstantValue(
+    rebindSync(TYPES.GetREST).toConstantValue(
       bindDepsToFn(
         getREST,
         [
@@ -442,7 +442,7 @@ module.exports = ({
         ]
       )
     )
-    rebind(TYPES.PrepareApiResponse).toConstantValue(
+    rebindSync(TYPES.PrepareApiResponse).toConstantValue(
       bindDepsToFn(
         prepareApiResponse,
         [
