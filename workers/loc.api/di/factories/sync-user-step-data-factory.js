@@ -4,7 +4,7 @@ const TYPES = require('../types')
 
 module.exports = (ctx) => {
   return (...args) => {
-    const syncUserStepData = ctx.container.get(
+    const syncUserStepData = ctx.get(
       TYPES.SyncUserStepData
     )
 
