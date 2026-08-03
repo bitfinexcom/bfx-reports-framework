@@ -175,8 +175,8 @@ module.exports = ({
       })
     rebind(TYPES.RServiceDepsSchemaAliase)
       .toDynamicValue((ctx) => [
-        ...ctx.container.get(TYPES.RServiceDepsSchema),
-        ...ctx.container.get(TYPES.FrameworkRServiceDepsSchema)
+        ...ctx.get(TYPES.RServiceDepsSchema),
+        ...ctx.get(TYPES.FrameworkRServiceDepsSchema)
       ])
     bind(TYPES.WSEventEmitterFactory)
       .toFactory(wsEventEmitterFactory)
@@ -256,10 +256,10 @@ module.exports = ({
       .toFactory(dbMigratorFactory)
     bind(TYPES.DB)
       .toDynamicValue((ctx) => {
-        const { dbDriver } = ctx.container.get(
+        const { dbDriver } = ctx.get(
           TYPES.CONF
         )
-        const rService = ctx.container.get(
+        const rService = ctx.get(
           TYPES.RService
         )
 
@@ -271,12 +271,12 @@ module.exports = ({
       .to(BetterSqliteDAO)
     bind(TYPES.DAO)
       .toDynamicValue((ctx) => {
-        const { dbDriver } = ctx.container.get(
+        const { dbDriver } = ctx.get(
           TYPES.CONF
         )
 
         if (dbDriver === 'better-sqlite') {
-          return ctx.container.get(
+          return ctx.get(
             TYPES.BetterSqliteDAO
           )
         }
