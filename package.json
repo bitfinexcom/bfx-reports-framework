@@ -4,7 +4,7 @@
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=22"
   },
   "license": "Apache-2.0",
   "dependencies": {
