@@ -20,7 +20,7 @@
     "mathjs": "14.8.1",
     "moment": "2.29.4",
     "puppeteer": "24.1.0",
-    "uuid": "9.0.0",
+    "uuid": "11.1.0",
     "yargs": "17.2.1"
   },
   "devDependencies": {
