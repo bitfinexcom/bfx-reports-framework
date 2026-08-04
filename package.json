@@ -16,7 +16,7 @@
     "bignumber.js": "9.1.2",
     "csv": "5.5.3",
     "grenache-nodejs-ws": "1.0.0",
-    "inversify": "6.0.1",
+    "inversify": "7.11.0",
     "mathjs": "14.8.1",
     "moment": "2.29.4",
     "puppeteer": "24.1.0",
