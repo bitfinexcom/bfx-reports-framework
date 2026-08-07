@@ -3,6 +3,9 @@
 const moment = require('moment')
 
 const {
+  orderBy
+} = require('@bitfinex/lib-js-util-base')
+const {
   FindMethodError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 const {
@@ -16,8 +19,7 @@ const {
   isForexSymb
 } = require('../helpers')
 const {
-  tryParseJSON,
-  orderBy
+  tryParseJSON
 } = require('../../helpers')
 const SyncTempTablesManager = require(
   '../data.inserter/sync.temp.tables.manager'

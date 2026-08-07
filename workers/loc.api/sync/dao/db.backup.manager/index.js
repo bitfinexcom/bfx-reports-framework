@@ -4,10 +4,12 @@ const { mkdirSync } = require('fs')
 const { readdir, rm, copyFile } = require('fs/promises')
 const path = require('path')
 const moment = require('moment')
+const {
+  orderBy
+} = require('@bitfinex/lib-js-util-base')
 
 const {
-  isBfxApiStaging,
-  orderBy
+  isBfxApiStaging
 } = require('../../../helpers')
 
 const { decorateInjectable } = require('../../../di/utils')

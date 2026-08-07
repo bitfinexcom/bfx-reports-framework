@@ -1,13 +1,15 @@
 'use strict'
 
 const {
+  orderBy
+} = require('@bitfinex/lib-js-util-base')
+const {
   AuthError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
 const {
   isSubAccountApiKeys,
-  getSubAccountAuthFromAuth,
-  orderBy
+  getSubAccountAuthFromAuth
 } = require('../../helpers')
 const {
   SubAccountCreatingError,

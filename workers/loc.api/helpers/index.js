@@ -11,8 +11,7 @@ const {
   sumAllObjectsNumbers,
   pickAllLowerObjectsNumbers,
   sumArrayVolumes,
-  pushLargeArr,
-  orderBy
+  pushLargeArr
 } = require('./utils')
 const {
   isSubAccountApiKeys,
@@ -36,6 +35,5 @@ module.exports = {
   pickAllLowerObjectsNumbers,
   sumArrayVolumes,
   pushLargeArr,
-  orderBy,
   isBfxApiStaging
 }
