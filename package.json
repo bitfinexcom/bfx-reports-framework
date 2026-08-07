@@ -4,7 +4,7 @@
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=22"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -16,18 +16,18 @@
     "bignumber.js": "9.1.2",
     "csv": "5.5.3",
     "grenache-nodejs-ws": "1.0.0",
-    "inversify": "6.0.1",
+    "inversify": "7.11.0",
     "mathjs": "14.8.1",
     "moment": "2.29.4",
     "puppeteer": "24.1.0",
-    "uuid": "9.0.0",
+    "uuid": "11.1.0",
     "yargs": "17.2.1"
   },
   "devDependencies": {
     "@bitfinex/bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
     "bfx-api-mock-srv": "2.0.0",
     "chai": "4.3.4",
-    "concurrently": "9.2.1",
+    "concurrently": "10.0.4",
     "cross-env": "10.1.0",
     "grenache-grape": "1.0.0",
     "mocha": "11.1.0",

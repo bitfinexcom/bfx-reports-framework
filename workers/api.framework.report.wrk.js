@@ -67,7 +67,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     const _appDeps = appDeps(...args)
 
     this.appDeps.push(_appDeps)
-    this.container.load(_appDeps)
+    this.container.loadSync(_appDeps)
   }
 
   getGrcConf () {

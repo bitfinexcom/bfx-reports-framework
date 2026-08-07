@@ -45,13 +45,13 @@ const _lookUpMigrations = (
 }
 
 module.exports = (ctx) => {
-  const { dbDriver } = ctx.container.get(
+  const { dbDriver } = ctx.get(
     TYPES.CONF
   )
-  const logger = ctx.container.get(
+  const logger = ctx.get(
     TYPES.Logger
   )
-  const processMessageManager = ctx.container.get(
+  const processMessageManager = ctx.get(
     TYPES.ProcessMessageManager
   )
 
@@ -71,7 +71,7 @@ module.exports = (ctx) => {
       TYPES.ProcessMessageManager
     ]
     const deps = depTypes.map((type) => {
-      return ctx.container.get(type)
+      return ctx.get(type)
     })
 
     const migrationFileDirents = fs.readdirSync(

@@ -4,7 +4,7 @@ const TYPES = require('../types')
 
 module.exports = (ctx) => {
   return () => {
-    const sync = ctx.container.get(
+    const sync = ctx.get(
       TYPES.Sync
     )
 

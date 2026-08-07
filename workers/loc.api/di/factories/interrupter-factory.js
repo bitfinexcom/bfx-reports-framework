@@ -7,7 +7,7 @@ const {
 const TYPES = require('../types')
 
 module.exports = (ctx) => {
-  const authenticator = ctx.container.get(TYPES.Authenticator)
+  const authenticator = ctx.get(TYPES.Authenticator)
 
   return (params) => {
     const { user, name } = params ?? {}
@@ -16,7 +16,7 @@ module.exports = (ctx) => {
       throw new AuthError()
     }
 
-    const interrupter = ctx.container.get(
+    const interrupter = ctx.get(
       TYPES.Interrupter
     ).setName(name)
 

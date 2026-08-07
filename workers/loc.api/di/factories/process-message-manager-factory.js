@@ -3,7 +3,7 @@
 const TYPES = require('../types')
 
 module.exports = (ctx) => {
-  const { dbDriver } = ctx.container.get(
+  const { dbDriver } = ctx.get(
     TYPES.CONF
   )
 
@@ -14,11 +14,11 @@ module.exports = (ctx) => {
       TYPES.RecalcSubAccountLedgersBalancesHook
     ]
     const deps = depTypes.map((type) => {
-      return ctx.container.get(type)
+      return ctx.get(type)
     })
 
     if (dbDriver === 'better-sqlite') {
-      const processMessageManager = ctx.container.get(
+      const processMessageManager = ctx.get(
         TYPES.ProcessMessageManager
       )
       processMessageManager.setDeps(...deps)
