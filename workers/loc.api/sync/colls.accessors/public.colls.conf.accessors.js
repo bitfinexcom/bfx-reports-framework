@@ -3,7 +3,8 @@
 const {
   omit,
   pick,
-  isEmpty
+  isEmpty,
+  orderBy
 } = require('@bitfinex/lib-js-util-base')
 const {
   prepareResponse
@@ -12,9 +13,6 @@ const {
   FindMethodError
 } = require('@bitfinex/bfx-report/workers/loc.api/errors')
 
-const {
-  orderBy
-} = require('../../helpers')
 const {
   GetPublicDataError
 } = require('../../errors')
