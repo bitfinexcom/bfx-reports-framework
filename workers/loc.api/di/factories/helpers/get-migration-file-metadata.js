@@ -1,6 +1,8 @@
 'use strict'
 
-const { orderBy } = require('../../../helpers')
+const {
+  orderBy
+} = require('@bitfinex/lib-js-util-base')
 
 module.exports = (migrationFileDirents) => {
   const metadata = migrationFileDirents.reduce((accum, dirent) => {

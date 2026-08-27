@@ -11,7 +11,6 @@ const sumObjectsNumbers = require('./sum-objects-numbers')
 const sumAllObjectsNumbers = require('./sum-all-objects-numbers')
 const sumArrayVolumes = require('./sum-array-volumes')
 const pushLargeArr = require('./push-large-arr')
-const orderBy = require('./order-by')
 
 module.exports = {
   checkParamsAuth,
@@ -24,6 +23,5 @@ module.exports = {
   sumObjectsNumbers,
   sumAllObjectsNumbers,
   sumArrayVolumes,
-  pushLargeArr,
-  orderBy
+  pushLargeArr
 }

@@ -1458,6 +1458,37 @@ module.exports = (
     })
   })
 
+  it('it should be successfully performed by the getLedgers method filtered by wallet', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getLedgers',
+        params: {
+          wallet: 'exchange',
+          start: 0,
+          end,
+          limit: 2
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isObject(res.body.result)
+    assert.isArray(res.body.result.res)
+
+    for (const resItem of res.body.result.res) {
+      assert.isObject(resItem)
+      assert.deepEqual(resItem.wallet, 'exchange')
+    }
+  })
+
   it('it should be successfully performed by the getLedgers method, without params', async function () {
     this.timeout(5000)
 

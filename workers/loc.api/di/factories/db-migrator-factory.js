@@ -3,17 +3,17 @@
 const TYPES = require('../types')
 
 module.exports = (ctx) => {
-  const { dbDriver } = ctx.container.get(
+  const { dbDriver } = ctx.get(
     TYPES.CONF
   )
 
   return () => {
-    const dao = ctx.container.get(
+    const dao = ctx.get(
       TYPES.DAO
     )
 
     if (dbDriver === 'better-sqlite') {
-      const sqliteDbMigrator = ctx.container.get(
+      const sqliteDbMigrator = ctx.get(
         TYPES.SqliteDbMigrator
       )
       sqliteDbMigrator.setDao(dao)

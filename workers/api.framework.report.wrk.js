@@ -67,7 +67,7 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     const _appDeps = appDeps(...args)
 
     this.appDeps.push(_appDeps)
-    this.container.load(_appDeps)
+    this.container.loadSync(_appDeps)
   }
 
   getGrcConf () {
@@ -210,6 +210,14 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
     const processMessageManager = this.container.get(TYPES.ProcessMessageManager)
 
     await wsTransport.start()
+    const emitReportFileGenFailedToOne = (e, job) => {
+      wsEventEmitter.emitReportFileGenerationFailedToOne(
+        { reportFilesMetadata: null },
+        job?.data?.userInfo
+      ).then(() => {}, (err) => {
+        this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_FAILED: ${err.stack || err}`)
+      })
+    }
 
     processorQueue.on(QUEUE_EVENT_NAMES.ERROR_BASE, (err, job) => {
       if (
@@ -219,13 +227,12 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
         return
       }
 
-      wsEventEmitter.emitReportFileGenerationFailedToOne(
-        { reportFilesMetadata: null },
-        job?.data?.userInfo
-      ).then(() => {}, (err) => {
-        this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_FAILED: ${err.stack || err}`)
-      })
+      emitReportFileGenFailedToOne(err, job)
     })
+    aggregatorQueue.on(
+      QUEUE_EVENT_NAMES.ERROR_BASE,
+      emitReportFileGenFailedToOne
+    )
     aggregatorQueue.on(QUEUE_EVENT_NAMES.COMPLETED, (res) => {
       const {
         reportFilesMetadata,

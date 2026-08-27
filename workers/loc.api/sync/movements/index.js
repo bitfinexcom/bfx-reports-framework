@@ -1,10 +1,12 @@
 'use strict'
 
-const { merge } = require('@bitfinex/lib-js-util-base')
+const {
+  merge,
+  orderBy
+} = require('@bitfinex/lib-js-util-base')
 
 const {
-  pushLargeArr,
-  orderBy
+  pushLargeArr
 } = require('../../helpers/utils')
 
 const { decorateInjectable } = require('../../di/utils')

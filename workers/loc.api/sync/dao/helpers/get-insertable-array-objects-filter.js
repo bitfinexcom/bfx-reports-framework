@@ -41,10 +41,9 @@ module.exports = (
     dateFieldName,
     model,
     symbolFieldName,
-    timeframeFieldName,
-    additionalFilteringProps
+    timeframeFieldName
   } = {},
-  params = {}
+  args
 ) => {
   if (!isInsertableArrObj(type)) {
     return {}
@@ -56,17 +55,16 @@ module.exports = (
     symbol,
     timeframe,
     filter: reqFilter = {}
-  } = { ...params }
+  } = args?.params ?? {}
   const symbFilter = getSymbolFilter(symbol, symbolFieldName)
   const timeframeFilter = getTimeframeFilter(timeframe, timeframeFieldName)
   const fieldsFilters = getFieldsFilters(
     [
       'isMarginFundingPayment',
       'isAffiliateRebate',
-      'isStakingPayments',
-      'category'
+      'isStakingPayments'
     ],
-    params,
+    args?.params,
     model
   )
   const filter = {
@@ -74,7 +72,6 @@ module.exports = (
     _dateFieldName: dateFieldName,
     start,
     end,
-    ...additionalFilteringProps,
     ...symbFilter,
     ...timeframeFilter,
     ...fieldsFilters
