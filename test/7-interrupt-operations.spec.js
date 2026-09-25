@@ -38,6 +38,8 @@ const {
 
 let wrkReportServiceApi = null
 let mockRESTv2Srv = null
+let rService = null
+let rServiceProxy = null
 
 const basePath = '/api'
 const tempDirPath = path.join(__dirname, '..', 'workers/loc.api/queue/temp')
@@ -83,9 +85,14 @@ describe('Interrupt operations', () => {
     const env = await startEnvironment(false, false, 1)
 
     wrkReportServiceApi = env.wrksReportServiceApi[0]
-    const rService = wrkReportServiceApi.grc_bfx.api
-    const rServiceProxy = getRServiceProxy(rService, {
+    rService = wrkReportServiceApi.grc_bfx.api
+    rServiceProxy = getRServiceProxy(rService, {
       async _getPublicTrades (targetMethod, context, argsList) {
+        await setTimeout(5000)
+
+        return Reflect.apply(...arguments)
+      },
+      async getActivePositions (targetMethod, context, argsList) {
         await setTimeout(5000)
 
         return Reflect.apply(...arguments)
@@ -191,6 +198,72 @@ describe('Interrupt operations', () => {
     assert.isArray(trxTaxReport.body.result.delistedCcyList)
     assert.lengthOf(trxTaxReport.body.result.taxes, 0)
     assert.lengthOf(trxTaxReport.body.result.delistedCcyList, 0)
+  })
+
+  it('it should interrupt full snapshot report', async function () {
+    this.timeout(60000)
+
+    const prevRService = rService._fullSnapshotReport.positionsSnapshot.rService
+    rService._fullSnapshotReport.positionsSnapshot.rService = rServiceProxy
+
+    const fullSnapshotReportPromise = agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getFullSnapshotReport',
+        params: {
+          end: end - (45 * 24 * 60 * 60 * 1000)
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+    const interruptOperationsPromise = setTimeout(1000).then(() => {
+      return agent
+        .post(`${basePath}/json-rpc`)
+        .type('json')
+        .send({
+          auth,
+          method: 'interruptOperations',
+          params: {
+            names: ['FULL_SNAPSHOT_REPORT_INTERRUPTER']
+          },
+          id: 5
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+    })
+
+    const [
+      fullSnapshotReport,
+      interruptOperations
+    ] = await Promise.all([
+      fullSnapshotReportPromise,
+      interruptOperationsPromise
+    ])
+
+    assert.isObject(interruptOperations.body)
+    assert.propertyVal(interruptOperations.body, 'id', 5)
+    assert.isBoolean(interruptOperations.body.result)
+    assert.isOk(interruptOperations.body.result)
+
+    assert.isObject(fullSnapshotReport.body)
+    assert.propertyVal(fullSnapshotReport.body, 'id', 5)
+    assert.isObject(fullSnapshotReport.body.result)
+    assert.isObject(fullSnapshotReport.body.result.timestamps)
+    assert.isArray(fullSnapshotReport.body.result.positionsSnapshot)
+    assert.isArray(fullSnapshotReport.body.result.walletsSnapshot)
+    assert.isArray(fullSnapshotReport.body.result.positionsTickers)
+    assert.isArray(fullSnapshotReport.body.result.walletsTickers)
+    assert.lengthOf(fullSnapshotReport.body.result.positionsSnapshot, 0)
+    assert.lengthOf(fullSnapshotReport.body.result.walletsSnapshot, 0)
+    assert.lengthOf(fullSnapshotReport.body.result.positionsTickers, 0)
+    assert.lengthOf(fullSnapshotReport.body.result.walletsTickers, 0)
+    assert.isNull(fullSnapshotReport.body.result.positionsTotalPlUsd)
+    assert.isNull(fullSnapshotReport.body.result.walletsTotalBalanceUsd)
+
+    rService._fullSnapshotReport.positionsSnapshot.rService = prevRService
   })
 
   it('it should not be successfully performed by the interruptOperations method', async function () {

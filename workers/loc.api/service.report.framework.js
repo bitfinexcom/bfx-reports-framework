@@ -656,7 +656,8 @@ class FrameworkReportService extends ReportService {
             getData: (space, args) => super.getActivePositions(space, args),
             args,
             callerName: 'ACTIVE_POSITIONS_GETTER',
-            shouldNotInterrupt: true
+            shouldNotInterrupt: !args?.interrupter,
+            interrupter: args?.interrupter
           }),
           args,
           {
@@ -697,7 +698,8 @@ class FrameworkReportService extends ReportService {
             },
             args,
             callerName: 'POSITIONS_AUDIT_GETTER',
-            shouldNotInterrupt: true
+            shouldNotInterrupt: !args?.interrupter,
+            interrupter: args?.interrupter
           }),
           args,
           {

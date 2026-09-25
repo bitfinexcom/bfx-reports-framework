@@ -198,7 +198,8 @@ class SubAccountApiData {
     const {
       datePropName,
       isThrownErrIfAllFail,
-      isNotPreparedResponse
+      isNotPreparedResponse,
+      interrupter
     } = opts ?? {}
 
     const errors = []
@@ -210,7 +211,8 @@ class SubAccountApiData {
           getData: (space, args) => method(args),
           args,
           callerName: 'SUB_ACCOUNT_API_DATA',
-          shouldNotInterrupt: true
+          shouldNotInterrupt: !interrupter,
+          interrupter
         })
 
         resArr.push(res)
@@ -290,18 +292,21 @@ class SubAccountApiData {
       throw new FindMethodError()
     }
 
-    const { auth } = { ...args }
-    const { params } = { ...args }
+    const {
+      auth,
+      params
+    } = args ?? {}
     const {
       checkParamsFn,
       dataToFindSubUserId = [],
       getDataFnToFindSubUserId,
       datePropName
-    } = { ...opts }
+    } = opts ?? {}
+    const interrupter = args?.interrupter ?? opts?.interrupter
     const {
       isSubAccount,
       subUsers
-    } = { ...auth }
+    } = auth ?? {}
 
     if (
       !datePropName ||
@@ -310,7 +315,10 @@ class SubAccountApiData {
       throw new DatePropNameError()
     }
     if (!isSubAccount) {
-      return method(args)
+      return method({
+        ...args,
+        interrupter
+      })
     }
     if (typeof checkParamsFn === 'function') {
       checkParamsFn(args)
@@ -352,7 +360,10 @@ class SubAccountApiData {
       method,
       argsArr,
       params,
-      opts
+      {
+        ...opts,
+        interrupter
+      }
     )
   }
 }
