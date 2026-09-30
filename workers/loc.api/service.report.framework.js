@@ -1294,17 +1294,17 @@ class FrameworkReportService extends ReportService {
   }
 
   getFullSnapshotReport (space, args, cb) {
-    return this._privResponder(async () => {
+    return this._privResponder(async (ctx, reqArgs) => {
       await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, args)
+        .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, reqArgs)
 
       this._dataValidator.validate(
-        args,
+        reqArgs,
         this._dataValidator.SCHEMA_IDS.GET_FULL_SNAPSHOT_REPORT_REQ
       )
 
-      return this._fullSnapshotReport.getFullSnapshotReport(args)
-    }, 'getFullSnapshotReport', args, cb)
+      return this._fullSnapshotReport.getFullSnapshotReport(reqArgs)
+    }, 'getFullSnapshotReport', args, cb, this._INTERRUPTER_NAMES.FULL_SNAPSHOT_REPORT_INTERRUPTER)
   }
 
   getFullTaxReport (space, args, cb) {
