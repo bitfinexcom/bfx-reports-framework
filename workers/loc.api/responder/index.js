@@ -1,46 +1,98 @@
 'use strict'
 
-const responder = require('@bitfinex/bfx-report/workers/loc.api/responder')
+const responder = require(
+  '@bitfinex/bfx-report/workers/loc.api/responder'
+)
+const Interrupter = require(
+  '@bitfinex/bfx-report/workers/loc.api/interrupter'
+)
+
+const _getInterrupter = (
+  interrupterName,
+  interrupterFactory,
+  user,
+  args
+) => {
+  if (
+    !interrupterName ||
+    args?.interrupter instanceof Interrupter
+  ) {
+    return null
+  }
+  if (interrupterName instanceof Interrupter) {
+    return interrupterName
+  }
+
+  return interrupterFactory({ user, name: interrupterName })
+}
+const _getArgsWithInterrupter = (args, ctx) => {
+  if (!(ctx.interrupter instanceof Interrupter)) {
+    return args
+  }
+  if (
+    !args ||
+    typeof args !== 'object'
+  ) {
+    return { interrupter: ctx.interrupter }
+  }
+
+  args.interrupter = ctx.interrupter
+
+  return args
+}
 
 const _getHandler = (
   authenticator,
-  handler,
-  args
+  interrupterName,
+  interrupterFactory,
+  context,
+  handler
 ) => {
-  return async (...handlerArgs) => {
-    await authenticator.verifyRequestUser(
+  return async (mainContext, args) => {
+    const ctx = mainContext ?? context
+    const user = await authenticator.verifyRequestUser(
       args,
       { isForcedVerification: true }
     )
+    ctx.interrupter = _getInterrupter(
+      interrupterName,
+      interrupterFactory,
+      user,
+      args
+    )
+    const handlerArgs = _getArgsWithInterrupter(args, ctx)
 
-    return handler(...handlerArgs)
+    return handler(ctx, handlerArgs)
   }
 }
 
 module.exports = (
-  container,
   logger,
   wsEventEmitterFactory,
-  authenticator
+  authenticator,
+  interrupterFactory
 ) => (
   handler,
   name,
   args,
-  cb
+  cb,
+  interrupterName
 ) => {
   const _name = typeof name === 'string'
     ? `${name} [PROTECTED]`
     : name
+  const context = { interrupter: null }
 
   const _responder = responder(
-    container,
     logger,
     wsEventEmitterFactory
   )
   const _handler = _getHandler(
     authenticator,
-    handler,
-    args
+    interrupterName,
+    interrupterFactory,
+    context,
+    handler
   )
 
   return _responder(
