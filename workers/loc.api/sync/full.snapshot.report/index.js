@@ -1,27 +1,20 @@
 'use strict'
 
-const INTERRUPTER_NAMES = require(
-  '@bitfinex/bfx-report/workers/loc.api/interrupter/interrupter.names'
-)
-
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.Wallets,
   TYPES.PositionsSnapshot,
-  TYPES.InterrupterFactory,
   TYPES.Authenticator
 ]
 class FullSnapshotReport {
   constructor (
     wallets,
     positionsSnapshot,
-    interrupterFactory,
     authenticator
   ) {
     this.wallets = wallets
     this.positionsSnapshot = positionsSnapshot
-    this.interrupterFactory = interrupterFactory
     this.authenticator = authenticator
   }
 
@@ -44,7 +37,7 @@ class FullSnapshotReport {
         !Number.isFinite(balanceUsd) ||
         balance === 0 ||
         balanceUsd === 0 ||
-        interrupter.hasInterrupted()
+        interrupter?.hasInterrupted?.()
       ) {
         return accum
       }
@@ -68,7 +61,7 @@ class FullSnapshotReport {
     if (
       !Array.isArray(array) ||
       array.length === 0 ||
-      interrupter.hasInterrupted()
+      interrupter?.hasInterrupted?.()
     ) {
       return null
     }
@@ -116,14 +109,10 @@ class FullSnapshotReport {
   }
 
   async getFullSnapshotReport (args) {
-    const { auth, params } = args ?? {}
+    const { auth, params, interrupter } = args ?? {}
     const end = params?.end ?? Date.now()
     const user = await this.authenticator
       .verifyRequestUser({ auth })
-    const interrupter = this.interrupterFactory({
-      user,
-      name: INTERRUPTER_NAMES.FULL_SNAPSHOT_REPORT_INTERRUPTER
-    })
     const timestamps = {
       mtsCreated: Date.now(),
       end
@@ -167,10 +156,7 @@ class FullSnapshotReport {
       interrupter
     )
 
-    const hasInterrupted = interrupter.hasInterrupted()
-    interrupter.emitInterrupted()
-
-    if (hasInterrupted) {
+    if (interrupter?.hasInterrupted?.()) {
       return this.#getEmptyResponse(timestamps)
     }
 
