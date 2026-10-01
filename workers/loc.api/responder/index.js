@@ -3,6 +3,9 @@
 const responder = require(
   '@bitfinex/bfx-report/workers/loc.api/responder'
 )
+const Context = require(
+  '@bitfinex/bfx-report/workers/loc.api/responder/context'
+)
 const Interrupter = require(
   '@bitfinex/bfx-report/workers/loc.api/interrupter'
 )
@@ -25,18 +28,19 @@ const _getInterrupter = (
 
   return interrupterFactory({ user, name: interrupterName })
 }
+
 const _getArgsWithInterrupter = (args, ctx) => {
-  if (!(ctx.interrupter instanceof Interrupter)) {
+  if (!ctx.hasInterrupter()) {
     return args
   }
   if (
     !args ||
     typeof args !== 'object'
   ) {
-    return { interrupter: ctx.interrupter }
+    return { interrupter: ctx.getInterrupter() }
   }
 
-  args.interrupter = ctx.interrupter
+  args.interrupter = ctx.getInterrupter()
 
   return args
 }
@@ -49,17 +53,19 @@ const _getHandler = (
   handler
 ) => {
   return async (mainContext, args) => {
-    const ctx = mainContext ?? context
+    const ctx = mainContext instanceof Context
+      ? mainContext
+      : context
     const user = await authenticator.verifyRequestUser(
       args,
       { isForcedVerification: true }
     )
-    ctx.interrupter = _getInterrupter(
+    ctx.setInterrupter(_getInterrupter(
       interrupterName,
       interrupterFactory,
       user,
       args
-    )
+    ))
     const handlerArgs = _getArgsWithInterrupter(args, ctx)
 
     return handler(ctx, handlerArgs)
@@ -81,7 +87,7 @@ module.exports = (
   const _name = typeof name === 'string'
     ? `${name} [PROTECTED]`
     : name
-  const context = { interrupter: null }
+  const context = new Context()
 
   const _responder = responder(
     logger,
