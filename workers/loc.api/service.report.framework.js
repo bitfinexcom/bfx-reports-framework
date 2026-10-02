@@ -1336,17 +1336,22 @@ class FrameworkReportService extends ReportService {
   }
 
   makeTrxTaxReportInBackground (space, args, cb) {
-    return this._privResponder(async () => {
+    return this._privResponder(async (ctx, reqArgs) => {
       await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, reqArgs)
 
       this._dataValidator.validate(
-        args,
+        reqArgs,
         this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
       )
 
-      return this._transactionTaxReport.makeTrxTaxReportInBackground(args)
-    }, 'makeTrxTaxReportInBackground', args, cb)
+      const res = await this._transactionTaxReport.makeTrxTaxReportInBackground(reqArgs)
+
+      // To finalize interruption in background
+      ctx.rmInterrupter()
+
+      return res
+    }, 'makeTrxTaxReportInBackground', args, cb, this._INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER)
   }
 
   getTradedVolume (space, args, cb) {
