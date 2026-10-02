@@ -74,7 +74,12 @@ class TransactionTaxReport {
   }
 
   async makeTrxTaxReportInBackground (args = {}) {
-    const { auth, params } = args ?? {}
+    const { auth, params, interrupter } = args ?? {}
+
+    if (!(interrupter instanceof Interrupter)) {
+      throw new InterrupterAvailabilityForTrxTaxError()
+    }
+
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const _args = { auth: user, params }
@@ -87,6 +92,9 @@ class TransactionTaxReport {
       }, user)
       .then(() => {}, (err) => {
         this.logger.error(`TRX_TAX_REPORT_GEN_FAILED: ${err.stack || err}`)
+      })
+      .finally(() => {
+        interrupter.emitInterrupted()
       })
 
     trxTaxReportPromise.catch(() => {
