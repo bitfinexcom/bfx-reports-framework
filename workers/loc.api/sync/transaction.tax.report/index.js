@@ -82,7 +82,7 @@ class TransactionTaxReport {
 
     const user = await this.authenticator
       .verifyRequestUser({ auth })
-    const _args = { auth: user, params }
+    const _args = { auth: user, params, interrupter }
 
     const trxTaxReportPromise = this.getTransactionTaxReport(_args)
 
