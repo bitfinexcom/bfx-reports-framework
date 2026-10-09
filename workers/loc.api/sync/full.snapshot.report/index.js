@@ -1,21 +1,31 @@
 'use strict'
 
+const INTERRUPTER_NAMES = require(
+  '@bitfinex/bfx-report/workers/loc.api/interrupter/interrupter.names'
+)
+
 const { decorateInjectable } = require('../../di/utils')
 
 const depsTypes = (TYPES) => [
   TYPES.Wallets,
-  TYPES.PositionsSnapshot
+  TYPES.PositionsSnapshot,
+  TYPES.InterrupterFactory,
+  TYPES.Authenticator
 ]
 class FullSnapshotReport {
   constructor (
     wallets,
-    positionsSnapshot
+    positionsSnapshot,
+    interrupterFactory,
+    authenticator
   ) {
     this.wallets = wallets
     this.positionsSnapshot = positionsSnapshot
+    this.interrupterFactory = interrupterFactory
+    this.authenticator = authenticator
   }
 
-  _getWalletsTickers (walletsSnapshot = []) {
+  _getWalletsTickers (walletsSnapshot = [], interrupter) {
     if (!Array.isArray(walletsSnapshot)) {
       return []
     }
@@ -33,7 +43,8 @@ class FullSnapshotReport {
         !Number.isFinite(balance) ||
         !Number.isFinite(balanceUsd) ||
         balance === 0 ||
-        balanceUsd === 0
+        balanceUsd === 0 ||
+        interrupter.hasInterrupted()
       ) {
         return accum
       }
@@ -53,10 +64,11 @@ class FullSnapshotReport {
     }, [])
   }
 
-  _calcObjFieldInArr (array, fieldName) {
+  _calcObjFieldInArr (array, fieldName, interrupter) {
     if (
       !Array.isArray(array) ||
-      array.length === 0
+      array.length === 0 ||
+      interrupter.hasInterrupted()
     ) {
       return null
     }
@@ -75,26 +87,51 @@ class FullSnapshotReport {
     }, 0)
   }
 
-  _calcPositionsTotalPlUsd (positionsSnapshot) {
+  _calcPositionsTotalPlUsd (positionsSnapshot, interrupter) {
     return this._calcObjFieldInArr(
       positionsSnapshot,
-      'plUsd'
+      'plUsd',
+      interrupter
     )
   }
 
-  _calcWalletsTotalBalanceUsd (walletsSnapshot) {
+  _calcWalletsTotalBalanceUsd (walletsSnapshot, interrupter) {
     return this._calcObjFieldInArr(
       walletsSnapshot,
-      'balanceUsd'
+      'balanceUsd',
+      interrupter
     )
+  }
+
+  #getEmptyResponse (timestamps) {
+    return {
+      timestamps,
+      positionsSnapshot: [],
+      walletsSnapshot: [],
+      positionsTickers: [],
+      walletsTickers: [],
+      positionsTotalPlUsd: null,
+      walletsTotalBalanceUsd: null
+    }
   }
 
   async getFullSnapshotReport (args) {
-    const { params = {} } = { ...args }
-    const { end = Date.now() } = { ...params }
+    const { auth, params } = args ?? {}
+    const end = params?.end ?? Date.now()
+    const user = await this.authenticator
+      .verifyRequestUser({ auth })
+    const interrupter = this.interrupterFactory({
+      user,
+      name: INTERRUPTER_NAMES.FULL_SNAPSHOT_REPORT_INTERRUPTER
+    })
+    const timestamps = {
+      mtsCreated: Date.now(),
+      end
+    }
 
     const _args = {
       ...args,
+      auth: user,
       params: {
         ...params,
         end
@@ -102,9 +139,9 @@ class FullSnapshotReport {
     }
 
     const positionsSnapshotAndTickersPromise = this.positionsSnapshot
-      .getPositionsSnapshotAndTickers(_args)
+      .getPositionsSnapshotAndTickers(_args, { interrupter })
     const walletsSnapshotPromise = this.wallets
-      .getWalletsConvertedByPublicTrades(_args)
+      .getWalletsConvertedByPublicTrades(_args, { interrupter })
     const [
       positionsSnapshotAndTickers,
       walletsSnapshot
@@ -117,30 +154,28 @@ class FullSnapshotReport {
       tickers: positionsTickers
     } = positionsSnapshotAndTickers
 
-    const walletsTickersPromise = this._getWalletsTickers(
-      walletsSnapshot
+    const walletsTickers = this._getWalletsTickers(
+      walletsSnapshot,
+      interrupter
     )
-    const positionsTotalPlUsdPromise = this._calcPositionsTotalPlUsd(
-      positionsSnapshot
+    const positionsTotalPlUsd = this._calcPositionsTotalPlUsd(
+      positionsSnapshot,
+      interrupter
     )
-    const walletsTotalBalanceUsdPromise = this._calcWalletsTotalBalanceUsd(
-      walletsSnapshot
+    const walletsTotalBalanceUsd = this._calcWalletsTotalBalanceUsd(
+      walletsSnapshot,
+      interrupter
     )
-    const [
-      walletsTickers,
-      positionsTotalPlUsd,
-      walletsTotalBalanceUsd
-    ] = await Promise.all([
-      walletsTickersPromise,
-      positionsTotalPlUsdPromise,
-      walletsTotalBalanceUsdPromise
-    ])
+
+    const hasInterrupted = interrupter.hasInterrupted()
+    interrupter.emitInterrupted()
+
+    if (hasInterrupted) {
+      return this.#getEmptyResponse(timestamps)
+    }
 
     return {
-      timestamps: {
-        mtsCreated: Date.now(),
-        end
-      },
+      timestamps,
       positionsSnapshot,
       walletsSnapshot,
       positionsTickers,

@@ -70,7 +70,8 @@ class CurrencyConverter {
     this.currenciesSynonymous = new Map()
   }
 
-  async _getPublicTrades (args) {
+  async _getPublicTrades (args, opts) {
+    const { interrupter } = opts ?? {}
     const getDataFn = this.rService[this.SYNC_API_METHODS.PUBLIC_TRADES]
       .bind(this.rService)
 
@@ -80,13 +81,18 @@ class CurrencyConverter {
       callerName: 'CURRENCY_CONVERTER',
       eNetErrorAttemptsTimeframeMin: 10 / 60,
       eNetErrorAttemptsTimeoutMs: 1000,
-      shouldNotInterrupt: true
+      shouldNotInterrupt: !interrupter,
+      interrupter
     })
 
     return res
   }
 
   async getCurrenciesSynonymous (opts) {
+    const {
+      interrupter,
+      withWorkerThreads
+    } = opts ?? {}
     const mtsDiff = new Date() - this.currenciesUpdatedAt
 
     if (
@@ -99,7 +105,7 @@ class CurrencyConverter {
 
     this.currencies = await this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.CURRENCIES,
-      { withWorkerThreads: opts?.withWorkerThreads }
+      { withWorkerThreads }
     )
 
     if (
@@ -112,7 +118,8 @@ class CurrencyConverter {
           callerName: 'CURRENCY_CONVERTER',
           eNetErrorAttemptsTimeframeMin: 10 / 60,
           eNetErrorAttemptsTimeoutMs: 1000,
-          shouldNotInterrupt: true
+          shouldNotInterrupt: !interrupter,
+          interrupter
         })
 
         if (
@@ -265,6 +272,10 @@ class CurrencyConverter {
     }
 
     for (const [symbol, conversion] of synonymous) {
+      if (opts?.interrupter?.hasInterrupted?.()) {
+        return null
+      }
+
       const price = await finderFn(symbol)
 
       if (
@@ -401,7 +412,8 @@ class CurrencyConverter {
 
   async _getPublicTradesPrice (
     reqSymb,
-    end
+    end,
+    opts
   ) {
     if (
       !reqSymb ||
@@ -419,7 +431,7 @@ class CurrencyConverter {
         notThrowError: true,
         notCheckNextPage: true
       }
-    })
+    }, opts)
 
     const publicTrade = Array.isArray(res)
       ? res[0]
@@ -434,17 +446,19 @@ class CurrencyConverter {
     end,
     opts
   ) {
+    const {
+      shouldTempTablesBeIncluded,
+      withWorkerThreads,
+      interrupter
+    } = opts ?? {}
+
     if (
       !reqSymb ||
-      !Number.isInteger(end)
+      !Number.isInteger(end) ||
+      interrupter?.hasInterrupted?.()
     ) {
       return null
     }
-
-    const {
-      shouldTempTablesBeIncluded,
-      withWorkerThreads
-    } = opts ?? {}
 
     const symbol = this._getPairFromPair(reqSymb)
     const candle = await this.dao.getElemInCollBy(
@@ -538,7 +552,8 @@ class CurrencyConverter {
     opts
   ) {
     const {
-      withWorkerThreads
+      withWorkerThreads,
+      interrupter
     } = opts ?? {}
     const end = Number.isInteger(mts)
       ? mts
@@ -559,7 +574,8 @@ class CurrencyConverter {
         end,
         {
           shouldTempTablesBeIncluded,
-          withWorkerThreads
+          withWorkerThreads,
+          interrupter
         }
       )
       const btcPriceOut = await _getPrice(
@@ -567,7 +583,8 @@ class CurrencyConverter {
         end,
         {
           shouldTempTablesBeIncluded,
-          withWorkerThreads
+          withWorkerThreads,
+          interrupter
         }
       )
 
@@ -588,7 +605,8 @@ class CurrencyConverter {
         end,
         {
           shouldTempTablesBeIncluded,
-          withWorkerThreads
+          withWorkerThreads,
+          interrupter
         }
       )
       const usdPriceOut = await _getPrice(
@@ -596,7 +614,8 @@ class CurrencyConverter {
         end,
         {
           shouldTempTablesBeIncluded,
-          withWorkerThreads
+          withWorkerThreads,
+          interrupter
         }
       )
 
@@ -623,7 +642,8 @@ class CurrencyConverter {
       end,
       {
         shouldTempTablesBeIncluded,
-        withWorkerThreads
+        withWorkerThreads,
+        interrupter
       }
     )
 
@@ -654,6 +674,7 @@ class CurrencyConverter {
       currenciesSynonymous: new Map(),
       ...convSchema
     }
+    const { interrupter } = opts ?? {}
 
     const currenciesSynonymous = await this
       .getCurrenciesSynonymousIfEmpty(_convSchema.currenciesSynonymous, opts)
@@ -670,6 +691,10 @@ class CurrencyConverter {
     const res = []
 
     for (const obj of elems) {
+      if (interrupter?.hasInterrupted?.()) {
+        return isArr ? res : res[0]
+      }
+
       const isNotObj = !obj || typeof obj !== 'object'
       const item = isNotObj ? obj : { ...obj }
 
@@ -930,11 +955,12 @@ class CurrencyConverter {
     )
   }
 
-  convertByPublicTrades (data, convSchema) {
+  convertByPublicTrades (data, convSchema, opts) {
     return this._convertBy(
       this._COLL_NAMES.PUBLIC_TRADES,
       data,
-      convSchema
+      convSchema,
+      opts
     )
   }
 
@@ -948,10 +974,10 @@ class CurrencyConverter {
     } = opts
 
     if (shouldTryPublicTradesFirst) {
-      return this.convertByPublicTrades(data, convSchema)
+      return this.convertByPublicTrades(data, convSchema, opts)
     }
 
-    return this.convertByCandles(data, convSchema)
+    return this.convertByCandles(data, convSchema, opts)
   }
 
   _selectGettingPriceWay (
@@ -961,12 +987,13 @@ class CurrencyConverter {
   ) {
     const {
       shouldTryPublicTradesFirst = false
-    } = opts
+    } = opts ?? {}
 
     if (shouldTryPublicTradesFirst) {
       return this._getPublicTradesPrice(
         reqSymb,
-        mts
+        mts,
+        opts
       )
     }
 
@@ -981,12 +1008,15 @@ class CurrencyConverter {
             convertTo: lastSymb,
             symbolFieldName: 'symbol',
             mts
-          }
+          },
+          opts
         )
 
         return res
       },
-      reqSymb
+      reqSymb,
+      null,
+      opts
     )
   }
 
@@ -996,17 +1026,18 @@ class CurrencyConverter {
   async convert (
     data,
     convSchema,
-    opts = {}
+    opts
   ) {
     const {
-      shouldTryPublicTradesFirst = false
-    } = opts
+      shouldTryPublicTradesFirst = false,
+      interrupter
+    } = opts ?? {}
 
     try {
       const res = await this._selectConvertWay(
         data,
         convSchema,
-        { shouldTryPublicTradesFirst }
+        { shouldTryPublicTradesFirst, interrupter }
       )
 
       return res
@@ -1014,7 +1045,10 @@ class CurrencyConverter {
       const res = await this._selectConvertWay(
         data,
         convSchema,
-        { shouldTryPublicTradesFirst: !shouldTryPublicTradesFirst }
+        {
+          shouldTryPublicTradesFirst: !shouldTryPublicTradesFirst,
+          interrupter
+        }
       )
 
       return res
@@ -1030,14 +1064,15 @@ class CurrencyConverter {
     opts = {}
   ) {
     const {
-      shouldTryPublicTradesFirst = false
-    } = opts
+      shouldTryPublicTradesFirst = false,
+      interrupter
+    } = opts ?? {}
 
     try {
       const price = await this._selectGettingPriceWay(
         reqSymb,
         mts,
-        { shouldTryPublicTradesFirst }
+        { shouldTryPublicTradesFirst, interrupter }
       )
 
       if (!Number.isFinite(price)) {
@@ -1048,14 +1083,24 @@ class CurrencyConverter {
 
       return price
     } catch (err) {
+      if (interrupter?.hasInterrupted?.()) {
+        return null
+      }
+
       const price = await this._selectGettingPriceWay(
         reqSymb,
         mts,
-        { shouldTryPublicTradesFirst: !shouldTryPublicTradesFirst }
+        {
+          shouldTryPublicTradesFirst: !shouldTryPublicTradesFirst,
+          interrupter
+        }
       )
 
       if (Number.isFinite(price)) {
         return price
+      }
+      if (interrupter?.hasInterrupted?.()) {
+        return null
       }
 
       throw err

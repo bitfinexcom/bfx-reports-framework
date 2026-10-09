@@ -14,7 +14,8 @@ module.exports = {
       items: {
         type: 'string',
         enum: [
-          'TRX_TAX_REPORT_INTERRUPTER'
+          'TRX_TAX_REPORT_INTERRUPTER',
+          'FULL_SNAPSHOT_REPORT_INTERRUPTER'
         ]
       }
     }

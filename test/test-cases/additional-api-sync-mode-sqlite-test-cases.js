@@ -272,6 +272,7 @@ module.exports = (
     assert.isObject(res.body)
     assert.propertyVal(res.body, 'id', 5)
     assert.isObject(res.body.result)
+    assert.isObject(res.body.result.timestamps)
     assert.isArray(res.body.result.positionsSnapshot)
     assert.isArray(res.body.result.walletsSnapshot)
     assert.isArray(res.body.result.positionsTickers)

@@ -39,11 +39,15 @@ class Wallets {
     }
   }
 
-  async _getWallets (args) {
+  async _getWallets (args, opts) {
     const {
       auth = {},
       params: { end = Date.now() } = {}
     } = { ...args }
+
+    if (opts?.interrupter?.hasInterrupted?.()) {
+      return []
+    }
 
     const walletsFromLedgers = await this.dao.findInCollBy(
       this.SYNC_API_METHODS.WALLETS,
@@ -105,14 +109,18 @@ class Wallets {
     )
   }
 
-  async getWalletsConvertedByPublicTrades (args) {
-    const wallets = await this._getWallets(args)
+  async getWalletsConvertedByPublicTrades (args, opts) {
+    const { interrupter } = opts ?? {}
+    const wallets = await this._getWallets(args, { interrupter })
     const convSchema = this._getConvSchema(args)
 
     return this.currencyConverter.convert(
       wallets,
       convSchema,
-      { shouldTryPublicTradesFirst: true }
+      {
+        shouldTryPublicTradesFirst: true,
+        interrupter
+      }
     )
   }
 }

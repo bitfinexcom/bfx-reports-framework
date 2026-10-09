@@ -71,6 +71,12 @@ class BfxApiRouter extends BaseBfxApiRouter {
     ) {
       return method()
     }
+    if (
+      interrupter instanceof Interrupter &&
+      interrupter.hasInterrupted()
+    ) {
+      return
+    }
 
     if (!rateLimitCheckerMaps.has(methodName)) {
       const rateLimit = this._rateLimitForMethodName.get(methodName)
@@ -108,13 +114,50 @@ class BfxApiRouter extends BaseBfxApiRouter {
       }).then(() => {
         rateLimitChecker.add()
 
-        return method()
+        return this.#execMethod(method, interrupter)
       })
     }
 
     rateLimitChecker.add()
 
-    return method()
+    return this.#execMethod(method, interrupter)
+  }
+
+  #execMethod (method, interrupter) {
+    if (!(interrupter instanceof Interrupter)) {
+      return method()
+    }
+    if (interrupter.hasInterrupted()) {
+      return
+    }
+
+    const res = method()
+
+    if (!(res instanceof Promise)) {
+      return res
+    }
+
+    let onceInterruptHandler = null
+    const intPromise = new Promise((resolve) => {
+      onceInterruptHandler = () => {
+        onceInterruptHandler = null
+        resolve()
+      }
+
+      interrupter.onceInterrupt(onceInterruptHandler)
+    })
+
+    return Promise.race([
+      res,
+      intPromise
+    ]).finally(() => {
+      if (typeof onceInterruptHandler !== 'function') {
+        return
+      }
+
+      interrupter.offInterrupt(onceInterruptHandler)
+      onceInterruptHandler()
+    })
   }
 }
 

@@ -62,8 +62,13 @@ class PositionsSnapshot {
 
   _getPositionsHistory (
     user,
-    endMts
+    endMts,
+    opts
   ) {
+    if (opts?.interrupter?.hasInterrupted?.()) {
+      return []
+    }
+
     return this.dao.getElemsInCollBy(
       this.ALLOWED_COLLS.POSITIONS_HISTORY,
       {
@@ -177,7 +182,8 @@ class PositionsSnapshot {
     opts
   ) {
     const {
-      shouldTryPublicTradesFirst = false
+      shouldTryPublicTradesFirst = false,
+      interrupter
     } = opts ?? {}
     const currency = splitSymbolPairs(symbol)[1]
 
@@ -203,7 +209,7 @@ class PositionsSnapshot {
           { inputField: 'pl', outputField: 'plUsd' }
         ]
       },
-      { shouldTryPublicTradesFirst }
+      { shouldTryPublicTradesFirst, interrupter }
     )
 
     return {
@@ -218,20 +224,28 @@ class PositionsSnapshot {
     opts = {}
   ) {
     const {
-      isNotTickersRequired = false
-    } = { ...opts }
+      isNotTickersRequired = false,
+      interrupter
+    } = opts ?? {}
     const positionsSnapshot = []
     const tickers = []
     const actualPrices = new Map()
 
     for (const position of positions) {
+      if (interrupter?.hasInterrupted?.()) {
+        return {
+          positionsSnapshot,
+          tickers
+        }
+      }
+
       const {
         symbol,
         basePrice,
         amount,
         marginFunding,
         mtsUpdate
-      } = { ...position }
+      } = position ?? {}
       const mts = end ?? mtsUpdate
       const priceCacheKey = `${symbol}-${mts}`
 
@@ -250,7 +264,7 @@ class PositionsSnapshot {
       }
       if (!actualPrices.has(priceCacheKey)) {
         const _actualPrice = await this.currencyConverter
-          .getPrice(symbol, mts)
+          .getPrice(symbol, mts, { interrupter })
 
         actualPrices.set(priceCacheKey, _actualPrice)
       }
@@ -284,7 +298,8 @@ class PositionsSnapshot {
       } = await this._convertPlToUsd(
         pl,
         symbol,
-        mts
+        mts,
+        { interrupter }
       )
 
       positionsSnapshot.push({
@@ -312,7 +327,7 @@ class PositionsSnapshot {
         )
           ? plUsd / pl
           : await this.currencyConverter
-            .getPrice(symbol, mts)
+            .getPrice(symbol, mts, { interrupter })
 
         tickers.push({
           symbol,
@@ -351,11 +366,17 @@ class PositionsSnapshot {
     {
       auth = {},
       params: { ids } = {}
-    } = {}
+    } = {},
+    opts
   ) {
+    const { interrupter } = opts ?? {}
     const positionsAudit = []
 
     for (const id of ids) {
+      if (interrupter?.hasInterrupted?.()) {
+        return positionsAudit
+      }
+
       const singleIdRes = []
 
       let end = Date.now()
@@ -369,7 +390,8 @@ class PositionsSnapshot {
           callerName: 'POSITIONS_SNAPSHOT',
           eNetErrorAttemptsTimeframeMin: 10 / 60,
           eNetErrorAttemptsTimeoutMs: 1000,
-          shouldNotInterrupt: true
+          shouldNotInterrupt: !interrupter,
+          interrupter
         })
 
         const { res, nextPage } = (
@@ -397,7 +419,8 @@ class PositionsSnapshot {
 
         if (
           !Array.isArray(res) ||
-          res.length === 0
+          res.length === 0 ||
+          interrupter?.hasInterrupted?.()
         ) {
           break
         }
@@ -455,7 +478,8 @@ class PositionsSnapshot {
     opts
   ) {
     const {
-      shouldPlBeConvertedToUsd
+      shouldPlBeConvertedToUsd,
+      interrupter
     } = opts ?? {}
 
     const activePositions = await this.getDataFromApi({
@@ -464,12 +488,14 @@ class PositionsSnapshot {
       callerName: 'POSITIONS_SNAPSHOT',
       eNetErrorAttemptsTimeframeMin: 10 / 60,
       eNetErrorAttemptsTimeoutMs: 1000,
-      shouldNotInterrupt: true
+      shouldNotInterrupt: !interrupter,
+      interrupter
     })
 
     if (
       !Array.isArray(activePositions) ||
-      activePositions.length === 0
+      activePositions.length === 0 ||
+      interrupter?.hasInterrupted?.()
     ) {
       return []
     }
@@ -491,6 +517,10 @@ class PositionsSnapshot {
     const res = []
 
     for (const position of positions) {
+      if (interrupter?.hasInterrupted?.()) {
+        return res
+      }
+
       const {
         pl,
         symbol,
@@ -512,7 +542,10 @@ class PositionsSnapshot {
         pl,
         symbol,
         mts,
-        { shouldTryPublicTradesFirst: true }
+        {
+          shouldTryPublicTradesFirst: true,
+          interrupter
+        }
       )
 
       position.plUsd = plUsd
@@ -541,7 +574,7 @@ class PositionsSnapshot {
     return orderBy(positions, ['mtsUpdate'], ['desc'])
   }
 
-  async _getPositionsAuditAndSnapshot (args) {
+  async _getPositionsAuditAndSnapshot (args, opts) {
     const {
       auth = {},
       params = {}
@@ -549,6 +582,7 @@ class PositionsSnapshot {
     const {
       end = Date.now()
     } = { ...params }
+    const { interrupter } = opts ?? {}
     const user = await this.authenticator
       .verifyRequestUser({ auth })
     const emptyRes = {
@@ -558,11 +592,13 @@ class PositionsSnapshot {
 
     const positionsHistoryPromise = this._getPositionsHistory(
       user,
-      end
+      end,
+      { interrupter }
     )
     const activePositionsPromise = this._getActivePositions(
       auth,
-      end
+      end,
+      { interrupter }
     )
 
     const [
@@ -580,7 +616,8 @@ class PositionsSnapshot {
 
     if (
       !Array.isArray(positions) ||
-      positions.length === 0
+      positions.length === 0 ||
+      interrupter?.hasInterrupted?.()
     ) {
       return emptyRes
     }
@@ -588,7 +625,8 @@ class PositionsSnapshot {
     const ids = this._getPositionsIds(positions)
     const positionsAudit = await this._getPositionsAudit(
       end,
-      { auth, params: { ids } }
+      { auth, params: { ids } },
+      { interrupter }
     )
 
     if (
@@ -603,7 +641,8 @@ class PositionsSnapshot {
       tickers
     } = await this._getCalculatedPositions(
       positionsAudit,
-      end
+      end,
+      { interrupter }
     )
 
     return {
@@ -887,11 +926,11 @@ class PositionsSnapshot {
     return positionsSnapshot
   }
 
-  async getPositionsSnapshotAndTickers (args) {
+  async getPositionsSnapshotAndTickers (args, opts) {
     const {
       positionsSnapshot,
       tickers
-    } = await this._getPositionsAuditAndSnapshot(args)
+    } = await this._getPositionsAuditAndSnapshot(args, opts)
 
     return {
       positionsSnapshot,
