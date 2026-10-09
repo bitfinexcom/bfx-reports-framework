@@ -9,6 +9,7 @@ module.exports = {
   EDIT_ALL_PUBLIC_COLLS_CONFS_REQ: 'editAllPublicCollsConfsReq',
 
   FW_GET_CANDLES_REQ: 'fwGetCandlesReq',
+  FW_GET_WALLETS_REQ: 'fwGetWalletsReq',
   GET_BALANCE_HISTORY_REQ: 'getBalanceHistoryReq',
   GET_WIN_LOSS_REQ: 'getWinLossReq',
   GET_POSITIONS_SNAPSHOT_REQ: 'getPositionsSnapshotReq',
