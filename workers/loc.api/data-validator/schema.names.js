@@ -23,6 +23,7 @@ module.exports = {
   GET_SUMMARY_BY_ASSET_REQ: 'getSummaryByAssetReq',
 
   FW_GET_CANDLES_FILE_REQ: 'fwGetCandlesFileReq',
+  FW_GET_WALLETS_FILE_REQ: 'fwGetWalletsFileReq',
   GET_BALANCE_HISTORY_FILE_REQ: 'getBalanceHistoryFileReq',
   GET_WIN_LOSS_FILE_REQ: 'getWinLossFileReq',
   GET_POSITIONS_SNAPSHOT_FILE_REQ: 'getPositionsSnapshotFileReq',
