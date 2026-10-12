@@ -115,16 +115,36 @@ class ReportFileJobData extends BaseReportFileJobData {
     uId,
     uInfo
   ) {
-    const _jobData = await super.getWalletsFileJobData(
+    this.dataValidator.validate(
       args,
+      this.dataValidator.SCHEMA_IDS.FW_GET_WALLETS_FILE_REQ
+    )
+
+    const {
+      userId,
+      userInfo
+    } = await checkJobAndGetUserData(
+      this.rService,
       uId,
       uInfo
     )
 
     const jobData = {
-      ..._jobData,
+      userInfo,
+      userId,
+      name: 'getWallets',
+      args: {
+        ...args,
+        params: {
+          ...args?.params,
+          isBaseNameInName: true
+        }
+      },
+      propNameForPagination: 'mtsUpdate',
       columnsCsv: {
-        ..._jobData.columnsCsv,
+        type: 'TYPE',
+        currency: 'CURRENCY',
+        balance: 'BALANCE',
         balanceUsd: 'BALANCE USD'
       }
     }
