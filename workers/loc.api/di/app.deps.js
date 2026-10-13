@@ -184,7 +184,6 @@ module.exports = ({
       bindDepsToFn(
         responder,
         [
-          TYPES.Container,
           TYPES.Logger,
           TYPES.WSEventEmitterFactory
         ]
@@ -197,10 +196,10 @@ module.exports = ({
       .toDynamicValue((ctx) => bindDepsToFn(
         privResponder,
         [
-          TYPES.Container,
           TYPES.Logger,
           TYPES.WSEventEmitterFactory,
-          TYPES.Authenticator
+          TYPES.Authenticator,
+          TYPES.InterrupterFactory
         ]
       ))
       .inSingletonScope()
