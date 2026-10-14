@@ -1244,8 +1244,12 @@ class FrameworkReportService extends ReportService {
 
       this._dataValidator.validate(
         args,
-        this._dataValidator.SCHEMA_IDS.GET_WALLETS_REQ
+        this._dataValidator.SCHEMA_IDS.FW_GET_WALLETS_REQ
       )
+
+      if (args?.params?.isCcyConvertedUsingPublicTrades) {
+        return this._wallets.getWalletsConvertedByPublicTrades(args)
+      }
 
       return this._wallets.getWallets(args)
     }, 'getWallets', args, cb)
