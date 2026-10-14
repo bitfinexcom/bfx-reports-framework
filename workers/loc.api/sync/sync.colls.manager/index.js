@@ -36,8 +36,13 @@ class SyncCollsManager {
     const {
       userId,
       subUserId,
-      collName
-    } = { ...params }
+      collName,
+      interrupter
+    } = params ?? {}
+
+    if (interrupter?.hasInterrupted?.()) {
+      return false
+    }
 
     const subUserIdFilter = Number.isInteger(subUserId)
       ? { subUserId }
@@ -51,6 +56,7 @@ class SyncCollsManager {
     })
 
     return (
+      !interrupter?.hasInterrupted?.() &&
       completedColl &&
       typeof completedColl === 'object' &&
       completedColl.collName === collName
@@ -58,20 +64,22 @@ class SyncCollsManager {
   }
 
   async haveCollsBeenSyncedAtLeastOnce (args) {
+    const { auth, interrupter } = args ?? {}
     const {
       _id: userId,
       subUsers,
       isSubAccount
-    } = args?.auth ?? {}
+    } = auth ?? {}
 
     const completedColls = await this._getCompletedCollsBy({
       $or: {
         $eq: { user_id: userId },
         $isNull: ['user_id']
       }
-    })
+    }, { interrupter })
 
     if (
+      interrupter?.hasInterrupted?.() ||
       !Array.isArray(completedColls) ||
       completedColls.length === 0
     ) {
@@ -141,7 +149,7 @@ class SyncCollsManager {
   }
 
   async haveCollsBeenSyncedUpToDate (args) {
-    const { auth, params } = { ...args }
+    const { auth, params, interrupter } = args ?? {}
     const { _id: userId } = auth
     const {
       schema,
@@ -153,9 +161,10 @@ class SyncCollsManager {
         $eq: { user_id: userId },
         $isNull: ['user_id']
       }
-    })
+    }, { interrupter })
 
     if (
+      interrupter?.hasInterrupted?.() ||
       !Array.isArray(completedColls) ||
       completedColls.length === 0 ||
       !schema ||
@@ -263,13 +272,22 @@ class SyncCollsManager {
     )
   }
 
-  async _getCompletedCollsBy (filter = {}) {
+  async _getCompletedCollsBy (filter = {}, opts) {
+    const { interrupter } = opts ?? {}
+
+    if (interrupter?.hasInterrupted?.()) {
+      return []
+    }
+
     const completedColls = await this.dao.getElemsInCollBy(
       this.TABLES_NAMES.SYNC_USER_STEPS,
       { filter }
     )
 
-    if (!Array.isArray(completedColls)) {
+    if (
+      interrupter?.hasInterrupted?.() ||
+      !Array.isArray(completedColls)
+    ) {
       return []
     }
 
