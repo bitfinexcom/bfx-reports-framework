@@ -21,7 +21,6 @@ const depsTypes = (TYPES) => [
   TYPES.RService,
   TYPES.DataValidator,
   TYPES.FullSnapshotReportCsvWriter,
-  TYPES.FullTaxReportCsvWriter,
   TYPES.WeightedAveragesReportCsvWriter,
   TYPES.TransactionTaxReportCsvWriter
 ]
@@ -30,14 +29,12 @@ class ReportFileJobData extends BaseReportFileJobData {
     rService,
     dataValidator,
     fullSnapshotReportCsvWriter,
-    fullTaxReportCsvWriter,
     weightedAveragesReportCsvWriter,
     transactionTaxReportCsvWriter
   ) {
     super(rService, dataValidator)
 
     this.fullSnapshotReportCsvWriter = fullSnapshotReportCsvWriter
-    this.fullTaxReportCsvWriter = fullTaxReportCsvWriter
     this.weightedAveragesReportCsvWriter = weightedAveragesReportCsvWriter
     this.transactionTaxReportCsvWriter = transactionTaxReportCsvWriter
   }
@@ -322,7 +319,6 @@ class ReportFileJobData extends BaseReportFileJobData {
       isEndSnapshot
     } = { ...params }
     const {
-      isFullTaxReport,
       chunkCommonFolder: _chunkCommonFolder
     } = { ...opts }
     const _typeName = isStartSnapshot
@@ -331,9 +327,7 @@ class ReportFileJobData extends BaseReportFileJobData {
     const typeName = (isStartSnapshot || isEndSnapshot)
       ? _typeName
       : 'MOMENT'
-    const fileName = isFullTaxReport
-      ? `full-tax-report_${typeName}`
-      : `full-snapshot-report_${typeName}`
+    const fileName = `full-snapshot-report_${typeName}`
 
     const endDate = end
       ? getDateString(end)
@@ -429,158 +423,6 @@ class ReportFileJobData extends BaseReportFileJobData {
       },
       csvCustomWriter: this.fullSnapshotReportCsvWriter,
       pdfCustomTemplateName: TEMPLATE_FILE_NAMES.FULL_SNAPSHOT_REPORT
-    }
-
-    return jobData
-  }
-
-  async getFullTaxReportFileJobData (
-    args,
-    uId,
-    uInfo
-  ) {
-    const { params } = { ...args }
-    const {
-      start,
-      end,
-      isStartSnapshot,
-      isEndSnapshot
-    } = { ...params }
-    const { username } = { ...uInfo }
-
-    const uName = username ? `${username}_` : ''
-    const startDate = start
-      ? getDateString(start)
-      : getDateString(0)
-    const endDate = end
-      ? getDateString(end)
-      : getDateString()
-    const chunkCommonFolder = `${uName}full-tax-report_FROM_${startDate}_TO_${endDate}`
-
-    if (isStartSnapshot || isEndSnapshot) {
-      const mts = isStartSnapshot ? start : end
-
-      return this.getFullSnapshotReportFileJobData(
-        {
-          ...args,
-          params: {
-            ...omit(params, ['start']),
-            end: mts
-          }
-        },
-        uId,
-        uInfo,
-        {
-          chunkCommonFolder,
-          isFullTaxReport: true
-        }
-      )
-    }
-
-    this.dataValidator.validate(
-      args,
-      this.dataValidator.SCHEMA_IDS.GET_FULL_TAX_REPORT_FILE_REQ
-    )
-
-    const {
-      userId,
-      userInfo
-    } = await checkJobAndGetUserData(
-      this.rService,
-      uId,
-      uInfo
-    )
-
-    const reportFileArgs = getReportFileArgs(
-      {
-        ...args,
-        params: omit(params, ['isStartSnapshot', 'isEndSnapshot'])
-      },
-      {
-        isLimitUnused: true,
-        extraParams: { isBaseNameInName: true }
-      }
-    )
-
-    const jobData = {
-      chunkCommonFolder,
-      userInfo,
-      userId,
-      name: 'getFullTaxReport',
-      fileNamesMap: [['getFullTaxReport', 'full-tax-report_FULL_PERIOD']],
-      args: reportFileArgs,
-      /*
-       * Example how to overwrite column order for pdf
-       * columnsPdf: {},
-       */
-      columnsCsv: {
-        timestamps: {
-          mtsCreated: 'CREATED',
-          start: 'FROM',
-          end: 'TO'
-        },
-        positionsSnapshot: {
-          id: '#',
-          symbol: 'PAIR',
-          amount: 'AMOUNT',
-          basePrice: 'BASE PRICE',
-          actualPrice: 'ACTUAL PRICE',
-          pl: 'P/L',
-          plUsd: 'P/L USD',
-          plPerc: 'P/L%',
-          marginFunding: 'FUNDING COST',
-          marginFundingType: 'FUNDING TYPE',
-          status: 'STATUS',
-          mtsUpdate: 'UPDATED',
-          mtsCreate: 'CREATED'
-        },
-        movements: {
-          id: '#',
-          mtsUpdated: 'DATE',
-          currency: 'CURRENCY',
-          status: 'STATUS',
-          amount: 'AMOUNT',
-          fees: 'FEES',
-          destinationAddress: 'DESCRIPTION',
-          transactionId: 'TRANSACTION ID',
-          note: 'NOTE'
-        },
-        periodBalances: {
-          walletsTotalBalanceUsd: 'WALLETS TOTAL BALANCE USD',
-          positionsTotalPlUsd: 'POSITIONS TOTAL P/L USD',
-          totalResult: 'TOTAL RESULT USD'
-        },
-        movementsTotalAmount: {
-          movementsTotalAmount: 'MOVEMENTS TOTAL AMOUNT USD'
-        },
-        totalResult: {
-          totalResult: 'TOTAL RESULT USD'
-        }
-      },
-      formatSettings: {
-        timestamps: {
-          mtsCreated: 'date',
-          start: 'date',
-          end: 'date'
-        },
-        startingPositionsSnapshot: {
-          mtsUpdate: 'date',
-          mtsCreate: 'date',
-          symbol: 'symbol'
-        },
-        endingPositionsSnapshot: {
-          mtsUpdate: 'date',
-          mtsCreate: 'date',
-          symbol: 'symbol'
-        },
-        finalState: {
-          movements: {
-            mtsUpdated: 'date'
-          }
-        }
-      },
-      csvCustomWriter: this.fullTaxReportCsvWriter,
-      pdfCustomTemplateName: TEMPLATE_FILE_NAMES.FULL_TAX_REPORT
     }
 
     return jobData
