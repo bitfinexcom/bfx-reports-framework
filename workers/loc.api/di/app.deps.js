@@ -95,10 +95,8 @@ const CurrencyConverter = require('../sync/currency.converter')
 const ReportFileJobData = require('../generate-report-file/report.file.job.data')
 const {
   fullSnapshotReportCsvWriter,
-  fullTaxReportCsvWriter,
   transactionTaxReportCsvWriter
 } = require('../generate-report-file/csv-writer')
-const FullTaxReport = require('../sync/full.tax.report')
 const TransactionTaxReport = require('../sync/transaction.tax.report')
 const WeightedAveragesReport = require('../sync/weighted.averages.report')
 const SqliteDbMigrator = require(
@@ -155,7 +153,6 @@ module.exports = ({
           ['_summaryByAsset', TYPES.SummaryByAsset],
           ['_positionsSnapshot', TYPES.PositionsSnapshot],
           ['_fullSnapshotReport', TYPES.FullSnapshotReport],
-          ['_fullTaxReport', TYPES.FullTaxReport],
           ['_transactionTaxReport', TYPES.TransactionTaxReport],
           ['_tradedVolume', TYPES.TradedVolume],
           ['_totalFeesReport', TYPES.TotalFeesReport],
@@ -184,7 +181,6 @@ module.exports = ({
       bindDepsToFn(
         responder,
         [
-          TYPES.Container,
           TYPES.Logger,
           TYPES.WSEventEmitterFactory
         ]
@@ -197,10 +193,10 @@ module.exports = ({
       .toDynamicValue((ctx) => bindDepsToFn(
         privResponder,
         [
-          TYPES.Container,
           TYPES.Logger,
           TYPES.WSEventEmitterFactory,
-          TYPES.Authenticator
+          TYPES.Authenticator,
+          TYPES.InterrupterFactory
         ]
       ))
       .inSingletonScope()
@@ -390,16 +386,6 @@ module.exports = ({
           ]
         )
       )
-    bind(TYPES.FullTaxReportCsvWriter)
-      .toConstantValue(
-        bindDepsToFn(
-          fullTaxReportCsvWriter,
-          [
-            TYPES.RService,
-            TYPES.GetDataFromApi
-          ]
-        )
-      )
     bind(TYPES.TransactionTaxReportCsvWriter)
       .toConstantValue(
         bindDepsToFn(
@@ -411,8 +397,6 @@ module.exports = ({
           ]
         )
       )
-    bind(TYPES.FullTaxReport)
-      .to(FullTaxReport)
     bind(TYPES.TransactionTaxReport)
       .to(TransactionTaxReport)
       .inSingletonScope()

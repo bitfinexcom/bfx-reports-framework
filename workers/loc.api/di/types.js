@@ -38,8 +38,6 @@ module.exports = {
   FullSnapshotReport: Symbol.for('FullSnapshotReport'),
   CurrencyConverter: Symbol.for('CurrencyConverter'),
   FullSnapshotReportCsvWriter: Symbol.for('FullSnapshotReportCsvWriter'),
-  FullTaxReport: Symbol.for('FullTaxReport'),
-  FullTaxReportCsvWriter: Symbol.for('FullTaxReportCsvWriter'),
   TransactionTaxReportCsvWriter: Symbol.for('TransactionTaxReportCsvWriter'),
   MigrationsFactory: Symbol.for('MigrationsFactory'),
   DbMigratorFactory: Symbol.for('DbMigratorFactory'),

@@ -72,10 +72,11 @@ class Checkers {
       })
   }
 
-  [CHECKER_NAMES.FULL_SNAPSHOT_REPORT] (auth) {
+  [CHECKER_NAMES.FULL_SNAPSHOT_REPORT] (auth, opts) {
     return this.syncCollsManager
       .haveCollsBeenSyncedUpToDate({
         auth,
+        interrupter: opts?.interrupter,
         params: {
           schema: [
             this.SYNC_API_METHODS.LEDGERS,
@@ -87,26 +88,11 @@ class Checkers {
       })
   }
 
-  [CHECKER_NAMES.FULL_TAX_REPORT] (auth) {
+  [CHECKER_NAMES.TRANSACTION_TAX_REPORT] (auth, opts) {
     return this.syncCollsManager
       .haveCollsBeenSyncedUpToDate({
         auth,
-        params: {
-          schema: [
-            this.SYNC_API_METHODS.LEDGERS,
-            this.SYNC_API_METHODS.CANDLES,
-            this.SYNC_API_METHODS.MOVEMENTS,
-            this.SYNC_API_METHODS.POSITIONS_SNAPSHOT,
-            this.SYNC_API_METHODS.POSITIONS_HISTORY
-          ]
-        }
-      })
-  }
-
-  [CHECKER_NAMES.TRANSACTION_TAX_REPORT] (auth) {
-    return this.syncCollsManager
-      .haveCollsBeenSyncedUpToDate({
-        auth,
+        interrupter: opts?.interrupter,
         params: {
           schema: [
             this.SYNC_API_METHODS.TRADES,

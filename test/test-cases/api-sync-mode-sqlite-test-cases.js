@@ -1219,6 +1219,55 @@ module.exports = (
     })
   })
 
+  it('it should be successfully performed by the getWallets method using public trades', async function () {
+    this.timeout(5000)
+
+    const res = await agent
+      .post(`${basePath}/json-rpc`)
+      .type('json')
+      .send({
+        auth,
+        method: 'getWallets',
+        params: {
+          end,
+          isCcyConvertedUsingPublicTrades: true
+        },
+        id: 5
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    assert.isObject(res.body)
+    assert.propertyVal(res.body, 'id', 5)
+    assert.isArray(res.body.result)
+
+    const mockPublicTrades = getMockData('public_trades')[0]
+    const price = mockPublicTrades[3]
+
+    res.body.result.forEach(resItem => {
+      assert.isObject(resItem)
+      assert.containsAllKeys(resItem, [
+        'type',
+        'currency',
+        'balance',
+        'balanceUsd',
+        'unsettledInterest',
+        'balanceAvailable',
+        'placeHolder',
+        'mtsUpdate'
+      ])
+
+      if (
+        ['USD', 'EUR', 'GBP', 'JPY'].every(symb => (
+          symb !== resItem.currency
+        ))
+      ) {
+        assert.isNumber(resItem.balanceUsd)
+        assert.strictEqual(resItem.balanceUsd, resItem.balance * price)
+      }
+    })
+  })
+
   it('it should be successfully performed by the getWallets method, without params', async function () {
     this.timeout(5000)
 

@@ -2,12 +2,15 @@
 
 const { setTimeout } = require('node:timers/promises')
 
-const INTERRUPTER_NAMES = require(
-  '@bitfinex/bfx-report/workers/loc.api/interrupter/interrupter.names'
+const Interrupter = require(
+  '@bitfinex/bfx-report/workers/loc.api/interrupter'
 )
 
 const { pushLargeArr } = require('../../helpers/utils')
-const { PubTradeFindForTrxTaxError } = require('../../errors')
+const {
+  PubTradeFindForTrxTaxError,
+  InterrupterAvailabilityForTrxTaxError
+} = require('../../errors')
 
 const {
   TRX_TAX_STRATEGIES,
@@ -34,7 +37,6 @@ const depsTypes = (TYPES) => [
   TYPES.GetDataFromApi,
   TYPES.WSEventEmitterFactory,
   TYPES.Logger,
-  TYPES.InterrupterFactory,
   TYPES.CurrencyConverter,
   TYPES.ProcessMessageManager
 ]
@@ -50,7 +52,6 @@ class TransactionTaxReport {
     getDataFromApi,
     wsEventEmitterFactory,
     logger,
-    interrupterFactory,
     currencyConverter,
     processMessageManager
   ) {
@@ -64,7 +65,6 @@ class TransactionTaxReport {
     this.getDataFromApi = getDataFromApi
     this.wsEventEmitterFactory = wsEventEmitterFactory
     this.logger = logger
-    this.interrupterFactory = interrupterFactory
     this.currencyConverter = currencyConverter
     this.processMessageManager = processMessageManager
 
@@ -74,10 +74,15 @@ class TransactionTaxReport {
   }
 
   async makeTrxTaxReportInBackground (args = {}) {
-    const { auth, params } = args ?? {}
+    const { auth, params, interrupter } = args ?? {}
+
+    if (!(interrupter instanceof Interrupter)) {
+      throw new InterrupterAvailabilityForTrxTaxError()
+    }
+
     const user = await this.authenticator
       .verifyRequestUser({ auth })
-    const _args = { auth: user, params }
+    const _args = { auth: user, params, interrupter }
 
     const trxTaxReportPromise = this.getTransactionTaxReport(_args)
 
@@ -87,6 +92,9 @@ class TransactionTaxReport {
       }, user)
       .then(() => {}, (err) => {
         this.logger.error(`TRX_TAX_REPORT_GEN_FAILED: ${err.stack || err}`)
+      })
+      .finally(() => {
+        interrupter.emitInterrupted()
       })
 
     trxTaxReportPromise.catch(() => {
@@ -99,17 +107,18 @@ class TransactionTaxReport {
   }
 
   async getTransactionTaxReport (args = {}) {
-    const { auth, params } = args ?? {}
+    const { auth, params, interrupter } = args ?? {}
+
+    if (!(interrupter instanceof Interrupter)) {
+      throw new InterrupterAvailabilityForTrxTaxError()
+    }
+
     const start = params.start ?? 0
     const end = params.end ?? Date.now()
     const strategy = params.strategy ?? TRX_TAX_STRATEGIES.LIFO
     const shouldFeesBeDeducted = params.shouldFeesBeDeducted ?? false
     const user = await this.authenticator
       .verifyRequestUser({ auth })
-    const interrupter = this.interrupterFactory({
-      user,
-      name: INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER
-    })
     const delistedCcyMap = new Map()
     await this.#emitProgress(
       user,
@@ -132,7 +141,6 @@ class TransactionTaxReport {
       !Array.isArray(trxsForCurrPeriod) ||
       trxsForCurrPeriod.length === 0
     ) {
-      interrupter.emitInterrupted()
       await this.#emitProgress(
         user,
         { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }
@@ -195,7 +203,6 @@ class TransactionTaxReport {
     )
 
     if (interrupter.hasInterrupted()) {
-      interrupter.emitInterrupted()
       await this.#emitProgress(
         user,
         { progress: null, state: PROGRESS_STATES.GENERATION_INTERRUPTED }
@@ -204,7 +211,6 @@ class TransactionTaxReport {
       return { taxes: [], delistedCcyList: [] }
     }
 
-    interrupter.emitInterrupted()
     await this.#emitProgress(
       user,
       { progress: 100, state: PROGRESS_STATES.GENERATION_COMPLETED }

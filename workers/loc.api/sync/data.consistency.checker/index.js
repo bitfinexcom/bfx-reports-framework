@@ -22,6 +22,11 @@ class DataConsistencyChecker {
   }
 
   async check (checkerName, args) {
+    const { auth, interrupter } = args ?? {}
+
+    if (interrupter?.hasInterrupted?.()) {
+      return
+    }
     if (
       !checkerName ||
       typeof checkerName !== 'string'
@@ -35,21 +40,28 @@ class DataConsistencyChecker {
       throw new DataConsistencyCheckerFindingError()
     }
 
-    const { auth } = { ...args }
     const check = checker.bind(this.checkers)
-    const isValid = await check(auth)
+    const isValid = await check(auth, { interrupter })
 
-    if (!isValid) {
-      const {
-        isSyncInProgress
-      } = await this.progress.getProgress()
-
-      if (isSyncInProgress) {
-        throw new DataConsistencyWhileSyncingError()
-      }
-
-      throw new DataConsistencyError()
+    if (
+      interrupter?.hasInterrupted?.() ||
+      isValid
+    ) {
+      return
     }
+
+    const {
+      isSyncInProgress
+    } = await this.progress.getProgress()
+
+    if (interrupter?.hasInterrupted?.()) {
+      return
+    }
+    if (isSyncInProgress) {
+      throw new DataConsistencyWhileSyncingError()
+    }
+
+    throw new DataConsistencyError()
   }
 }
 

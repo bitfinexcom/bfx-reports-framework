@@ -1244,8 +1244,12 @@ class FrameworkReportService extends ReportService {
 
       this._dataValidator.validate(
         args,
-        this._dataValidator.SCHEMA_IDS.GET_WALLETS_REQ
+        this._dataValidator.SCHEMA_IDS.FW_GET_WALLETS_REQ
       )
+
+      if (args?.params?.isCcyConvertedUsingPublicTrades) {
+        return this._wallets.getWalletsConvertedByPublicTrades(args)
+      }
 
       return this._wallets.getWallets(args)
     }, 'getWallets', args, cb)
@@ -1294,59 +1298,50 @@ class FrameworkReportService extends ReportService {
   }
 
   getFullSnapshotReport (space, args, cb) {
-    return this._privResponder(async () => {
+    return this._privResponder(async (ctx, reqArgs) => {
       await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, args)
+        .check(this._CHECKER_NAMES.FULL_SNAPSHOT_REPORT, reqArgs)
 
       this._dataValidator.validate(
-        args,
+        reqArgs,
         this._dataValidator.SCHEMA_IDS.GET_FULL_SNAPSHOT_REPORT_REQ
       )
 
-      return this._fullSnapshotReport.getFullSnapshotReport(args)
-    }, 'getFullSnapshotReport', args, cb)
-  }
-
-  getFullTaxReport (space, args, cb) {
-    return this._privResponder(async () => {
-      await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.FULL_TAX_REPORT, args)
-
-      this._dataValidator.validate(
-        args,
-        this._dataValidator.SCHEMA_IDS.GET_FULL_TAX_REPORT_REQ
-      )
-
-      return this._fullTaxReport.getFullTaxReport(args)
-    }, 'getFullTaxReport', args, cb)
+      return this._fullSnapshotReport.getFullSnapshotReport(reqArgs)
+    }, 'getFullSnapshotReport', args, cb, this._INTERRUPTER_NAMES.FULL_SNAPSHOT_REPORT_INTERRUPTER)
   }
 
   getTransactionTaxReport (space, args, cb) {
-    return this._privResponder(async () => {
+    return this._privResponder(async (ctx, reqArgs) => {
       await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, reqArgs)
 
       this._dataValidator.validate(
-        args,
+        reqArgs,
         this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
       )
 
-      return this._transactionTaxReport.getTransactionTaxReport(args)
-    }, 'getTransactionTaxReport', args, cb)
+      return this._transactionTaxReport.getTransactionTaxReport(reqArgs)
+    }, 'getTransactionTaxReport', args, cb, this._INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER)
   }
 
   makeTrxTaxReportInBackground (space, args, cb) {
-    return this._privResponder(async () => {
+    return this._privResponder(async (ctx, reqArgs) => {
       await this._dataConsistencyChecker
-        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, args)
+        .check(this._CHECKER_NAMES.TRANSACTION_TAX_REPORT, reqArgs)
 
       this._dataValidator.validate(
-        args,
+        reqArgs,
         this._dataValidator.SCHEMA_IDS.GET_TRANSACTION_TAX_REPORT_REQ
       )
 
-      return this._transactionTaxReport.makeTrxTaxReportInBackground(args)
-    }, 'makeTrxTaxReportInBackground', args, cb)
+      const res = await this._transactionTaxReport.makeTrxTaxReportInBackground(reqArgs)
+
+      // To finalize interruption in background
+      ctx.rmInterrupter()
+
+      return res
+    }, 'makeTrxTaxReportInBackground', args, cb, this._INTERRUPTER_NAMES.TRX_TAX_REPORT_INTERRUPTER)
   }
 
   getTradedVolume (space, args, cb) {
@@ -1466,15 +1461,6 @@ class FrameworkReportService extends ReportService {
         args
       )
     }, 'getFullSnapshotReportFile', args, cb)
-  }
-
-  getFullTaxReportFile (space, args, cb) {
-    return this._responder(() => {
-      return this._generateReportFile(
-        'getFullTaxReportFileJobData',
-        args
-      )
-    }, 'getFullTaxReportFile', args, cb)
   }
 
   getTransactionTaxReportFile (space, args, cb) {

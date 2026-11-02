@@ -272,6 +272,12 @@ class PubTradePriceFindForTrxTaxError extends BaseError {
   }
 }
 
+class InterrupterAvailabilityForTrxTaxError extends BaseError {
+  constructor (message = 'ERR_NO_INTERRUPTER_FOR_TRX_TAX') {
+    super(message)
+  }
+}
+
 class DbModelCreationError extends BaseError {
   constructor (data, message = 'ERR_WRONG_DB_MODEL_FIELD') {
     super({ data, message })
@@ -331,6 +337,7 @@ module.exports = {
   CurrencyPairSeparationError,
   PubTradeFindForTrxTaxError,
   PubTradePriceFindForTrxTaxError,
+  InterrupterAvailabilityForTrxTaxError,
   DbModelCreationError,
   SyncSchemaModelCreationError,
   SyncSchemaModelFieldKeyNameAccessError

@@ -87,6 +87,9 @@ module.exports = {
     },
     isFundingFees: {
       type: 'boolean'
+    },
+    isCcyConvertedUsingPublicTrades: {
+      type: 'boolean'
     }
   }
 }
