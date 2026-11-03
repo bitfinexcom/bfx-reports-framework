@@ -10,6 +10,9 @@ module.exports = {
   READY_TRX_TAX_REPORT: 'ready:trx-tax-report',
   ERROR_TRX_TAX_REPORT: 'error:trx-tax-report',
 
+  READY_REPORT_FILE_GENERATION: 'ready:report-file-generation',
+  ERROR_REPORT_FILE_GENERATION: 'error:report-file-generation',
+
   READY_SYNC: 'ready:sync',
   ERROR_SYNC: 'error:sync',
 

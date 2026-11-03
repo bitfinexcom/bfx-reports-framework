@@ -217,6 +217,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       ).then(() => {}, (err) => {
         this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_FAILED: ${err.stack || err}`)
       })
+      processMessageManager.sendState(
+        processMessageManager.PROCESS_MESSAGES.ERROR_REPORT_FILE_GENERATION
+      )
     }
 
     processorQueue.on(QUEUE_EVENT_NAMES.ERROR_BASE, (err, job) => {
@@ -246,6 +249,9 @@ class WrkReportFrameWorkApi extends WrkReportServiceApi {
       ).then(() => {}, (err) => {
         this.logger.error(`WS_EVENT_EMITTER:REPORT_FILE_COMPLETED: ${err.stack || err}`)
       })
+      processMessageManager.sendState(
+        processMessageManager.PROCESS_MESSAGES.READY_REPORT_FILE_GENERATION
+      )
     })
 
     if (
