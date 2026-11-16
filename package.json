@@ -32,6 +32,26 @@
     "nodemon": "3.1.14",
     "supertest": "7.3.2"
   },
+    "overrides": {
+    "mocha": {
+      "glob": "14.0.4",
+      "minimatch": "11.0.5"
+    },
+    "nodemon": {
+      "minimatch": "11.0.5"
+    },
+    "grenache-nodejs-ws": {
+      "cbq": "1.0.0",
+      "grenache-nodejs-base": "2.0.1",
+      "grenache-nodejs-link": "2.0.2",
+      "uuid": "11.1.1",
+      "ws": "7.5.13"
+    },
+    "archiver": {
+      "glob": "14.0.4",
+      "minimatch": "11.0.5"
+    }
+  },
   "contributors": [
     "Paolo Ardoino <paolo@bitfinex.com>",
     "Ezequiel Wernicke <ezequiel.wernicke@bitfinex.com>",
