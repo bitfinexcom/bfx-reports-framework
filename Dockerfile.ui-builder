@@ -1,4 +1,4 @@
-FROM node:24.1.0-alpine3.20
+FROM node:24.22.1-alpine3.24
 
 WORKDIR /home/node/bfx-report-ui
 
@@ -18,7 +18,8 @@ COPY ./bfx-report-ui/.npmrc ./.npmrc
 
 RUN mkdir -p ./src/ui/PlatformLogo/files && \
   mkdir -p ./public && \
-  npm i --no-audit
+  npm ci && \
+  npm cache clean --force
 
 COPY ./bfx-report-ui .
 COPY ./scripts/build-ui.sh /usr/local/bin/
