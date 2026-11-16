@@ -25,7 +25,7 @@
     "@bitfinex/bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
     "@bitfinex/lint-js": "^1.1.0",
     "bfx-api-mock-srv": "^4.0.1",
-    "chai": "4.3.4",
+    "chai": "6.3.0",
     "concurrently": "10.0.4",
     "cross-env": "10.1.0",
     "grenache-grape": "1.0.0",
