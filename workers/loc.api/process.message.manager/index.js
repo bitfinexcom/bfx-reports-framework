@@ -101,7 +101,13 @@ class ProcessMessageManager {
       return false
     }
 
-    return sendState(state, data)
+    try {
+      return sendState(state, data)
+    } catch (err) {
+      this.logger.error(err)
+
+      return false
+    }
   }
 
   onMessage (...args) {
