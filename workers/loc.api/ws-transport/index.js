@@ -1,6 +1,6 @@
 'use strict'
 
-const uuid = require('uuid')
+const { randomUUID } = require('node:crypto')
 const { omit } = require('@bitfinex/lib-js-util-base')
 const { PeerRPCServer } = require('grenache-nodejs-ws')
 
@@ -134,7 +134,7 @@ class WSTransport {
       this._active = true
       socket.isAlive = true
 
-      const sid = socket._grc_id = uuid.v4()
+      const sid = socket._grc_id = randomUUID()
 
       this._sockets.set(sid, socket)
 

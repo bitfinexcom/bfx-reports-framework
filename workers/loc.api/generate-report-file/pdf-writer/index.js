@@ -1,9 +1,9 @@
 'use strict'
 
+const { randomUUID } = require('node:crypto')
 const fs = require('fs/promises')
 const path = require('path')
 const argv = require('yargs').argv
-const { v4: uuidv4 } = require('uuid')
 
 const puppeteer = require('puppeteer')
 
@@ -108,7 +108,7 @@ class PdfWriter extends MainPdfWriter {
   }
 
   async createPDFBufferUnderElectron (args) {
-    const uid = `uid-${uuidv4()}-${Date.now()}`
+    const uid = `uid-${randomUUID()}-${Date.now()}`
 
     const uniqueFileName = await createUniqueFileName(
       this.rootFolderPath,

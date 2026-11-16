@@ -1,6 +1,6 @@
 'use strict'
 
-const { v4: uuidv4 } = require('uuid')
+const { randomUUID } = require('node:crypto')
 const { pick, isNil } = require('@bitfinex/lib-js-util-base')
 const {
   AuthError,
@@ -237,7 +237,7 @@ class Authenticator {
       { isNotInTrans, withWorkerThreads, doNotQueueQuery }
     )
 
-    const token = uuidv4()
+    const token = randomUUID()
     const fullUserData = {
       ...user,
       subUsers: [],
@@ -438,7 +438,7 @@ class Authenticator {
     )
     const createdToken = isTokenExisted
       ? existedToken
-      : uuidv4()
+      : randomUUID()
 
     if (!isNotSetSession) {
       this.setUserSession({ ...refreshedUser, token: createdToken })
@@ -678,7 +678,7 @@ class Authenticator {
       typeof existedToken === 'string'
     )
       ? existedToken
-      : uuidv4()
+      : randomUUID()
 
     this.setUserSession({ ...refreshedUser, token: createdToken })
 
