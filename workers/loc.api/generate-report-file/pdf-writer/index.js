@@ -90,7 +90,7 @@ class PdfWriter extends MainPdfWriter {
       const u8ArrayPdf = await page.pdf({
         landscape: args?.format !== 'portrait',
         format: args?.orientation,
-        margins: {
+        margin: {
           top: 0,
           bottom: 0,
           left: 0,
