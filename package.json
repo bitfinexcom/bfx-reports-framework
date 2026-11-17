@@ -13,7 +13,7 @@
     "@bitfinex/bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
     "@bitfinex/bfx-svc-boot-js": "https://github.com/bitfinexcom/bfx-svc-boot-js.git#v2.0.0",
     "@bitfinex/lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git#v3.0.0",
-    "bignumber.js": "9.1.2",
+    "bignumber.js": "11.1.5",
     "grenache-nodejs-ws": "1.0.0",
     "inversify": "7.11.0",
     "mathjs": "15.2.0",
@@ -32,7 +32,7 @@
     "nodemon": "3.1.14",
     "supertest": "7.3.2"
   },
-    "overrides": {
+  "overrides": {
     "mocha": {
       "glob": "14.0.4",
       "minimatch": "11.0.5"
