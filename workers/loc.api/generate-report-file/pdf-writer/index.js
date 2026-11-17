@@ -5,7 +5,27 @@ const fs = require('fs/promises')
 const path = require('path')
 const argv = require('yargs').argv
 
-const puppeteer = require('puppeteer')
+// In Electronjs env, puppeteer is not called and
+// adding corresponding binaries into bundle is skipped
+let puppeteerPromise = null
+const getPuppeteer = async () => {
+  if (
+    puppeteerPromise ||
+    argv.isElectronjsEnv
+  ) {
+    return puppeteerPromise
+  }
+
+  const promise = import('puppeteer')
+    .catch((err) => {
+      puppeteerPromise = null
+      throw err
+    })
+  puppeteerPromise = promise
+
+  return promise
+}
+getPuppeteer().catch(() => {})
 
 const MainPdfWriter = require(
   '@bitfinex/bfx-report/workers/loc.api/generate-report-file/pdf-writer'
@@ -76,8 +96,11 @@ class PdfWriter extends MainPdfWriter {
   }
 
   async createPDFBufferUnderFramework (args) {
+    let browser
+
     try {
-      const browser = await puppeteer.launch({
+      const puppeteer = await getPuppeteer()
+      browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-gpu'],
         protocolTimeout: args?.timeout,
         timeout: 60_000
@@ -99,11 +122,12 @@ class PdfWriter extends MainPdfWriter {
         displayHeaderFooter: true,
         footerTemplate: this.#getFooterTemplate(args)
       })
-      await browser.close()
 
       return Buffer.from(u8ArrayPdf)
     } catch (err) {
       throw new PDFBufferUnderFrameworkCreationError(err)
+    } finally {
+      await browser?.close()
     }
   }
 
