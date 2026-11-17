@@ -84,7 +84,7 @@
     "migration": "node scripts/node/migration",
     "init": "bash init.sh",
     "initDev": "bash init.sh -d",
-    "lint": "bfx-lint-js --mocha",
-    "lint:fix": "bfx-lint-js --mocha --fix"
+    "lint": "bfx-lint-js",
+    "lint:fix": "bfx-lint-js --fix"
   }
 }
