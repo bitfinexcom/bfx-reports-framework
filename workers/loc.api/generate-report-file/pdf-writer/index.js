@@ -13,7 +13,7 @@ const getPuppeteer = async () => {
     puppeteerPromise ||
     argv.isElectronjsEnv
   ) {
-    return puppeteerPromise
+    return (await puppeteerPromise)?.default
   }
 
   const promise = import('puppeteer')
@@ -23,7 +23,7 @@ const getPuppeteer = async () => {
     })
   puppeteerPromise = promise
 
-  return promise
+  return (await promise)?.default
 }
 getPuppeteer().catch(() => {})
 
