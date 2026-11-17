@@ -19,7 +19,7 @@
     "mathjs": "14.8.1",
     "moment": "2.29.4",
     "puppeteer": "24.1.0",
-    "yargs": "17.2.1"
+    "yargs": "17.7.3"
   },
   "devDependencies": {
     "@bitfinex/bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
