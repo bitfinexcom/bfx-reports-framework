@@ -85,6 +85,7 @@
     "init": "bash init.sh",
     "initDev": "bash init.sh -d",
     "lint": "bfx-lint-js",
-    "lint:fix": "bfx-lint-js --fix"
+    "lint:fix": "bfx-lint-js --fix",
+    "install-puppeteer": "npm rebuild puppeteer --ignore-scripts=false"
   }
 }

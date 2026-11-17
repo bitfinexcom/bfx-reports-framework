@@ -31,7 +31,7 @@ jobs:
           && cp config/facs/grc.config.json.example config/facs/grc.config.json \
           && cp config/facs/grc-slack.config.json.example config/facs/grc-slack.config.json
     - name: Install deps
-      run: npm ci
+      run: npm ci && npm run install-puppeteer
     - name: Run tests
       run: npm test -- --reporter=json --reporter-option output=test-report.json
     - uses: actions/upload-artifact@v7.0.0
