@@ -86,6 +86,9 @@
     "initDev": "bash init.sh -d",
     "lint": "bfx-lint-js",
     "lint:fix": "bfx-lint-js --fix",
-    "install-puppeteer": "npm rebuild puppeteer --ignore-scripts=false"
+    "rebuild": "npm rebuild puppeteer --ignore-scripts=false"
+  },
+  "allowScripts": {
+    "puppeteer@25.17.0": true
   }
 }

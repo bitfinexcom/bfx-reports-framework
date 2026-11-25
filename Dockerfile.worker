@@ -50,7 +50,7 @@ WORKDIR /home/node/bfx-reports-framework
 
 COPY package*.json .npmrc ./
 RUN npm ci --omit=dev && \
-  npm run install-puppeteer && \
+  npm run rebuild && \
   npm cache clean --force
 
 COPY ./config ./config
