@@ -32,6 +32,7 @@ function installDeps {
 
   rm -rf ./node_modules
   npm i
+  npm run rebuild
 
   cd "$path"
 }

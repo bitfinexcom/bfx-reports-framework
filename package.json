@@ -1,6 +1,6 @@
 {
   "name": "@bitfinex/bfx-reports-framework",
-  "version": "5.6.0",
+  "version": "6.0.0",
   "description": "Bitfinex reports framework",
   "main": "worker.js",
   "engines": {
@@ -8,51 +8,56 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@bitfinex/bfx-facs-db-better-sqlite": "git+https://github.com/bitfinexcom/bfx-facs-db-better-sqlite.git",
-    "@bitfinex/bfx-facs-scheduler": "git+https://github.com/bitfinexcom/bfx-facs-scheduler.git",
-    "@bitfinex/bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git",
-    "@bitfinex/bfx-svc-boot-js": "https://github.com/bitfinexcom/bfx-svc-boot-js.git",
-    "@bitfinex/lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git",
-    "bignumber.js": "9.1.2",
-    "csv": "5.5.3",
+    "@bitfinex/bfx-facs-db-better-sqlite": "git+https://github.com/bitfinexcom/bfx-facs-db-better-sqlite.git#v4.0.0",
+    "@bitfinex/bfx-facs-scheduler": "git+https://github.com/bitfinexcom/bfx-facs-scheduler.git#v2.0.0",
+    "@bitfinex/bfx-report": "git+https://github.com/bitfinexcom/bfx-report.git#d42df6748c24e0815587622eaf33bd83827a942f",
+    "@bitfinex/bfx-svc-boot-js": "git+https://github.com/bitfinexcom/bfx-svc-boot-js.git#v2.0.0",
+    "@bitfinex/lib-js-util-base": "git+https://github.com/bitfinexcom/lib-js-util-base.git#v3.0.0",
+    "bignumber.js": "11.1.5",
     "grenache-nodejs-ws": "1.0.0",
     "inversify": "7.11.0",
-    "mathjs": "14.8.1",
-    "moment": "2.29.4",
-    "puppeteer": "24.1.0",
-    "uuid": "11.1.0",
-    "yargs": "17.2.1"
+    "mathjs": "15.2.0",
+    "moment": "2.31.0",
+    "puppeteer": "25.17.0",
+    "yargs": "17.7.3"
   },
   "devDependencies": {
-    "@bitfinex/bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git",
-    "bfx-api-mock-srv": "2.0.0",
-    "chai": "4.3.4",
-    "concurrently": "10.0.4",
+    "@bitfinex/bfx-report-express": "git+https://github.com/bitfinexcom/bfx-report-express.git#v4.0.0",
+    "@bitfinex/lint-js": "^1.1.0",
+    "bfx-api-mock-srv": "^4.0.1",
+    "chai": "6.3.0",
+    "concurrently": "10.0.7",
     "cross-env": "10.1.0",
-    "grenache-grape": "1.0.0",
-    "mocha": "11.1.0",
+    "grenache-grape": "^2.0.1",
+    "mocha": "12.0.3",
     "nodemon": "3.1.14",
-    "standard": "17.0.0",
-    "supertest": "7.1.0"
+    "supertest": "7.3.2"
+  },
+  "overrides": {
+    "mocha": {
+      "glob": "14.0.4",
+      "minimatch": "11.0.5"
+    },
+    "nodemon": {
+      "minimatch": "11.0.5"
+    },
+    "grenache-nodejs-ws": {
+      "cbq": "1.0.0",
+      "grenache-nodejs-base": "2.0.1",
+      "grenache-nodejs-link": "2.0.2",
+      "uuid": "11.1.1",
+      "ws": "7.5.13"
+    },
+    "archiver": {
+      "glob": "14.0.4",
+      "minimatch": "11.0.5"
+    }
   },
   "contributors": [
     "Paolo Ardoino <paolo@bitfinex.com>",
     "Ezequiel Wernicke <ezequiel.wernicke@bitfinex.com>",
     "Vladimir Voronkov <vsvoronkov@gmail.com>"
   ],
-  "standard": {
-    "globals": [
-      "describe",
-      "it",
-      "before",
-      "after",
-      "beforeEach",
-      "afterEach"
-    ],
-    "ignore": [
-      "bfx-report-ui"
-    ]
-  },
   "nodemonConfig": {
     "verbose": true,
     "ignore": [
@@ -73,11 +78,17 @@
     "startDev": "cross-env NODE_ENV=development nodemon worker.js --env=development --wtype=wrk-report-framework-api --apiPort 1337 --dbId 1 --isSchedulerEnabled true",
     "startServDev": "cross-env NODE_ENV=development NODE_CONFIG_DIR=./test/config node ./node_modules/@bitfinex/bfx-report-express",
     "startSimulEnv": "cross-env NODE_ENV=development node ./node_modules/@bitfinex/bfx-report/test/simulate/simulate-enviroment.js",
-    "test": "standard && npm run unit && cross-env NODE_ENV=test mocha './test/**/*.spec.js' --config .mocharc.json",
+    "test": "npm run lint && npm run unit && cross-env NODE_ENV=test mocha './test/**/*.spec.js' --config .mocharc.json",
     "testDev": "cross-env NODE_ENV=test mocha './workers/**/__test__/*-dev.spec.js' './test/**/*-dev.spec.js' --config .mocharc.json",
     "unit": "cross-env NODE_ENV=test mocha './workers/**/__test__/*.spec.js' --config .mocharc.json",
     "migration": "node scripts/node/migration",
     "init": "bash init.sh",
-    "initDev": "bash init.sh -d"
+    "initDev": "bash init.sh -d",
+    "lint": "bfx-lint-js",
+    "lint:fix": "bfx-lint-js --fix",
+    "rebuild": "npm rebuild puppeteer --ignore-scripts=false"
+  },
+  "allowScripts": {
+    "puppeteer@25.17.0": true
   }
 }

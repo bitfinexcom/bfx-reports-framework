@@ -1,6 +1,6 @@
 'use strict'
 
-const { v4: uuidv4 } = require('uuid')
+const { randomUUID } = require('node:crypto')
 const {
   createMockRESTv2SrvWithDate: _createMockRESTv2SrvWithDate,
   getMockDataOpts: getBaseMockDataOpts,
@@ -21,7 +21,7 @@ const setDataTo = (
     date = Date.now(),
     id = 12345,
     fee = 0.0001,
-    strId = uuidv4()
+    strId = randomUUID()
   } = {}
 ) => {
   const _dataItem = _setDataTo(

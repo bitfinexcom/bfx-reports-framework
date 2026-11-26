@@ -11,6 +11,8 @@ on:
 jobs:
   linux-test-runner:
     name: Linux Test Runner
+    permissions:
+      contents: read
     timeout-minutes: 90
     runs-on: ubuntu-22.04
     steps:
@@ -20,7 +22,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-node@v6.3.0
       with:
-        node-version: 24.14.0
+        node-version: 24.22.1
     - name: Setup configs
       run: |
         cp config/common.json.example config/common.json \
@@ -29,7 +31,7 @@ jobs:
           && cp config/facs/grc.config.json.example config/facs/grc.config.json \
           && cp config/facs/grc-slack.config.json.example config/facs/grc-slack.config.json
     - name: Install deps
-      run: npm ci
+      run: npm ci && npm run rebuild
     - name: Run tests
       run: npm test -- --reporter=json --reporter-option output=test-report.json
     - uses: actions/upload-artifact@v7.0.0
